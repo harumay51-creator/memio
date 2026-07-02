@@ -4,11 +4,13 @@ import { AppStoreProvider } from './store/AppStore'
 import Sidebar      from './components/Sidebar'
 import QuickCapture from './components/QuickCapture'
 import Router       from './router/Router'
+import LockScreen   from './components/LockScreen'
 
 // ── Inner app (needs to be inside AppStoreProvider to access useAppStore) ─────
 const AppInner: React.FC = () => {
   const [activePage,    setActivePage]    = useState<PageId>(() => (localStorage.getItem('yuri-active-page') as PageId) || 'dashboard')
   const [activeItemId,  setActiveItemId]  = useState<string | null>(null)
+  const [unlocked,      setUnlocked]      = useState<boolean>(() => localStorage.getItem('yuri-auth') === 'true')
 
   const navigate = useCallback((page: PageId, itemId?: string) => {
     setActiveItemId(itemId || null)
@@ -28,6 +30,15 @@ const AppInner: React.FC = () => {
     return () => window.removeEventListener('keydown', handler)
   }, [navigate])
 
+  const handleUnlock = useCallback(() => {
+    setUnlocked(true)
+    localStorage.setItem('yuri-auth', 'true')
+  }, [])
+
+  if (!unlocked) {
+    return <LockScreen onUnlock={handleUnlock} />
+  }
+
   return (
     <div className="flex h-screen overflow-hidden bg-white">
       {/* ── Left sidebar ────────────────────────────────────────────── */}
@@ -39,7 +50,7 @@ const AppInner: React.FC = () => {
       {/* ── Main content & Bottom Bar ────────────────────────────────────────────── */}
       <main className="flex-1 min-w-0 flex flex-col h-screen">
         <div className="flex-1 min-h-0 relative overflow-hidden bg-white">
-          <Router page={activePage} activeItemId={activeItemId} onNavigate={navigate} />
+          <Router page={activePage} activeItemId={activeItemId} />
         </div>
 
         {/* ── Quick Capture (Only in Ledger) ──────────────────────────── */}
