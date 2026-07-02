@@ -22,14 +22,14 @@ interface RouterProps {
  * To add a new feature page: import it here and replace the matching
  * PlaceholderPage case with the real component.
  */
-const Router: React.FC<RouterProps> = ({ page, activeItemId, onNavigate }) => {
+const Router: React.FC<RouterProps> = ({ page, activeItemId }) => {
   switch (page) {
     // ── Implemented pages ─────────────────────────────────────────────
     case 'dashboard':
       return <TodayPage />
 
     case 'search':
-      return <SearchPage onNavigate={onNavigate} />
+      return <SearchPage />
 
     case 'calendar':
       return <CalendarPage />

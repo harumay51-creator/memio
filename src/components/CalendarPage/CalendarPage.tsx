@@ -36,8 +36,8 @@ function buildGrid(year: number, month: number): (Date | null)[] {
 // ── Component ─────────────────────────────────────────────────────────────────
 const CalendarPage: React.FC = () => {
   const {
-    tasks, events, notes, ledger, agendas,
-    toggleTask, deleteTask, deleteEvent, deleteNote, deleteLedgerEntry,
+    tasks, events, agendas,
+    toggleTask, deleteTask, deleteEvent,
     addAgenda, toggleAgenda, deleteAgenda,
     addEvent, updateItemOrders,
     navDate, setNavDate
@@ -339,10 +339,9 @@ const CalendarPage: React.FC = () => {
                       {/* Badge */}
                       <span className={`shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded tracking-wider ${
                         item.type === 'task' ? 'bg-yuri-100 text-yuri-700' :
-                        item.type === 'event' ? 'bg-amber-100 text-amber-700' :
-                        'bg-gray-200 text-gray-700'
+                        'bg-amber-100 text-amber-700'
                       }`}>
-                        {item.type === 'task' ? '업무' : item.type === 'event' ? '일정' : '메모'}
+                        {item.type === 'task' ? '업무' : '일정'}
                       </span>
                       
                       {/* Content */}
@@ -364,7 +363,6 @@ const CalendarPage: React.FC = () => {
                         <button onClick={() => {
                           if (item.type === 'task') deleteTask(item.id)
                           else if (item.type === 'event') deleteEvent(item.id)
-                          else deleteNote(item.id)
                         }} className="w-6 h-6 flex items-center justify-center rounded text-yuri-300 hover:text-red-400 hover:bg-red-50">✕</button>
                       </div>
                     </div>

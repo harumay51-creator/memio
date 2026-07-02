@@ -1,6 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react'
 import { useAppStore } from '../../store/AppStore'
-import type { Note } from '../../types'
 
 const NotesPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId }) => {
   const { notes, addNote, updateNote, deleteNote } = useAppStore()

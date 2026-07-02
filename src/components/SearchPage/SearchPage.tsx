@@ -1,10 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react'
 import { useAppStore } from '../../store/AppStore'
-import type { PageId } from '../../types'
-
-interface SearchPageProps {
-  onNavigate?: (page: PageId, itemId?: string) => void
-}
 
 type SearchResultItem = {
   id: string
@@ -17,7 +12,7 @@ type SearchResultItem = {
 
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토']
 
-const SearchPage: React.FC<SearchPageProps> = ({ onNavigate }) => {
+const SearchPage: React.FC = () => {
   const { tasks, events, notes } = useAppStore()
   const [query, setQuery] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
