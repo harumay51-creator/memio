@@ -35,6 +35,11 @@ const AppInner: React.FC = () => {
     localStorage.setItem('yuri-auth', 'true')
   }, [])
 
+  const handleLogout = useCallback(() => {
+    setUnlocked(false)
+    localStorage.removeItem('yuri-auth')
+  }, [])
+
   if (!unlocked) {
     return <LockScreen onUnlock={handleUnlock} />
   }
@@ -45,6 +50,7 @@ const AppInner: React.FC = () => {
       <Sidebar
         activePage={activePage}
         onNavigate={navigate}
+        onLogout={handleLogout}
       />
 
       {/* ── Main content & Bottom Bar ────────────────────────────────────────────── */}

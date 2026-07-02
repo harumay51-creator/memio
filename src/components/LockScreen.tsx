@@ -9,8 +9,8 @@ const LockScreen: React.FC<LockScreenProps> = ({ onUnlock }) => {
   const [error, setError] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  // Hardcoded expected password
-  const EXPECTED_PASSWORD = '%^&memio2026!@'
+  // SHA-256 hash of '%^&memio2026!@'
+  const EXPECTED_HASH = '4d112400c287b23117b72a349436c7de6b0ec74b033d241676d0ac09c489ad60'
 
   useEffect(() => {
     // Focus the input when component mounts
@@ -19,17 +19,28 @@ const LockScreen: React.FC<LockScreenProps> = ({ onUnlock }) => {
     }
   }, [])
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (password === EXPECTED_PASSWORD) {
-      setError(false)
-      onUnlock()
-    } else {
-      setError(true)
-      setPassword('')
-      if (inputRef.current) {
-        inputRef.current.focus()
+    
+    try {
+      const encoder = new TextEncoder()
+      const data = encoder.encode(password)
+      const hashBuffer = await crypto.subtle.digest('SHA-256', data)
+      const hashArray = Array.from(new Uint8Array(hashBuffer))
+      const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
+
+      if (hashHex === EXPECTED_HASH) {
+        setError(false)
+        onUnlock()
+      } else {
+        setError(true)
+        setPassword('')
+        if (inputRef.current) {
+          inputRef.current.focus()
+        }
       }
+    } catch (err) {
+      console.error('Crypto error:', err)
     }
   }
 

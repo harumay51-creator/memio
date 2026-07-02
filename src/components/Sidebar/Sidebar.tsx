@@ -5,9 +5,10 @@ import { NAV_ITEMS } from '../../config/nav'
 interface SidebarProps {
   activePage: PageId
   onNavigate: (page: PageId, itemId?: string) => void
+  onLogout: () => void
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ activePage, onNavigate }) => {
+const Sidebar: React.FC<SidebarProps> = ({ activePage, onNavigate, onLogout }) => {
   const homeItems    = NAV_ITEMS.filter(i => i.group === 'home')
   const inputItems   = NAV_ITEMS.filter(i => i.group === 'input')
   const exploreItems = NAV_ITEMS.filter(i => i.group === 'explore')
@@ -60,19 +61,23 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage, onNavigate }) => {
             <NavItemButton key={item.id} item={item} active={activePage === item.id} onClick={() => onNavigate(item.id)} />
           ))}
         </nav>
-      </div>
 
-      {/* Utility nav (Bottom) */}
-      <nav className="flex flex-col gap-0.5 mt-auto pt-2 border-t border-yuri-200">
-        {utilityItems.map(item => (
-          <NavItemButton
-            key={item.id}
-            item={item}
-            active={activePage === item.id}
-            onClick={() => onNavigate(item.id)}
-          />
-        ))}
-      </nav>
+        <div className="border-t border-yuri-200 my-1 mx-2" />
+
+        {/* Utility nav */}
+        <nav className="flex flex-col gap-0.5 mb-2">
+          {utilityItems.map(item => (
+            <NavItemButton key={item.id} item={item} active={activePage === item.id} onClick={() => onNavigate(item.id)} />
+          ))}
+          <button 
+            onClick={onLogout}
+            className="flex items-center gap-2.5 px-3 py-2 mt-1 rounded-lg text-[13px] font-medium text-red-500 hover:bg-red-50 hover:text-red-600 transition-colors"
+          >
+            <span className="w-4 flex justify-center text-base leading-none">🚪</span>
+            로그아웃
+          </button>
+        </nav>
+      </div>
 
       {/* User avatar placeholder */}
       <div className="flex items-center gap-2.5 px-3 pt-3 mt-1">
