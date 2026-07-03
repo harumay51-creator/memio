@@ -152,7 +152,12 @@ const CalendarPage: React.FC = () => {
     const dStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
     const holidayInfo = HOLIDAYS[dStr]
     if (holidayInfo) {
-      items.push(<div key="holiday" className={`text-[10px] px-1.5 py-0.5 rounded-md truncate w-full font-bold ${holidayInfo.isRedDay ? 'text-[#BE123C] bg-[#FFE4E6]' : 'text-[#6D28D9] bg-[#F5F3FF]'}`}>{holidayInfo.name}</div>)
+      items.push(
+        <div key="holiday" className="text-[10px] pl-1 py-0.5 w-full flex gap-1.5 items-center">
+          <span className="text-[#EF6A7B]">📍</span>
+          <span className="text-[#2D334A] font-medium truncate">{holidayInfo.name}</span>
+        </div>
+      )
     }
 
     const dayAnnivs = anniversaries.filter(a => {
@@ -162,7 +167,12 @@ const CalendarPage: React.FC = () => {
       return dEnd >= createdTime
     })
     dayAnnivs.forEach(a => {
-      items.push(<div key={`a-${a.id}`} className="text-[10px] text-[#C2410C] bg-[#FFF7ED] px-1.5 py-0.5 rounded-md truncate w-full">🎂 {a.name}</div>)
+      items.push(
+        <div key={`a-${a.id}`} className="text-[10px] pl-1 py-0.5 w-full flex items-center border-l-[3px] border-[#F5A5C4]">
+          <span className="ml-1.5 mr-1 text-[10px]">🎂</span>
+          <span className="text-[#2D334A] font-medium truncate">{a.name}</span>
+        </div>
+      )
     })
 
     const dayMonthly = monthlyEvents.filter(m => {
@@ -172,7 +182,12 @@ const CalendarPage: React.FC = () => {
       return dEnd >= createdTime
     })
     dayMonthly.forEach(m => {
-      items.push(<div key={`m-${m.id}`} className="text-[10px] text-[#0369A1] bg-[#E0F2FE] px-1.5 py-0.5 rounded-md truncate w-full">🔄 {m.name}</div>)
+      items.push(
+        <div key={`m-${m.id}`} className="text-[10px] pl-1 py-0.5 w-full flex items-center border-l-[3px] border-[#63D2B0]">
+          <span className="ml-1.5 mr-1 text-[10px]">🔄</span>
+          <span className="text-[#2D334A] font-medium truncate">{m.name}</span>
+        </div>
+      )
     })
 
     const dayEvents = events.filter(e => isoMatchesDay(eventDisplayDate(e.scheduledDate, e.createdAt), d)).sort((a, b) => {
@@ -181,7 +196,11 @@ const CalendarPage: React.FC = () => {
       return (a.order ?? timeA) - (b.order ?? timeB)
     })
     dayEvents.forEach(e => {
-      items.push(<div key={`e-${e.id}`} className="text-[10px] text-[#6D28D9] bg-[#F5F3FF] px-1.5 py-0.5 rounded-md truncate w-full">{e.text}</div>)
+      items.push(
+        <div key={`e-${e.id}`} className="text-[10px] pl-1 py-0.5 w-full flex items-center border-l-[3px] border-[#8B7CF8]">
+          <span className="ml-1.5 text-[#2D334A] font-medium truncate">{e.text}</span>
+        </div>
+      )
     })
 
     const isRedDay = (holidayInfo && holidayInfo.isRedDay) || d.getDay() === 0
@@ -193,44 +212,44 @@ const CalendarPage: React.FC = () => {
   const selDayFormatted = `${selDay.getMonth() + 1}월 ${selDay.getDate()}일 (${WEEKDAYS[selDay.getDay()]})`
 
   return (
-    <div className="flex h-full w-full bg-[#FCFCFE]">
+    <div className="flex h-full w-full bg-[#FAFBFF]">
       {/* ── Left: Main Calendar ────────────────────────────────────────────── */}
-      <main className="flex-1 border-r border-[#F2F3F7] flex flex-col p-6 overflow-hidden relative">
+      <main className="flex-1 flex flex-col p-6 overflow-hidden relative">
         <header className="relative flex items-center justify-between mb-6 z-10 shrink-0">
           <div className="flex items-center gap-4">
-            <button onClick={prevMonth} className="w-8 h-8 flex items-center justify-center hover:bg-yuri-100 rounded text-yuri-500 font-bold transition-colors">←</button>
+            <button onClick={prevMonth} className="w-8 h-8 flex items-center justify-center hover:bg-[#F7F6FF] rounded text-[#717A8C] font-bold transition-colors">←</button>
             <button 
               onClick={() => { setPickerYear(year); setShowPicker(!showPicker); }}
-              className="text-2xl font-extrabold text-yuri-900 tracking-tight hover:text-accent transition-colors flex items-center gap-2"
+              className="text-2xl font-semibold text-[#2D334A] tracking-tight hover:text-[#8B7CF8] transition-colors flex items-center gap-2"
             >
               {year}년 {MONTH_KO[month]}
-              <span className="text-[12px] text-yuri-400 mt-1">{showPicker ? '▲' : '▼'}</span>
+              <span className="text-[12px] text-[#717A8C] mt-1">{showPicker ? '▲' : '▼'}</span>
             </button>
-            <button onClick={nextMonth} className="w-8 h-8 flex items-center justify-center hover:bg-yuri-100 rounded text-yuri-500 font-bold transition-colors">→</button>
+            <button onClick={nextMonth} className="w-8 h-8 flex items-center justify-center hover:bg-[#F7F6FF] rounded text-[#717A8C] font-bold transition-colors">→</button>
           </div>
           
-          <button onClick={goToToday} className="px-4 py-2 bg-white border border-yuri-200 hover:border-yuri-300 hover:bg-yuri-50 rounded-lg text-sm font-bold text-yuri-700 transition-all shadow-sm">
+          <button onClick={goToToday} className="px-4 py-2 bg-white border border-[#EEF1F6] hover:bg-[#F7F6FF] rounded-lg text-sm font-medium text-[#2D334A] transition-all">
             오늘
           </button>
 
           {showPicker && (
-            <div className="absolute top-full left-12 mt-2 w-64 bg-white border border-yuri-200 shadow-xl rounded-xl p-4 z-50 animate-fade-in">
+            <div className="absolute top-full left-12 mt-2 w-64 bg-white border border-[#EEF1F6] shadow-float rounded-xl p-4 z-50 animate-fade-in">
               <div className="flex justify-between items-center mb-4 px-2">
-                <button onClick={() => setPickerYear(y => y - 1)} className="text-yuri-400 hover:text-yuri-800 font-bold p-1">←</button>
-                <span className="font-bold text-yuri-900">{pickerYear}년</span>
-                <button onClick={() => setPickerYear(y => y + 1)} className="text-yuri-400 hover:text-yuri-800 font-bold p-1">→</button>
+                <button onClick={() => setPickerYear(y => y - 1)} className="text-[#717A8C] hover:text-[#2D334A] font-bold p-1">←</button>
+                <span className="font-semibold text-[#2D334A]">{pickerYear}년</span>
+                <button onClick={() => setPickerYear(y => y + 1)} className="text-[#717A8C] hover:text-[#2D334A] font-bold p-1">→</button>
               </div>
               <div className="grid grid-cols-4 gap-2">
                 {MONTH_KO.map((mName, i) => (
                   <button
                     key={i}
                     onClick={() => handleMonthSelect(i)}
-                    className={`py-2 rounded-lg text-sm font-bold transition-colors ${
+                    className={`py-2 rounded-lg text-sm font-medium transition-colors ${
                       pickerYear === year && i === month 
-                        ? 'bg-yuri-900 text-white' 
+                        ? 'bg-[#8B7CF8] text-white' 
                         : pickerYear === today.getFullYear() && i === today.getMonth()
-                          ? 'bg-accent/10 text-accent hover:bg-accent/20'
-                          : 'hover:bg-yuri-100 text-yuri-700'
+                          ? 'bg-[#F1EEFF] text-[#8B7CF8] hover:bg-[#E5E0FF]'
+                          : 'hover:bg-[#F7F6FF] text-[#717A8C]'
                     }`}
                   >
                     {mName}
@@ -242,16 +261,21 @@ const CalendarPage: React.FC = () => {
         </header>
 
         <div className="grid grid-cols-7 mb-2">
-          {WEEKDAYS.map((wd, i) => (
-            <div key={i} className="text-center text-[10px] font-bold text-purple-400/80 py-1">
-              {wd}
-            </div>
-          ))}
+          {WEEKDAYS.map((wd, i) => {
+            const isSat = i === 6;
+            const isSun = i === 0;
+            const wdColor = isSun ? 'text-[#EF6A7B]' : isSat ? 'text-[#5C8CFF]' : 'text-[#717A8C]';
+            return (
+              <div key={i} className={`text-center text-[11px] font-medium py-1 ${wdColor}`}>
+                {wd}
+              </div>
+            );
+          })}
         </div>
 
-        <div className="flex-1 grid grid-cols-7 grid-rows-[repeat(6,minmax(0,1fr))] auto-rows-fr border-l border-b border-[#F2F3F7]">
+        <div className="flex-1 grid grid-cols-7 grid-rows-[repeat(6,minmax(0,1fr))] auto-rows-fr border-l border-t border-[#EEF1F6]">
           {grid.map((date, idx) => {
-            if (!date) return <div key={idx} className="border-t border-r border-[#F2F3F7]" />
+            if (!date) return <div key={idx} className="border-b border-r border-[#EEF1F6] bg-[#FAFBFF]" />
             
             const isToday = sameDay(date, today)
             const isSelected = sameDay(date, selDay)
@@ -271,18 +295,18 @@ const CalendarPage: React.FC = () => {
                     setInlineText('')
                   }
                 }}
-                className={`p-1.5 border-t border-r border-[#F2F3F7] flex flex-col cursor-pointer transition-all duration-200 min-h-[100px] ${isSelected ? 'bg-[#F9F8FF]' : 'hover:bg-[#FCFCFE]'}`}
+                className={`p-2 border-b border-r border-[#EEF1F6] flex flex-col cursor-pointer transition-all duration-200 min-h-[100px] bg-[#FFFFFF] hover:bg-[#F7F6FF]`}
               >
                 <div className={`
-                  w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold self-start mb-1
-                  ${isToday ? 'bg-[#8B7CF8] text-white shadow-sm' : isSelected ? (isRedDay ? 'text-[#BE123C]' : 'text-[#6D28D9]') : (isRedDay ? 'text-[#BE123C]' : 'text-slate-700')}
+                  w-6 h-6 rounded-full flex items-center justify-center text-[12px] font-medium self-start mb-1.5
+                  ${isToday ? 'bg-[#8B7CF8] text-[#FFFFFF] shadow-[0_2px_4px_rgba(139,124,248,0.3)]' : isRedDay ? 'text-[#EF6A7B]' : 'text-[#717A8C]'}
                 `}>
                   {date.getDate()}
                 </div>
-                <div className="flex flex-col gap-0.5 overflow-hidden flex-1">
-                  {items.slice(0, 3)}
-                  {items.length > 3 && (
-                    <div className="text-[9px] text-yuri-400 font-bold px-1">+ {items.length - 3}개</div>
+                <div className="flex flex-col gap-1 overflow-hidden flex-1">
+                  {items.slice(0, 4)}
+                  {items.length > 4 && (
+                    <div className="text-[10px] text-[#717A8C] font-medium px-1">+ {items.length - 4} more</div>
                   )}
                   {inlineDate && sameDay(inlineDate, date) && (
                     <input
@@ -323,172 +347,161 @@ const CalendarPage: React.FC = () => {
       </main>
 
       {/* ── Right: Timeline & Agenda ─────────────────────────────────────────── */}
-      <aside className="w-[360px] flex flex-col h-full bg-[#FCFCFE] overflow-hidden shrink-0 border-l border-[#F2F3F7] p-4 gap-4">
+      <aside className="w-[360px] flex flex-col h-full bg-[#FAFBFF] overflow-hidden shrink-0 border-l border-[#EEF1F6] p-5 gap-6">
         
         {/* 1. Selected Day Events */}
-        <div className="flex-[3.5] min-h-0 flex flex-col bg-white rounded-2xl border border-[#F2F3F7] shadow-sm overflow-hidden">
+        <div className="flex-[3.5] min-h-0 flex flex-col bg-[#FFFFFF] rounded-[16px] shadow-[0_2px_12px_rgba(0,0,0,0.02)] overflow-hidden">
           <header className="shrink-0 px-5 pt-5 pb-3">
-            <h1 className="text-lg font-extrabold text-yuri-900 tracking-tight">
+            <h1 className="text-lg font-semibold text-[#2D334A] tracking-tight">
               {isSelDayToday ? `오늘, ${selDayFormatted}` : selDayFormatted}
             </h1>
           </header>
 
           <div className="px-5 pb-5 flex-1 overflow-y-auto">
             {selectedDayEvents.length > 0 || getDayItems(selDay).dayAnnivs.length > 0 || getDayItems(selDay).dayMonthly.length > 0 ? (
-              <ul className="flex flex-col gap-2 relative before:absolute before:inset-y-3 before:left-[9px] before:w-0.5 before:bg-yuri-100">
+              <ul className="flex flex-col gap-1.5 relative before:absolute before:inset-y-3 before:left-[9px] before:w-px before:bg-[#EEF1F6]">
                 
                 {getDayItems(selDay).dayAnnivs.map(a => (
-                  <li key={`sa-${a.id}`} className="flex items-start gap-3 relative">
-                    <div className="w-5 h-5 rounded-full bg-white border-2 border-[#F2F3F7] flex items-center justify-center z-10 shrink-0 mt-0.5">
-                      <div className="w-1.5 h-1.5 rounded-full bg-[#C2410C]" />
+                  <li key={`sa-${a.id}`} className="flex items-start gap-3 relative group">
+                    <div className="w-5 h-5 rounded-full bg-[#FFFFFF] flex items-center justify-center z-10 shrink-0 mt-0.5">
+                      <div className="w-1.5 h-1.5 rounded-full bg-[#F5A5C4]" />
                     </div>
                     
-                    <div className="flex-1 bg-white border border-[#F2F3F7] shadow-sm rounded-xl p-2.5 flex gap-2 items-start hover:border-[#FFF7ED] hover:bg-[#FFF7ED] transition-colors group">
-                      <span className="shrink-0 text-[9px] font-bold px-1.5 py-0.5 rounded-md tracking-wider bg-[#FFF7ED] text-[#C2410C] mt-0.5">
-                        기념일
-                      </span>
-                      
+                    <div className="flex-1 bg-transparent p-1.5 flex gap-2 items-start transition-colors rounded-lg hover:bg-[#F7F6FF]">
+                      <span className="shrink-0 text-[11px] mt-0.5">🎂</span>
                       <div className="flex-1">
-                        <span className="text-xs text-yuri-900 font-medium whitespace-pre-wrap leading-tight">
+                        <span className="text-xs text-[#2D334A] font-medium whitespace-pre-wrap leading-relaxed">
                           {a.name}
                         </span>
                       </div>
-                      
                       <div className="flex gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button onClick={() => deleteAnniversary(a.id)} className="w-5 h-5 flex items-center justify-center rounded text-yuri-300 hover:text-red-400 hover:bg-red-50 text-[10px]">✕</button>
+                        <button onClick={() => deleteAnniversary(a.id)} className="w-5 h-5 flex items-center justify-center rounded text-[#717A8C] hover:text-[#EF6A7B] text-[10px]">✕</button>
                       </div>
                     </div>
                   </li>
                 ))}
 
                 {getDayItems(selDay).dayMonthly.map(m => (
-                  <li key={`sm-${m.id}`} className="flex items-start gap-3 relative">
-                    <div className="w-5 h-5 rounded-full bg-white border-2 border-[#F2F3F7] flex items-center justify-center z-10 shrink-0 mt-0.5">
-                      <div className="w-1.5 h-1.5 rounded-full bg-[#0369A1]" />
+                  <li key={`sm-${m.id}`} className="flex items-start gap-3 relative group">
+                    <div className="w-5 h-5 rounded-full bg-[#FFFFFF] flex items-center justify-center z-10 shrink-0 mt-0.5">
+                      <div className="w-1.5 h-1.5 rounded-full bg-[#63D2B0]" />
                     </div>
                     
-                    <div className="flex-1 bg-white border border-[#F2F3F7] shadow-sm rounded-xl p-2.5 flex gap-2 items-start hover:border-[#E0F2FE] hover:bg-[#E0F2FE] transition-colors group">
-                      <span className="shrink-0 text-[9px] font-bold px-1.5 py-0.5 rounded-md tracking-wider bg-[#E0F2FE] text-[#0369A1] mt-0.5">
-                        반복일정
-                      </span>
-                      
+                    <div className="flex-1 bg-transparent p-1.5 flex gap-2 items-start transition-colors rounded-lg hover:bg-[#F7F6FF]">
+                      <span className="shrink-0 text-[11px] mt-0.5">🔄</span>
                       <div className="flex-1">
-                        <span className="text-xs text-yuri-900 font-medium whitespace-pre-wrap leading-tight">
+                        <span className="text-xs text-[#2D334A] font-medium whitespace-pre-wrap leading-relaxed">
                           {m.name}
                         </span>
                       </div>
-                      
                       <div className="flex gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button onClick={() => deleteMonthlyEvent(m.id)} className="w-5 h-5 flex items-center justify-center rounded text-yuri-300 hover:text-red-400 hover:bg-red-50 text-[10px]">✕</button>
+                        <button onClick={() => deleteMonthlyEvent(m.id)} className="w-5 h-5 flex items-center justify-center rounded text-[#717A8C] hover:text-[#EF6A7B] text-[10px]">✕</button>
                       </div>
                     </div>
                   </li>
                 ))}
+                
                 {selectedDayEvents.map((e, index) => (
-                  <li key={e.id} className="flex items-start gap-3 relative">
-                    <div className="w-5 h-5 rounded-full bg-white border-2 border-[#F2F3F7] flex items-center justify-center z-10 shrink-0 mt-0.5">
-                      <div className="w-1.5 h-1.5 rounded-full bg-[#6D28D9]" />
+                  <li key={e.id} className="flex items-start gap-3 relative group">
+                    <div className="w-5 h-5 rounded-full bg-[#FFFFFF] flex items-center justify-center z-10 shrink-0 mt-0.5">
+                      <div className="w-1.5 h-1.5 rounded-full bg-[#8B7CF8]" />
                     </div>
                     
-                    <div className="flex-1 bg-white border border-[#F2F3F7] shadow-sm rounded-xl p-2.5 flex gap-2 items-start hover:border-[#F5F3FF] hover:bg-[#F5F3FF] transition-colors group">
-                      <span className="shrink-0 text-[9px] font-bold px-1.5 py-0.5 rounded-md tracking-wider bg-[#F5F3FF] text-[#6D28D9] mt-0.5">
-                        일정
-                      </span>
-                      
+                    <div className="flex-1 bg-transparent p-1.5 flex gap-2 items-start transition-colors rounded-lg hover:bg-[#F7F6FF]">
                       <div className="flex-1">
-                        <span className="text-xs text-yuri-900 font-medium whitespace-pre-wrap leading-tight">
+                        <span className="text-xs text-[#2D334A] font-medium whitespace-pre-wrap leading-relaxed">
                           {e.text}
                         </span>
                       </div>
                       
                       <div className="flex gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
                         <div className="flex flex-col mr-1 justify-center gap-0.5">
-                          <button onClick={() => handleMoveEventUp(index)} disabled={index === 0} className="w-4 h-3 flex items-center justify-center text-yuri-300 hover:text-yuri-600 disabled:opacity-30 text-[9px]" aria-label="위로 이동">▲</button>
-                          <button onClick={() => handleMoveEventDown(index)} disabled={index === selectedDayEvents.length - 1} className="w-4 h-3 flex items-center justify-center text-yuri-300 hover:text-yuri-600 disabled:opacity-30 text-[9px]" aria-label="아래로 이동">▼</button>
+                          <button onClick={() => handleMoveEventUp(index)} disabled={index === 0} className="w-4 h-3 flex items-center justify-center text-[#717A8C] hover:text-[#2D334A] disabled:opacity-30 text-[9px]" aria-label="위로 이동">▲</button>
+                          <button onClick={() => handleMoveEventDown(index)} disabled={index === selectedDayEvents.length - 1} className="w-4 h-3 flex items-center justify-center text-[#717A8C] hover:text-[#2D334A] disabled:opacity-30 text-[9px]" aria-label="아래로 이동">▼</button>
                         </div>
-                        <button onClick={() => deleteEvent(e.id)} className="w-5 h-5 flex items-center justify-center rounded text-yuri-300 hover:text-red-400 hover:bg-red-50 text-[10px]">✕</button>
+                        <button onClick={() => deleteEvent(e.id)} className="w-5 h-5 flex items-center justify-center rounded text-[#717A8C] hover:text-[#EF6A7B] text-[10px]">✕</button>
                       </div>
                     </div>
                   </li>
                 ))}
               </ul>
             ) : (
-              <p className="text-xs text-yuri-400 bg-yuri-50 rounded-lg p-3 text-center">이 날짜의 일정이 없습니다.</p>
+              <p className="text-xs text-[#717A8C] text-center py-4">이 날짜의 일정이 없습니다.</p>
             )}
           </div>
         </div>
 
         {/* 2. Active Tasks */}
-        <div className="flex-[3.5] min-h-0 flex flex-col bg-white rounded-2xl border border-[#F2F3F7] shadow-sm overflow-hidden">
+        <div className="flex-[3.5] min-h-0 flex flex-col bg-[#FFFFFF] rounded-[16px] shadow-[0_2px_12px_rgba(0,0,0,0.02)] overflow-hidden">
           <header className="shrink-0 px-5 pt-4 pb-2 flex justify-between items-center">
-            <h2 className="text-sm font-bold text-yuri-900">진행 중인 업무</h2>
-            <span className="text-[9px] font-bold text-yuri-400 bg-yuri-100 px-1.5 py-0.5 rounded">{activeTasks.length}건</span>
+            <h2 className="text-sm font-semibold text-[#2D334A]">진행 중인 업무</h2>
+            <span className="text-[10px] font-medium text-[#717A8C]">{activeTasks.length}건</span>
           </header>
 
           <div className="px-5 pb-4 flex-1 overflow-y-auto">
             {activeTasks.length > 0 ? (
-              <ul className="flex flex-col gap-2">
+              <ul className="flex flex-col gap-1">
                 {activeTasks.map((t, index) => (
-                  <li key={t.id} className="flex items-start gap-2 bg-white border border-[#F2F3F7] shadow-sm rounded-xl p-2.5 hover:border-[#E2E4EA] transition-colors group">
-                    <button onClick={() => toggleTask(t.id)} className="w-4 h-4 mt-0.5 flex items-center justify-center border-2 rounded border-yuri-300 text-transparent hover:border-accent shrink-0">
-                      <svg className="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  <li key={t.id} className="flex items-start gap-2.5 bg-transparent p-1.5 rounded-lg hover:bg-[#F7F6FF] transition-colors group">
+                    <button onClick={() => toggleTask(t.id)} className="w-4 h-4 mt-0.5 flex items-center justify-center border-[1.5px] rounded border-[#717A8C] text-transparent hover:border-[#8B7CF8] shrink-0">
+                      <svg className="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round"/></svg>
                     </button>
                     
                     <div className="flex-1">
-                      <span className="text-xs text-yuri-900 font-medium whitespace-pre-wrap leading-tight">
+                      <span className="text-xs text-[#2D334A] font-medium whitespace-pre-wrap leading-relaxed">
                         {t.text}
                       </span>
                     </div>
                     
                     <div className="flex gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
                       <div className="flex flex-col mr-1 justify-center gap-0.5">
-                        <button onClick={() => handleMoveTaskUp(index)} disabled={index === 0} className="w-4 h-3 flex items-center justify-center text-yuri-300 hover:text-yuri-600 disabled:opacity-30 text-[9px]" aria-label="위로 이동">▲</button>
-                        <button onClick={() => handleMoveTaskDown(index)} disabled={index === activeTasks.length - 1} className="w-4 h-3 flex items-center justify-center text-yuri-300 hover:text-yuri-600 disabled:opacity-30 text-[9px]" aria-label="아래로 이동">▼</button>
+                        <button onClick={() => handleMoveTaskUp(index)} disabled={index === 0} className="w-4 h-3 flex items-center justify-center text-[#717A8C] hover:text-[#2D334A] disabled:opacity-30 text-[9px]" aria-label="위로 이동">▲</button>
+                        <button onClick={() => handleMoveTaskDown(index)} disabled={index === activeTasks.length - 1} className="w-4 h-3 flex items-center justify-center text-[#717A8C] hover:text-[#2D334A] disabled:opacity-30 text-[9px]" aria-label="아래로 이동">▼</button>
                       </div>
-                      <button onClick={() => deleteTask(t.id)} className="w-5 h-5 flex items-center justify-center rounded text-yuri-300 hover:text-red-400 hover:bg-red-50 text-[10px]">✕</button>
+                      <button onClick={() => deleteTask(t.id)} className="w-5 h-5 flex items-center justify-center rounded text-[#717A8C] hover:text-[#EF6A7B] text-[10px]">✕</button>
                     </div>
                   </li>
                 ))}
               </ul>
             ) : (
-              <p className="text-xs text-yuri-400 bg-yuri-50 rounded-lg p-3 text-center">모든 업무를 완료했습니다!</p>
+              <p className="text-xs text-[#717A8C] text-center py-4">모든 업무를 완료했습니다!</p>
             )}
           </div>
         </div>
 
         {/* 3. Monthly Agenda */}
-        <div className="flex-[3] min-h-0 flex flex-col bg-[#FCFCFE] rounded-2xl border border-[#F2F3F7] shadow-sm overflow-hidden">
-          <header className="shrink-0 px-5 pt-4 pb-2 flex justify-between items-center bg-white border-b border-[#F2F3F7]">
-            <h2 className="text-sm font-bold text-yuri-900">이달 목표</h2>
-            <span className="text-[9px] font-bold text-yuri-400 bg-yuri-100 px-1.5 py-0.5 rounded">{monthKey}</span>
+        <div className="flex-[3] min-h-0 flex flex-col bg-[#FFFFFF] rounded-[16px] shadow-[0_2px_12px_rgba(0,0,0,0.02)] overflow-hidden">
+          <header className="shrink-0 px-5 pt-4 pb-2 flex justify-between items-center bg-[#FFFFFF]">
+            <h2 className="text-sm font-semibold text-[#2D334A]">이달 목표</h2>
+            <span className="text-[10px] font-medium text-[#717A8C]">{monthKey}</span>
           </header>
           
-          <div className="flex-1 overflow-y-auto p-5">
+          <div className="flex-1 overflow-y-auto px-5 pb-5 pt-2">
             <form onSubmit={handleAddAgenda} className="mb-3 flex gap-2">
               <input
                 type="text" placeholder="새 목표 입력..."
                 value={newAgenda} onChange={e => setNewAgenda(e.target.value)}
-                className="flex-1 px-2.5 py-1.5 text-xs bg-white border border-yuri-200 rounded-lg outline-none focus:border-accent"
+                className="flex-1 px-3 py-1.5 text-xs bg-[#FAFBFF] border-none rounded-lg outline-none focus:ring-1 focus:ring-[#8B7CF8] text-[#2D334A] placeholder:text-[#717A8C]"
               />
-              <button type="submit" disabled={!newAgenda.trim()} className="px-3 py-1.5 bg-yuri-900 text-white text-xs font-bold rounded-lg disabled:opacity-50">
+              <button type="submit" disabled={!newAgenda.trim()} className="px-3 py-1.5 bg-[#8B7CF8] text-white text-xs font-semibold rounded-lg disabled:opacity-50 hover:bg-[#7A6AE6] transition-colors">
                 추가
               </button>
             </form>
 
-            <ul className="flex flex-col gap-1.5 px-1 pb-1">
+            <ul className="flex flex-col gap-1 pb-1">
               {monthAgendas.map(ag => (
-                <li key={ag.id} className="group flex items-start gap-2 bg-white border border-[#F2F3F7] shadow-sm p-2.5 rounded-xl hover:border-[#E2E4EA] transition-colors">
-                  <button onClick={() => toggleAgenda(ag.id)} className={`w-4 h-4 mt-0.5 flex items-center justify-center border-2 rounded shrink-0 ${ag.done ? 'bg-accent border-accent text-white' : 'border-yuri-300 text-transparent hover:border-accent'}`}>
-                    <svg className="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                <li key={ag.id} className="group flex items-start gap-2.5 bg-transparent p-1.5 rounded-lg hover:bg-[#F7F6FF] transition-colors">
+                  <button onClick={() => toggleAgenda(ag.id)} className={`w-4 h-4 mt-0.5 flex items-center justify-center border-[1.5px] rounded shrink-0 ${ag.done ? 'bg-[#8B7CF8] border-[#8B7CF8] text-white' : 'border-[#717A8C] text-transparent hover:border-[#8B7CF8]'}`}>
+                    <svg className="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round"/></svg>
                   </button>
-                  <span className={`flex-1 text-xs leading-tight ${ag.done ? 'text-yuri-400 line-through' : 'text-yuri-900'}`}>{ag.text}</span>
-                  <button onClick={() => deleteAgenda(ag.id)} className="w-5 h-5 flex items-center justify-center rounded text-yuri-300 hover:text-red-500 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-opacity text-[10px]">
+                  <span className={`flex-1 text-xs leading-relaxed ${ag.done ? 'text-[#717A8C] line-through' : 'text-[#2D334A] font-medium'}`}>{ag.text}</span>
+                  <button onClick={() => deleteAgenda(ag.id)} className="w-5 h-5 flex items-center justify-center rounded text-[#717A8C] hover:text-[#EF6A7B] opacity-0 group-hover:opacity-100 transition-opacity text-[10px]">
                     ✕
                   </button>
                 </li>
               ))}
               {monthAgendas.length === 0 && (
-                <p className="text-xs text-yuri-400 text-center py-2">등록된 어젠다가 없습니다.</p>
+                <p className="text-xs text-[#717A8C] text-center py-4">등록된 어젠다가 없습니다.</p>
               )}
             </ul>
           </div>

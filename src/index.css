@@ -16,8 +16,8 @@
   }
 
   body {
-    background-color: #ffffff;
-    color: #25272e;
+    background-color: #FAFBFF;
+    color: #2D334A;
     height: 100vh;
     overflow: hidden;
   }
@@ -33,12 +33,12 @@
   /* Sidebar nav item */
   .nav-item {
     @apply flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium
-           text-slate-500 hover:bg-[#8B7CF8]/5 hover:text-[#8B7CF8]
+           text-[#717A8C] hover:bg-[#F7F6FF] hover:text-[#2D334A]
            transition-all duration-200 cursor-pointer select-none;
   }
 
   .nav-item.active {
-    @apply bg-[#8B7CF8]/10 text-[#8B7CF8] font-semibold;
+    @apply bg-[#F1EEFF] text-[#8B7CF8] font-semibold;
   }
 
   /* Dashboard card */

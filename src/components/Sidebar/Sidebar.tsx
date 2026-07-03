@@ -18,7 +18,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage, onNavigate, onLogout }) =
   return (
     <aside className="
       w-56 shrink-0 h-full
-      bg-[#F9F8FF] border-r border-[#F2F3F7]
+      bg-[#FCFCFF] border-r border-[#EEF1F6]
       flex flex-col py-5 px-3 gap-1
       select-none
     ">
@@ -28,11 +28,10 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage, onNavigate, onLogout }) =
           w-7 h-7 rounded-xl bg-[#8B7CF8]
           flex items-center justify-center
           text-white font-bold text-sm
-          shadow-sm
         ">
           M
         </div>
-        <span className="font-semibold text-slate-800 tracking-tight text-[15px]">
+        <span className="font-semibold text-[#2D334A] tracking-tight text-[15px]">
           Memio
         </span>
       </div>
@@ -85,15 +84,15 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage, onNavigate, onLogout }) =
       {/* User avatar placeholder */}
       <div className="flex items-center gap-2.5 px-3 pt-3 mt-1">
         <div className="
-          w-8 h-8 rounded-full bg-gradient-to-br from-[#8B7CF8] to-[#C4B5FD]
+          w-8 h-8 rounded-full bg-[#8B7CF8]
           flex items-center justify-center text-white text-xs font-semibold
-          shrink-0 shadow-sm
+          shrink-0
         ">
           유
         </div>
         <div className="min-w-0">
-          <p className="text-xs font-semibold text-slate-700 truncate">Yuri</p>
-          <p className="text-[10px] text-slate-400 truncate">Personal</p>
+          <p className="text-xs font-semibold text-[#2D334A] truncate">Yuri</p>
+          <p className="text-[10px] text-[#717A8C] truncate">Personal</p>
         </div>
       </div>
     </aside>
