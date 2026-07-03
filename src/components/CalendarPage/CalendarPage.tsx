@@ -152,7 +152,7 @@ const CalendarPage: React.FC = () => {
     const dStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
     const holidayInfo = HOLIDAYS[dStr]
     if (holidayInfo) {
-      items.push(<div key="holiday" className={`text-[10px] px-1 rounded truncate w-full font-bold ${holidayInfo.isRedDay ? 'text-red-500 bg-red-50/50' : 'text-purple-500 bg-purple-50/50'}`}>{holidayInfo.name}</div>)
+      items.push(<div key="holiday" className={`text-[10px] px-1.5 py-0.5 rounded-md truncate w-full font-bold ${holidayInfo.isRedDay ? 'text-[#BE123C] bg-[#FFE4E6]' : 'text-[#6D28D9] bg-[#F5F3FF]'}`}>{holidayInfo.name}</div>)
     }
 
     const dayAnnivs = anniversaries.filter(a => {
@@ -162,7 +162,7 @@ const CalendarPage: React.FC = () => {
       return dEnd >= createdTime
     })
     dayAnnivs.forEach(a => {
-      items.push(<div key={`a-${a.id}`} className="text-[10px] text-purple-700 bg-purple-100/60 px-1 rounded truncate w-full">🎂 {a.name}</div>)
+      items.push(<div key={`a-${a.id}`} className="text-[10px] text-[#C2410C] bg-[#FFF7ED] px-1.5 py-0.5 rounded-md truncate w-full">🎂 {a.name}</div>)
     })
 
     const dayMonthly = monthlyEvents.filter(m => {
@@ -172,7 +172,7 @@ const CalendarPage: React.FC = () => {
       return dEnd >= createdTime
     })
     dayMonthly.forEach(m => {
-      items.push(<div key={`m-${m.id}`} className="text-[10px] text-teal-700 bg-teal-100/60 px-1 rounded truncate w-full">🔄 {m.name}</div>)
+      items.push(<div key={`m-${m.id}`} className="text-[10px] text-[#0369A1] bg-[#E0F2FE] px-1.5 py-0.5 rounded-md truncate w-full">🔄 {m.name}</div>)
     })
 
     const dayEvents = events.filter(e => isoMatchesDay(eventDisplayDate(e.scheduledDate, e.createdAt), d)).sort((a, b) => {
@@ -181,7 +181,7 @@ const CalendarPage: React.FC = () => {
       return (a.order ?? timeA) - (b.order ?? timeB)
     })
     dayEvents.forEach(e => {
-      items.push(<div key={`e-${e.id}`} className="text-[10px] text-pink-700 bg-pink-100/60 px-1 rounded truncate w-full">{e.text}</div>)
+      items.push(<div key={`e-${e.id}`} className="text-[10px] text-[#6D28D9] bg-[#F5F3FF] px-1.5 py-0.5 rounded-md truncate w-full">{e.text}</div>)
     })
 
     const isRedDay = (holidayInfo && holidayInfo.isRedDay) || d.getDay() === 0
@@ -193,9 +193,9 @@ const CalendarPage: React.FC = () => {
   const selDayFormatted = `${selDay.getMonth() + 1}월 ${selDay.getDate()}일 (${WEEKDAYS[selDay.getDay()]})`
 
   return (
-    <div className="flex h-full w-full bg-[#fcfbff]">
+    <div className="flex h-full w-full bg-[#FCFCFE]">
       {/* ── Left: Main Calendar ────────────────────────────────────────────── */}
-      <main className="flex-1 border-r border-[#e9e4f0] flex flex-col p-6 overflow-hidden relative">
+      <main className="flex-1 border-r border-[#F2F3F7] flex flex-col p-6 overflow-hidden relative">
         <header className="relative flex items-center justify-between mb-6 z-10 shrink-0">
           <div className="flex items-center gap-4">
             <button onClick={prevMonth} className="w-8 h-8 flex items-center justify-center hover:bg-yuri-100 rounded text-yuri-500 font-bold transition-colors">←</button>
@@ -249,9 +249,9 @@ const CalendarPage: React.FC = () => {
           ))}
         </div>
 
-        <div className="flex-1 grid grid-cols-7 grid-rows-[repeat(6,minmax(0,1fr))] auto-rows-fr border-l border-b border-[#e9e4f0]">
+        <div className="flex-1 grid grid-cols-7 grid-rows-[repeat(6,minmax(0,1fr))] auto-rows-fr border-l border-b border-[#F2F3F7]">
           {grid.map((date, idx) => {
-            if (!date) return <div key={idx} className="border-t border-r border-[#e9e4f0]" />
+            if (!date) return <div key={idx} className="border-t border-r border-[#F2F3F7]" />
             
             const isToday = sameDay(date, today)
             const isSelected = sameDay(date, selDay)
@@ -271,11 +271,11 @@ const CalendarPage: React.FC = () => {
                     setInlineText('')
                   }
                 }}
-                className={`p-1.5 border-t border-r border-[#e9e4f0] flex flex-col cursor-pointer transition-colors min-h-[100px] ${isSelected ? 'bg-purple-50/40' : 'hover:bg-purple-50/20'}`}
+                className={`p-1.5 border-t border-r border-[#F2F3F7] flex flex-col cursor-pointer transition-all duration-200 min-h-[100px] ${isSelected ? 'bg-[#F9F8FF]' : 'hover:bg-[#FCFCFE]'}`}
               >
                 <div className={`
                   w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold self-start mb-1
-                  ${isToday ? 'bg-purple-400 text-white shadow-sm' : isSelected ? (isRedDay ? 'text-red-500' : 'text-purple-700') : (isRedDay ? 'text-red-400' : 'text-yuri-700')}
+                  ${isToday ? 'bg-[#8B7CF8] text-white shadow-sm' : isSelected ? (isRedDay ? 'text-[#BE123C]' : 'text-[#6D28D9]') : (isRedDay ? 'text-[#BE123C]' : 'text-slate-700')}
                 `}>
                   {date.getDate()}
                 </div>
@@ -323,10 +323,10 @@ const CalendarPage: React.FC = () => {
       </main>
 
       {/* ── Right: Timeline & Agenda ─────────────────────────────────────────── */}
-      <aside className="w-[340px] flex flex-col h-full bg-white overflow-hidden shrink-0 border-l border-yuri-100">
+      <aside className="w-[360px] flex flex-col h-full bg-[#FCFCFE] overflow-hidden shrink-0 border-l border-[#F2F3F7] p-4 gap-4">
         
-        {/* 1. Selected Day Events (35%) */}
-        <div className="h-[35%] flex flex-col bg-white border-b border-yuri-100 overflow-hidden">
+        {/* 1. Selected Day Events */}
+        <div className="flex-[3.5] min-h-0 flex flex-col bg-white rounded-2xl border border-[#F2F3F7] shadow-sm overflow-hidden">
           <header className="shrink-0 px-5 pt-5 pb-3">
             <h1 className="text-lg font-extrabold text-yuri-900 tracking-tight">
               {isSelDayToday ? `오늘, ${selDayFormatted}` : selDayFormatted}
@@ -339,12 +339,12 @@ const CalendarPage: React.FC = () => {
                 
                 {getDayItems(selDay).dayAnnivs.map(a => (
                   <li key={`sa-${a.id}`} className="flex items-start gap-3 relative">
-                    <div className="w-5 h-5 rounded-full bg-white border-2 border-yuri-200 flex items-center justify-center z-10 shrink-0 mt-0.5">
-                      <div className="w-1.5 h-1.5 rounded-full bg-purple-400" />
+                    <div className="w-5 h-5 rounded-full bg-white border-2 border-[#F2F3F7] flex items-center justify-center z-10 shrink-0 mt-0.5">
+                      <div className="w-1.5 h-1.5 rounded-full bg-[#C2410C]" />
                     </div>
                     
-                    <div className="flex-1 bg-purple-50/40 border border-purple-100 rounded-lg p-2.5 flex gap-2 items-start hover:border-purple-200 transition-colors group">
-                      <span className="shrink-0 text-[9px] font-bold px-1.5 py-0.5 rounded tracking-wider bg-purple-100 text-purple-700 mt-0.5">
+                    <div className="flex-1 bg-white border border-[#F2F3F7] shadow-sm rounded-xl p-2.5 flex gap-2 items-start hover:border-[#FFF7ED] hover:bg-[#FFF7ED] transition-colors group">
+                      <span className="shrink-0 text-[9px] font-bold px-1.5 py-0.5 rounded-md tracking-wider bg-[#FFF7ED] text-[#C2410C] mt-0.5">
                         기념일
                       </span>
                       
@@ -363,12 +363,12 @@ const CalendarPage: React.FC = () => {
 
                 {getDayItems(selDay).dayMonthly.map(m => (
                   <li key={`sm-${m.id}`} className="flex items-start gap-3 relative">
-                    <div className="w-5 h-5 rounded-full bg-white border-2 border-yuri-200 flex items-center justify-center z-10 shrink-0 mt-0.5">
-                      <div className="w-1.5 h-1.5 rounded-full bg-teal-400" />
+                    <div className="w-5 h-5 rounded-full bg-white border-2 border-[#F2F3F7] flex items-center justify-center z-10 shrink-0 mt-0.5">
+                      <div className="w-1.5 h-1.5 rounded-full bg-[#0369A1]" />
                     </div>
                     
-                    <div className="flex-1 bg-teal-50/40 border border-teal-100 rounded-lg p-2.5 flex gap-2 items-start hover:border-teal-200 transition-colors group">
-                      <span className="shrink-0 text-[9px] font-bold px-1.5 py-0.5 rounded tracking-wider bg-teal-100 text-teal-700 mt-0.5">
+                    <div className="flex-1 bg-white border border-[#F2F3F7] shadow-sm rounded-xl p-2.5 flex gap-2 items-start hover:border-[#E0F2FE] hover:bg-[#E0F2FE] transition-colors group">
+                      <span className="shrink-0 text-[9px] font-bold px-1.5 py-0.5 rounded-md tracking-wider bg-[#E0F2FE] text-[#0369A1] mt-0.5">
                         반복일정
                       </span>
                       
@@ -386,12 +386,12 @@ const CalendarPage: React.FC = () => {
                 ))}
                 {selectedDayEvents.map((e, index) => (
                   <li key={e.id} className="flex items-start gap-3 relative">
-                    <div className="w-5 h-5 rounded-full bg-white border-2 border-yuri-200 flex items-center justify-center z-10 shrink-0 mt-0.5">
-                      <div className="w-1.5 h-1.5 rounded-full bg-pink-400" />
+                    <div className="w-5 h-5 rounded-full bg-white border-2 border-[#F2F3F7] flex items-center justify-center z-10 shrink-0 mt-0.5">
+                      <div className="w-1.5 h-1.5 rounded-full bg-[#6D28D9]" />
                     </div>
                     
-                    <div className="flex-1 bg-pink-50/40 border border-pink-100 rounded-lg p-2.5 flex gap-2 items-start hover:border-pink-200 transition-colors group">
-                      <span className="shrink-0 text-[9px] font-bold px-1.5 py-0.5 rounded tracking-wider bg-pink-100 text-pink-700 mt-0.5">
+                    <div className="flex-1 bg-white border border-[#F2F3F7] shadow-sm rounded-xl p-2.5 flex gap-2 items-start hover:border-[#F5F3FF] hover:bg-[#F5F3FF] transition-colors group">
+                      <span className="shrink-0 text-[9px] font-bold px-1.5 py-0.5 rounded-md tracking-wider bg-[#F5F3FF] text-[#6D28D9] mt-0.5">
                         일정
                       </span>
                       
@@ -418,8 +418,8 @@ const CalendarPage: React.FC = () => {
           </div>
         </div>
 
-        {/* 2. Active Tasks (35%) */}
-        <div className="h-[35%] flex flex-col bg-white border-b border-yuri-100 overflow-hidden">
+        {/* 2. Active Tasks */}
+        <div className="flex-[3.5] min-h-0 flex flex-col bg-white rounded-2xl border border-[#F2F3F7] shadow-sm overflow-hidden">
           <header className="shrink-0 px-5 pt-4 pb-2 flex justify-between items-center">
             <h2 className="text-sm font-bold text-yuri-900">진행 중인 업무</h2>
             <span className="text-[9px] font-bold text-yuri-400 bg-yuri-100 px-1.5 py-0.5 rounded">{activeTasks.length}건</span>
@@ -429,7 +429,7 @@ const CalendarPage: React.FC = () => {
             {activeTasks.length > 0 ? (
               <ul className="flex flex-col gap-2">
                 {activeTasks.map((t, index) => (
-                  <li key={t.id} className="flex items-start gap-2 bg-yuri-50/50 border border-yuri-100 rounded-lg p-2.5 hover:border-yuri-200 transition-colors group">
+                  <li key={t.id} className="flex items-start gap-2 bg-white border border-[#F2F3F7] shadow-sm rounded-xl p-2.5 hover:border-[#E2E4EA] transition-colors group">
                     <button onClick={() => toggleTask(t.id)} className="w-4 h-4 mt-0.5 flex items-center justify-center border-2 rounded border-yuri-300 text-transparent hover:border-accent shrink-0">
                       <svg className="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round"/></svg>
                     </button>
@@ -456,9 +456,9 @@ const CalendarPage: React.FC = () => {
           </div>
         </div>
 
-        {/* 3. Monthly Agenda (30%) */}
-        <div className="h-[30%] flex flex-col bg-yuri-50/30 overflow-hidden">
-          <header className="shrink-0 px-5 pt-4 pb-2 flex justify-between items-center bg-white border-b border-yuri-100">
+        {/* 3. Monthly Agenda */}
+        <div className="flex-[3] min-h-0 flex flex-col bg-[#FCFCFE] rounded-2xl border border-[#F2F3F7] shadow-sm overflow-hidden">
+          <header className="shrink-0 px-5 pt-4 pb-2 flex justify-between items-center bg-white border-b border-[#F2F3F7]">
             <h2 className="text-sm font-bold text-yuri-900">이달 목표</h2>
             <span className="text-[9px] font-bold text-yuri-400 bg-yuri-100 px-1.5 py-0.5 rounded">{monthKey}</span>
           </header>
@@ -475,9 +475,9 @@ const CalendarPage: React.FC = () => {
               </button>
             </form>
 
-            <ul className="flex flex-col gap-1.5">
+            <ul className="flex flex-col gap-1.5 px-1 pb-1">
               {monthAgendas.map(ag => (
-                <li key={ag.id} className="group flex items-start gap-2 bg-white border border-yuri-100 p-2.5 rounded-lg hover:border-yuri-200">
+                <li key={ag.id} className="group flex items-start gap-2 bg-white border border-[#F2F3F7] shadow-sm p-2.5 rounded-xl hover:border-[#E2E4EA] transition-colors">
                   <button onClick={() => toggleAgenda(ag.id)} className={`w-4 h-4 mt-0.5 flex items-center justify-center border-2 rounded shrink-0 ${ag.done ? 'bg-accent border-accent text-white' : 'border-yuri-300 text-transparent hover:border-accent'}`}>
                     <svg className="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round"/></svg>
                   </button>

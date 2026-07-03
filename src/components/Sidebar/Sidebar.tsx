@@ -1,6 +1,7 @@
 import React from 'react'
 import type { NavItem, PageId } from '../../types'
 import { NAV_ITEMS } from '../../config/nav'
+import { Home, Calendar, CheckSquare, FileText, Wallet, History, Search, Settings, LogOut } from 'lucide-react'
 
 interface SidebarProps {
   activePage: PageId
@@ -17,21 +18,21 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage, onNavigate, onLogout }) =
   return (
     <aside className="
       w-56 shrink-0 h-full
-      bg-yuri-50 border-r border-yuri-100
+      bg-[#F9F8FF] border-r border-[#F2F3F7]
       flex flex-col py-5 px-3 gap-1
       select-none
     ">
       {/* Logo */}
-      <div className="flex items-center gap-2.5 px-3 mb-3">
+      <div className="flex items-center gap-2.5 px-3 mb-4 mt-1">
         <div className="
-          w-7 h-7 rounded-lg bg-accent
+          w-7 h-7 rounded-xl bg-[#8B7CF8]
           flex items-center justify-center
           text-white font-bold text-sm
           shadow-sm
         ">
           M
         </div>
-        <span className="font-semibold text-yuri-900 tracking-tight text-[15px]">
+        <span className="font-semibold text-slate-800 tracking-tight text-[15px]">
           Memio
         </span>
       </div>
@@ -44,7 +45,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage, onNavigate, onLogout }) =
           ))}
         </nav>
 
-        <div className="border-t border-yuri-200 my-1 mx-2" />
+        <div className="border-t border-[#e2e4ea] opacity-60 my-2 mx-3" />
 
         {/* Input nav */}
         <nav className="flex flex-col gap-0.5">
@@ -53,7 +54,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage, onNavigate, onLogout }) =
           ))}
         </nav>
 
-        <div className="border-t border-yuri-200 my-1 mx-2" />
+        <div className="border-t border-[#e2e4ea] opacity-60 my-2 mx-3" />
 
         {/* Explore nav */}
         <nav className="flex flex-col gap-0.5">
@@ -62,7 +63,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage, onNavigate, onLogout }) =
           ))}
         </nav>
 
-        <div className="border-t border-yuri-200 my-1 mx-2" />
+        <div className="border-t border-[#e2e4ea] opacity-60 my-2 mx-3" />
 
         {/* Utility nav */}
         <nav className="flex flex-col gap-0.5 mb-2">
@@ -71,9 +72,11 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage, onNavigate, onLogout }) =
           ))}
           <button 
             onClick={onLogout}
-            className="flex items-center gap-2.5 px-3 py-2 mt-1 rounded-lg text-[13px] font-medium text-red-500 hover:bg-red-50 hover:text-red-600 transition-colors"
+            className="flex items-center gap-2.5 px-3 py-2 mt-1 rounded-xl text-sm font-medium text-red-400 hover:bg-red-50 hover:text-red-500 transition-colors"
           >
-            <span className="w-4 flex justify-center text-base leading-none">🚪</span>
+            <span className="w-5 flex justify-center text-base leading-none">
+              <LogOut size={16} strokeWidth={1.5} />
+            </span>
             로그아웃
           </button>
         </nav>
@@ -82,15 +85,15 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage, onNavigate, onLogout }) =
       {/* User avatar placeholder */}
       <div className="flex items-center gap-2.5 px-3 pt-3 mt-1">
         <div className="
-          w-7 h-7 rounded-full bg-gradient-to-br from-accent to-purple-400
+          w-8 h-8 rounded-full bg-gradient-to-br from-[#8B7CF8] to-[#C4B5FD]
           flex items-center justify-center text-white text-xs font-semibold
-          shrink-0
+          shrink-0 shadow-sm
         ">
           유
         </div>
         <div className="min-w-0">
-          <p className="text-xs font-semibold text-yuri-800 truncate">Yuri</p>
-          <p className="text-[10px] text-yuri-400 truncate">Personal</p>
+          <p className="text-xs font-semibold text-slate-700 truncate">Yuri</p>
+          <p className="text-[10px] text-slate-400 truncate">Personal</p>
         </div>
       </div>
     </aside>
@@ -104,16 +107,31 @@ interface NavItemButtonProps {
   onClick: () => void
 }
 
-const NavItemButton: React.FC<NavItemButtonProps> = ({ item, active, onClick }) => (
-  <button
-    id={`nav-${item.id}`}
-    onClick={onClick}
-    className={`nav-item w-full text-left ${active ? 'active' : ''}`}
-    aria-current={active ? 'page' : undefined}
-  >
-    <span className="w-5 text-center text-base leading-none">{item.icon}</span>
-    <span>{item.label}</span>
-  </button>
-)
+const NavItemButton: React.FC<NavItemButtonProps> = ({ item, active, onClick }) => {
+  const IconComponent = (({
+    'dashboard': Home,
+    'calendar': Calendar,
+    'tasks': CheckSquare,
+    'notes': FileText,
+    'ledger': Wallet,
+    'history': History,
+    'search': Search,
+    'settings': Settings
+  } as Record<string, any>)[item.id]) || Home
+
+  return (
+    <button
+      id={`nav-${item.id}`}
+      onClick={onClick}
+      className={`nav-item w-full text-left ${active ? 'active' : ''}`}
+      aria-current={active ? 'page' : undefined}
+    >
+      <span className="w-5 flex justify-center text-base leading-none">
+        <IconComponent size={18} strokeWidth={1.5} />
+      </span>
+      <span>{item.label}</span>
+    </button>
+  )
+}
 
 export default Sidebar
