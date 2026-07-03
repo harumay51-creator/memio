@@ -7,7 +7,7 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        sans: ['Pretendard', 'Inter', 'system-ui', '-apple-system', 'sans-serif'],
       },
       colors: {
         'yuri': {
