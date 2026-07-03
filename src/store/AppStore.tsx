@@ -315,7 +315,7 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
       const next = prev.map(c => {
         if (c.name === categoryName && !c.keywords.includes(keyword)) {
           const updated = { ...c, keywords: [...c.keywords, keyword] }
-          updateDoc(doc(db, 'users', uid, 'expenseCategories', c.name), { keywords: updated.keywords }).catch(console.error)
+          setDoc(doc(db, 'users', uid, 'expenseCategories', c.name), { keywords: updated.keywords }, { merge: true }).catch(console.error)
           return updated
         }
         return c
@@ -329,7 +329,7 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
       const next = prev.map(c => {
         if (c.name === categoryName) {
           const updated = { ...c, keywords: c.keywords.filter(k => k !== keyword) }
-          updateDoc(doc(db, 'users', uid, 'expenseCategories', c.name), { keywords: updated.keywords }).catch(console.error)
+          setDoc(doc(db, 'users', uid, 'expenseCategories', c.name), { keywords: updated.keywords }, { merge: true }).catch(console.error)
           return updated
         }
         return c

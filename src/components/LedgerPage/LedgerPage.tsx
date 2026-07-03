@@ -396,9 +396,18 @@ const LedgerPage: React.FC = () => {
                                   className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                                 >
                                   {e.type === 'expense' ? (
-                                    expenseCategories.map(c => <option key={c.name} value={c.name}>{c.name}</option>)
+                                    <>
+                                      {expenseCategories.map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
+                                      {!expenseCategories.some(c => c.name === '기타') && <option value="기타">기타</option>}
+                                      {!expenseCategories.some(c => c.name === e.category) && e.category !== '기타' && <option value={e.category}>{e.category}</option>}
+                                    </>
                                   ) : (
-                                    <option value={e.category}>{e.category}</option>
+                                    <>
+                                      {['급여', '용돈', '이자/배당', '환급', '기타수입'].map(name => (
+                                        <option key={name} value={name}>{name}</option>
+                                      ))}
+                                      {![ '급여', '용돈', '이자/배당', '환급', '기타수입'].includes(e.category) && <option value={e.category}>{e.category}</option>}
+                                    </>
                                   )}
                                 </select>
                                 <div 

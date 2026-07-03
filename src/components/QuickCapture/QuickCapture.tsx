@@ -65,7 +65,7 @@ const QuickCapture: React.FC = () => {
   }
 
   // Live parse preview (update as user types)
-  const preview    = value.trim() ? parseCapture(value.trim()) : null
+  const preview    = value.trim() ? parseCapture(value.trim(), expenseCategories) : null
   const previewCat = preview ? CAT[preview.type as keyof typeof CAT] : null
 
   return (
