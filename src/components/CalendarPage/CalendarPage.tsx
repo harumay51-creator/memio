@@ -83,14 +83,22 @@ const CalendarPage: React.FC = () => {
   const selectedDayEvents = useMemo(() => {
     return events
       .filter(e => isoMatchesDay(eventDisplayDate(e.scheduledDate, e.createdAt), selDay))
-      .sort((a, b) => (a.order ?? new Date(a.createdAt).getTime()) - (b.order ?? new Date(b.createdAt).getTime()))
+      .sort((a, b) => {
+        const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0
+        const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0
+        return (a.order ?? timeA) - (b.order ?? timeB)
+      })
   }, [events, selDay])
 
   // ── 2. Active Tasks (Date Independent) ────────
   const activeTasks = useMemo(() => {
     return tasks
       .filter(t => !t.done)
-      .sort((a, b) => (a.order ?? new Date(a.createdAt).getTime()) - (b.order ?? new Date(b.createdAt).getTime()))
+      .sort((a, b) => {
+        const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0
+        const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0
+        return (a.order ?? timeA) - (b.order ?? timeB)
+      })
   }, [tasks])
 
   const handleMoveEventUp = (index: number) => {
@@ -147,17 +155,31 @@ const CalendarPage: React.FC = () => {
       items.push(<div key="holiday" className={`text-[10px] px-1 rounded truncate w-full font-bold ${holidayInfo.isRedDay ? 'text-red-600 bg-red-50' : 'text-yuri-600 bg-yuri-50'}`}>{holidayInfo.name}</div>)
     }
 
-    const dayAnnivs = anniversaries.filter(a => a.month === d.getMonth() + 1 && a.day === d.getDate() && new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59).getTime() >= new Date(a.createdAt).getTime())
+    const dayAnnivs = anniversaries.filter(a => {
+      if (a.month !== d.getMonth() + 1 || a.day !== d.getDate()) return false
+      const createdTime = a.createdAt ? new Date(a.createdAt).getTime() : 0
+      const dEnd = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59).getTime()
+      return dEnd >= createdTime
+    })
     dayAnnivs.forEach(a => {
       items.push(<div key={`a-${a.id}`} className="text-[10px] text-pink-700 bg-pink-100/50 px-1 rounded truncate w-full">🎂 {a.name}</div>)
     })
 
-    const dayMonthly = monthlyEvents.filter(m => m.day === d.getDate() && new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59).getTime() >= new Date(m.createdAt).getTime())
+    const dayMonthly = monthlyEvents.filter(m => {
+      if (m.day !== d.getDate()) return false
+      const createdTime = m.createdAt ? new Date(m.createdAt).getTime() : 0
+      const dEnd = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59).getTime()
+      return dEnd >= createdTime
+    })
     dayMonthly.forEach(m => {
       items.push(<div key={`m-${m.id}`} className="text-[10px] text-blue-700 bg-blue-100/50 px-1 rounded truncate w-full">🔄 {m.name}</div>)
     })
 
-    const dayEvents = events.filter(e => isoMatchesDay(eventDisplayDate(e.scheduledDate, e.createdAt), d)).sort((a, b) => (a.order ?? new Date(a.createdAt).getTime()) - (b.order ?? new Date(b.createdAt).getTime()))
+    const dayEvents = events.filter(e => isoMatchesDay(eventDisplayDate(e.scheduledDate, e.createdAt), d)).sort((a, b) => {
+      const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0
+      const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0
+      return (a.order ?? timeA) - (b.order ?? timeB)
+    })
     dayEvents.forEach(e => {
       items.push(<div key={`e-${e.id}`} className="text-[10px] text-amber-700 bg-amber-100/50 px-1 rounded truncate w-full">{e.text}</div>)
     })
