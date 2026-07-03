@@ -73,50 +73,6 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
   useEffect(() => {
     async function loadData() {
       try {
-        const isMigrated = localStorage.getItem('yuri-migrated-to-firebase') === 'true'
-        
-        if (!isMigrated) {
-        // Perform Migration
-        const loadLocal = <T,>(key: string, fb: T): T => {
-          try { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : fb } 
-          catch { return fb }
-        }
-        
-        const localTasks = loadLocal<Task[]>('yuri-tasks', [])
-        const localLedger = loadLocal<LedgerEntry[]>('yuri-ledger', [])
-        const localEvents = loadLocal<ScheduleEvent[]>('yuri-events', [])
-        const localNotes = loadLocal<Note[]>('yuri-notes', [])
-        const localFixedExpenses = loadLocal<FixedExpense[]>('yuri-fixed-expenses', [])
-        const localExpenseCategories = loadLocal<CategoryConfig[]>('yuri-expense-cats', DEFAULT_EXPENSE_CATS)
-        const localAgendas = loadLocal<AgendaItem[]>('yuri-agendas', [])
-        const localAnnivs = loadLocal<Anniversary[]>('yuri-anniversaries', [])
-        const localMonthly = loadLocal<MonthlyEvent[]>('yuri-monthly-events', [])
-
-        const batch = writeBatch(db)
-        
-        localTasks.forEach(t => batch.set(doc(db, 'users', uid, 'tasks', t.id), t))
-        localLedger.forEach(l => batch.set(doc(db, 'users', uid, 'ledger', l.id), l))
-        localEvents.forEach(e => batch.set(doc(db, 'users', uid, 'events', e.id), e))
-        localNotes.forEach(n => batch.set(doc(db, 'users', uid, 'notes', n.id), n))
-        localFixedExpenses.forEach(f => batch.set(doc(db, 'users', uid, 'fixedExpenses', f.id), f))
-        localExpenseCategories.forEach(c => batch.set(doc(db, 'users', uid, 'expenseCategories', c.name), c))
-        localAgendas.forEach(a => batch.set(doc(db, 'users', uid, 'agendas', a.id), a))
-        localAnnivs.forEach(a => batch.set(doc(db, 'users', uid, 'anniversaries', a.id), a))
-        localMonthly.forEach(m => batch.set(doc(db, 'users', uid, 'monthlyEvents', m.id), m))
-
-        await batch.commit()
-        localStorage.setItem('yuri-migrated-to-firebase', 'true')
-        
-        setTasks(localTasks.sort((a, b) => (a.order || 0) - (b.order || 0)))
-        setLedger(localLedger)
-        setEvents(localEvents.sort((a, b) => (a.order || 0) - (b.order || 0)))
-        setNotes(localNotes)
-        setFixedExpenses(localFixedExpenses)
-        setExpenseCategories(localExpenseCategories)
-        setAgendas(localAgendas)
-        setAnniversaries(localAnnivs)
-        setMonthlyEvents(localMonthly)
-      } else {
         // Fetch from Firestore
         const fetchCol = async (colName: string) => {
           const snap = await getDocs(collection(db, 'users', uid, colName))
@@ -161,7 +117,6 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
         setAgendas(fetchedAgendas as AgendaItem[])
         setAnniversaries(fetchedAnnivs as Anniversary[])
         setMonthlyEvents(fetchedMonthly as MonthlyEvent[])
-      }
       } catch (err: any) {
         console.error("Firebase load error:", err)
         setLoadError(err.message || '데이터를 불러오는 중 알 수 없는 오류가 발생했습니다.')
