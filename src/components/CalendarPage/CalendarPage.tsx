@@ -212,9 +212,9 @@ const CalendarPage: React.FC = () => {
   const selDayFormatted = `${selDay.getMonth() + 1}월 ${selDay.getDate()}일 (${WEEKDAYS[selDay.getDay()]})`
 
   return (
-    <div className="flex min-h-full w-full bg-[#FAFBFF]">
+    <div className="flex h-full w-full bg-[#FAFBFF] overflow-hidden">
       {/* ── Left: Main Calendar ────────────────────────────────────────────── */}
-      <main className="flex-1 flex flex-col p-6 relative">
+      <main className="flex-1 flex flex-col p-6 relative overflow-hidden">
         <header className="relative flex items-center justify-between mb-6 z-10 shrink-0">
           <div className="flex items-center gap-4">
             <button onClick={prevMonth} className="w-8 h-8 flex items-center justify-center hover:bg-[#F7F6FF] rounded text-[#717A8C] font-bold transition-colors">←</button>
@@ -273,7 +273,7 @@ const CalendarPage: React.FC = () => {
           })}
         </div>
 
-        <div className="flex-1 grid grid-cols-7 grid-rows-[repeat(6,minmax(0,1fr))] auto-rows-fr gap-2.5">
+        <div className="flex-1 grid grid-cols-7 grid-rows-[repeat(6,minmax(0,1fr))] auto-rows-fr gap-2.5 min-h-0">
           {grid.map((date, idx) => {
             if (!date) return <div key={idx} className="bg-transparent" />
             
@@ -295,15 +295,15 @@ const CalendarPage: React.FC = () => {
                     setInlineText('')
                   }
                 }}
-                className={`p-3 rounded-[14px] shadow-[0_1px_4px_rgba(0,0,0,0.08)] flex flex-col cursor-pointer transition-all duration-200 min-h-[80px] ${isSelected ? 'bg-[#F7F6FF]' : 'bg-[#FFFFFF] hover:bg-[#FCFCFF]'}`}
+                className={`p-3 rounded-[14px] shadow-[0_1px_4px_rgba(0,0,0,0.08)] flex flex-col cursor-pointer transition-all duration-200 min-h-0 overflow-hidden ${isSelected ? 'bg-[#F7F6FF]' : 'bg-[#FFFFFF] hover:bg-[#FCFCFF]'}`}
               >
                 <div className={`
-                  w-7 h-7 rounded-full flex items-center justify-center text-[12px] font-medium self-start mb-2 shrink-0
+                  w-7 h-7 rounded-full flex items-center justify-center text-[12px] font-medium self-start mb-1 shrink-0
                   ${isToday ? 'bg-[#8B7CF8] text-[#FFFFFF] shadow-[0_2px_6px_rgba(139,124,248,0.4)]' : isRedDay ? 'text-[#EF6A7B]' : 'text-[#717A8C]'}
                 `}>
                   {date.getDate()}
                 </div>
-                <div className="flex flex-col gap-1 overflow-hidden flex-1">
+                <div className="flex flex-col gap-1 overflow-hidden flex-1 min-h-0">
                   {items.slice(0, 4)}
                   {items.length > 4 && (
                     <div className="text-[10px] text-[#717A8C] font-medium px-1">+ {items.length - 4} more</div>
