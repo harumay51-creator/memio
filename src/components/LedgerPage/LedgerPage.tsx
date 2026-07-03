@@ -9,19 +9,19 @@ const WDAY_KO  = ['일','월','화','수','목','금','토'] as const
 
 /** Colour associated with each category (used for dots and bars). */
 const CAT_COLOR: Record<string, string> = {
-  '식비':     '#f97316',
-  '카페':     '#f59e0b',
-  '교통':     '#3b82f6',
-  '쇼핑':     '#a855f7',
-  '문화':     '#ec4899',
-  '의료':     '#ef4444',
-  '통신':     '#06b6d4',
-  '기타':     '#94a3b8',
-  '급여':     '#10b981',
-  '용돈':     '#22c55e',
-  '이자/배당': '#14b8a6',
-  '환급':     '#34d399',
-  '기타수입':  '#6b7280',
+  '식비':     '#FFB4A2',
+  '카페':     '#FFD6A5',
+  '교통':     '#A0C4FF',
+  '쇼핑':     '#CDB4DB',
+  '문화':     '#FFC6FF',
+  '의료':     '#FFAFCC',
+  '통신':     '#9BF6FF',
+  '기타':     '#E0E0E0',
+  '급여':     '#B9FBC0',
+  '용돈':     '#CAFFBF',
+  '이자/배당': '#A0E8AF',
+  '환급':     '#C4FAF8',
+  '기타수입':  '#D8E2DC',
 }
 
 function catColor(name: string): string {
@@ -247,15 +247,15 @@ const LedgerPage: React.FC = () => {
           <div className="p-6 bg-white border-b border-yuri-100 flex flex-col gap-4">
             <div className="flex justify-between items-center">
               <span className="text-xs font-bold text-yuri-500">총 수입</span>
-              <span className="text-sm font-bold text-emerald-600">{totalIncome > 0 ? `+${fmtAmt(totalIncome)}` : '0원'}</span>
+              <span className="text-sm font-bold text-teal-500">{totalIncome > 0 ? `+${fmtAmt(totalIncome)}` : '0원'}</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-xs font-bold text-yuri-500">총 지출</span>
-              <span className="text-sm font-bold text-red-500">{totalExpense > 0 ? `-${fmtAmt(totalExpense)}` : '0원'}</span>
+              <span className="text-sm font-bold text-rose-400">{totalExpense > 0 ? `-${fmtAmt(totalExpense)}` : '0원'}</span>
             </div>
             <div className="pt-3 border-t border-yuri-100 flex justify-between items-center">
               <span className="text-sm font-bold text-yuri-800">잔액</span>
-              <span className={`text-lg font-black ${net >= 0 ? 'text-yuri-900' : 'text-red-500'}`}>
+              <span className={`text-lg font-black ${net >= 0 ? 'text-slate-800' : 'text-rose-400'}`}>
                 {net >= 0 ? `+${fmtAmt(net)}` : `-${fmtAmt(Math.abs(net))}`}
               </span>
             </div>
@@ -333,7 +333,7 @@ const LedgerPage: React.FC = () => {
                   </div>
                   <div className="flex justify-between items-center pl-3">
                     <span className="text-[10px] text-yuri-500">매월 {fe.day === 99 ? '말일' : `${fe.day}일`}</span>
-                    <span className="text-xs font-bold text-red-500">-{fmtAmt(fe.amount)}</span>
+                    <span className="text-xs font-bold text-rose-400">-{fmtAmt(fe.amount)}</span>
                   </div>
                 </div>
               ))}
@@ -433,8 +433,8 @@ const LedgerPage: React.FC = () => {
                                 onClick={() => togglePaymentMethod(e)}
                                 className={`shrink-0 w-16 text-[10px] font-bold py-1 rounded transition-colors text-center cursor-pointer ${
                                   (e.paymentMethod || '카드') === '카드' 
-                                    ? 'bg-blue-50 text-blue-600 hover:bg-blue-100' 
-                                    : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'
+                                    ? 'bg-blue-50/50 text-blue-500 hover:bg-blue-100' 
+                                    : 'bg-teal-50 text-teal-600 hover:bg-teal-100'
                                 }`}
                               >
                                 {e.paymentMethod || '카드'}
@@ -444,7 +444,7 @@ const LedgerPage: React.FC = () => {
                             <div className="flex items-center gap-4 shrink-0">
                               <span 
                                 onClick={() => startEditLedger(e)}
-                                className={`text-sm font-bold w-24 text-right cursor-pointer hover:underline hover:text-accent ${e.type === 'income' ? 'text-emerald-600' : 'text-yuri-900'}`}
+                                className={`text-sm font-bold w-24 text-right cursor-pointer hover:underline hover:text-accent ${e.type === 'income' ? 'text-teal-500' : 'text-slate-800'}`}
                               >
                                 {e.type === 'income' ? '+' : '-'}{fmtAmt(e.amount)}
                               </span>
