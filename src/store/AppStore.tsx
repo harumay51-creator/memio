@@ -246,6 +246,7 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
   }, [uid])
 
   const addEvent = useCallback((text: string, scheduledDate?: string) => {
+    console.log('addEvent called with:', text, scheduledDate)
     const newItem: ScheduleEvent = { id: genId(), text, scheduledDate, createdAt: new Date().toISOString(), order: events.length }
     setEvents(prev => [newItem, ...prev])
     setDoc(doc(db, 'users', uid, 'events', newItem.id), newItem).catch(console.error)

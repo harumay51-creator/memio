@@ -284,11 +284,13 @@ const CalendarPage: React.FC = () => {
                         setTimeout(() => setInlineDate(null), 100)
                       }}
                       onKeyDown={e => {
+                        if (e.nativeEvent.isComposing) return
                         if (e.key === 'Enter') {
                           e.preventDefault()
                           e.stopPropagation()
                           if (inlineText.trim()) {
                             const iso = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), -9, 0)).toISOString()
+                            console.log('Adding event from Calendar:', inlineText.trim(), iso)
                             addEvent(inlineText.trim(), iso)
                           }
                           setInlineDate(null)
