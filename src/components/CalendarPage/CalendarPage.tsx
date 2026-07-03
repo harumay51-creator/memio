@@ -152,7 +152,7 @@ const CalendarPage: React.FC = () => {
     const dStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
     const holidayInfo = HOLIDAYS[dStr]
     if (holidayInfo) {
-      items.push(<div key="holiday" className={`text-[10px] px-1 rounded truncate w-full font-bold ${holidayInfo.isRedDay ? 'text-red-600 bg-red-50' : 'text-yuri-600 bg-yuri-50'}`}>{holidayInfo.name}</div>)
+      items.push(<div key="holiday" className={`text-[10px] px-1 rounded truncate w-full font-bold ${holidayInfo.isRedDay ? 'text-red-500 bg-red-50/50' : 'text-purple-500 bg-purple-50/50'}`}>{holidayInfo.name}</div>)
     }
 
     const dayAnnivs = anniversaries.filter(a => {
@@ -162,7 +162,7 @@ const CalendarPage: React.FC = () => {
       return dEnd >= createdTime
     })
     dayAnnivs.forEach(a => {
-      items.push(<div key={`a-${a.id}`} className="text-[10px] text-pink-700 bg-pink-100/50 px-1 rounded truncate w-full">🎂 {a.name}</div>)
+      items.push(<div key={`a-${a.id}`} className="text-[10px] text-purple-700 bg-purple-100/60 px-1 rounded truncate w-full">🎂 {a.name}</div>)
     })
 
     const dayMonthly = monthlyEvents.filter(m => {
@@ -172,7 +172,7 @@ const CalendarPage: React.FC = () => {
       return dEnd >= createdTime
     })
     dayMonthly.forEach(m => {
-      items.push(<div key={`m-${m.id}`} className="text-[10px] text-blue-700 bg-blue-100/50 px-1 rounded truncate w-full">🔄 {m.name}</div>)
+      items.push(<div key={`m-${m.id}`} className="text-[10px] text-teal-700 bg-teal-100/60 px-1 rounded truncate w-full">🔄 {m.name}</div>)
     })
 
     const dayEvents = events.filter(e => isoMatchesDay(eventDisplayDate(e.scheduledDate, e.createdAt), d)).sort((a, b) => {
@@ -181,7 +181,7 @@ const CalendarPage: React.FC = () => {
       return (a.order ?? timeA) - (b.order ?? timeB)
     })
     dayEvents.forEach(e => {
-      items.push(<div key={`e-${e.id}`} className="text-[10px] text-amber-700 bg-amber-100/50 px-1 rounded truncate w-full">{e.text}</div>)
+      items.push(<div key={`e-${e.id}`} className="text-[10px] text-pink-700 bg-pink-100/60 px-1 rounded truncate w-full">{e.text}</div>)
     })
 
     const isRedDay = (holidayInfo && holidayInfo.isRedDay) || d.getDay() === 0
@@ -193,9 +193,9 @@ const CalendarPage: React.FC = () => {
   const selDayFormatted = `${selDay.getMonth() + 1}월 ${selDay.getDate()}일 (${WEEKDAYS[selDay.getDay()]})`
 
   return (
-    <div className="flex h-full w-full bg-yuri-50/10">
+    <div className="flex h-full w-full bg-[#fcfbff]">
       {/* ── Left: Main Calendar ────────────────────────────────────────────── */}
-      <main className="flex-1 border-r border-yuri-100 flex flex-col p-6 overflow-hidden relative">
+      <main className="flex-1 border-r border-[#e9e4f0] flex flex-col p-6 overflow-hidden relative">
         <header className="relative flex items-center justify-between mb-6 z-10 shrink-0">
           <div className="flex items-center gap-4">
             <button onClick={prevMonth} className="w-8 h-8 flex items-center justify-center hover:bg-yuri-100 rounded text-yuri-500 font-bold transition-colors">←</button>
@@ -243,15 +243,15 @@ const CalendarPage: React.FC = () => {
 
         <div className="grid grid-cols-7 mb-2">
           {WEEKDAYS.map((wd, i) => (
-            <div key={i} className="text-center text-[10px] font-bold text-yuri-400 py-1">
+            <div key={i} className="text-center text-[10px] font-bold text-purple-400/80 py-1">
               {wd}
             </div>
           ))}
         </div>
 
-        <div className="flex-1 grid grid-cols-7 grid-rows-[repeat(6,minmax(0,1fr))] auto-rows-fr border-l border-b border-yuri-200">
+        <div className="flex-1 grid grid-cols-7 grid-rows-[repeat(6,minmax(0,1fr))] auto-rows-fr border-l border-b border-[#e9e4f0]">
           {grid.map((date, idx) => {
-            if (!date) return <div key={idx} className="border-t border-r border-yuri-200" />
+            if (!date) return <div key={idx} className="border-t border-r border-[#e9e4f0]" />
             
             const isToday = sameDay(date, today)
             const isSelected = sameDay(date, selDay)
@@ -271,11 +271,11 @@ const CalendarPage: React.FC = () => {
                     setInlineText('')
                   }
                 }}
-                className={`p-1.5 border-t border-r border-yuri-200 flex flex-col cursor-pointer transition-colors min-h-[100px] ${isSelected ? 'bg-amber-50/50' : 'hover:bg-yuri-50'}`}
+                className={`p-1.5 border-t border-r border-[#e9e4f0] flex flex-col cursor-pointer transition-colors min-h-[100px] ${isSelected ? 'bg-purple-50/40' : 'hover:bg-purple-50/20'}`}
               >
                 <div className={`
                   w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold self-start mb-1
-                  ${isToday ? 'bg-accent text-white shadow-sm' : isSelected ? (isRedDay ? 'text-red-600' : 'text-amber-700') : (isRedDay ? 'text-red-500' : 'text-yuri-700')}
+                  ${isToday ? 'bg-purple-400 text-white shadow-sm' : isSelected ? (isRedDay ? 'text-red-500' : 'text-purple-700') : (isRedDay ? 'text-red-400' : 'text-yuri-700')}
                 `}>
                   {date.getDate()}
                 </div>
@@ -340,11 +340,11 @@ const CalendarPage: React.FC = () => {
                 {getDayItems(selDay).dayAnnivs.map(a => (
                   <li key={`sa-${a.id}`} className="flex items-start gap-3 relative">
                     <div className="w-5 h-5 rounded-full bg-white border-2 border-yuri-200 flex items-center justify-center z-10 shrink-0 mt-0.5">
-                      <div className="w-1.5 h-1.5 rounded-full bg-pink-400" />
+                      <div className="w-1.5 h-1.5 rounded-full bg-purple-400" />
                     </div>
                     
-                    <div className="flex-1 bg-pink-50/30 border border-pink-100 rounded-lg p-2.5 flex gap-2 items-start hover:border-pink-200 transition-colors group">
-                      <span className="shrink-0 text-[9px] font-bold px-1.5 py-0.5 rounded tracking-wider bg-pink-100 text-pink-700 mt-0.5">
+                    <div className="flex-1 bg-purple-50/40 border border-purple-100 rounded-lg p-2.5 flex gap-2 items-start hover:border-purple-200 transition-colors group">
+                      <span className="shrink-0 text-[9px] font-bold px-1.5 py-0.5 rounded tracking-wider bg-purple-100 text-purple-700 mt-0.5">
                         기념일
                       </span>
                       
@@ -364,11 +364,11 @@ const CalendarPage: React.FC = () => {
                 {getDayItems(selDay).dayMonthly.map(m => (
                   <li key={`sm-${m.id}`} className="flex items-start gap-3 relative">
                     <div className="w-5 h-5 rounded-full bg-white border-2 border-yuri-200 flex items-center justify-center z-10 shrink-0 mt-0.5">
-                      <div className="w-1.5 h-1.5 rounded-full bg-blue-400" />
+                      <div className="w-1.5 h-1.5 rounded-full bg-teal-400" />
                     </div>
                     
-                    <div className="flex-1 bg-blue-50/30 border border-blue-100 rounded-lg p-2.5 flex gap-2 items-start hover:border-blue-200 transition-colors group">
-                      <span className="shrink-0 text-[9px] font-bold px-1.5 py-0.5 rounded tracking-wider bg-blue-100 text-blue-700 mt-0.5">
+                    <div className="flex-1 bg-teal-50/40 border border-teal-100 rounded-lg p-2.5 flex gap-2 items-start hover:border-teal-200 transition-colors group">
+                      <span className="shrink-0 text-[9px] font-bold px-1.5 py-0.5 rounded tracking-wider bg-teal-100 text-teal-700 mt-0.5">
                         반복일정
                       </span>
                       
@@ -387,11 +387,11 @@ const CalendarPage: React.FC = () => {
                 {selectedDayEvents.map((e, index) => (
                   <li key={e.id} className="flex items-start gap-3 relative">
                     <div className="w-5 h-5 rounded-full bg-white border-2 border-yuri-200 flex items-center justify-center z-10 shrink-0 mt-0.5">
-                      <div className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                      <div className="w-1.5 h-1.5 rounded-full bg-pink-400" />
                     </div>
                     
-                    <div className="flex-1 bg-yuri-50/50 border border-yuri-100 rounded-lg p-2.5 flex gap-2 items-start hover:border-yuri-200 transition-colors group">
-                      <span className="shrink-0 text-[9px] font-bold px-1.5 py-0.5 rounded tracking-wider bg-amber-100 text-amber-700 mt-0.5">
+                    <div className="flex-1 bg-pink-50/40 border border-pink-100 rounded-lg p-2.5 flex gap-2 items-start hover:border-pink-200 transition-colors group">
+                      <span className="shrink-0 text-[9px] font-bold px-1.5 py-0.5 rounded tracking-wider bg-pink-100 text-pink-700 mt-0.5">
                         일정
                       </span>
                       
