@@ -298,28 +298,33 @@ const CalendarPage: React.FC = () => {
                 }}
                 className={`p-3 rounded-[14px] shadow-[0_1px_4px_rgba(0,0,0,0.08)] flex flex-col cursor-pointer transition-all duration-200 min-h-0 overflow-hidden ${isSelected ? 'bg-[#F7F6FF]' : 'bg-[#FFFFFF] hover:bg-[#FCFCFF]'}`}
               >
-                <div className={`
+                <div 
+                  className={`
                   w-7 h-7 rounded-full flex items-center justify-center text-[12px] font-medium self-start mb-1 shrink-0
                   ${isToday ? 'bg-[#8B7CF8] text-[#FFFFFF] shadow-[0_2px_6px_rgba(139,124,248,0.4)]' : isRedDay ? 'text-[#EF6A7B]' : 'text-[#717A8C]'}
                 `}>
                   {date.getDate()}
                 </div>
                 <div className="flex flex-col gap-1 overflow-hidden flex-1 min-h-0">
-                  {items.slice(0, 3)}
-                  {items.length > 3 && (
-                    <div className="text-[9px] shrink-0 text-[#A0AABF] font-medium px-1 bg-transparent">+ {items.length - 3}개</div>
+                  {items.slice(0, 2)}
+                  {items.length > 2 && (
+                    <div className="text-[9px] shrink-0 text-[#A0AABF] font-medium px-1 bg-transparent">+ {items.length - 2}개</div>
                   )}
-                  {inlineDate && sameDay(inlineDate, date) && (
+                </div>
+                {inlineDate && sameDay(inlineDate, date) && (
+                  <div className="mt-0.5 shrink-0" onClick={e => e.stopPropagation()}>
                     <input
                       autoFocus
                       type="text"
-                      className="w-full shrink-0 text-[10px] bg-white border border-yuri-300 rounded px-1 py-0.5 outline-none shadow-sm focus:border-amber-400 mt-0.5 text-yuri-900"
+                      className="w-full text-[10px] bg-white border border-yuri-300 rounded px-1 py-0.5 outline-none shadow-sm focus:border-amber-400 text-yuri-900 box-border"
                       placeholder="일정 입력 (Enter)"
                       value={inlineText}
                       onChange={e => setInlineText(e.target.value)}
                       onBlur={() => {
-                        // Delay clearing so click can register if needed, though simple UI is just close on blur
-                        setTimeout(() => setInlineDate(null), 100)
+                        setTimeout(() => {
+                          setInlineDate(null)
+                          setInlineText('')
+                        }, 100)
                       }}
                       onKeyDown={e => {
                         if (e.nativeEvent.isComposing) return
@@ -328,7 +333,6 @@ const CalendarPage: React.FC = () => {
                           e.stopPropagation()
                           if (inlineText.trim()) {
                             const iso = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), -9, 0)).toISOString()
-                            console.log('Adding event from Calendar:', inlineText.trim(), iso)
                             addEvent(inlineText.trim(), iso)
                           }
                           setInlineDate(null)
