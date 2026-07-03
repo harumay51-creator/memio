@@ -295,7 +295,7 @@ const CalendarPage: React.FC = () => {
                     setInlineText('')
                   }
                 }}
-                className={`p-3 rounded-[14px] shadow-[0_1px_3px_rgba(0,0,0,0.02),0_1px_2px_rgba(0,0,0,0.01)] flex flex-col cursor-pointer transition-all duration-200 min-h-[100px] ${isSelected ? 'bg-[#F7F6FF]' : 'bg-[#FFFFFF] hover:bg-[#FCFCFF]'}`}
+                className={`p-3 rounded-[14px] shadow-[0_1px_4px_rgba(0,0,0,0.08)] flex flex-col cursor-pointer transition-all duration-200 min-h-0 ${isSelected ? 'bg-[#F7F6FF]' : 'bg-[#FFFFFF] hover:bg-[#FCFCFF]'}`}
               >
                 <div className={`
                   w-7 h-7 rounded-full flex items-center justify-center text-[12px] font-medium self-start mb-2 shrink-0
@@ -350,7 +350,7 @@ const CalendarPage: React.FC = () => {
       <aside className="w-[360px] flex flex-col h-full bg-[#FAFBFF] overflow-hidden shrink-0 border-l border-[#EEF1F6] p-5 gap-6">
         
         {/* 1. Selected Day Events */}
-        <div className="flex-[3.5] min-h-0 flex flex-col bg-[#FFFFFF] rounded-[14px] shadow-[0_1px_3px_rgba(0,0,0,0.02),0_1px_2px_rgba(0,0,0,0.01)] overflow-hidden">
+        <div className="flex-[3.5] min-h-0 flex flex-col bg-[#FFFFFF] rounded-[14px] shadow-[0_1px_4px_rgba(0,0,0,0.08)] overflow-hidden">
           <header className="shrink-0 px-5 pt-5 pb-3">
             <h1 className="text-lg font-semibold text-[#2D334A] tracking-tight">
               {isSelDayToday ? `오늘, ${selDayFormatted}` : selDayFormatted}
@@ -432,7 +432,7 @@ const CalendarPage: React.FC = () => {
         </div>
 
         {/* 2. Active Tasks */}
-        <div className="flex-[3.5] min-h-0 flex flex-col bg-[#FFFFFF] rounded-[14px] shadow-[0_1px_3px_rgba(0,0,0,0.02),0_1px_2px_rgba(0,0,0,0.01)] overflow-hidden">
+        <div className="flex-[3.5] min-h-0 flex flex-col bg-[#FFFFFF] rounded-[14px] shadow-[0_1px_4px_rgba(0,0,0,0.08)] overflow-hidden">
           <header className="shrink-0 px-5 pt-4 pb-2 flex justify-between items-center">
             <h2 className="text-sm font-semibold text-[#2D334A]">진행 중인 업무</h2>
             <span className="text-[10px] font-medium text-[#717A8C]">{activeTasks.length}건</span>
@@ -470,7 +470,7 @@ const CalendarPage: React.FC = () => {
         </div>
 
         {/* 3. Monthly Agenda */}
-        <div className="flex-[3] min-h-0 flex flex-col bg-[#FFFFFF] rounded-[14px] shadow-[0_1px_3px_rgba(0,0,0,0.02),0_1px_2px_rgba(0,0,0,0.01)] overflow-hidden">
+        <div className="flex-[3] min-h-0 flex flex-col bg-[#FFFFFF] rounded-[14px] shadow-[0_1px_4px_rgba(0,0,0,0.08)] overflow-hidden">
           <header className="shrink-0 px-5 pt-4 pb-2 flex justify-between items-center bg-[#FFFFFF]">
             <h2 className="text-sm font-semibold text-[#2D334A]">이달 목표</h2>
             <span className="text-[10px] font-medium text-[#717A8C]">{monthKey}</span>
