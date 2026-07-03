@@ -153,7 +153,7 @@ const CalendarPage: React.FC = () => {
     const holidayInfo = HOLIDAYS[dStr]
     if (holidayInfo) {
       items.push(
-        <div key="holiday" className="text-[10px] h-5 px-1.5 bg-[#FDEEEE] text-[#D45D6E] rounded-md flex gap-1 items-center w-full overflow-hidden">
+        <div key="holiday" className="text-[10px] shrink-0 h-5 px-1.5 bg-[#FDEEEE] text-[#D45D6E] rounded-md flex gap-1 items-center w-full overflow-hidden">
           <span className="shrink-0 text-[10px]">📍</span>
           <span className="font-medium truncate leading-none">{holidayInfo.name}</span>
         </div>
@@ -168,7 +168,7 @@ const CalendarPage: React.FC = () => {
     })
     dayAnnivs.forEach(a => {
       items.push(
-        <div key={`a-${a.id}`} className="text-[10px] h-5 px-1.5 bg-[#FCEFF6] text-[#C96A95] rounded-md flex gap-1 items-center w-full overflow-hidden">
+        <div key={`a-${a.id}`} className="text-[10px] shrink-0 h-5 px-1.5 bg-[#FCEFF6] text-[#C96A95] rounded-md flex gap-1 items-center w-full overflow-hidden">
           <span className="shrink-0 text-[10px]">🎂</span>
           <span className="font-medium truncate leading-none">{a.name}</span>
         </div>
@@ -183,7 +183,7 @@ const CalendarPage: React.FC = () => {
     })
     dayMonthly.forEach(m => {
       items.push(
-        <div key={`m-${m.id}`} className="text-[10px] h-5 px-1.5 bg-[#EDF9F4] text-[#3F9E7A] rounded-md flex gap-1 items-center w-full overflow-hidden">
+        <div key={`m-${m.id}`} className="text-[10px] shrink-0 h-5 px-1.5 bg-[#EDF9F4] text-[#3F9E7A] rounded-md flex gap-1 items-center w-full overflow-hidden">
           <span className="shrink-0 text-[10px]">🔄</span>
           <span className="font-medium truncate leading-none">{m.name}</span>
         </div>
@@ -197,7 +197,7 @@ const CalendarPage: React.FC = () => {
     })
     dayEvents.forEach(e => {
       items.push(
-        <div key={`e-${e.id}`} className="text-[10px] h-5 px-1.5 bg-[#F4F1FF] text-[#5B4FCF] rounded-md flex gap-1 items-center w-full overflow-hidden">
+        <div key={`e-${e.id}`} className="text-[10px] shrink-0 h-5 px-1.5 bg-[#F4F1FF] text-[#5B4FCF] rounded-md flex gap-1 items-center w-full overflow-hidden">
           <span className="font-medium truncate leading-none">{e.text}</span>
         </div>
       )
@@ -306,13 +306,13 @@ const CalendarPage: React.FC = () => {
                 <div className="flex flex-col gap-1 overflow-hidden flex-1 min-h-0">
                   {items.slice(0, 4)}
                   {items.length > 4 && (
-                    <div className="text-[10px] text-[#717A8C] font-medium px-1">+ {items.length - 4} more</div>
+                    <div className="text-[10px] shrink-0 text-[#717A8C] font-medium px-1">+ {items.length - 4} more</div>
                   )}
                   {inlineDate && sameDay(inlineDate, date) && (
                     <input
                       autoFocus
                       type="text"
-                      className="w-full text-[10px] bg-white border border-yuri-300 rounded px-1 py-0.5 outline-none shadow-sm focus:border-amber-400 mt-0.5 text-yuri-900"
+                      className="w-full shrink-0 text-[10px] bg-white border border-yuri-300 rounded px-1 py-0.5 outline-none shadow-sm focus:border-amber-400 mt-0.5 text-yuri-900"
                       placeholder="일정 입력 (Enter)"
                       value={inlineText}
                       onChange={e => setInlineText(e.target.value)}
