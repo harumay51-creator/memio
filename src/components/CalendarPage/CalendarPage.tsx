@@ -153,9 +153,9 @@ const CalendarPage: React.FC = () => {
     const holidayInfo = HOLIDAYS[dStr]
     if (holidayInfo) {
       items.push(
-        <div key="holiday" className="text-[10px] pl-1 py-0.5 w-full flex gap-1.5 items-center">
-          <span className="text-[#EF6A7B]">📍</span>
-          <span className="text-[#2D334A] font-medium truncate">{holidayInfo.name}</span>
+        <div key="holiday" className="text-[10px] h-5 px-1.5 bg-[#FDEEEE] text-[#D45D6E] rounded-md flex gap-1 items-center w-full overflow-hidden">
+          <span className="shrink-0 text-[10px]">📍</span>
+          <span className="font-medium truncate leading-none">{holidayInfo.name}</span>
         </div>
       )
     }
@@ -168,9 +168,9 @@ const CalendarPage: React.FC = () => {
     })
     dayAnnivs.forEach(a => {
       items.push(
-        <div key={`a-${a.id}`} className="text-[10px] pl-1 py-0.5 w-full flex items-center border-l-[3px] border-[#F5A5C4]">
-          <span className="ml-1.5 mr-1 text-[10px]">🎂</span>
-          <span className="text-[#2D334A] font-medium truncate">{a.name}</span>
+        <div key={`a-${a.id}`} className="text-[10px] h-5 px-1.5 bg-[#FCEFF6] text-[#C96A95] rounded-md flex gap-1 items-center w-full overflow-hidden">
+          <span className="shrink-0 text-[10px]">🎂</span>
+          <span className="font-medium truncate leading-none">{a.name}</span>
         </div>
       )
     })
@@ -183,9 +183,9 @@ const CalendarPage: React.FC = () => {
     })
     dayMonthly.forEach(m => {
       items.push(
-        <div key={`m-${m.id}`} className="text-[10px] pl-1 py-0.5 w-full flex items-center border-l-[3px] border-[#63D2B0]">
-          <span className="ml-1.5 mr-1 text-[10px]">🔄</span>
-          <span className="text-[#2D334A] font-medium truncate">{m.name}</span>
+        <div key={`m-${m.id}`} className="text-[10px] h-5 px-1.5 bg-[#EDF9F4] text-[#3F9E7A] rounded-md flex gap-1 items-center w-full overflow-hidden">
+          <span className="shrink-0 text-[10px]">🔄</span>
+          <span className="font-medium truncate leading-none">{m.name}</span>
         </div>
       )
     })
@@ -197,8 +197,8 @@ const CalendarPage: React.FC = () => {
     })
     dayEvents.forEach(e => {
       items.push(
-        <div key={`e-${e.id}`} className="text-[10px] pl-1 py-0.5 w-full flex items-center border-l-[3px] border-[#8B7CF8]">
-          <span className="ml-1.5 text-[#2D334A] font-medium truncate">{e.text}</span>
+        <div key={`e-${e.id}`} className="text-[10px] h-5 px-1.5 bg-[#F4F1FF] text-[#5B4FCF] rounded-md flex gap-1 items-center w-full overflow-hidden">
+          <span className="font-medium truncate leading-none">{e.text}</span>
         </div>
       )
     })
@@ -273,9 +273,9 @@ const CalendarPage: React.FC = () => {
           })}
         </div>
 
-        <div className="flex-1 grid grid-cols-7 grid-rows-[repeat(6,minmax(0,1fr))] auto-rows-fr border-l border-t border-[#EEF1F6]">
+        <div className="flex-1 grid grid-cols-7 grid-rows-[repeat(6,minmax(0,1fr))] auto-rows-fr gap-2.5">
           {grid.map((date, idx) => {
-            if (!date) return <div key={idx} className="border-b border-r border-[#EEF1F6] bg-[#FAFBFF]" />
+            if (!date) return <div key={idx} className="bg-transparent" />
             
             const isToday = sameDay(date, today)
             const isSelected = sameDay(date, selDay)
@@ -295,11 +295,11 @@ const CalendarPage: React.FC = () => {
                     setInlineText('')
                   }
                 }}
-                className={`p-2 border-b border-r border-[#EEF1F6] flex flex-col cursor-pointer transition-all duration-200 min-h-[100px] ${isSelected ? 'bg-[#F7F6FF]' : 'bg-[#FFFFFF] hover:bg-[#F7F6FF]'}`}
+                className={`p-3 rounded-[14px] shadow-[0_1px_3px_rgba(0,0,0,0.02),0_1px_2px_rgba(0,0,0,0.01)] flex flex-col cursor-pointer transition-all duration-200 min-h-[100px] ${isSelected ? 'bg-[#F7F6FF]' : 'bg-[#FFFFFF] hover:bg-[#FCFCFF]'}`}
               >
                 <div className={`
-                  w-6 h-6 rounded-full flex items-center justify-center text-[12px] font-medium self-start mb-1.5
-                  ${isToday ? 'bg-[#8B7CF8] text-[#FFFFFF] shadow-[0_2px_4px_rgba(139,124,248,0.3)]' : isRedDay ? 'text-[#EF6A7B]' : 'text-[#717A8C]'}
+                  w-7 h-7 rounded-full flex items-center justify-center text-[12px] font-medium self-start mb-2 shrink-0
+                  ${isToday ? 'bg-[#8B7CF8] text-[#FFFFFF] shadow-[0_2px_6px_rgba(139,124,248,0.4)]' : isRedDay ? 'text-[#EF6A7B]' : 'text-[#717A8C]'}
                 `}>
                   {date.getDate()}
                 </div>
@@ -350,7 +350,7 @@ const CalendarPage: React.FC = () => {
       <aside className="w-[360px] flex flex-col h-full bg-[#FAFBFF] overflow-hidden shrink-0 border-l border-[#EEF1F6] p-5 gap-6">
         
         {/* 1. Selected Day Events */}
-        <div className="flex-[3.5] min-h-0 flex flex-col bg-[#FFFFFF] rounded-[16px] shadow-[0_2px_12px_rgba(0,0,0,0.02)] overflow-hidden">
+        <div className="flex-[3.5] min-h-0 flex flex-col bg-[#FFFFFF] rounded-[14px] shadow-[0_1px_3px_rgba(0,0,0,0.02),0_1px_2px_rgba(0,0,0,0.01)] overflow-hidden">
           <header className="shrink-0 px-5 pt-5 pb-3">
             <h1 className="text-lg font-semibold text-[#2D334A] tracking-tight">
               {isSelDayToday ? `오늘, ${selDayFormatted}` : selDayFormatted}
@@ -432,7 +432,7 @@ const CalendarPage: React.FC = () => {
         </div>
 
         {/* 2. Active Tasks */}
-        <div className="flex-[3.5] min-h-0 flex flex-col bg-[#FFFFFF] rounded-[16px] shadow-[0_2px_12px_rgba(0,0,0,0.02)] overflow-hidden">
+        <div className="flex-[3.5] min-h-0 flex flex-col bg-[#FFFFFF] rounded-[14px] shadow-[0_1px_3px_rgba(0,0,0,0.02),0_1px_2px_rgba(0,0,0,0.01)] overflow-hidden">
           <header className="shrink-0 px-5 pt-4 pb-2 flex justify-between items-center">
             <h2 className="text-sm font-semibold text-[#2D334A]">진행 중인 업무</h2>
             <span className="text-[10px] font-medium text-[#717A8C]">{activeTasks.length}건</span>
@@ -470,7 +470,7 @@ const CalendarPage: React.FC = () => {
         </div>
 
         {/* 3. Monthly Agenda */}
-        <div className="flex-[3] min-h-0 flex flex-col bg-[#FFFFFF] rounded-[16px] shadow-[0_2px_12px_rgba(0,0,0,0.02)] overflow-hidden">
+        <div className="flex-[3] min-h-0 flex flex-col bg-[#FFFFFF] rounded-[14px] shadow-[0_1px_3px_rgba(0,0,0,0.02),0_1px_2px_rgba(0,0,0,0.01)] overflow-hidden">
           <header className="shrink-0 px-5 pt-4 pb-2 flex justify-between items-center bg-[#FFFFFF]">
             <h2 className="text-sm font-semibold text-[#2D334A]">이달 목표</h2>
             <span className="text-[10px] font-medium text-[#717A8C]">{monthKey}</span>
