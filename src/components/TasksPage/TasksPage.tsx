@@ -11,7 +11,6 @@ const TasksPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId })
     if (activeItemId) setSelTaskId(activeItemId)
   }, [activeItemId])
   const [inputText, setInputText] = useState('')
-  const [showCompleted, setShowCompleted] = useState(false)
 
   // Split tasks into pending and completed
   const pendingTasks = useMemo(() => tasks.filter(t => !t.done).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()), [tasks])
@@ -53,59 +52,53 @@ const TasksPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId })
         </div>
 
         <div className="flex-1 flex flex-col gap-4 p-4 pt-2 min-h-0">
-          {tasks.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-yuri-400 p-6 text-center">
-              <p className="text-sm">등록된 업무가 없습니다.<br />위 입력창에서 바로 추가해보세요!</p>
+          {/* Pending Tasks */}
+          <section className="flex-[7] min-h-0 flex flex-col overflow-hidden">
+            <h2 className="shrink-0 text-xs font-bold text-yuri-500 mb-3 px-1 uppercase tracking-wider">진행 중</h2>
+            <div className="flex-1 overflow-y-auto flex flex-col gap-1 pr-1">
+              {pendingTasks.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full text-yuri-400 p-6 text-center">
+                  <p className="text-sm">진행 중인 업무가 없습니다.<br />위 입력창에서 바로 추가해보세요!</p>
+                </div>
+              ) : (
+                pendingTasks.map(t => (
+                  <TaskListItem 
+                    key={t.id} 
+                    task={t} 
+                    isSelected={selTaskId === t.id}
+                    onSelect={() => setSelTaskId(t.id)}
+                    onToggle={(e) => { e.stopPropagation(); toggleTask(t.id) }}
+                    onDelete={(e) => handleDelete(t.id, e)}
+                  />
+                ))
+              )}
             </div>
-          ) : (
-            <>
-              {/* Pending Tasks */}
-              {pendingTasks.length > 0 && (
-                <section className="flex-[7] min-h-0 flex flex-col overflow-hidden">
-                  <h2 className="shrink-0 text-xs font-bold text-yuri-500 mb-3 px-1 uppercase tracking-wider">진행 중</h2>
-                  <div className="flex-1 overflow-y-auto flex flex-col gap-1 pr-1">
-                    {pendingTasks.map(t => (
-                      <TaskListItem 
-                        key={t.id} 
-                        task={t} 
-                        isSelected={selTaskId === t.id}
-                        onSelect={() => setSelTaskId(t.id)}
-                        onToggle={(e) => { e.stopPropagation(); toggleTask(t.id) }}
-                        onDelete={(e) => handleDelete(t.id, e)}
-                      />
-                    ))}
-                  </div>
-                </section>
-              )}
+          </section>
 
-              {/* Completed Tasks */}
-              {completedTasks.length > 0 && (
-                <section className={`flex flex-col min-h-0 overflow-hidden ${showCompleted ? 'flex-[3]' : 'shrink-0'}`}>
-                  <button 
-                    onClick={() => setShowCompleted(!showCompleted)}
-                    className="shrink-0 w-full flex justify-between items-center text-xs font-bold text-yuri-500 mb-2 px-2 py-1.5 rounded hover:bg-yuri-100 transition-colors uppercase tracking-wider cursor-pointer"
-                  >
-                    <span>완료됨 ({completedTasks.length}개)</span>
-                    <span>{showCompleted ? '▲' : '▼'}</span>
-                  </button>
-                  {showCompleted && (
-                    <div className="flex-1 overflow-y-auto flex flex-col gap-1 pr-1">
-                      {completedTasks.map(t => (
-                        <TaskListItem 
-                          key={t.id} 
-                          task={t} 
-                          isSelected={selTaskId === t.id}
-                          onSelect={() => setSelTaskId(t.id)}
-                          onToggle={(e) => { e.stopPropagation(); toggleTask(t.id) }}
-                          onDelete={(e) => handleDelete(t.id, e)}
-                        />
-                      ))}
-                    </div>
-                  )}
-                </section>
+          {/* Completed Tasks */}
+          <section className="flex-[3] flex flex-col min-h-0 overflow-hidden pt-4 border-t border-yuri-100">
+            <h2 className="shrink-0 text-xs font-bold text-yuri-500 mb-3 px-1 uppercase tracking-wider flex justify-between items-center">
+              <span>완료됨 ({completedTasks.length}개)</span>
+            </h2>
+            <div className="flex-1 overflow-y-auto flex flex-col gap-1 pr-1">
+              {completedTasks.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full text-yuri-400 p-2 text-center">
+                  <p className="text-xs">완료된 업무가 없습니다.</p>
+                </div>
+              ) : (
+                completedTasks.map(t => (
+                  <TaskListItem 
+                    key={t.id} 
+                    task={t} 
+                    isSelected={selTaskId === t.id}
+                    onSelect={() => setSelTaskId(t.id)}
+                    onToggle={(e) => { e.stopPropagation(); toggleTask(t.id) }}
+                    onDelete={(e) => handleDelete(t.id, e)}
+                  />
+                ))
               )}
-            </>
-          )}
+            </div>
+          </section>
         </div>
       </aside>
 
