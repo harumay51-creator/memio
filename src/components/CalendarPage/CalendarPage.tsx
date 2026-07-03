@@ -78,79 +78,50 @@ const CalendarPage: React.FC = () => {
     }
   }, [navDate, setNavDate])
 
-  // ── Unified Timeline for Selected Day ────────
-  const timelineItems = useMemo(() => {
-    const items: { id: string, type: 'task'|'event', text: string, date: Date, done?: boolean, order?: number }[] = []
-    
-    tasks.filter(t => isoMatchesDay(t.createdAt, selDay)).forEach(t => {
-      items.push({ id: t.id, type: 'task', text: t.text, date: new Date(t.createdAt), done: t.done, order: t.order })
-    })
-    events.filter(e => isoMatchesDay(eventDisplayDate(e.scheduledDate, e.createdAt), selDay)).forEach(e => {
-      items.push({ id: e.id, type: 'event', text: e.text, date: new Date(e.createdAt), order: e.order })
-    })
+  // ── 1. Selected Day Events ────────
+  const selectedDayEvents = useMemo(() => {
+    return events
+      .filter(e => isoMatchesDay(eventDisplayDate(e.scheduledDate, e.createdAt), selDay))
+      .sort((a, b) => (a.order ?? new Date(a.createdAt).getTime()) - (b.order ?? new Date(b.createdAt).getTime()))
+  }, [events, selDay])
 
-    return items.sort((a, b) => {
-      const orderA = a.order ?? a.date.getTime()
-      const orderB = b.order ?? b.date.getTime()
-      return orderA - orderB
-    })
-  }, [tasks, events, selDay])
+  // ── 2. Active Tasks (Date Independent) ────────
+  const activeTasks = useMemo(() => {
+    return tasks
+      .filter(t => !t.done)
+      .sort((a, b) => (a.order ?? new Date(a.createdAt).getTime()) - (b.order ?? new Date(b.createdAt).getTime()))
+  }, [tasks])
 
-  const [draggedIdx, setDraggedIdx] = useState<number | null>(null)
-
-  const handleDragStart = (e: React.DragEvent, index: number) => {
-    setDraggedIdx(index)
-    e.dataTransfer.effectAllowed = 'move'
-  }
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault()
-    e.dataTransfer.dropEffect = 'move'
-  }
-
-  const handleDrop = (e: React.DragEvent, index: number) => {
-    e.preventDefault()
-    if (draggedIdx === null || draggedIdx === index) return
-
-    const reordered = [...timelineItems]
-    const [draggedItem] = reordered.splice(draggedIdx, 1)
-    reordered.splice(index, 0, draggedItem)
-
-    const updates = reordered.map((item, i) => ({
-      id: item.id,
-      type: item.type,
-      order: Date.now() + i
-    }))
-    updateItemOrders(updates)
-    setDraggedIdx(null)
-  }
-
-  const handleMoveUp = (index: number) => {
+  const handleMoveEventUp = (index: number) => {
     if (index === 0) return
-    const reordered = [...timelineItems]
-    const [itemToMove] = reordered.splice(index, 1)
-    reordered.splice(index - 1, 0, itemToMove)
-
-    const updates = reordered.map((item, i) => ({
-      id: item.id,
-      type: item.type,
-      order: Date.now() + i
-    }))
-    updateItemOrders(updates)
+    const reordered = [...selectedDayEvents]
+    const [item] = reordered.splice(index, 1)
+    reordered.splice(index - 1, 0, item)
+    updateItemOrders(reordered.map((e, i) => ({ id: e.id, type: 'event', order: Date.now() + i })))
   }
 
-  const handleMoveDown = (index: number) => {
-    if (index === timelineItems.length - 1) return
-    const reordered = [...timelineItems]
-    const [itemToMove] = reordered.splice(index, 1)
-    reordered.splice(index + 1, 0, itemToMove)
+  const handleMoveEventDown = (index: number) => {
+    if (index === selectedDayEvents.length - 1) return
+    const reordered = [...selectedDayEvents]
+    const [item] = reordered.splice(index, 1)
+    reordered.splice(index + 1, 0, item)
+    updateItemOrders(reordered.map((e, i) => ({ id: e.id, type: 'event', order: Date.now() + i })))
+  }
 
-    const updates = reordered.map((item, i) => ({
-      id: item.id,
-      type: item.type,
-      order: Date.now() + i
-    }))
-    updateItemOrders(updates)
+  const handleMoveTaskUp = (index: number) => {
+    if (index === 0) return
+    const reordered = [...activeTasks]
+    const [item] = reordered.splice(index, 1)
+    reordered.splice(index - 1, 0, item)
+    updateItemOrders(reordered.map((t, i) => ({ id: t.id, type: 'task', order: Date.now() + i })))
+  }
+
+  const handleMoveTaskDown = (index: number) => {
+    if (index === activeTasks.length - 1) return
+    const reordered = [...activeTasks]
+    const [item] = reordered.splice(index, 1)
+    reordered.splice(index + 1, 0, item)
+    updateItemOrders(reordered.map((t, i) => ({ id: t.id, type: 'task', order: Date.now() + i })))
   }
 
   // ── Monthly Agenda ────────
@@ -310,107 +281,124 @@ const CalendarPage: React.FC = () => {
       </main>
 
       {/* ── Right: Timeline & Agenda ─────────────────────────────────────────── */}
-      <aside className="w-96 flex flex-col h-full bg-white overflow-hidden shrink-0 border-l border-yuri-100">
+      <aside className="w-[340px] flex flex-col h-full bg-white overflow-hidden shrink-0 border-l border-yuri-100">
         
-        {/* 1. Today's Record (Top 60%) */}
-        <div className="h-[60%] flex flex-col bg-white overflow-y-auto">
-          <header className="shrink-0 px-8 pt-8 pb-4">
-            <h1 className="text-2xl font-extrabold text-yuri-900 tracking-tight">
+        {/* 1. Selected Day Events (35%) */}
+        <div className="h-[35%] flex flex-col bg-white border-b border-yuri-100 overflow-hidden">
+          <header className="shrink-0 px-5 pt-5 pb-3">
+            <h1 className="text-lg font-extrabold text-yuri-900 tracking-tight">
               {isSelDayToday ? `오늘, ${selDayFormatted}` : selDayFormatted}
             </h1>
           </header>
 
-          <div className="px-8 pb-12 flex-1">
-            <section>
-            {timelineItems.length > 0 ? (
-              <ul className="flex flex-col gap-3 relative before:absolute before:inset-y-4 before:left-[11px] before:w-0.5 before:bg-yuri-100">
-                {timelineItems.map((item, index) => (
-                  <li 
-                    key={`${item.type}-${item.id}`} 
-                    className={`flex items-start gap-4 relative cursor-grab active:cursor-grabbing ${draggedIdx === index ? 'opacity-50' : ''}`}
-                    draggable
-                    onDragStart={(e) => handleDragStart(e, index)}
-                    onDragOver={handleDragOver}
-                    onDrop={(e) => handleDrop(e, index)}
-                  >
-                    <div className="w-6 h-6 rounded-full bg-white border-2 border-yuri-200 flex items-center justify-center z-10 shrink-0 mt-0.5">
-                      <div className={`w-2 h-2 rounded-full ${item.type === 'task' ? 'bg-yuri-400' : item.type === 'event' ? 'bg-amber-400' : 'bg-gray-400'}`} />
+          <div className="px-5 pb-5 flex-1 overflow-y-auto">
+            {selectedDayEvents.length > 0 ? (
+              <ul className="flex flex-col gap-2 relative before:absolute before:inset-y-3 before:left-[9px] before:w-0.5 before:bg-yuri-100">
+                {selectedDayEvents.map((e, index) => (
+                  <li key={e.id} className="flex items-start gap-3 relative">
+                    <div className="w-5 h-5 rounded-full bg-white border-2 border-yuri-200 flex items-center justify-center z-10 shrink-0 mt-0.5">
+                      <div className="w-1.5 h-1.5 rounded-full bg-amber-400" />
                     </div>
                     
-                    <div className="flex-1 bg-yuri-50/50 border border-yuri-100 rounded-xl p-3 flex gap-3 items-start hover:border-yuri-200 transition-colors group">
-                      {/* Badge */}
-                      <span className={`shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded tracking-wider ${
-                        item.type === 'task' ? 'bg-yuri-100 text-yuri-700' :
-                        'bg-amber-100 text-amber-700'
-                      }`}>
-                        {item.type === 'task' ? '업무' : '일정'}
+                    <div className="flex-1 bg-yuri-50/50 border border-yuri-100 rounded-lg p-2.5 flex gap-2 items-start hover:border-yuri-200 transition-colors group">
+                      <span className="shrink-0 text-[9px] font-bold px-1.5 py-0.5 rounded tracking-wider bg-amber-100 text-amber-700 mt-0.5">
+                        일정
                       </span>
                       
-                      {/* Content */}
-                      <div className="flex-1 pt-0.5">
-                        <span className={`text-sm ${item.done ? 'text-yuri-400 line-through' : 'text-yuri-900 font-medium whitespace-pre-wrap'}`}>
-                          {item.text}
+                      <div className="flex-1">
+                        <span className="text-xs text-yuri-900 font-medium whitespace-pre-wrap leading-tight">
+                          {e.text}
                         </span>
                       </div>
                       
-                      {/* Delete / Toggle Actions */}
                       <div className="flex gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
                         <div className="flex flex-col mr-1 justify-center gap-0.5">
-                          <button onClick={() => handleMoveUp(index)} disabled={index === 0} className="w-4 h-3 flex items-center justify-center text-yuri-300 hover:text-yuri-600 disabled:opacity-30 text-[10px]" aria-label="위로 이동">▲</button>
-                          <button onClick={() => handleMoveDown(index)} disabled={index === timelineItems.length - 1} className="w-4 h-3 flex items-center justify-center text-yuri-300 hover:text-yuri-600 disabled:opacity-30 text-[10px]" aria-label="아래로 이동">▼</button>
+                          <button onClick={() => handleMoveEventUp(index)} disabled={index === 0} className="w-4 h-3 flex items-center justify-center text-yuri-300 hover:text-yuri-600 disabled:opacity-30 text-[9px]" aria-label="위로 이동">▲</button>
+                          <button onClick={() => handleMoveEventDown(index)} disabled={index === selectedDayEvents.length - 1} className="w-4 h-3 flex items-center justify-center text-yuri-300 hover:text-yuri-600 disabled:opacity-30 text-[9px]" aria-label="아래로 이동">▼</button>
                         </div>
-                        {item.type === 'task' && (
-                          <button onClick={() => toggleTask(item.id)} className="w-6 h-6 flex items-center justify-center rounded text-yuri-400 hover:text-accent hover:bg-accent/10">✓</button>
-                        )}
-                        <button onClick={() => {
-                          if (item.type === 'task') deleteTask(item.id)
-                          else if (item.type === 'event') deleteEvent(item.id)
-                        }} className="w-6 h-6 flex items-center justify-center rounded text-yuri-300 hover:text-red-400 hover:bg-red-50">✕</button>
+                        <button onClick={() => deleteEvent(e.id)} className="w-5 h-5 flex items-center justify-center rounded text-yuri-300 hover:text-red-400 hover:bg-red-50 text-[10px]">✕</button>
                       </div>
                     </div>
                   </li>
                 ))}
               </ul>
             ) : (
-              <p className="text-sm text-yuri-400 bg-yuri-50 rounded-xl p-4">이 날짜에 기록된 항목이 없습니다.</p>
+              <p className="text-xs text-yuri-400 bg-yuri-50 rounded-lg p-3 text-center">이 날짜의 일정이 없습니다.</p>
             )}
-            </section>
           </div>
         </div>
 
-        {/* 2. Monthly Agenda (Bottom 40%) */}
-        <div className="h-[40%] flex flex-col border-t border-yuri-100 bg-yuri-50/30">
-          <header className="shrink-0 px-6 py-4 border-b border-yuri-100 flex justify-between items-center bg-white">
+        {/* 2. Active Tasks (35%) */}
+        <div className="h-[35%] flex flex-col bg-white border-b border-yuri-100 overflow-hidden">
+          <header className="shrink-0 px-5 pt-4 pb-2 flex justify-between items-center">
+            <h2 className="text-sm font-bold text-yuri-900">진행 중인 업무</h2>
+            <span className="text-[9px] font-bold text-yuri-400 bg-yuri-100 px-1.5 py-0.5 rounded">{activeTasks.length}건</span>
+          </header>
+
+          <div className="px-5 pb-4 flex-1 overflow-y-auto">
+            {activeTasks.length > 0 ? (
+              <ul className="flex flex-col gap-2">
+                {activeTasks.map((t, index) => (
+                  <li key={t.id} className="flex items-start gap-2 bg-yuri-50/50 border border-yuri-100 rounded-lg p-2.5 hover:border-yuri-200 transition-colors group">
+                    <button onClick={() => toggleTask(t.id)} className="w-4 h-4 mt-0.5 flex items-center justify-center border-2 rounded border-yuri-300 text-transparent hover:border-accent shrink-0">
+                      <svg className="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    </button>
+                    
+                    <div className="flex-1">
+                      <span className="text-xs text-yuri-900 font-medium whitespace-pre-wrap leading-tight">
+                        {t.text}
+                      </span>
+                    </div>
+                    
+                    <div className="flex gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="flex flex-col mr-1 justify-center gap-0.5">
+                        <button onClick={() => handleMoveTaskUp(index)} disabled={index === 0} className="w-4 h-3 flex items-center justify-center text-yuri-300 hover:text-yuri-600 disabled:opacity-30 text-[9px]" aria-label="위로 이동">▲</button>
+                        <button onClick={() => handleMoveTaskDown(index)} disabled={index === activeTasks.length - 1} className="w-4 h-3 flex items-center justify-center text-yuri-300 hover:text-yuri-600 disabled:opacity-30 text-[9px]" aria-label="아래로 이동">▼</button>
+                      </div>
+                      <button onClick={() => deleteTask(t.id)} className="w-5 h-5 flex items-center justify-center rounded text-yuri-300 hover:text-red-400 hover:bg-red-50 text-[10px]">✕</button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-xs text-yuri-400 bg-yuri-50 rounded-lg p-3 text-center">모든 업무를 완료했습니다!</p>
+            )}
+          </div>
+        </div>
+
+        {/* 3. Monthly Agenda (30%) */}
+        <div className="h-[30%] flex flex-col bg-yuri-50/30 overflow-hidden">
+          <header className="shrink-0 px-5 pt-4 pb-2 flex justify-between items-center bg-white border-b border-yuri-100">
             <h2 className="text-sm font-bold text-yuri-900">이달 목표</h2>
-            <span className="text-[10px] font-bold text-yuri-400 bg-yuri-100 px-1.5 py-0.5 rounded">{monthKey}</span>
+            <span className="text-[9px] font-bold text-yuri-400 bg-yuri-100 px-1.5 py-0.5 rounded">{monthKey}</span>
           </header>
           
-          <div className="flex-1 overflow-y-auto p-6">
-            <form onSubmit={handleAddAgenda} className="mb-4 flex gap-2">
+          <div className="flex-1 overflow-y-auto p-5">
+            <form onSubmit={handleAddAgenda} className="mb-3 flex gap-2">
               <input
-                type="text" placeholder="이번 달 목표나 업무를 기록하세요..."
+                type="text" placeholder="새 목표 입력..."
                 value={newAgenda} onChange={e => setNewAgenda(e.target.value)}
-                className="flex-1 px-3 py-2 text-sm bg-white border border-yuri-200 rounded-lg outline-none focus:border-accent"
+                className="flex-1 px-2.5 py-1.5 text-xs bg-white border border-yuri-200 rounded-lg outline-none focus:border-accent"
               />
-              <button type="submit" disabled={!newAgenda.trim()} className="px-4 py-2 bg-yuri-900 text-white text-sm font-bold rounded-lg disabled:opacity-50">
+              <button type="submit" disabled={!newAgenda.trim()} className="px-3 py-1.5 bg-yuri-900 text-white text-xs font-bold rounded-lg disabled:opacity-50">
                 추가
               </button>
             </form>
 
-            <ul className="flex flex-col gap-2">
+            <ul className="flex flex-col gap-1.5">
               {monthAgendas.map(ag => (
-                <li key={ag.id} className="group flex items-start gap-3 bg-white border border-yuri-100 p-3 rounded-lg hover:border-yuri-200">
-                  <button onClick={() => toggleAgenda(ag.id)} className={`w-5 h-5 mt-0.5 flex items-center justify-center border-2 rounded ${ag.done ? 'bg-accent border-accent text-white' : 'border-yuri-300 text-transparent hover:border-accent'}`}>
-                    <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                <li key={ag.id} className="group flex items-start gap-2 bg-white border border-yuri-100 p-2.5 rounded-lg hover:border-yuri-200">
+                  <button onClick={() => toggleAgenda(ag.id)} className={`w-4 h-4 mt-0.5 flex items-center justify-center border-2 rounded shrink-0 ${ag.done ? 'bg-accent border-accent text-white' : 'border-yuri-300 text-transparent hover:border-accent'}`}>
+                    <svg className="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round"/></svg>
                   </button>
-                  <span className={`flex-1 text-sm pt-0.5 ${ag.done ? 'text-yuri-400 line-through' : 'text-yuri-900'}`}>{ag.text}</span>
-                  <button onClick={() => deleteAgenda(ag.id)} className="w-6 h-6 flex items-center justify-center rounded text-yuri-300 hover:text-red-500 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <span className={`flex-1 text-xs leading-tight ${ag.done ? 'text-yuri-400 line-through' : 'text-yuri-900'}`}>{ag.text}</span>
+                  <button onClick={() => deleteAgenda(ag.id)} className="w-5 h-5 flex items-center justify-center rounded text-yuri-300 hover:text-red-500 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-opacity text-[10px]">
                     ✕
                   </button>
                 </li>
               ))}
               {monthAgendas.length === 0 && (
-                <p className="text-sm text-yuri-400 text-center py-4">등록된 어젠다가 없습니다.</p>
+                <p className="text-xs text-yuri-400 text-center py-2">등록된 어젠다가 없습니다.</p>
               )}
             </ul>
           </div>
