@@ -145,14 +145,19 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
           fetchCol('monthlyEvents')
         ])
 
-        const finalCats = fetchedExpenseCats.length > 0 ? fetchedExpenseCats : DEFAULT_EXPENSE_CATS
+        const mergedCats = DEFAULT_EXPENSE_CATS.map(defCat => {
+          const fetched = fetchedExpenseCats.find((c: any) => c.name === defCat.name) as any
+          return fetched ? { ...defCat, keywords: fetched.keywords || [] } : defCat
+        })
+        const customCats = fetchedExpenseCats.filter((c: any) => !DEFAULT_EXPENSE_CATS.some(defCat => defCat.name === c.name)) as CategoryConfig[]
+        const finalCats = [...mergedCats, ...customCats]
 
         setTasks((fetchedTasks as Task[]).sort((a, b) => (a.order || 0) - (b.order || 0)))
         setLedger(fetchedLedger as LedgerEntry[])
         setEvents((fetchedEvents as ScheduleEvent[]).sort((a, b) => (a.order || 0) - (b.order || 0)))
         setNotes(fetchedNotes as Note[])
         setFixedExpenses(fetchedFixedExpenses as FixedExpense[])
-        setExpenseCategories(finalCats as CategoryConfig[])
+        setExpenseCategories(finalCats)
         setAgendas(fetchedAgendas as AgendaItem[])
         setAnniversaries(fetchedAnnivs as Anniversary[])
         setMonthlyEvents(fetchedMonthly as MonthlyEvent[])
