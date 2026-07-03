@@ -197,8 +197,8 @@ const CalendarPage: React.FC = () => {
     })
     dayEvents.forEach(e => {
       items.push(
-        <div key={`e-${e.id}`} className="text-[10px] shrink-0 h-5 px-1.5 bg-[#F4F1FF] text-[#5B4FCF] rounded-md flex gap-1 items-center w-full overflow-hidden">
-          <span className="font-medium truncate leading-none">{e.text}</span>
+        <div key={`e-${e.id}`} className="text-[10px] shrink-0 h-5 px-1.5 bg-[#FBFAFF] border-l-[2px] border-[#5B4FCF] text-[#5B4FCF] rounded-[6px] flex gap-1 items-center w-full overflow-hidden box-border">
+          <span className="font-medium truncate leading-none block w-full text-left">{e.text}</span>
         </div>
       )
     })
@@ -304,9 +304,9 @@ const CalendarPage: React.FC = () => {
                   {date.getDate()}
                 </div>
                 <div className="flex flex-col gap-1 overflow-hidden flex-1 min-h-0">
-                  {items.slice(0, 4)}
-                  {items.length > 4 && (
-                    <div className="text-[10px] shrink-0 text-[#717A8C] font-medium px-1">+ {items.length - 4} more</div>
+                  {items.slice(0, 3)}
+                  {items.length > 3 && (
+                    <div className="text-[9px] shrink-0 text-[#A0AABF] font-medium px-1 bg-transparent">+ {items.length - 3}개</div>
                   )}
                   {inlineDate && sameDay(inlineDate, date) && (
                     <input
