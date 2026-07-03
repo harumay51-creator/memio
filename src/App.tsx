@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import type { PageId } from './types'
-import { AppStoreProvider } from './store/AppStore'
+import { useAppStore, AppStoreProvider } from './store/AppStore'
 import Sidebar      from './components/Sidebar'
 import QuickCapture from './components/QuickCapture'
 import Router       from './router/Router'
@@ -8,6 +8,7 @@ import LockScreen   from './components/LockScreen'
 
 // ── Inner app (needs to be inside AppStoreProvider to access useAppStore) ─────
 const AppInner: React.FC = () => {
+  const { isLoading } = useAppStore()
   const [activePage,    setActivePage]    = useState<PageId>(() => (localStorage.getItem('yuri-active-page') as PageId) || 'dashboard')
   const [activeItemId,  setActiveItemId]  = useState<string | null>(null)
   const [unlocked,      setUnlocked]      = useState<boolean>(() => localStorage.getItem('yuri-auth') === 'true')
@@ -39,6 +40,14 @@ const AppInner: React.FC = () => {
     setUnlocked(false)
     localStorage.removeItem('yuri-auth')
   }, [])
+
+  if (isLoading) {
+    return (
+      <div className="flex h-screen w-screen items-center justify-center bg-yuri-50">
+        <div className="animate-pulse text-accent font-medium text-lg">데이터를 불러오는 중...</div>
+      </div>
+    )
+  }
 
   if (!unlocked) {
     return <LockScreen onUnlock={handleUnlock} />

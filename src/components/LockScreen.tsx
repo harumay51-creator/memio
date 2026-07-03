@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
+import { doc, getDoc, setDoc } from 'firebase/firestore'
+import { db } from '../config/firebase'
 
 interface LockScreenProps {
   onUnlock: () => void
@@ -8,12 +10,27 @@ const LockScreen: React.FC<LockScreenProps> = ({ onUnlock }) => {
   const [password, setPassword] = useState('')
   const [error, setError] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
-
-  // SHA-256 hash of '%^&memio2026!@'
-  const EXPECTED_HASH = '4d112400c287b23117b72a349436c7de6b0ec74b033d241676d0ac09c489ad60'
+  const [expectedHash, setExpectedHash] = useState<string | null>(null)
 
   useEffect(() => {
-    // Focus the input when component mounts
+    async function fetchAuth() {
+      try {
+        const docRef = doc(db, 'settings', 'auth')
+        const snap = await getDoc(docRef)
+        if (snap.exists()) {
+          setExpectedHash(snap.data().hash)
+        } else {
+          // Default hash for '%^&memio2026!@'
+          const defaultHash = '4d112400c287b23117b72a349436c7de6b0ec74b033d241676d0ac09c489ad60'
+          await setDoc(docRef, { hash: defaultHash })
+          setExpectedHash(defaultHash)
+        }
+      } catch (err) {
+        console.error('Failed to fetch auth', err)
+      }
+    }
+    fetchAuth()
+    
     if (inputRef.current) {
       inputRef.current.focus()
     }
@@ -29,7 +46,7 @@ const LockScreen: React.FC<LockScreenProps> = ({ onUnlock }) => {
       const hashArray = Array.from(new Uint8Array(hashBuffer))
       const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
 
-      if (hashHex === EXPECTED_HASH) {
+      if (expectedHash && hashHex === expectedHash) {
         setError(false)
         onUnlock()
       } else {
@@ -64,15 +81,17 @@ const LockScreen: React.FC<LockScreenProps> = ({ onUnlock }) => {
                 if (error) setError(false)
               }}
               placeholder="비밀번호"
-              className={`w-full bg-yuri-50 border ${error ? 'border-red-400 focus:border-red-500 text-red-500' : 'border-yuri-200 focus:border-accent text-yuri-900'} rounded-lg px-4 py-3 text-base outline-none transition-colors tracking-widest`}
+              disabled={!expectedHash}
+              className={`w-full bg-yuri-50 border ${error ? 'border-red-400 focus:border-red-500 text-red-500' : 'border-yuri-200 focus:border-accent text-yuri-900'} rounded-lg px-4 py-3 text-base outline-none transition-colors tracking-widest disabled:opacity-50`}
             />
           </div>
           {error && <p className="text-red-500 text-xs text-center -mt-2">비밀번호가 올바르지 않습니다.</p>}
           <button
             type="submit"
-            className="w-full bg-accent hover:bg-accent/90 text-white font-medium py-3 rounded-lg transition-colors flex items-center justify-center gap-2"
+            disabled={!expectedHash}
+            className="w-full bg-accent hover:bg-accent/90 text-white font-medium py-3 rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
           >
-            잠금 해제
+            {expectedHash ? '잠금 해제' : '인증 정보 로딩 중...'}
           </button>
         </form>
       </div>
