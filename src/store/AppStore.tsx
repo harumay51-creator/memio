@@ -50,7 +50,7 @@ interface StoreValue {
 const StoreCtx = createContext<StoreValue | null>(null)
 
 // ── Provider ──────────────────────────────────────────────────────────────────
-export const AppStoreProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string }> = ({ children, uid }) => {
   const [isLoading, setIsLoading] = useState(true)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [tasks,  setTasks]  = useState<Task[]>([])
@@ -84,13 +84,13 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
         const batch = writeBatch(db)
         
-        localTasks.forEach(t => batch.set(doc(db, 'tasks', t.id), t))
-        localLedger.forEach(l => batch.set(doc(db, 'ledger', l.id), l))
-        localEvents.forEach(e => batch.set(doc(db, 'events', e.id), e))
-        localNotes.forEach(n => batch.set(doc(db, 'notes', n.id), n))
-        localFixedExpenses.forEach(f => batch.set(doc(db, 'fixedExpenses', f.id), f))
-        localExpenseCategories.forEach(c => batch.set(doc(db, 'expenseCategories', c.name), c))
-        localAgendas.forEach(a => batch.set(doc(db, 'agendas', a.id), a))
+        localTasks.forEach(t => batch.set(doc(db, 'users', uid, 'tasks', t.id), t))
+        localLedger.forEach(l => batch.set(doc(db, 'users', uid, 'ledger', l.id), l))
+        localEvents.forEach(e => batch.set(doc(db, 'users', uid, 'events', e.id), e))
+        localNotes.forEach(n => batch.set(doc(db, 'users', uid, 'notes', n.id), n))
+        localFixedExpenses.forEach(f => batch.set(doc(db, 'users', uid, 'fixedExpenses', f.id), f))
+        localExpenseCategories.forEach(c => batch.set(doc(db, 'users', uid, 'expenseCategories', c.name), c))
+        localAgendas.forEach(a => batch.set(doc(db, 'users', uid, 'agendas', a.id), a))
 
         await batch.commit()
         localStorage.setItem('yuri-migrated-to-firebase', 'true')
@@ -105,7 +105,7 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       } else {
         // Fetch from Firestore
         const fetchCol = async (colName: string) => {
-          const snap = await getDocs(collection(db, colName))
+          const snap = await getDocs(collection(db, 'users', uid, colName))
           return snap.docs.map(doc => doc.data())
         }
         
@@ -146,7 +146,7 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
     
     loadData()
-  }, [])
+  }, [uid])
 
   // Auto-inject logic (only when NOT loading)
   useEffect(() => {
@@ -188,164 +188,164 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     if (hasChanges) {
       setLedger(prev => [...injections, ...prev])
       const batch = writeBatch(db)
-      injections.forEach(inj => batch.set(doc(db, 'ledger', inj.id), inj))
+      injections.forEach(inj => batch.set(doc(db, 'users', uid, 'ledger', inj.id), inj))
       batch.commit().catch(console.error)
     }
-  }, [fixedExpenses, ledger, isLoading])
+  }, [fixedExpenses, ledger, isLoading, uid])
 
   const addTask = useCallback((text: string) => {
     const newItem: Task = { id: genId(), text, done: false, createdAt: new Date().toISOString(), order: tasks.length }
     setTasks(prev => [newItem, ...prev])
-    setDoc(doc(db, 'tasks', newItem.id), newItem).catch(console.error)
-  }, [tasks.length])
+    setDoc(doc(db, 'users', uid, 'tasks', newItem.id), newItem).catch(console.error)
+  }, [tasks.length, uid])
 
   const toggleTask = useCallback((id: string) => {
     setTasks(prev => {
       const next = prev.map(t => t.id === id ? { ...t, done: !t.done } : t)
       const updated = next.find(t => t.id === id)
-      if (updated) updateDoc(doc(db, 'tasks', id), { done: updated.done }).catch(console.error)
+      if (updated) updateDoc(doc(db, 'users', uid, 'tasks', id), { done: updated.done }).catch(console.error)
       return next
     })
-  }, [])
+  }, [uid])
 
   const updateTaskNote = useCallback((id: string, note: string) => {
     setTasks(prev => {
       const next = prev.map(t => t.id === id ? { ...t, note } : t)
-      updateDoc(doc(db, 'tasks', id), { note }).catch(console.error)
+      updateDoc(doc(db, 'users', uid, 'tasks', id), { note }).catch(console.error)
       return next
     })
-  }, [])
+  }, [uid])
 
   const updateTaskText = useCallback((id: string, text: string) => {
     setTasks(prev => {
       const next = prev.map(t => t.id === id ? { ...t, text } : t)
-      updateDoc(doc(db, 'tasks', id), { text }).catch(console.error)
+      updateDoc(doc(db, 'users', uid, 'tasks', id), { text }).catch(console.error)
       return next
     })
-  }, [])
+  }, [uid])
 
   const deleteTask = useCallback((id: string) => {
     setTasks(prev => prev.filter(t => t.id !== id))
-    deleteDoc(doc(db, 'tasks', id)).catch(console.error)
-  }, [])
+    deleteDoc(doc(db, 'users', uid, 'tasks', id)).catch(console.error)
+  }, [uid])
 
   const addLedgerEntry = useCallback((text: string, amount: number, type: 'income' | 'expense', category: string, date?: string) => {
     const newItem: LedgerEntry = { id: genId(), type, amount, category, label: text, scheduledDate: date, paymentMethod: '카드', createdAt: new Date().toISOString() }
     setLedger(prev => [newItem, ...prev])
-    setDoc(doc(db, 'ledger', newItem.id), newItem).catch(console.error)
-  }, [])
+    setDoc(doc(db, 'users', uid, 'ledger', newItem.id), newItem).catch(console.error)
+  }, [uid])
 
   const updateLedgerEntry = useCallback((id: string, updates: Partial<LedgerEntry>) => {
     setLedger(prev => prev.map(l => l.id === id ? { ...l, ...updates } : l))
-    updateDoc(doc(db, 'ledger', id), updates).catch(console.error)
-  }, [])
+    updateDoc(doc(db, 'users', uid, 'ledger', id), updates).catch(console.error)
+  }, [uid])
 
   const deleteLedgerEntry = useCallback((id: string) => {
     setLedger(prev => prev.filter(l => l.id !== id))
-    deleteDoc(doc(db, 'ledger', id)).catch(console.error)
-  }, [])
+    deleteDoc(doc(db, 'users', uid, 'ledger', id)).catch(console.error)
+  }, [uid])
 
   const addEvent = useCallback((text: string, scheduledDate?: string) => {
     const newItem: ScheduleEvent = { id: genId(), text, scheduledDate, createdAt: new Date().toISOString(), order: events.length }
     setEvents(prev => [newItem, ...prev])
-    setDoc(doc(db, 'events', newItem.id), newItem).catch(console.error)
-  }, [events.length])
+    setDoc(doc(db, 'users', uid, 'events', newItem.id), newItem).catch(console.error)
+  }, [events.length, uid])
 
   const deleteEvent = useCallback((id: string) => {
     setEvents(prev => prev.filter(e => e.id !== id))
-    deleteDoc(doc(db, 'events', id)).catch(console.error)
-  }, [])
+    deleteDoc(doc(db, 'users', uid, 'events', id)).catch(console.error)
+  }, [uid])
 
   const addNote = useCallback((text: string) => {
     const newItem: Note = { id: genId(), text, createdAt: new Date().toISOString() }
     setNotes(prev => [newItem, ...prev])
-    setDoc(doc(db, 'notes', newItem.id), newItem).catch(console.error)
+    setDoc(doc(db, 'users', uid, 'notes', newItem.id), newItem).catch(console.error)
     return newItem.id
-  }, [])
+  }, [uid])
 
   const deleteNote = useCallback((id: string) => {
     setNotes(prev => prev.filter(n => n.id !== id))
-    deleteDoc(doc(db, 'notes', id)).catch(console.error)
-  }, [])
+    deleteDoc(doc(db, 'users', uid, 'notes', id)).catch(console.error)
+  }, [uid])
 
   const updateNote = useCallback((id: string, text: string) => {
     setNotes(prev => prev.map(n => n.id === id ? { ...n, text } : n))
-    updateDoc(doc(db, 'notes', id), { text }).catch(console.error)
-  }, [])
+    updateDoc(doc(db, 'users', uid, 'notes', id), { text }).catch(console.error)
+  }, [uid])
 
   const addFixedExpense = useCallback((label: string, amount: number, day: number, category: string) => {
     const newItem: FixedExpense = { id: genId(), label, amount, day, category, createdAt: new Date().toISOString() }
     setFixedExpenses(prev => [newItem, ...prev])
-    setDoc(doc(db, 'fixedExpenses', newItem.id), newItem).catch(console.error)
-  }, [])
+    setDoc(doc(db, 'users', uid, 'fixedExpenses', newItem.id), newItem).catch(console.error)
+  }, [uid])
 
   const updateFixedExpense = useCallback((id: string, updates: Partial<FixedExpense>) => {
     setFixedExpenses(prev => prev.map(f => f.id === id ? { ...f, ...updates } : f))
-    updateDoc(doc(db, 'fixedExpenses', id), updates).catch(console.error)
-  }, [])
+    updateDoc(doc(db, 'users', uid, 'fixedExpenses', id), updates).catch(console.error)
+  }, [uid])
 
   const deleteFixedExpense = useCallback((id: string) => {
     setFixedExpenses(prev => prev.filter(f => f.id !== id))
-    deleteDoc(doc(db, 'fixedExpenses', id)).catch(console.error)
-  }, [])
+    deleteDoc(doc(db, 'users', uid, 'fixedExpenses', id)).catch(console.error)
+  }, [uid])
 
   const addCategoryKeyword = useCallback((categoryName: string, keyword: string) => {
     setExpenseCategories(prev => {
       const next = prev.map(c => {
         if (c.name === categoryName && !c.keywords.includes(keyword)) {
           const updated = { ...c, keywords: [...c.keywords, keyword] }
-          updateDoc(doc(db, 'expenseCategories', c.name), { keywords: updated.keywords }).catch(console.error)
+          updateDoc(doc(db, 'users', uid, 'expenseCategories', c.name), { keywords: updated.keywords }).catch(console.error)
           return updated
         }
         return c
       })
       return next
     })
-  }, [])
+  }, [uid])
 
   const removeCategoryKeyword = useCallback((categoryName: string, keyword: string) => {
     setExpenseCategories(prev => {
       const next = prev.map(c => {
         if (c.name === categoryName) {
           const updated = { ...c, keywords: c.keywords.filter(k => k !== keyword) }
-          updateDoc(doc(db, 'expenseCategories', c.name), { keywords: updated.keywords }).catch(console.error)
+          updateDoc(doc(db, 'users', uid, 'expenseCategories', c.name), { keywords: updated.keywords }).catch(console.error)
           return updated
         }
         return c
       })
       return next
     })
-  }, [])
+  }, [uid])
 
   const addCategory = useCallback((name: string) => {
     setExpenseCategories(prev => {
       if (prev.some(c => c.name === name)) return prev
       const newItem = { name, keywords: [] }
       const next = [...prev, newItem]
-      setDoc(doc(db, 'expenseCategories', name), newItem).catch(console.error)
+      setDoc(doc(db, 'users', uid, 'expenseCategories', name), newItem).catch(console.error)
       return next
     })
-  }, [])
+  }, [uid])
 
   const addAgenda = useCallback((text: string, monthKey: string) => {
     const newItem: AgendaItem = { id: genId(), monthKey, text, done: false, createdAt: new Date().toISOString() }
     setAgendas(prev => [...prev, newItem])
-    setDoc(doc(db, 'agendas', newItem.id), newItem).catch(console.error)
-  }, [])
+    setDoc(doc(db, 'users', uid, 'agendas', newItem.id), newItem).catch(console.error)
+  }, [uid])
 
   const toggleAgenda = useCallback((id: string) => {
     setAgendas(prev => {
       const next = prev.map(a => a.id === id ? { ...a, done: !a.done } : a)
       const updated = next.find(a => a.id === id)
-      if (updated) updateDoc(doc(db, 'agendas', id), { done: updated.done }).catch(console.error)
+      if (updated) updateDoc(doc(db, 'users', uid, 'agendas', id), { done: updated.done }).catch(console.error)
       return next
     })
-  }, [])
+  }, [uid])
 
   const deleteAgenda = useCallback((id: string) => {
     setAgendas(prev => prev.filter(a => a.id !== id))
-    deleteDoc(doc(db, 'agendas', id)).catch(console.error)
-  }, [])
+    deleteDoc(doc(db, 'users', uid, 'agendas', id)).catch(console.error)
+  }, [uid])
 
   const updateItemOrders = useCallback((updates: { id: string, type: 'task' | 'event', order: number }[]) => {
     const taskUpdates = updates.filter(u => u.type === 'task')
@@ -355,7 +355,7 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setTasks(prev => prev.map(t => {
         const u = taskUpdates.find(x => x.id === t.id)
         if (u) {
-          updateDoc(doc(db, 'tasks', t.id), { order: u.order }).catch(console.error)
+          updateDoc(doc(db, 'users', uid, 'tasks', t.id), { order: u.order }).catch(console.error)
           return { ...t, order: u.order }
         }
         return t
@@ -366,13 +366,13 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setEvents(prev => prev.map(e => {
         const u = eventUpdates.find(x => x.id === e.id)
         if (u) {
-          updateDoc(doc(db, 'events', e.id), { order: u.order }).catch(console.error)
+          updateDoc(doc(db, 'users', uid, 'events', e.id), { order: u.order }).catch(console.error)
           return { ...e, order: u.order }
         }
         return e
       }))
     }
-  }, [])
+  }, [uid])
 
   return (
     <StoreCtx.Provider value={{

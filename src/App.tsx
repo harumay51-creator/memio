@@ -4,14 +4,15 @@ import { useAppStore, AppStoreProvider } from './store/AppStore'
 import Sidebar      from './components/Sidebar'
 import QuickCapture from './components/QuickCapture'
 import Router       from './router/Router'
-import LockScreen   from './components/LockScreen'
+import AuthScreen   from './components/AuthScreen'
+import { auth }     from './config/firebase'
+import { onAuthStateChanged, User } from 'firebase/auth'
 
 // ── Inner app (needs to be inside AppStoreProvider to access useAppStore) ─────
 const AppInner: React.FC = () => {
   const { isLoading, loadError } = useAppStore()
   const [activePage,    setActivePage]    = useState<PageId>(() => (localStorage.getItem('yuri-active-page') as PageId) || 'dashboard')
   const [activeItemId,  setActiveItemId]  = useState<string | null>(null)
-  const [unlocked,      setUnlocked]      = useState<boolean>(() => localStorage.getItem('yuri-auth') === 'true')
 
   const navigate = useCallback((page: PageId, itemId?: string) => {
     setActiveItemId(itemId || null)
@@ -31,15 +32,9 @@ const AppInner: React.FC = () => {
     return () => window.removeEventListener('keydown', handler)
   }, [navigate])
 
-  const handleUnlock = useCallback(() => {
-    setUnlocked(true)
-    localStorage.setItem('yuri-auth', 'true')
-  }, [])
-
-  const handleLogout = useCallback(() => {
-    setUnlocked(false)
-    localStorage.removeItem('yuri-auth')
-  }, [])
+  const handleLogout = () => {
+    auth.signOut()
+  }
 
   if (isLoading) {
     return (
@@ -81,26 +76,19 @@ service cloud.firestore {
     )
   }
 
-  if (!unlocked) {
-    return <LockScreen onUnlock={handleUnlock} />
-  }
-
   return (
-    <div className="flex h-screen overflow-hidden bg-white">
-      {/* ── Left sidebar ────────────────────────────────────────────── */}
+    <div className="flex h-screen w-screen overflow-hidden bg-yuri-50 font-sans text-yuri-900 selection:bg-accent/20">
       <Sidebar
         activePage={activePage}
         onNavigate={navigate}
         onLogout={handleLogout}
       />
-
-      {/* ── Main content & Bottom Bar ────────────────────────────────────────────── */}
-      <main className="flex-1 min-w-0 flex flex-col h-screen">
-        <div className="flex-1 min-h-0 relative overflow-hidden bg-white">
+      
+      <main className="flex-1 flex flex-col relative h-full min-w-0">
+        <div className="flex-1 overflow-y-auto w-full relative">
           <Router page={activePage} activeItemId={activeItemId} />
         </div>
-
-        {/* ── Quick Capture (Only in Ledger) ──────────────────────────── */}
+        
         {activePage === 'ledger' && (
           <div className="shrink-0 pb-6 pt-2 px-6 border-t border-yuri-100 bg-yuri-50/50">
             <QuickCapture />
@@ -111,11 +99,34 @@ service cloud.firestore {
   )
 }
 
-// ── Root ──────────────────────────────────────────────────────────────────────
-const App: React.FC = () => (
-  <AppStoreProvider>
-    <AppInner />
-  </AppStoreProvider>
-)
+// ── Root app ──────────────────────────────────────────────────────────────────
+export default function App() {
+  const [user, setUser] = useState<User | null>(null)
+  const [isAuthLoading, setIsAuthLoading] = useState(true)
 
-export default App
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser)
+      setIsAuthLoading(false)
+    })
+    return () => unsubscribe()
+  }, [])
+
+  if (isAuthLoading) {
+    return (
+      <div className="flex h-screen w-screen items-center justify-center bg-yuri-50">
+        <div className="animate-pulse text-accent font-medium text-lg">인증 확인 중...</div>
+      </div>
+    )
+  }
+
+  if (!user) {
+    return <AuthScreen />
+  }
+
+  return (
+    <AppStoreProvider uid={user.uid}>
+      <AppInner />
+    </AppStoreProvider>
+  )
+}
