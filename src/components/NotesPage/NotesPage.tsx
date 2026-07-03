@@ -46,9 +46,12 @@ const NotesPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId })
   }
 
   const filteredNotes = useMemo(() => {
-    if (!searchQuery.trim()) return notes
-    const lowerQ = searchQuery.toLowerCase()
-    return notes.filter(n => n.text.toLowerCase().includes(lowerQ))
+    let result = notes
+    if (searchQuery.trim()) {
+      const lowerQ = searchQuery.toLowerCase()
+      result = notes.filter(n => n.text.toLowerCase().includes(lowerQ))
+    }
+    return [...result].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
   }, [notes, searchQuery])
 
   return (

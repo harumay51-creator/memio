@@ -40,7 +40,7 @@ const CalendarPage: React.FC = () => {
     tasks, events, agendas, anniversaries, monthlyEvents,
     toggleTask, deleteTask, deleteEvent,
     addAgenda, toggleAgenda, deleteAgenda,
-    addEvent, updateItemOrders,
+    addEvent, updateItemOrders, deleteAnniversary, deleteMonthlyEvent,
     navDate, setNavDate
   } = useAppStore()
 
@@ -142,25 +142,29 @@ const CalendarPage: React.FC = () => {
     const items: React.ReactNode[] = []
 
     const dStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-    const holidayName = HOLIDAYS[dStr]
-    if (holidayName) {
-      items.push(<div key="holiday" className="text-[10px] text-red-600 bg-red-50 px-1 rounded truncate w-full font-bold">{holidayName}</div>)
+    const holidayInfo = HOLIDAYS[dStr]
+    if (holidayInfo) {
+      items.push(<div key="holiday" className={`text-[10px] px-1 rounded truncate w-full font-bold ${holidayInfo.isRedDay ? 'text-red-600 bg-red-50' : 'text-yuri-600 bg-yuri-50'}`}>{holidayInfo.name}</div>)
     }
 
-    anniversaries.filter(a => a.month === d.getMonth() + 1 && a.day === d.getDate()).forEach(a => {
+    const dayAnnivs = anniversaries.filter(a => a.month === d.getMonth() + 1 && a.day === d.getDate() && new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59).getTime() >= new Date(a.createdAt).getTime())
+    dayAnnivs.forEach(a => {
       items.push(<div key={`a-${a.id}`} className="text-[10px] text-pink-700 bg-pink-100/50 px-1 rounded truncate w-full">🎂 {a.name}</div>)
     })
 
-    monthlyEvents.filter(m => m.day === d.getDate()).forEach(m => {
+    const dayMonthly = monthlyEvents.filter(m => m.day === d.getDate() && new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59).getTime() >= new Date(m.createdAt).getTime())
+    dayMonthly.forEach(m => {
       items.push(<div key={`m-${m.id}`} className="text-[10px] text-blue-700 bg-blue-100/50 px-1 rounded truncate w-full">🔄 {m.name}</div>)
     })
 
-    const dayEvents = events.filter(e => isoMatchesDay(eventDisplayDate(e.scheduledDate, e.createdAt), d))
+    const dayEvents = events.filter(e => isoMatchesDay(eventDisplayDate(e.scheduledDate, e.createdAt), d)).sort((a, b) => (a.order ?? new Date(a.createdAt).getTime()) - (b.order ?? new Date(b.createdAt).getTime()))
     dayEvents.forEach(e => {
       items.push(<div key={`e-${e.id}`} className="text-[10px] text-amber-700 bg-amber-100/50 px-1 rounded truncate w-full">{e.text}</div>)
     })
 
-    return { items, isRedDay: !!holidayName || d.getDay() === 0 }
+    const isRedDay = (holidayInfo && holidayInfo.isRedDay) || d.getDay() === 0
+
+    return { items, isRedDay, dayAnnivs, dayMonthly, dayEvents }
   }
 
   const isSelDayToday = sameDay(selDay, today)
@@ -308,8 +312,56 @@ const CalendarPage: React.FC = () => {
           </header>
 
           <div className="px-5 pb-5 flex-1 overflow-y-auto">
-            {selectedDayEvents.length > 0 ? (
+            {selectedDayEvents.length > 0 || getDayItems(selDay).dayAnnivs.length > 0 || getDayItems(selDay).dayMonthly.length > 0 ? (
               <ul className="flex flex-col gap-2 relative before:absolute before:inset-y-3 before:left-[9px] before:w-0.5 before:bg-yuri-100">
+                
+                {getDayItems(selDay).dayAnnivs.map(a => (
+                  <li key={`sa-${a.id}`} className="flex items-start gap-3 relative">
+                    <div className="w-5 h-5 rounded-full bg-white border-2 border-yuri-200 flex items-center justify-center z-10 shrink-0 mt-0.5">
+                      <div className="w-1.5 h-1.5 rounded-full bg-pink-400" />
+                    </div>
+                    
+                    <div className="flex-1 bg-pink-50/30 border border-pink-100 rounded-lg p-2.5 flex gap-2 items-start hover:border-pink-200 transition-colors group">
+                      <span className="shrink-0 text-[9px] font-bold px-1.5 py-0.5 rounded tracking-wider bg-pink-100 text-pink-700 mt-0.5">
+                        기념일
+                      </span>
+                      
+                      <div className="flex-1">
+                        <span className="text-xs text-yuri-900 font-medium whitespace-pre-wrap leading-tight">
+                          {a.name}
+                        </span>
+                      </div>
+                      
+                      <div className="flex gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button onClick={() => deleteAnniversary(a.id)} className="w-5 h-5 flex items-center justify-center rounded text-yuri-300 hover:text-red-400 hover:bg-red-50 text-[10px]">✕</button>
+                      </div>
+                    </div>
+                  </li>
+                ))}
+
+                {getDayItems(selDay).dayMonthly.map(m => (
+                  <li key={`sm-${m.id}`} className="flex items-start gap-3 relative">
+                    <div className="w-5 h-5 rounded-full bg-white border-2 border-yuri-200 flex items-center justify-center z-10 shrink-0 mt-0.5">
+                      <div className="w-1.5 h-1.5 rounded-full bg-blue-400" />
+                    </div>
+                    
+                    <div className="flex-1 bg-blue-50/30 border border-blue-100 rounded-lg p-2.5 flex gap-2 items-start hover:border-blue-200 transition-colors group">
+                      <span className="shrink-0 text-[9px] font-bold px-1.5 py-0.5 rounded tracking-wider bg-blue-100 text-blue-700 mt-0.5">
+                        반복일정
+                      </span>
+                      
+                      <div className="flex-1">
+                        <span className="text-xs text-yuri-900 font-medium whitespace-pre-wrap leading-tight">
+                          {m.name}
+                        </span>
+                      </div>
+                      
+                      <div className="flex gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button onClick={() => deleteMonthlyEvent(m.id)} className="w-5 h-5 flex items-center justify-center rounded text-yuri-300 hover:text-red-400 hover:bg-red-50 text-[10px]">✕</button>
+                      </div>
+                    </div>
+                  </li>
+                ))}
                 {selectedDayEvents.map((e, index) => (
                   <li key={e.id} className="flex items-start gap-3 relative">
                     <div className="w-5 h-5 rounded-full bg-white border-2 border-yuri-200 flex items-center justify-center z-10 shrink-0 mt-0.5">
