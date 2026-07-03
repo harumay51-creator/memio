@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react'
-import type { Task, LedgerEntry, ScheduleEvent, Note, FixedExpense, CategoryConfig, AgendaItem } from '../types'
+import type { Task, LedgerEntry, ScheduleEvent, Note, FixedExpense, CategoryConfig, AgendaItem, Anniversary, MonthlyEvent } from '../types'
 import { DEFAULT_EXPENSE_CATS } from '../utils/parser'
 import { collection, getDocs, setDoc, updateDoc, deleteDoc, doc, writeBatch } from 'firebase/firestore'
 import { db } from '../config/firebase'
@@ -20,6 +20,8 @@ interface StoreValue {
   fixedExpenses: FixedExpense[]
   expenseCategories: CategoryConfig[]
   agendas: AgendaItem[]
+  anniversaries: Anniversary[]
+  monthlyEvents: MonthlyEvent[]
   addTask:        (text: string) => void
   toggleTask:     (id: string)  => void
   updateTaskText: (id: string, text: string) => void
@@ -45,6 +47,10 @@ interface StoreValue {
   toggleAgenda: (id: string) => void
   deleteAgenda: (id: string) => void
   updateItemOrders: (updates: { id: string, type: 'task' | 'event', order: number }[]) => void
+  addAnniversary: (name: string, month: number, day: number) => void
+  deleteAnniversary: (id: string) => void
+  addMonthlyEvent: (name: string, day: number) => void
+  deleteMonthlyEvent: (id: string) => void
 }
 
 const StoreCtx = createContext<StoreValue | null>(null)
@@ -60,6 +66,8 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
   const [fixedExpenses, setFixedExpenses] = useState<FixedExpense[]>([])
   const [expenseCategories, setExpenseCategories] = useState<CategoryConfig[]>([])
   const [agendas, setAgendas] = useState<AgendaItem[]>([])
+  const [anniversaries, setAnniversaries] = useState<Anniversary[]>([])
+  const [monthlyEvents, setMonthlyEvents] = useState<MonthlyEvent[]>([])
   const [navDate, setNavDate] = useState<Date | null>(null)
 
   useEffect(() => {
@@ -81,6 +89,8 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
         const localFixedExpenses = loadLocal<FixedExpense[]>('yuri-fixed-expenses', [])
         const localExpenseCategories = loadLocal<CategoryConfig[]>('yuri-expense-cats', DEFAULT_EXPENSE_CATS)
         const localAgendas = loadLocal<AgendaItem[]>('yuri-agendas', [])
+        const localAnnivs = loadLocal<Anniversary[]>('yuri-anniversaries', [])
+        const localMonthly = loadLocal<MonthlyEvent[]>('yuri-monthly-events', [])
 
         const batch = writeBatch(db)
         
@@ -91,6 +101,8 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
         localFixedExpenses.forEach(f => batch.set(doc(db, 'users', uid, 'fixedExpenses', f.id), f))
         localExpenseCategories.forEach(c => batch.set(doc(db, 'users', uid, 'expenseCategories', c.name), c))
         localAgendas.forEach(a => batch.set(doc(db, 'users', uid, 'agendas', a.id), a))
+        localAnnivs.forEach(a => batch.set(doc(db, 'users', uid, 'anniversaries', a.id), a))
+        localMonthly.forEach(m => batch.set(doc(db, 'users', uid, 'monthlyEvents', m.id), m))
 
         await batch.commit()
         localStorage.setItem('yuri-migrated-to-firebase', 'true')
@@ -102,6 +114,8 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
         setFixedExpenses(localFixedExpenses)
         setExpenseCategories(localExpenseCategories)
         setAgendas(localAgendas)
+        setAnniversaries(localAnnivs)
+        setMonthlyEvents(localMonthly)
       } else {
         // Fetch from Firestore
         const fetchCol = async (colName: string) => {
@@ -116,7 +130,9 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
           fetchedNotes,
           fetchedFixedExpenses,
           fetchedExpenseCats,
-          fetchedAgendas
+          fetchedAgendas,
+          fetchedAnnivs,
+          fetchedMonthly
         ] = await Promise.all([
           fetchCol('tasks'),
           fetchCol('ledger'),
@@ -124,7 +140,9 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
           fetchCol('notes'),
           fetchCol('fixedExpenses'),
           fetchCol('expenseCategories'),
-          fetchCol('agendas')
+          fetchCol('agendas'),
+          fetchCol('anniversaries'),
+          fetchCol('monthlyEvents')
         ])
 
         const finalCats = fetchedExpenseCats.length > 0 ? fetchedExpenseCats : DEFAULT_EXPENSE_CATS
@@ -136,6 +154,8 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
         setFixedExpenses(fetchedFixedExpenses as FixedExpense[])
         setExpenseCategories(finalCats as CategoryConfig[])
         setAgendas(fetchedAgendas as AgendaItem[])
+        setAnniversaries(fetchedAnnivs as Anniversary[])
+        setMonthlyEvents(fetchedMonthly as MonthlyEvent[])
       }
       } catch (err: any) {
         console.error("Firebase load error:", err)
@@ -375,10 +395,32 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
     }
   }, [uid])
 
+  const addAnniversary = useCallback((name: string, month: number, day: number) => {
+    const newItem: Anniversary = { id: genId(), name, month, day, createdAt: new Date().toISOString() }
+    setAnniversaries(prev => [...prev, newItem])
+    setDoc(doc(db, 'users', uid, 'anniversaries', newItem.id), newItem).catch(console.error)
+  }, [uid])
+
+  const deleteAnniversary = useCallback((id: string) => {
+    setAnniversaries(prev => prev.filter(a => a.id !== id))
+    deleteDoc(doc(db, 'users', uid, 'anniversaries', id)).catch(console.error)
+  }, [uid])
+
+  const addMonthlyEvent = useCallback((name: string, day: number) => {
+    const newItem: MonthlyEvent = { id: genId(), name, day, createdAt: new Date().toISOString() }
+    setMonthlyEvents(prev => [...prev, newItem])
+    setDoc(doc(db, 'users', uid, 'monthlyEvents', newItem.id), newItem).catch(console.error)
+  }, [uid])
+
+  const deleteMonthlyEvent = useCallback((id: string) => {
+    setMonthlyEvents(prev => prev.filter(m => m.id !== id))
+    deleteDoc(doc(db, 'users', uid, 'monthlyEvents', id)).catch(console.error)
+  }, [uid])
+
   return (
     <StoreCtx.Provider value={{
       isLoading, loadError,
-      tasks, ledger, events, notes, fixedExpenses, expenseCategories, agendas,
+      tasks, ledger, events, notes, fixedExpenses, expenseCategories, agendas, anniversaries, monthlyEvents,
       addTask, toggleTask, updateTaskText, updateTaskNote, deleteTask,
       addLedgerEntry, updateLedgerEntry, deleteLedgerEntry,
       addEvent, deleteEvent,
@@ -387,7 +429,9 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
       addFixedExpense, updateFixedExpense, deleteFixedExpense,
       addCategory, addCategoryKeyword, removeCategoryKeyword,
       addAgenda, toggleAgenda, deleteAgenda,
-      updateItemOrders
+      updateItemOrders,
+      addAnniversary, deleteAnniversary,
+      addMonthlyEvent, deleteMonthlyEvent
     }}>
       {children}
     </StoreCtx.Provider>

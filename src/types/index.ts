@@ -80,3 +80,18 @@ export interface AgendaItem {
   done:      boolean
   createdAt: string
 }
+
+export interface Anniversary {
+  id: string
+  name: string
+  month: number // 1-12
+  day: number   // 1-31
+  createdAt: string
+}
+
+export interface MonthlyEvent {
+  id: string
+  name: string
+  day: number   // 1-31
+  createdAt: string
+}

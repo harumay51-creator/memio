@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react'
 import { useAppStore } from '../../store/AppStore'
+import { HOLIDAYS } from '../../utils/holidays'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'] as const
@@ -36,7 +37,7 @@ function buildGrid(year: number, month: number): (Date | null)[] {
 // ── Component ─────────────────────────────────────────────────────────────────
 const CalendarPage: React.FC = () => {
   const {
-    tasks, events, agendas,
+    tasks, events, agendas, anniversaries, monthlyEvents,
     toggleTask, deleteTask, deleteEvent,
     addAgenda, toggleAgenda, deleteAgenda,
     addEvent, updateItemOrders,
@@ -138,9 +139,28 @@ const CalendarPage: React.FC = () => {
 
   // Helper for mini calendar dots & text
   const getDayItems = (d: Date) => {
+    const items: React.ReactNode[] = []
+
+    const dStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+    const holidayName = HOLIDAYS[dStr]
+    if (holidayName) {
+      items.push(<div key="holiday" className="text-[10px] text-red-600 bg-red-50 px-1 rounded truncate w-full font-bold">{holidayName}</div>)
+    }
+
+    anniversaries.filter(a => a.month === d.getMonth() + 1 && a.day === d.getDate()).forEach(a => {
+      items.push(<div key={`a-${a.id}`} className="text-[10px] text-pink-700 bg-pink-100/50 px-1 rounded truncate w-full">🎂 {a.name}</div>)
+    })
+
+    monthlyEvents.filter(m => m.day === d.getDate()).forEach(m => {
+      items.push(<div key={`m-${m.id}`} className="text-[10px] text-blue-700 bg-blue-100/50 px-1 rounded truncate w-full">🔄 {m.name}</div>)
+    })
+
     const dayEvents = events.filter(e => isoMatchesDay(eventDisplayDate(e.scheduledDate, e.createdAt), d))
-    const total = dayEvents.length
-    return { dayEvents, total }
+    dayEvents.forEach(e => {
+      items.push(<div key={`e-${e.id}`} className="text-[10px] text-amber-700 bg-amber-100/50 px-1 rounded truncate w-full">{e.text}</div>)
+    })
+
+    return { items, isRedDay: !!holidayName || d.getDay() === 0 }
   }
 
   const isSelDayToday = sameDay(selDay, today)
@@ -209,7 +229,7 @@ const CalendarPage: React.FC = () => {
             
             const isToday = sameDay(date, today)
             const isSelected = sameDay(date, selDay)
-            const { dayEvents, total } = getDayItems(date)
+            const { items, isRedDay } = getDayItems(date)
 
             return (
               <div 
@@ -229,18 +249,14 @@ const CalendarPage: React.FC = () => {
               >
                 <div className={`
                   w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold self-start mb-1
-                  ${isToday ? 'bg-accent text-white shadow-sm' : isSelected ? 'text-amber-700' : 'text-yuri-700'}
+                  ${isToday ? 'bg-accent text-white shadow-sm' : isSelected ? (isRedDay ? 'text-red-600' : 'text-amber-700') : (isRedDay ? 'text-red-500' : 'text-yuri-700')}
                 `}>
                   {date.getDate()}
                 </div>
                 <div className="flex flex-col gap-0.5 overflow-hidden flex-1">
-                  {dayEvents.slice(0, 3).map(e => (
-                    <div key={e.id} className="text-[10px] text-amber-700 bg-amber-100/50 px-1 rounded truncate w-full">
-                      {e.text}
-                    </div>
-                  ))}
-                  {total > 3 && (
-                    <div className="text-[9px] text-yuri-400 font-bold px-1">+ {total - 3}개</div>
+                  {items.slice(0, 3)}
+                  {items.length > 3 && (
+                    <div className="text-[9px] text-yuri-400 font-bold px-1">+ {items.length - 3}개</div>
                   )}
                   {inlineDate && sameDay(inlineDate, date) && (
                     <input

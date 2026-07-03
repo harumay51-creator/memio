@@ -3,10 +3,14 @@ import { useAppStore } from '../../store/AppStore'
 import { auth } from '../../config/firebase'
 import { EmailAuthProvider, reauthenticateWithCredential, updatePassword } from 'firebase/auth'
 
-type TabType = 'categories' | 'security'
+type TabType = 'categories' | 'security' | 'anniversaries' | 'monthly'
 
 const SettingsPage: React.FC = () => {
-  const { expenseCategories, addCategoryKeyword, removeCategoryKeyword, addCategory } = useAppStore()
+  const { 
+    expenseCategories, addCategoryKeyword, removeCategoryKeyword, addCategory,
+    anniversaries, addAnniversary, deleteAnniversary,
+    monthlyEvents, addMonthlyEvent, deleteMonthlyEvent
+  } = useAppStore()
   
   const [activeTab, setActiveTab] = useState<TabType>('categories')
 
@@ -22,6 +26,15 @@ const SettingsPage: React.FC = () => {
   const [pwdError, setPwdError] = useState('')
   const [pwdSuccess, setPwdSuccess] = useState('')
   const [isUpdating, setIsUpdating] = useState(false)
+
+  // ── Anniversary States ─────
+  const [annivName, setAnnivName] = useState('')
+  const [annivMonth, setAnnivMonth] = useState('')
+  const [annivDay, setAnnivDay] = useState('')
+
+  // ── Monthly Event States ───
+  const [monthlyName, setMonthlyName] = useState('')
+  const [monthlyDay, setMonthlyDay] = useState('')
 
   // ── Category Handlers ────────
   const toggleCategory = (catName: string) => {
@@ -72,11 +85,8 @@ const SettingsPage: React.FC = () => {
 
     setIsUpdating(true)
     try {
-      // 1. 재인증 (현재 비밀번호 확인)
       const credential = EmailAuthProvider.credential(user.email, currentPassword)
       await reauthenticateWithCredential(user, credential)
-
-      // 2. 비밀번호 업데이트
       await updatePassword(user, newPassword)
       
       setPwdSuccess('비밀번호가 성공적으로 변경되었습니다.')
@@ -95,9 +105,39 @@ const SettingsPage: React.FC = () => {
     }
   }
 
+  // ── Anniversary Handlers ───
+  const handleAddAnniv = (e: React.FormEvent) => {
+    e.preventDefault()
+    const m = parseInt(annivMonth, 10)
+    const d = parseInt(annivDay, 10)
+    if (!annivName.trim() || isNaN(m) || isNaN(d)) return
+    addAnniversary(annivName.trim(), m, d)
+    setAnnivName('')
+    setAnnivMonth('')
+    setAnnivDay('')
+  }
+
+  // ── Monthly Event Handlers ──
+  const handleAddMonthly = (e: React.FormEvent) => {
+    e.preventDefault()
+    const d = parseInt(monthlyDay, 10)
+    if (!monthlyName.trim() || isNaN(d)) return
+    addMonthlyEvent(monthlyName.trim(), d)
+    setMonthlyName('')
+    setMonthlyDay('')
+  }
+
+  const getTabTitle = (tab: TabType) => {
+    switch (tab) {
+      case 'categories': return '가계부 카테고리 관리'
+      case 'security': return '보안 및 비밀번호'
+      case 'anniversaries': return '기념일 관리'
+      case 'monthly': return '매월 반복 일정'
+    }
+  }
+
   return (
     <div className="flex h-full w-full bg-white overflow-hidden">
-      {/* ── Left Sidebar: Settings Navigation (~30%) ────────────────────────────── */}
       <aside className="w-[30%] min-w-[320px] max-w-[400px] border-r border-yuri-100 bg-yuri-50/30 flex flex-col shrink-0 h-full">
         <header className="shrink-0 h-16 border-b border-yuri-100 flex items-center px-8 bg-white">
           <h2 className="text-lg font-bold text-yuri-900 tracking-tight">설정</h2>
@@ -112,6 +152,22 @@ const SettingsPage: React.FC = () => {
             가계부 카테고리 관리
           </button>
           <button 
+            onClick={() => setActiveTab('anniversaries')}
+            className={`w-full text-left px-4 py-3 rounded-lg font-bold text-sm transition-colors ${
+              activeTab === 'anniversaries' ? 'bg-yuri-100 text-yuri-900' : 'text-yuri-600 hover:bg-yuri-50'
+            }`}
+          >
+            기념일 관리 (매년)
+          </button>
+          <button 
+            onClick={() => setActiveTab('monthly')}
+            className={`w-full text-left px-4 py-3 rounded-lg font-bold text-sm transition-colors ${
+              activeTab === 'monthly' ? 'bg-yuri-100 text-yuri-900' : 'text-yuri-600 hover:bg-yuri-50'
+            }`}
+          >
+            매월 반복 일정
+          </button>
+          <button 
             onClick={() => setActiveTab('security')}
             className={`w-full text-left px-4 py-3 rounded-lg font-bold text-sm transition-colors ${
               activeTab === 'security' ? 'bg-yuri-100 text-yuri-900' : 'text-yuri-600 hover:bg-yuri-50'
@@ -122,11 +178,10 @@ const SettingsPage: React.FC = () => {
         </div>
       </aside>
 
-      {/* ── Right Panel: Settings Content (~70%) ───────────────────────────────────── */}
       <main className="flex-1 flex flex-col h-full bg-white relative min-w-0">
         <header className="shrink-0 h-16 border-b border-yuri-100 flex items-center px-8 bg-white">
           <h2 className="text-lg font-bold text-yuri-900 tracking-tight">
-            {activeTab === 'categories' ? '가계부 카테고리 관리' : '보안 및 비밀번호'}
+            {getTabTitle(activeTab)}
           </h2>
         </header>
 
@@ -221,6 +276,111 @@ const SettingsPage: React.FC = () => {
                   </div>
                 </div>
               </>
+            )}
+
+            {activeTab === 'anniversaries' && (
+              <div className="bg-white border border-yuri-200 rounded-xl p-8 shadow-sm">
+                <h3 className="text-lg font-bold text-yuri-900 mb-2">기념일 관리</h3>
+                <p className="text-sm text-yuri-500 mb-6">매년 반복되는 기념일을 추가하면 달력에 자동으로 표시됩니다.</p>
+
+                <form onSubmit={handleAddAnniv} className="flex gap-3 mb-8">
+                  <input
+                    type="text"
+                    placeholder="이름 (예: 엄마 생일)"
+                    value={annivName}
+                    onChange={e => setAnnivName(e.target.value)}
+                    className="flex-1 px-4 py-3 bg-yuri-50 border border-yuri-200 rounded-lg text-sm outline-none focus:border-accent focus:bg-white transition-colors"
+                    required
+                  />
+                  <input
+                    type="number"
+                    min="1" max="12"
+                    placeholder="월 (1-12)"
+                    value={annivMonth}
+                    onChange={e => setAnnivMonth(e.target.value)}
+                    className="w-24 px-4 py-3 bg-yuri-50 border border-yuri-200 rounded-lg text-sm outline-none focus:border-accent focus:bg-white transition-colors"
+                    required
+                  />
+                  <input
+                    type="number"
+                    min="1" max="31"
+                    placeholder="일 (1-31)"
+                    value={annivDay}
+                    onChange={e => setAnnivDay(e.target.value)}
+                    className="w-24 px-4 py-3 bg-yuri-50 border border-yuri-200 rounded-lg text-sm outline-none focus:border-accent focus:bg-white transition-colors"
+                    required
+                  />
+                  <button type="submit" className="px-6 py-3 bg-yuri-900 text-white font-bold rounded-lg hover:bg-yuri-800 transition-colors">
+                    추가
+                  </button>
+                </form>
+
+                <div className="flex flex-col gap-3">
+                  {anniversaries.length === 0 ? (
+                    <div className="text-center py-8 text-yuri-400 text-sm">등록된 기념일이 없습니다.</div>
+                  ) : (
+                    anniversaries.map(a => (
+                      <div key={a.id} className="flex items-center justify-between px-5 py-4 bg-yuri-50 border border-yuri-200 rounded-xl">
+                        <div className="flex items-center gap-4">
+                          <span className="text-yuri-900 font-bold">{a.name}</span>
+                          <span className="text-yuri-500 text-sm">{a.month}월 {a.day}일</span>
+                        </div>
+                        <button onClick={() => deleteAnniversary(a.id)} className="text-red-500 hover:text-red-600 text-sm font-bold px-3 py-1 bg-white border border-red-100 rounded hover:bg-red-50">
+                          삭제
+                        </button>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'monthly' && (
+              <div className="bg-white border border-yuri-200 rounded-xl p-8 shadow-sm">
+                <h3 className="text-lg font-bold text-yuri-900 mb-2">매월 반복 일정</h3>
+                <p className="text-sm text-yuri-500 mb-6">매달 고정적으로 있는 일정을 추가하면 달력에 자동으로 표시됩니다.</p>
+
+                <form onSubmit={handleAddMonthly} className="flex gap-3 mb-8">
+                  <input
+                    type="text"
+                    placeholder="일정 이름 (예: VC레포트 제출)"
+                    value={monthlyName}
+                    onChange={e => setMonthlyName(e.target.value)}
+                    className="flex-1 px-4 py-3 bg-yuri-50 border border-yuri-200 rounded-lg text-sm outline-none focus:border-accent focus:bg-white transition-colors"
+                    required
+                  />
+                  <input
+                    type="number"
+                    min="1" max="31"
+                    placeholder="며칠 (1-31)"
+                    value={monthlyDay}
+                    onChange={e => setMonthlyDay(e.target.value)}
+                    className="w-32 px-4 py-3 bg-yuri-50 border border-yuri-200 rounded-lg text-sm outline-none focus:border-accent focus:bg-white transition-colors"
+                    required
+                  />
+                  <button type="submit" className="px-6 py-3 bg-yuri-900 text-white font-bold rounded-lg hover:bg-yuri-800 transition-colors">
+                    추가
+                  </button>
+                </form>
+
+                <div className="flex flex-col gap-3">
+                  {monthlyEvents.length === 0 ? (
+                    <div className="text-center py-8 text-yuri-400 text-sm">등록된 반복 일정이 없습니다.</div>
+                  ) : (
+                    monthlyEvents.map(m => (
+                      <div key={m.id} className="flex items-center justify-between px-5 py-4 bg-yuri-50 border border-yuri-200 rounded-xl">
+                        <div className="flex items-center gap-4">
+                          <span className="text-yuri-900 font-bold">{m.name}</span>
+                          <span className="text-yuri-500 text-sm">매월 {m.day}일</span>
+                        </div>
+                        <button onClick={() => deleteMonthlyEvent(m.id)} className="text-red-500 hover:text-red-600 text-sm font-bold px-3 py-1 bg-white border border-red-100 rounded hover:bg-red-50">
+                          삭제
+                        </button>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
             )}
 
             {activeTab === 'security' && (
