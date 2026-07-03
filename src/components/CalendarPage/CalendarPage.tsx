@@ -295,7 +295,7 @@ const CalendarPage: React.FC = () => {
                     setInlineText('')
                   }
                 }}
-                className={`p-2 border-b border-r border-[#EEF1F6] flex flex-col cursor-pointer transition-all duration-200 min-h-[100px] bg-[#FFFFFF] hover:bg-[#F7F6FF]`}
+                className={`p-2 border-b border-r border-[#EEF1F6] flex flex-col cursor-pointer transition-all duration-200 min-h-[100px] ${isSelected ? 'bg-[#F7F6FF]' : 'bg-[#FFFFFF] hover:bg-[#F7F6FF]'}`}
               >
                 <div className={`
                   w-6 h-6 rounded-full flex items-center justify-center text-[12px] font-medium self-start mb-1.5
