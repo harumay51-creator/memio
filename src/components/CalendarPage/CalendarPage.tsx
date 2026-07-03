@@ -153,8 +153,8 @@ const CalendarPage: React.FC = () => {
     const holidayInfo = HOLIDAYS[dStr]
     if (holidayInfo) {
       items.push(
-        <div key="holiday" className="text-[10px] shrink-0 h-5 px-1.5 bg-[#FDEEEE] text-[#D45D6E] rounded-md flex gap-1 items-center w-full overflow-hidden">
-          <span className="shrink-0 text-[10px]">📍</span>
+        <div key="holiday" className="text-[10px] shrink-0 h-5 px-1.5 bg-[#FDEEEE] text-[#D45D6E] rounded-md flex gap-[6px] items-center w-full overflow-hidden">
+          <span className="w-[2px] h-[10px] rounded-full bg-[#D45D6E] shrink-0"></span>
           <span className="font-medium truncate leading-none">{holidayInfo.name}</span>
         </div>
       )
@@ -168,8 +168,8 @@ const CalendarPage: React.FC = () => {
     })
     dayAnnivs.forEach(a => {
       items.push(
-        <div key={`a-${a.id}`} className="text-[10px] shrink-0 h-5 px-1.5 bg-[#FCEFF6] text-[#C96A95] rounded-md flex gap-1 items-center w-full overflow-hidden">
-          <span className="shrink-0 text-[10px]">🎂</span>
+        <div key={`a-${a.id}`} className="text-[10px] shrink-0 h-5 px-1.5 bg-[#FCEFF6] text-[#C96A95] rounded-md flex gap-[6px] items-center w-full overflow-hidden">
+          <span className="w-[2px] h-[10px] rounded-full bg-[#C96A95] shrink-0"></span>
           <span className="font-medium truncate leading-none">{a.name}</span>
         </div>
       )
@@ -183,8 +183,8 @@ const CalendarPage: React.FC = () => {
     })
     dayMonthly.forEach(m => {
       items.push(
-        <div key={`m-${m.id}`} className="text-[10px] shrink-0 h-5 px-1.5 bg-[#EDF9F4] text-[#3F9E7A] rounded-md flex gap-1 items-center w-full overflow-hidden">
-          <span className="shrink-0 text-[10px]">🔄</span>
+        <div key={`m-${m.id}`} className="text-[10px] shrink-0 h-5 px-1.5 bg-[#EDF9F4] text-[#3F9E7A] rounded-md flex gap-[6px] items-center w-full overflow-hidden">
+          <span className="w-[2px] h-[10px] rounded-full bg-[#3F9E7A] shrink-0"></span>
           <span className="font-medium truncate leading-none">{m.name}</span>
         </div>
       )
@@ -197,7 +197,8 @@ const CalendarPage: React.FC = () => {
     })
     dayEvents.forEach(e => {
       items.push(
-        <div key={`e-${e.id}`} className="text-[10px] shrink-0 h-5 px-1.5 bg-[#FBFAFF] border-l-[2px] border-[#5B4FCF] text-[#5B4FCF] rounded-[6px] flex gap-1 items-center w-full overflow-hidden box-border">
+        <div key={`e-${e.id}`} className="text-[10px] shrink-0 h-5 px-1.5 bg-[#FBFAFF] text-[#5B4FCF] rounded-[6px] flex gap-[6px] items-center w-full overflow-hidden box-border">
+          <span className="w-[2px] h-[10px] rounded-full bg-[#5B4FCF] shrink-0"></span>
           <span className="font-medium truncate leading-none block w-full text-left">{e.text}</span>
         </div>
       )
