@@ -12,6 +12,7 @@ function genId(): string {
 // ── Store shape ───────────────────────────────────────────────────────────────
 interface StoreValue {
   isLoading: boolean
+  loadError: string | null
   tasks:  Task[]
   ledger: LedgerEntry[]
   events: ScheduleEvent[]
@@ -51,6 +52,7 @@ const StoreCtx = createContext<StoreValue | null>(null)
 // ── Provider ──────────────────────────────────────────────────────────────────
 export const AppStoreProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true)
+  const [loadError, setLoadError] = useState<string | null>(null)
   const [tasks,  setTasks]  = useState<Task[]>([])
   const [ledger, setLedger] = useState<LedgerEntry[]>([])
   const [events, setEvents] = useState<ScheduleEvent[]>([])
@@ -62,9 +64,10 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   useEffect(() => {
     async function loadData() {
-      const isMigrated = localStorage.getItem('yuri-migrated-to-firebase') === 'true'
-      
-      if (!isMigrated) {
+      try {
+        const isMigrated = localStorage.getItem('yuri-migrated-to-firebase') === 'true'
+        
+        if (!isMigrated) {
         // Perform Migration
         const loadLocal = <T,>(key: string, fb: T): T => {
           try { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : fb } 
@@ -134,7 +137,12 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         setExpenseCategories(finalCats as CategoryConfig[])
         setAgendas(fetchedAgendas as AgendaItem[])
       }
-      setIsLoading(false)
+      } catch (err: any) {
+        console.error("Firebase load error:", err)
+        setLoadError(err.message || '데이터를 불러오는 중 알 수 없는 오류가 발생했습니다.')
+      } finally {
+        setIsLoading(false)
+      }
     }
     
     loadData()
@@ -368,7 +376,7 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   return (
     <StoreCtx.Provider value={{
-      isLoading,
+      isLoading, loadError,
       tasks, ledger, events, notes, fixedExpenses, expenseCategories, agendas,
       addTask, toggleTask, updateTaskText, updateTaskNote, deleteTask,
       addLedgerEntry, updateLedgerEntry, deleteLedgerEntry,
