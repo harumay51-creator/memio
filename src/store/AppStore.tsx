@@ -180,7 +180,10 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
     const injections: LedgerEntry[] = []
 
     fixedExpenses.forEach(fe => {
-      if (currentDay >= fe.day) {
+      const lastDayOfMonth = new Date(currentYear, currentMonth, 0).getDate()
+      const targetDay = fe.day === 99 ? lastDayOfMonth : fe.day
+
+      if (currentDay >= targetDay) {
         const hasInjectedThisMonth = ledger.some(l => {
           if (l.fixedExpenseId !== fe.id) return false
           const lDate = new Date(l.scheduledDate || l.createdAt)
@@ -188,7 +191,7 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
         })
 
         if (!hasInjectedThisMonth) {
-          const scheduledDate = new Date(currentYear, currentMonth - 1, fe.day, 12, 0).toISOString()
+          const scheduledDate = new Date(currentYear, currentMonth - 1, targetDay, 12, 0).toISOString()
           injections.push({
             id: genId(),
             label: fe.label,

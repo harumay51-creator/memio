@@ -153,15 +153,15 @@ const LedgerPage: React.FC = () => {
   const startEditFe = (f: FixedExpense) => {
     setEditingFeId(f.id)
     setFeLabel(f.label)
-    setFeAmount(f.amount.toString())
-    setFeDay(f.day.toString())
+    setFeAmount(f.amount.toLocaleString('ko-KR'))
+    setFeDay(f.day === 99 ? '말일' : f.day.toString())
   }
 
   const saveEditFe = () => {
     if (!editingFeId) return
-    const amt = parseInt(feAmount, 10)
-    const day = parseInt(feDay, 10)
-    if (feLabel.trim() && !isNaN(amt) && !isNaN(day) && day >= 1 && day <= 31) {
+    const amt = parseInt(feAmount.replace(/,/g, ''), 10)
+    const day = feDay === '말일' ? 99 : parseInt(feDay, 10)
+    if (feLabel.trim() && !isNaN(amt) && !isNaN(day) && (day === 99 || (day >= 1 && day <= 31))) {
       updateFixedExpense(editingFeId, {
         label: feLabel.trim(),
         amount: amt,
@@ -177,9 +177,9 @@ const LedgerPage: React.FC = () => {
 
   const handleAddFe = (e: React.FormEvent) => {
     e.preventDefault()
-    const amt = parseInt(feAmount, 10)
-    const day = parseInt(feDay, 10)
-    if (!feLabel.trim() || isNaN(amt) || isNaN(day) || day < 1 || day > 31) return
+    const amt = parseInt(feAmount.replace(/,/g, ''), 10)
+    const day = feDay === '말일' ? 99 : parseInt(feDay, 10)
+    if (!feLabel.trim() || isNaN(amt) || isNaN(day) || (day !== 99 && (day < 1 || day > 31))) return
     
     addFixedExpense(feLabel.trim(), amt, day, classifyLedgerCategory(feLabel.trim(), 'expense', expenseCategories))
     setFeLabel('')
@@ -295,11 +295,14 @@ const LedgerPage: React.FC = () => {
               />
               <div className="flex gap-2">
                 <input
-                  type="number" placeholder="일(1~31)" min="1" max="31" value={feDay} onChange={e => setFeDay(e.target.value)}
-                  className="w-16 px-2.5 py-1.5 bg-white border border-yuri-200 rounded text-xs outline-none focus:border-accent"
+                  type="text" placeholder="일(1~31, 말일)" value={feDay} onChange={e => setFeDay(e.target.value)}
+                  className="w-24 px-2.5 py-1.5 bg-white border border-yuri-200 rounded text-xs outline-none focus:border-accent"
                 />
                 <input
-                  type="number" placeholder="금액" value={feAmount} onChange={e => setFeAmount(e.target.value)}
+                  type="text" placeholder="금액" value={feAmount} onChange={e => {
+                    const raw = e.target.value.replace(/[^0-9]/g, '')
+                    setFeAmount(raw ? parseInt(raw, 10).toLocaleString('ko-KR') : '')
+                  }}
                   className="flex-1 px-2.5 py-1.5 bg-white border border-yuri-200 rounded text-xs outline-none focus:border-accent"
                 />
               </div>
@@ -329,7 +332,7 @@ const LedgerPage: React.FC = () => {
                     </div>
                   </div>
                   <div className="flex justify-between items-center pl-3">
-                    <span className="text-[10px] text-yuri-500">매월 {fe.day}일</span>
+                    <span className="text-[10px] text-yuri-500">매월 {fe.day === 99 ? '말일' : `${fe.day}일`}</span>
                     <span className="text-xs font-bold text-red-500">-{fmtAmt(fe.amount)}</span>
                   </div>
                 </div>
