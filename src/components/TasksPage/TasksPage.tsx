@@ -61,7 +61,7 @@ const TasksPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId })
             <>
               {/* Pending Tasks */}
               {pendingTasks.length > 0 && (
-                <section className="flex-1 min-h-0 flex flex-col overflow-hidden">
+                <section className="flex-[7] min-h-0 flex flex-col overflow-hidden">
                   <h2 className="shrink-0 text-xs font-bold text-yuri-500 mb-3 px-1 uppercase tracking-wider">진행 중</h2>
                   <div className="flex-1 overflow-y-auto flex flex-col gap-1 pr-1">
                     {pendingTasks.map(t => (
@@ -80,7 +80,7 @@ const TasksPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId })
 
               {/* Completed Tasks */}
               {completedTasks.length > 0 && (
-                <section className={`flex flex-col min-h-0 overflow-hidden ${showCompleted ? 'flex-1' : 'shrink-0'}`}>
+                <section className={`flex flex-col min-h-0 overflow-hidden ${showCompleted ? 'flex-[3]' : 'shrink-0'}`}>
                   <button 
                     onClick={() => setShowCompleted(!showCompleted)}
                     className="shrink-0 w-full flex justify-between items-center text-xs font-bold text-yuri-500 mb-2 px-2 py-1.5 rounded hover:bg-yuri-100 transition-colors uppercase tracking-wider cursor-pointer"
