@@ -52,7 +52,7 @@ const TasksPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId })
           />
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4 pt-2 flex flex-col gap-6">
+        <div className="flex-1 flex flex-col gap-4 p-4 pt-2 min-h-0">
           {tasks.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-yuri-400 p-6 text-center">
               <p className="text-sm">등록된 업무가 없습니다.<br />위 입력창에서 바로 추가해보세요!</p>
@@ -61,9 +61,9 @@ const TasksPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId })
             <>
               {/* Pending Tasks */}
               {pendingTasks.length > 0 && (
-                <section>
-                  <h2 className="text-xs font-bold text-yuri-500 mb-3 px-1 uppercase tracking-wider">진행 중</h2>
-                  <div className="flex flex-col gap-1">
+                <section className="flex-1 min-h-0 flex flex-col overflow-hidden">
+                  <h2 className="shrink-0 text-xs font-bold text-yuri-500 mb-3 px-1 uppercase tracking-wider">진행 중</h2>
+                  <div className="flex-1 overflow-y-auto flex flex-col gap-1 pr-1">
                     {pendingTasks.map(t => (
                       <TaskListItem 
                         key={t.id} 
@@ -80,16 +80,16 @@ const TasksPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId })
 
               {/* Completed Tasks */}
               {completedTasks.length > 0 && (
-                <section>
+                <section className={`flex flex-col min-h-0 overflow-hidden ${showCompleted ? 'flex-1' : 'shrink-0'}`}>
                   <button 
                     onClick={() => setShowCompleted(!showCompleted)}
-                    className="w-full flex justify-between items-center text-xs font-bold text-yuri-500 mb-2 px-2 py-1.5 rounded hover:bg-yuri-100 transition-colors uppercase tracking-wider cursor-pointer"
+                    className="shrink-0 w-full flex justify-between items-center text-xs font-bold text-yuri-500 mb-2 px-2 py-1.5 rounded hover:bg-yuri-100 transition-colors uppercase tracking-wider cursor-pointer"
                   >
                     <span>완료됨 ({completedTasks.length}개)</span>
                     <span>{showCompleted ? '▲' : '▼'}</span>
                   </button>
                   {showCompleted && (
-                    <div className="flex flex-col gap-1">
+                    <div className="flex-1 overflow-y-auto flex flex-col gap-1 pr-1">
                       {completedTasks.map(t => (
                         <TaskListItem 
                           key={t.id} 
