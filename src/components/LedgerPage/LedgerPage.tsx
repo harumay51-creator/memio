@@ -239,6 +239,7 @@ const LedgerPage: React.FC = () => {
   const [feAmount, setFeAmount] = useState('')
   const [feDay, setFeDay] = useState('')
   const [fePaymentMethod, setFePaymentMethod] = useState<'카드' | '계좌이체'>('카드')
+  const [feCategory, setFeCategory] = useState<string>('')
   const [editingFeId, setEditingFeId] = useState<string | null>(null)
 
   const startEditFe = (f: FixedExpense) => {
@@ -247,6 +248,7 @@ const LedgerPage: React.FC = () => {
     setFeAmount(f.amount.toString())
     setFeDay(f.day === 99 ? '말일' : f.day.toString())
     setFePaymentMethod(f.paymentMethod || '카드')
+    setFeCategory(f.category || '')
   }
 
   const handleSaveFe = (e: React.FormEvent) => {
@@ -255,16 +257,19 @@ const LedgerPage: React.FC = () => {
     const day = feDay === '말일' ? 99 : parseInt(feDay, 10)
     if (!feLabel.trim() || isNaN(amt) || isNaN(day) || (day !== 99 && (day < 1 || day > 31))) return
     
+    const finalCategory = feCategory || classifyLedgerCategory(feLabel.trim(), 'expense', expenseCategories)
+    
     if (editingFeId) {
-      updateFixedExpense(editingFeId, { label: feLabel.trim(), amount: amt, day, category: classifyLedgerCategory(feLabel.trim(), 'expense', expenseCategories), paymentMethod: fePaymentMethod })
+      updateFixedExpense(editingFeId, { label: feLabel.trim(), amount: amt, day, category: finalCategory, paymentMethod: fePaymentMethod })
       setEditingFeId(null)
     } else {
-      addFixedExpense(feLabel.trim(), amt, day, classifyLedgerCategory(feLabel.trim(), 'expense', expenseCategories), fePaymentMethod)
+      addFixedExpense(feLabel.trim(), amt, day, finalCategory, fePaymentMethod)
     }
     setFeLabel('')
     setFeAmount('')
     setFeDay('')
     setFePaymentMethod('카드')
+    setFeCategory('')
   }
 
   const uniqueCategories = useMemo(() => {
@@ -636,15 +641,15 @@ const LedgerPage: React.FC = () => {
       {showFeModal && (
         <div className="absolute inset-0 z-50 flex items-center justify-center p-4 bg-yuri-900/20 backdrop-blur-sm animate-fade-in">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-md flex flex-col max-h-[80vh] overflow-hidden">
-            <div className="flex justify-between items-center p-4 border-b border-yuri-100 bg-yuri-50/50">
+            <div className="flex justify-between items-center p-4 border-b border-yuri-100 bg-yuri-50/50 shrink-0">
               <h2 className="text-base font-bold text-yuri-900">고정지출 관리</h2>
               <button onClick={() => setShowFeModal(false)} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-yuri-200 text-yuri-500 transition-colors">
                 <X size={18} />
               </button>
             </div>
             
-            <div className="p-4 overflow-y-auto flex-1 bg-yuri-50/20">
-              <form onSubmit={handleSaveFe} className="bg-white p-4 rounded-xl border border-yuri-200 mb-6 flex flex-col gap-3 shadow-sm">
+            <div className="p-4 border-b border-yuri-100 bg-yuri-50/20 shrink-0">
+              <form onSubmit={handleSaveFe} className="bg-white p-4 rounded-xl border border-yuri-200 flex flex-col gap-3 shadow-sm">
                 <h3 className="text-xs font-bold text-accent">{editingFeId ? '고정지출 수정' : '새 고정지출 추가'}</h3>
                 <input
                   type="text" placeholder="항목명 (예: 넷플릭스)" value={feLabel} onChange={e => setFeLabel(e.target.value)}
@@ -663,12 +668,29 @@ const LedgerPage: React.FC = () => {
                     className="flex-1 px-3 py-2 bg-yuri-50 border border-yuri-200 rounded-lg text-sm outline-none focus:border-accent"
                   />
                 </div>
-                <div className="flex gap-2 items-center mb-1 pl-1">
-                  <span className="text-xs font-bold text-yuri-500 w-14">결제수단</span>
-                  <div className="flex gap-2">
-                    <button type="button" onClick={() => setFePaymentMethod('카드')} className={`px-3 py-1 rounded text-[10px] font-bold transition-colors ${fePaymentMethod === '카드' ? 'bg-[#6B7280] text-white' : 'bg-[#F1F0F5] text-[#6B7280] hover:bg-gray-200'}`}>카드</button>
-                    <button type="button" onClick={() => setFePaymentMethod('계좌이체')} className={`px-3 py-1 rounded text-[10px] font-bold transition-colors ${fePaymentMethod === '계좌이체' ? 'bg-[#6B7280] text-white' : 'bg-[#F1F0F5] text-[#6B7280] hover:bg-gray-200'}`}>계좌이체</button>
+                <div className="flex items-center gap-2">
+                  <div className="relative flex items-center justify-center shrink-0">
+                    <select
+                      value={feCategory || ''}
+                      onChange={(ev) => setFeCategory(ev.target.value)}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    >
+                      <option value="" disabled>카테고리</option>
+                      {expenseCategories.map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
+                      {!expenseCategories.some(c => c.name === '기타') && <option value="기타">기타</option>}
+                      {feCategory && !expenseCategories.some(c => c.name === feCategory) && feCategory !== '기타' && <option value={feCategory}>{feCategory}</option>}
+                    </select>
+                    <span className={`text-[10px] font-bold px-2 py-1 rounded-sm pointer-events-none ${feCategory ? `${getCatClasses(feCategory).bg} ${getCatClasses(feCategory).text}` : 'bg-yuri-100 text-yuri-500'}`}>
+                      {feCategory || '카테고리 (자동)'}
+                    </span>
                   </div>
+                  <button 
+                    type="button"
+                    onClick={() => setFePaymentMethod(fePaymentMethod === '카드' ? '계좌이체' : '카드')}
+                    className="shrink-0 text-[10px] font-bold px-2 py-1 rounded transition-colors text-center cursor-pointer bg-[#F1F0F5] text-[#6B7280] hover:bg-gray-200"
+                  >
+                    {fePaymentMethod}
+                  </button>
                 </div>
                 <div className="flex gap-2 mt-1">
                   <button type="submit" disabled={!feLabel.trim() || !feAmount || !feDay} className="flex-1 py-2 bg-yuri-900 text-white text-sm font-bold rounded-lg hover:bg-yuri-800 transition-colors disabled:opacity-50">
@@ -681,7 +703,9 @@ const LedgerPage: React.FC = () => {
                   )}
                 </div>
               </form>
+            </div>
 
+            <div className="p-4 overflow-y-auto flex-1 bg-yuri-50/20">
               <div className="flex flex-col gap-2">
                 <h3 className="text-xs font-bold text-yuri-500 mb-1 ml-1">등록된 고정지출 목록</h3>
                 {fixedExpenses.map(fe => (
