@@ -10,17 +10,6 @@ export interface ParseResult {
   scheduledDate?: string   // UTC ISO string (KST-aware); present for schedule (optional for fixed expense)
 }
 
-// ── Keyword lists ─────────────────────────────────────────────────────────────
-const INCOME_KEYWORDS = [
-  '월급', '급여', '용돈', '보너스', '입금', '수입',
-  '수당', '임금', '알바비', '환급', '페이', '수익', '이자', '배당',
-  '환불', '받았다',
-]
-
-const EXPENSE_KEYWORDS = [
-  '결제', '샀다', '구매', '지출', '출금', '냈다', '썼다', '할인', '적립', '이체', '카드', '현금', '계좌',
-]
-
 // ── Ledger category classification ───────────────────────────────────────────
 export const DEFAULT_EXPENSE_CATS: CategoryConfig[] = [
   {
