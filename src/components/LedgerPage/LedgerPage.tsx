@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import type { LedgerEntry, FixedExpense } from '../../types'
 import { useAppStore } from '../../store/AppStore'
 import { parseCapture, classifyLedgerCategory } from '../../utils/parser'
@@ -52,7 +52,8 @@ const LedgerPage: React.FC = () => {
   const { 
     ledger, updateLedgerEntry, deleteLedgerEntry, 
     fixedExpenses, addFixedExpense, updateFixedExpense, deleteFixedExpense,
-    expenseCategories, isPrivateUnlocked, lockPrivate
+    expenseCategories, isPrivateUnlocked, lockPrivate,
+    cardPaymentDay, cardBills, updateCardBill
   } = useAppStore()
 
   const today = useMemo(() => new Date(), [])
