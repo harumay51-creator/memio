@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { useAppStore } from '../../store/AppStore'
 import { auth } from '../../config/firebase'
 import { signInWithEmailAndPassword } from 'firebase/auth'
-import { Lock, Unlock, KeyRound, RefreshCcw, LogOut } from 'lucide-react'
+import { Lock, KeyRound, RefreshCcw, LogOut } from 'lucide-react'
 
 const PinScreen: React.FC = () => {
   const { hasPin, unlockPrivate, setPrivatePin, resetPrivatePin } = useAppStore()

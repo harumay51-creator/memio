@@ -9,10 +9,7 @@ const CAT = {
   income:   { label: '수입',   color: 'text-green-600', bg: 'bg-green-50',   icon: '↑' },
 } satisfies Record<CaptureType, { label: string; color: string; bg: string; icon: string }>
 
-// ── Format amount for toast message ───────────────────────────────────────────
-function fmtAmt(n: number): string {
-  return n.toLocaleString('ko-KR') + '원'
-}
+
 
 // ── Toast state ───────────────────────────────────────────────────────────────
 interface ToastState {
