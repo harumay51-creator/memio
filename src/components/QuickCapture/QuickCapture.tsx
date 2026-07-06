@@ -112,7 +112,7 @@ const QuickCapture: React.FC = () => {
             onKeyDown={handleKeyDown}
             onFocus={() => setFocused(true)}
             onBlur={() => setFocused(false)}
-            placeholder='무엇이든 입력하세요… "점심 12000원", "회의 내일 3시", "보고서 수정"'
+            placeholder='무엇이든 입력하세요...'
             className="
               flex-1 bg-transparent outline-none
               text-sm text-yuri-900 placeholder:text-yuri-300

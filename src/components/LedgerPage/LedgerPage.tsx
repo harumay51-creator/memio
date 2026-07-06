@@ -29,6 +29,12 @@ function catColor(name: string): string {
   return CAT_COLOR[name] ?? '#94a3b8'
 }
 
+function catTextColor(bgHex: string): string {
+  const greyHexes = ['#E0E0E0', '#D8E2DC', '#94a3b8'];
+  if (greyHexes.includes(bgHex)) return '#374151';
+  return bgHex.replace('B4A2','C060').replace('CDB4DB','8A5A9E');
+}
+
 // ── Formatters ────────────────────────────────────────────────────────────────
 function fmtAmt(n: number): string {
   return n.toLocaleString('ko-KR') + '원'
@@ -298,19 +304,6 @@ const LedgerPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Quick Capture */}
-          <div className="p-6 flex flex-col gap-2 shrink-0">
-            <input
-              type="text"
-              placeholder="내역 빠른 입력 (예: 점심 12000원)"
-              value={captureInput}
-              onChange={(e) => setCaptureInput(e.target.value)}
-              onKeyDown={handleQuickCapture}
-              className="w-full bg-white border border-yuri-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-accent transition-colors shadow-sm"
-            />
-            <p className="text-[10px] text-yuri-400 pl-1">수입은 금액 앞에 '+'를 입력하세요. 예) 월급 +3,200,000원</p>
-          </div>
-
           <div className="flex-1" />
 
           {/* Fixed Expense Button */}
@@ -445,7 +438,7 @@ const LedgerPage: React.FC = () => {
                                         </>
                                       )}
                                     </select>
-                                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-sm pointer-events-none" style={{ backgroundColor: catColor(e.category) + '33', color: catColor(e.category).replace('B4A2','C060').replace('CDB4DB','8A5A9E') }}>
+                                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-sm pointer-events-none" style={{ backgroundColor: catColor(e.category) + '33', color: catTextColor(catColor(e.category)) }}>
                                       {e.category}
                                     </span>
                                   </div>
