@@ -63,6 +63,9 @@ interface StoreValue {
 
   cardPaymentDay: number
   setCardPaymentDay: (day: number) => void
+  cardBillingStartDay: number
+  cardBillingEndDay: number
+  setCardBillingDays: (start: number, end: number) => void
   cardBills: Record<string, number>
   updateCardBill: (monthKey: string, amount: number) => void
   
@@ -91,6 +94,8 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
   const [monthlyEvents, setMonthlyEvents] = useState<MonthlyEvent[]>([])
   
   const [cardPaymentDay, setCardPaymentDayState] = useState<number>(14)
+  const [cardBillingStartDay, setCardBillingStartDay] = useState<number>(28)
+  const [cardBillingEndDay, setCardBillingEndDay] = useState<number>(27)
   const [cardBills, setCardBills] = useState<Record<string, number>>({})
   
   const [isPrivateUnlocked, setIsPrivateUnlocked] = useState(() => {
@@ -122,7 +127,10 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
         // Load General settings
         const genSettingsSnap = await getDoc(doc(db, `users/${uid}/settings/config`))
         if (genSettingsSnap.exists()) {
-          setCardPaymentDayState(genSettingsSnap.data().cardPaymentDay || 14)
+          const data = genSettingsSnap.data()
+          setCardPaymentDayState(data.cardPaymentDay || 14)
+          setCardBillingStartDay(data.cardBillingStartDay || 28)
+          setCardBillingEndDay(data.cardBillingEndDay || 27)
         }
         
         const [
@@ -485,6 +493,17 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
     sessionStorage.removeItem('yuri-private-unlocked')
   }
 
+  const setCardPaymentDay = useCallback((day: number) => {
+    setCardPaymentDayState(day)
+    setDoc(doc(db, `users/${uid}/settings/config`), { cardPaymentDay: day }, { merge: true }).catch(console.error)
+  }, [uid])
+
+  const setCardBillingDays = useCallback((start: number, end: number) => {
+    setCardBillingStartDay(start)
+    setCardBillingEndDay(end)
+    setDoc(doc(db, `users/${uid}/settings/config`), { cardBillingStartDay: start, cardBillingEndDay: end }, { merge: true }).catch(console.error)
+  }, [uid])
+
   return (
     <StoreCtx.Provider value={{
       isLoading, loadError,
@@ -502,6 +521,7 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
       addMonthlyEvent, deleteMonthlyEvent,
       hasPin, isPrivateUnlocked, unlockPrivate, setPrivatePin, lockPrivate, resetPrivatePin,
       cardPaymentDay, setCardPaymentDay,
+      cardBillingStartDay, cardBillingEndDay, setCardBillingDays,
       cardBills, updateCardBill,
     }}>
       {children}

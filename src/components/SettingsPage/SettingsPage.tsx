@@ -10,7 +10,8 @@ const SettingsPage: React.FC = () => {
     expenseCategories, addCategoryKeyword, removeCategoryKeyword, addCategory,
     anniversaries, addAnniversary, deleteAnniversary,
     monthlyEvents, addMonthlyEvent, deleteMonthlyEvent,
-    cardPaymentDay, setCardPaymentDay
+    cardPaymentDay, setCardPaymentDay,
+    cardBillingStartDay, cardBillingEndDay, setCardBillingDays
   } = useAppStore()
   
   const [activeTab, setActiveTab] = useState<TabType>('ledger')
@@ -191,23 +192,76 @@ const SettingsPage: React.FC = () => {
             {activeTab === 'ledger' && (
               <>
                 <div className="bg-white border border-yuri-200 rounded-xl p-8 shadow-sm mb-8">
-                  <h3 className="text-lg font-bold text-yuri-900 mb-2">신용카드 결제일 설정</h3>
-                  <p className="text-sm text-yuri-500 mb-6">가계부에서 카드값 청구 예정액을 정확히 계산하기 위해 결제일을 입력해주세요.</p>
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="number"
-                      min="1" max="31"
-                      value={cardPaymentDay}
-                      onChange={(e) => {
-                        const val = parseInt(e.target.value, 10);
-                        if (!isNaN(val) && val >= 1 && val <= 31) {
-                          setCardPaymentDay(val);
-                        }
-                      }}
-                      className="w-32 px-4 py-3 bg-yuri-50 border border-yuri-200 rounded-lg text-sm outline-none focus:border-accent focus:bg-white transition-colors"
-                    />
-                    <span className="text-sm font-bold text-yuri-700">일</span>
-                    <span className="text-xs text-yuri-400 ml-2">※ 입력 시 자동 저장됩니다.</span>
+                  <h3 className="text-lg font-bold text-yuri-900 mb-2">신용카드 청구 설정</h3>
+                  <p className="text-sm text-yuri-500 mb-6 leading-relaxed">
+                    가계부에서 카드값 청구 예정액을 정확히 계산하기 위해 <strong>사용기간 시작일과 종료일</strong>을 설정해주세요.<br />
+                    (결제일은 단순 참고용으로 화면에 표시되며 실제 계산은 사용기간 설정값을 기준으로 이루어집니다.)
+                  </p>
+                  
+                  <div className="flex flex-col gap-5">
+                    <div className="flex items-center gap-4">
+                      <span className="text-sm font-bold text-yuri-700 w-24">카드 결제일</span>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="number"
+                          min="1" max="31"
+                          value={cardPaymentDay}
+                          onChange={(e) => {
+                            const val = parseInt(e.target.value, 10);
+                            if (!isNaN(val) && val >= 1 && val <= 31) {
+                              setCardPaymentDay(val);
+                            }
+                          }}
+                          className="w-20 px-3 py-2 bg-yuri-50 border border-yuri-200 rounded-lg text-sm outline-none focus:border-accent focus:bg-white transition-colors"
+                        />
+                        <span className="text-sm font-bold text-yuri-700">일</span>
+                      </div>
+                    </div>
+
+                    <div className="h-px bg-yuri-100 my-1"></div>
+
+                    <div className="flex items-center gap-4">
+                      <span className="text-sm font-bold text-yuri-700 w-24">사용기간 시작</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-yuri-500">전전월</span>
+                        <input
+                          type="number"
+                          min="1" max="31"
+                          value={cardBillingStartDay}
+                          onChange={(e) => {
+                            const val = parseInt(e.target.value, 10);
+                            if (!isNaN(val) && val >= 1 && val <= 31) {
+                              setCardBillingDays(val, cardBillingEndDay);
+                            }
+                          }}
+                          className="w-20 px-3 py-2 bg-yuri-50 border border-yuri-200 rounded-lg text-sm outline-none focus:border-accent focus:bg-white transition-colors"
+                        />
+                        <span className="text-sm font-bold text-yuri-700">일</span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-4">
+                      <span className="text-sm font-bold text-yuri-700 w-24">사용기간 종료</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-yuri-500">전월</span>
+                        <input
+                          type="number"
+                          min="1" max="31"
+                          value={cardBillingEndDay}
+                          onChange={(e) => {
+                            const val = parseInt(e.target.value, 10);
+                            if (!isNaN(val) && val >= 1 && val <= 31) {
+                              setCardBillingDays(cardBillingStartDay, val);
+                            }
+                          }}
+                          className="w-20 px-3 py-2 bg-yuri-50 border border-yuri-200 rounded-lg text-sm outline-none focus:border-accent focus:bg-white transition-colors"
+                        />
+                        <span className="text-sm font-bold text-yuri-700">일</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-5 text-xs text-yuri-400 bg-yuri-50 p-3 rounded-lg border border-yuri-100">
+                    ※ 입력 시 자동 저장됩니다. 예: 시작 28일, 종료 27일 설정 시 7월 가계부의 청구 예정액은 '5월 28일 ~ 6월 27일' 사용분으로 계산됩니다.
                   </div>
                 </div>
 

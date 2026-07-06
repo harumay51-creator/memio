@@ -53,7 +53,8 @@ const LedgerPage: React.FC = () => {
     ledger, updateLedgerEntry, deleteLedgerEntry, 
     fixedExpenses, addFixedExpense, updateFixedExpense, deleteFixedExpense,
     expenseCategories, isPrivateUnlocked, lockPrivate,
-    cardPaymentDay, cardBills, updateCardBill
+    cardPaymentDay, cardBills, updateCardBill,
+    cardBillingStartDay, cardBillingEndDay
   } = useAppStore()
 
   const today = useMemo(() => new Date(), [])
@@ -92,8 +93,8 @@ const LedgerPage: React.FC = () => {
   }, [ledger, year, month])
 
   // ── Card Billing Logic ──────────────────────────────────────────────────────
-  const billingEnd = useMemo(() => new Date(year, month, cardPaymentDay - 13, 23, 59, 59), [year, month, cardPaymentDay]);
-  const billingStart = useMemo(() => new Date(billingEnd.getFullYear(), billingEnd.getMonth() - 1, billingEnd.getDate() + 1, 0, 0, 0), [billingEnd]);
+  const billingEnd = useMemo(() => new Date(year, month - 1, cardBillingEndDay, 23, 59, 59), [year, month, cardBillingEndDay]);
+  const billingStart = useMemo(() => new Date(year, month - 2, cardBillingStartDay, 0, 0, 0), [year, month, cardBillingStartDay]);
   
   const cardBillEntries = useMemo(() => {
     return ledger.filter(e => {
@@ -113,20 +114,28 @@ const LedgerPage: React.FC = () => {
   const [actualBillInput, setActualBillInput] = useState<string>('');
 
   useEffect(() => {
-    setActualBillInput(hasActualBill ? actualCardBill.toString() : '');
+    setActualBillInput(hasActualBill ? actualCardBill.toLocaleString('ko-KR') : '');
     setShowBillDetails(false);
   }, [monthKey, hasActualBill, actualCardBill]);
 
+  const handleActualBillChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value.replace(/,/g, '');
+    if (!/^\d*$/.test(raw)) return;
+    if (raw === '') {
+      setActualBillInput('');
+      return;
+    }
+    setActualBillInput(parseInt(raw, 10).toLocaleString('ko-KR'));
+  };
+
   const handleActualBillBlur = () => {
     if (actualBillInput.trim() === '') {
-      // Remove it (Firebase merge won't delete unless we use deleteField, but since it's a Record, setting it to undefined isn't supported without restructuring. However, the user said "실제 청구액을 전부 지우면". Let's handle it as 0 or ignore. Actually, setting to undefined works if we don't strictly type it).
-      // Wait, we can just let it be. But let's assume they enter a number.
       return;
     }
     const val = parseInt(actualBillInput.replace(/,/g, ''), 10);
     if (!isNaN(val)) {
       updateCardBill(monthKey, val);
-      setActualBillInput(val.toString());
+      setActualBillInput(val.toLocaleString('ko-KR'));
     }
   };
 
@@ -183,6 +192,7 @@ const LedgerPage: React.FC = () => {
 
   // ── Transaction Editing ─────────────────────────────────────────────────────
   const [editingEntryId, setEditingEntryId] = useState<string | null>(null)
+  const [editingDateId, setEditingDateId] = useState<string | null>(null)
   const [editInput, setEditInput] = useState('')
   const [editMemo, setEditMemo] = useState('')
 
@@ -374,7 +384,7 @@ const LedgerPage: React.FC = () => {
                   <input
                     type="text"
                     value={actualBillInput}
-                    onChange={(e) => setActualBillInput(e.target.value)}
+                    onChange={handleActualBillChange}
                     onBlur={handleActualBillBlur}
                     placeholder="실제 금액 (미입력시 예정액 적용)"
                     className="flex-1 px-3 py-1.5 bg-white border border-yuri-200 rounded text-xs outline-none focus:border-accent text-right"
@@ -487,12 +497,13 @@ const LedgerPage: React.FC = () => {
                   <div className="flex flex-col gap-1.5">
                     {g.entries.map(e => {
                       const isEditing = editingEntryId === e.id
+                      const isEditingDate = editingDateId === e.id
                       return (
                         <div 
                           key={e.id} 
                           className={`
                             group flex flex-col p-3 rounded-xl border transition-all duration-150 relative cursor-pointer
-                            ${isEditing ? 'bg-yuri-50 border-accent shadow-sm' : 'bg-transparent border-yuri-100 hover:border-yuri-300'}
+                            ${isEditing ? 'bg-yuri-50 border-accent shadow-sm' : isEditingDate ? 'bg-yuri-50/50 border-blue-400 ring-1 ring-blue-400 shadow-sm' : 'bg-transparent border-yuri-100 hover:border-yuri-300'}
                           `}
                         >
                           {isEditing ? (
@@ -589,6 +600,8 @@ const LedgerPage: React.FC = () => {
                                       newD.setHours(oldD.getHours(), oldD.getMinutes(), oldD.getSeconds());
                                       updateLedgerEntry(e.id, { scheduledDate: newD.toISOString() });
                                     }}
+                                    onFocus={() => setEditingDateId(e.id)}
+                                    onBlur={() => setEditingDateId(null)}
                                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                                   />
                                 </div>
