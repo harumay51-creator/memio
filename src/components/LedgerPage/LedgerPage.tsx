@@ -536,7 +536,7 @@ const LedgerPage: React.FC = () => {
                   <div key={fe.id} className={`group p-4 rounded-xl border ${editingFeId === fe.id ? 'border-accent bg-accent/5' : 'border-yuri-200 bg-white hover:border-yuri-300'} shadow-sm`}>
                     <div className="flex justify-between items-start mb-2">
                       <div className="flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full" style={{ backgroundColor: catColor(fe.category) }} />
+                        <span className={`w-2 h-2 rounded-full ${getCatClasses(fe.category).text.replace('text-', 'bg-')}`} />
                         <span className="text-sm font-bold text-yuri-900">{fe.label}</span>
                       </div>
                       <div className="flex items-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
