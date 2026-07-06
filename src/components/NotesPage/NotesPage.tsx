@@ -37,13 +37,6 @@ const NotesPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId })
     return firstLine.length > 30 ? firstLine.slice(0, 30) + '...' : firstLine
   }
 
-  const getPreview = (text: string) => {
-    const trimmed = text.trim()
-    const lines = trimmed.split('\n')
-    if (lines.length <= 1) return '추가 내용 없음'
-    const preview = lines.slice(1).join(' ')
-    return preview.length > 40 ? preview.slice(0, 40) + '...' : preview
-  }
 
   const filteredNotes = useMemo(() => {
     let result = notes
