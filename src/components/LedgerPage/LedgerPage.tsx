@@ -238,6 +238,7 @@ const LedgerPage: React.FC = () => {
   const [feLabel, setFeLabel] = useState('')
   const [feAmount, setFeAmount] = useState('')
   const [feDay, setFeDay] = useState('')
+  const [fePaymentMethod, setFePaymentMethod] = useState<'카드' | '계좌이체'>('카드')
   const [editingFeId, setEditingFeId] = useState<string | null>(null)
 
   const startEditFe = (f: FixedExpense) => {
@@ -245,6 +246,7 @@ const LedgerPage: React.FC = () => {
     setFeLabel(f.label)
     setFeAmount(f.amount.toString())
     setFeDay(f.day === 99 ? '말일' : f.day.toString())
+    setFePaymentMethod(f.paymentMethod || '카드')
   }
 
   const handleSaveFe = (e: React.FormEvent) => {
@@ -254,14 +256,15 @@ const LedgerPage: React.FC = () => {
     if (!feLabel.trim() || isNaN(amt) || isNaN(day) || (day !== 99 && (day < 1 || day > 31))) return
     
     if (editingFeId) {
-      updateFixedExpense(editingFeId, { label: feLabel.trim(), amount: amt, day, category: classifyLedgerCategory(feLabel.trim(), 'expense', expenseCategories) })
+      updateFixedExpense(editingFeId, { label: feLabel.trim(), amount: amt, day, category: classifyLedgerCategory(feLabel.trim(), 'expense', expenseCategories), paymentMethod: fePaymentMethod })
       setEditingFeId(null)
     } else {
-      addFixedExpense(feLabel.trim(), amt, day, classifyLedgerCategory(feLabel.trim(), 'expense', expenseCategories))
+      addFixedExpense(feLabel.trim(), amt, day, classifyLedgerCategory(feLabel.trim(), 'expense', expenseCategories), fePaymentMethod)
     }
     setFeLabel('')
     setFeAmount('')
     setFeDay('')
+    setFePaymentMethod('카드')
   }
 
   const uniqueCategories = useMemo(() => {
@@ -660,6 +663,13 @@ const LedgerPage: React.FC = () => {
                     className="flex-1 px-3 py-2 bg-yuri-50 border border-yuri-200 rounded-lg text-sm outline-none focus:border-accent"
                   />
                 </div>
+                <div className="flex gap-2 items-center mb-1 pl-1">
+                  <span className="text-xs font-bold text-yuri-500 w-14">결제수단</span>
+                  <div className="flex gap-2">
+                    <button type="button" onClick={() => setFePaymentMethod('카드')} className={`px-3 py-1 rounded text-[10px] font-bold transition-colors ${fePaymentMethod === '카드' ? 'bg-[#6B7280] text-white' : 'bg-[#F1F0F5] text-[#6B7280] hover:bg-gray-200'}`}>카드</button>
+                    <button type="button" onClick={() => setFePaymentMethod('계좌이체')} className={`px-3 py-1 rounded text-[10px] font-bold transition-colors ${fePaymentMethod === '계좌이체' ? 'bg-[#6B7280] text-white' : 'bg-[#F1F0F5] text-[#6B7280] hover:bg-gray-200'}`}>계좌이체</button>
+                  </div>
+                </div>
                 <div className="flex gap-2 mt-1">
                   <button type="submit" disabled={!feLabel.trim() || !feAmount || !feDay} className="flex-1 py-2 bg-yuri-900 text-white text-sm font-bold rounded-lg hover:bg-yuri-800 transition-colors disabled:opacity-50">
                     {editingFeId ? '저장' : '추가'}
@@ -686,8 +696,11 @@ const LedgerPage: React.FC = () => {
                         <button onClick={() => deleteFixedExpense(fe.id)} className="text-xs text-yuri-500 hover:text-red-500 font-bold">삭제</button>
                       </div>
                     </div>
-                    <div className="flex justify-between items-center pl-4">
-                      <span className="text-xs text-yuri-500 bg-yuri-100 px-2 py-0.5 rounded">매월 {fe.day === 99 ? '말일' : `${fe.day}일`}</span>
+                    <div className="flex justify-between items-center pl-4 mt-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-yuri-500 bg-yuri-100 px-2 py-0.5 rounded">매월 {fe.day === 99 ? '말일' : `${fe.day}일`}</span>
+                        <span className="text-[10px] font-bold bg-[#F1F0F5] text-[#6B7280] px-1.5 py-0.5 rounded">{fe.paymentMethod || '카드'}</span>
+                      </div>
                       <span className="text-sm font-bold text-rose-400">-{fmtAmt(fe.amount)}</span>
                     </div>
                   </div>

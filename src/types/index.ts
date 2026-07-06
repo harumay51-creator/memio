@@ -59,6 +59,7 @@ export interface FixedExpense {
   amount: number
   day: number               // 1-31
   category: string          // auto-classified
+  paymentMethod?: '카드' | '계좌이체'
   createdAt: string
 }
 

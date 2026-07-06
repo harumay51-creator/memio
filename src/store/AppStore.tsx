@@ -46,7 +46,7 @@ interface StoreValue {
   deleteNote:     (id: string) => void
   navDate:        Date | null
   setNavDate:     (d: Date | null) => void
-  addFixedExpense: (label: string, amount: number, day: number, category: string) => void
+  addFixedExpense: (label: string, amount: number, day: number, category: string, paymentMethod?: '카드' | '계좌이체') => void
   updateFixedExpense: (id: string, updates: Partial<FixedExpense>) => void
   deleteFixedExpense: (id: string) => void
   addCategory: (name: string) => void
@@ -222,7 +222,7 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
             amount: fe.amount,
             type: 'expense',
             category: fe.category,
-            paymentMethod: '카드',
+            paymentMethod: fe.paymentMethod || '카드',
             scheduledDate,
             fixedExpenseId: fe.id,
             createdAt: new Date().toISOString()
@@ -337,8 +337,8 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
     updateDoc(doc(db, 'users', uid, 'notes', id), { text, updatedAt }).catch(console.error)
   }, [uid])
 
-  const addFixedExpense = useCallback((label: string, amount: number, day: number, category: string) => {
-    const newItem: FixedExpense = { id: genId(), label, amount, day, category, createdAt: new Date().toISOString() }
+  const addFixedExpense = useCallback((label: string, amount: number, day: number, category: string, paymentMethod: '카드' | '계좌이체' = '카드') => {
+    const newItem: FixedExpense = { id: genId(), label, amount, day, category, paymentMethod, createdAt: new Date().toISOString() }
     setFixedExpenses(prev => [newItem, ...prev])
     setDoc(doc(db, 'users', uid, 'fixedExpenses', newItem.id), newItem).catch(console.error)
   }, [uid])
