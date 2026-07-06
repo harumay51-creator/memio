@@ -146,7 +146,18 @@ const LedgerPage: React.FC = () => {
 
   const startEdit = (entry: LedgerEntry) => {
     setEditingEntryId(entry.id)
-    setEditInput(`${entry.label} ${entry.type === 'income' ? '+' : ''}${entry.amount}원`)
+    
+    let input = entry.label;
+    const cleanLabel = input.replace(/,/g, '');
+    const amtStr = entry.amount.toString();
+    
+    if (!cleanLabel.includes(amtStr)) {
+       input = `${input} ${entry.type === 'income' ? '+' : ''}${entry.amount}원`;
+    } else if (entry.type === 'income' && !input.includes('+')) {
+       input = input.replace(new RegExp(`(${entry.amount.toLocaleString('ko-KR')}|${entry.amount})`), '+$1');
+    }
+    
+    setEditInput(input)
     setEditMemo(entry.memo || '')
   }
 
