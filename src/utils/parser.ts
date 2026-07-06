@@ -108,17 +108,25 @@ function parseKorNum(expr: string): number {
 
 const NON_AMOUNT_SUFFIX = /^\s*(?:시간|시|분|초|명|개|번|층|호|등|위|살|박|일|주|달|년|회|번째)/
 
-function extractAmount(text: string): number | null {
+function hasPlusBeforeIndex(text: string, index: number): boolean {
+  for (let i = index - 1; i >= 0; i--) {
+    if (text[i] === '+') return true;
+    if (text[i] !== ' ' && text[i] !== '\t') return false;
+  }
+  return false;
+}
+
+function extractAmount(text: string): { amount: number, hasPlusPrefix: boolean } | null {
   const decM = text.match(/([0-9]+\.[0-9]+)\s*만\s*원/)
-  if (decM) return Math.round(parseFloat(decM[1]) * 10_000)
+  if (decM) return { amount: Math.round(parseFloat(decM[1]) * 10_000), hasPlusPrefix: hasPlusBeforeIndex(text, decM.index!) }
 
   const korWithWon = /((?:[0-9]*\s*(?:억|만|천|백)\s*)+[0-9,]*|[0-9][0-9,]*)\s*원/
   const kwM = text.match(korWithWon)
-  if (kwM) return parseKorNum(kwM[1])
+  if (kwM) return { amount: parseKorNum(kwM[1]), hasPlusPrefix: hasPlusBeforeIndex(text, kwM.index!) }
 
   const korNoWon = /([0-9]+(?:\s*(?:억|만|천|백))+\s*[0-9,]*)/
   const knwM = text.match(korNoWon)
-  if (knwM) return parseKorNum(knwM[1])
+  if (knwM) return { amount: parseKorNum(knwM[1]), hasPlusPrefix: hasPlusBeforeIndex(text, knwM.index!) }
 
   const numRe = /([0-9][0-9,]*)/g
   let m: RegExpExecArray | null
@@ -126,7 +134,7 @@ function extractAmount(text: string): number | null {
     const after = text.slice(m.index + m[0].length)
     if (NON_AMOUNT_SUFFIX.test(after)) continue
     const n = parseInt(m[1].replace(/,/g, ''), 10)
-    if (n >= 100) return n
+    if (n >= 100) return { amount: n, hasPlusPrefix: hasPlusBeforeIndex(text, m.index) }
   }
   return null
 }
@@ -375,17 +383,12 @@ function parseScheduledDate(text: string): string {
 
 export function parseCapture(raw: string, customExpenseCats: CategoryConfig[] = DEFAULT_EXPENSE_CATS): ParseResult {
   const text   = raw.trim()
-  const amount = extractAmount(text)
+  const amountObj = extractAmount(text)
 
-  const hasIncomeWord  = INCOME_KEYWORDS.some(k => text.includes(k))
-  const hasExpenseWord = EXPENSE_KEYWORDS.some(k => text.includes(k))
-
-  // 1. Income — amount present AND income keyword (and no explicit expense keyword)
-  if (amount !== null && hasIncomeWord && !hasExpenseWord) {
-    return { type: 'income', text, amount, category: classifyLedgerCategory(text, 'income', customExpenseCats), scheduledDate: parseScheduledDate(text) }
+  if (amountObj && amountObj.hasPlusPrefix) {
+    return { type: 'income', text, amount: amountObj.amount, category: classifyLedgerCategory(text, 'income', customExpenseCats), scheduledDate: parseScheduledDate(text) }
   }
 
-  // 2. Expense — Default fallback
-  const finalAmount = amount !== null ? amount : 0
+  const finalAmount = amountObj ? amountObj.amount : 0
   return { type: 'expense', text, amount: finalAmount, category: classifyLedgerCategory(text, 'expense', customExpenseCats), scheduledDate: parseScheduledDate(text) }
 }
