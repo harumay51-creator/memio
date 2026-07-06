@@ -135,7 +135,7 @@ const LedgerPage: React.FC = () => {
   const totalExpense = monthEntries.filter(e => e.type === 'expense').reduce((s, e) => s + e.amount, 0)
   const transferExpense = monthEntries.filter(e => e.type === 'expense' && e.paymentMethod === '계좌이체').reduce((s, e) => s + e.amount, 0)
   
-  const net = totalIncome - transferExpense - (hasActualBill ? actualCardBill : expectedCardBill)
+  const net = totalIncome - transferExpense - (hasActualBill ? (actualCardBill as number) : expectedCardBill)
 
   // ── Filtered & Sorted Entries ───────────────────────────────────────────────
   const displayEntries = useMemo(() => {
