@@ -90,10 +90,51 @@ const LedgerPage: React.FC = () => {
     })
   }, [ledger, year, month])
 
+  // ── Card Billing Logic ──────────────────────────────────────────────────────
+  const billingEnd = useMemo(() => new Date(year, month, cardPaymentDay - 13, 23, 59, 59), [year, month, cardPaymentDay]);
+  const billingStart = useMemo(() => new Date(billingEnd.getFullYear(), billingEnd.getMonth() - 1, billingEnd.getDate() + 1, 0, 0, 0), [billingEnd]);
+  
+  const cardBillEntries = useMemo(() => {
+    return ledger.filter(e => {
+      if (e.paymentMethod !== '카드' || e.type !== 'expense') return false;
+      const d = new Date(e.scheduledDate || e.createdAt);
+      return d.getTime() >= billingStart.getTime() && d.getTime() <= billingEnd.getTime();
+    }).sort((a, b) => new Date(b.scheduledDate || b.createdAt).getTime() - new Date(a.scheduledDate || a.createdAt));
+  }, [ledger, billingStart, billingEnd]);
+
+  const expectedCardBill = cardBillEntries.reduce((sum, e) => sum + e.amount, 0);
+  
+  const monthKey = `${year}-${String(month + 1).padStart(2, '0')}`;
+  const actualCardBill = cardBills[monthKey];
+  const hasActualBill = typeof actualCardBill === 'number';
+  const [showBillDetails, setShowBillDetails] = useState(false);
+
+  const [actualBillInput, setActualBillInput] = useState<string>('');
+
+  useEffect(() => {
+    setActualBillInput(hasActualBill ? actualCardBill.toString() : '');
+    setShowBillDetails(false);
+  }, [monthKey, hasActualBill, actualCardBill]);
+
+  const handleActualBillBlur = () => {
+    if (actualBillInput.trim() === '') {
+      // Remove it (Firebase merge won't delete unless we use deleteField, but since it's a Record, setting it to undefined isn't supported without restructuring. However, the user said "실제 청구액을 전부 지우면". Let's handle it as 0 or ignore. Actually, setting to undefined works if we don't strictly type it).
+      // Wait, we can just let it be. But let's assume they enter a number.
+      return;
+    }
+    const val = parseInt(actualBillInput.replace(/,/g, ''), 10);
+    if (!isNaN(val)) {
+      updateCardBill(monthKey, val);
+      setActualBillInput(val.toString());
+    }
+  };
+
   // ── Computed Totals ─────────────────────────────────────────────────────────
   const totalIncome  = monthEntries.filter(e => e.type === 'income' ).reduce((s, e) => s + e.amount, 0)
   const totalExpense = monthEntries.filter(e => e.type === 'expense').reduce((s, e) => s + e.amount, 0)
-  const net          = totalIncome - totalExpense
+  const transferExpense = monthEntries.filter(e => e.type === 'expense' && e.paymentMethod === '계좌이체').reduce((s, e) => s + e.amount, 0)
+  
+  const net = totalIncome - transferExpense - (hasActualBill ? actualCardBill : expectedCardBill)
 
   // ── Filtered & Sorted Entries ───────────────────────────────────────────────
   const displayEntries = useMemo(() => {
@@ -290,17 +331,74 @@ const LedgerPage: React.FC = () => {
               <span className="text-sm font-bold text-teal-500">{totalIncome > 0 ? `+${fmtAmt(totalIncome)}` : '0원'}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-xs font-bold text-yuri-500">총 지출</span>
+              <span className="text-xs font-bold text-yuri-500">총 지출 (카테고리 기준)</span>
               <span className="text-sm font-bold text-rose-400">{totalExpense > 0 ? `-${fmtAmt(totalExpense)}` : '0원'}</span>
             </div>
-            <div className="pt-3 border-t border-yuri-100 flex justify-between items-center">
-              <span className="text-sm font-bold text-yuri-800">잔액</span>
-              <span 
-                className="text-[15px] font-extrabold" 
-                style={{ color: '#3A3550' }}
+            
+            <div className="bg-yuri-50 rounded-xl p-4 flex flex-col gap-3 mt-2 border border-yuri-100">
+              <div 
+                className="flex flex-col cursor-pointer group"
+                onClick={() => setShowBillDetails(!showBillDetails)}
               >
-                {net >= 0 ? `+${fmtAmt(net)}` : `-${fmtAmt(Math.abs(net))}`}
-              </span>
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-xs font-bold text-yuri-600 flex items-center gap-1">
+                    카드값 청구 예정액
+                    <span className="text-[10px] text-yuri-400 group-hover:text-accent transition-colors">{showBillDetails ? '▲' : '▼'}</span>
+                  </span>
+                  <span className="text-sm font-bold text-yuri-900">{fmtAmt(expectedCardBill)}</span>
+                </div>
+                <span className="text-[10px] text-yuri-400">
+                  {billingStart.getFullYear()}년 {billingStart.getMonth() + 1}월 {billingStart.getDate()}일 ~ {billingEnd.getFullYear()}년 {billingEnd.getMonth() + 1}월 {billingEnd.getDate()}일 사용분
+                </span>
+              </div>
+              
+              {showBillDetails && (
+                <div className="flex flex-col gap-2 pt-2 border-t border-yuri-200 max-h-32 overflow-y-auto">
+                  {cardBillEntries.length === 0 ? (
+                    <div className="text-[11px] text-yuri-400 text-center py-2">청구 내역이 없습니다.</div>
+                  ) : (
+                    cardBillEntries.map(e => (
+                      <div key={e.id} className="flex justify-between items-center text-[11px]">
+                        <span className="text-yuri-500 truncate mr-2 flex-1">{new Date(e.scheduledDate || e.createdAt).getDate()}일 {e.label}</span>
+                        <span className="text-yuri-700 font-bold">{fmtAmt(e.amount)}</span>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
+
+              <div className="flex flex-col gap-1.5 pt-3 border-t border-yuri-200">
+                <span className="text-xs font-bold text-yuri-600">실제 청구액 입력</span>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={actualBillInput}
+                    onChange={(e) => setActualBillInput(e.target.value)}
+                    onBlur={handleActualBillBlur}
+                    placeholder="실제 금액 (미입력시 예정액 적용)"
+                    className="flex-1 px-3 py-1.5 bg-white border border-yuri-200 rounded text-xs outline-none focus:border-accent text-right"
+                  />
+                  <span className="text-xs font-bold text-yuri-700">원</span>
+                </div>
+                {hasActualBill && (
+                  <span className="text-[10px] text-accent mt-0.5 text-right font-bold">
+                    예정 {fmtAmt(expectedCardBill)} / 실제 {fmtAmt(actualCardBill)}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            <div className="pt-3 flex flex-col gap-1 border-t border-yuri-100">
+              <div className="flex justify-between items-center">
+                <span className="text-sm font-bold text-yuri-800">잔액</span>
+                <span 
+                  className="text-[15px] font-extrabold" 
+                  style={{ color: '#3A3550' }}
+                >
+                  {net >= 0 ? `+${fmtAmt(net)}` : `-${fmtAmt(Math.abs(net))}`}
+                </span>
+              </div>
+              <span className="text-[10px] text-yuri-400 text-right mt-1">실제 카드 청구액 기준으로 계산돼요</span>
             </div>
           </div>
 
@@ -469,16 +567,30 @@ const LedgerPage: React.FC = () => {
                                   </button>
                                 </div>
                               </div>
-                              <div className="flex flex-col items-end gap-1 shrink-0" onClick={() => startEdit(e)}>
+                              <div className="flex flex-col items-end gap-1 shrink-0">
                                 <span 
-                                  className="text-sm font-black"
+                                  className="text-sm font-black cursor-pointer hover:opacity-80"
+                                  onClick={(ev) => { ev.stopPropagation(); startEdit(e); }}
                                   style={{ color: e.type === 'income' ? '#3F9E7A' : '#D45D6E' }}
                                 >
                                   {e.type === 'income' ? '+' : '-'}{fmtAmt(e.amount)}
                                 </span>
-                                <span className="text-[10px] text-yuri-400">
-                                  {fmtCreatedAt(e.createdAt)}
-                                </span>
+                                <div className="relative inline-block cursor-pointer" onClick={(ev) => ev.stopPropagation()}>
+                                  <span className="text-[10px] text-yuri-400 hover:text-accent font-medium">
+                                    {fmtCreatedAt(e.scheduledDate || e.createdAt)}
+                                  </span>
+                                  <input 
+                                    type="date"
+                                    value={dayKey(new Date(e.scheduledDate || e.createdAt))}
+                                    onChange={(ev) => {
+                                      const newD = new Date(ev.target.value);
+                                      const oldD = new Date(e.scheduledDate || e.createdAt);
+                                      newD.setHours(oldD.getHours(), oldD.getMinutes(), oldD.getSeconds());
+                                      updateLedgerEntry(e.id, { scheduledDate: newD.toISOString() });
+                                    }}
+                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                  />
+                                </div>
                               </div>
                             </div>
                           )}

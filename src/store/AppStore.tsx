@@ -60,6 +60,11 @@ interface StoreValue {
   deleteAnniversary: (id: string) => void
   addMonthlyEvent: (name: string, day: number) => void
   deleteMonthlyEvent: (id: string) => void
+
+  cardPaymentDay: number
+  setCardPaymentDay: (day: number) => void
+  cardBills: Record<string, number>
+  updateCardBill: (monthKey: string, amount: number) => void
   
   hasPin: boolean
   isPrivateUnlocked: boolean
@@ -84,6 +89,9 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
   const [agendas, setAgendas] = useState<AgendaItem[]>([])
   const [anniversaries, setAnniversaries] = useState<Anniversary[]>([])
   const [monthlyEvents, setMonthlyEvents] = useState<MonthlyEvent[]>([])
+  
+  const [cardPaymentDay, setCardPaymentDayState] = useState<number>(14)
+  const [cardBills, setCardBills] = useState<Record<string, number>>({})
   
   const [isPrivateUnlocked, setIsPrivateUnlocked] = useState(() => {
     return sessionStorage.getItem('yuri-private-unlocked') === 'true'
@@ -111,6 +119,12 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
           setPinHash(null)
         }
         
+        // Load General settings
+        const genSettingsSnap = await getDoc(doc(db, `users/${uid}/settings/config`))
+        if (genSettingsSnap.exists()) {
+          setCardPaymentDayState(genSettingsSnap.data().cardPaymentDay || 14)
+        }
+        
         const [
           fetchedTasks,
           fetchedLedger,
@@ -120,7 +134,8 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
           fetchedExpenseCats,
           fetchedAgendas,
           fetchedAnnivs,
-          fetchedMonthly
+          fetchedMonthly,
+          fetchedCardBills
         ] = await Promise.all([
           fetchCol('tasks'),
           fetchCol('ledger'),
@@ -130,7 +145,8 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
           fetchCol('expenseCategories'),
           fetchCol('agendas'),
           fetchCol('anniversaries'),
-          fetchCol('monthlyEvents')
+          fetchCol('monthlyEvents'),
+          fetchCol('cardBills')
         ])
 
         const mergedCats = DEFAULT_EXPENSE_CATS.map(defCat => {
@@ -149,6 +165,14 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
         setAgendas(fetchedAgendas as AgendaItem[])
         setAnniversaries(fetchedAnnivs as Anniversary[])
         setMonthlyEvents(fetchedMonthly as MonthlyEvent[])
+        
+        const billsMap: Record<string, number> = {}
+        ;(fetchedCardBills as any[]).forEach((b: any) => {
+          if (b.id && typeof b.actualAmount === 'number') {
+            billsMap[b.id] = b.actualAmount
+          }
+        })
+        setCardBills(billsMap)
       } catch (err: any) {
         console.error("Firebase load error:", err)
         setLoadError(err.message || '데이터를 불러오는 중 알 수 없는 오류가 발생했습니다.')
@@ -262,6 +286,16 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
   const deleteLedgerEntry = useCallback((id: string) => {
     setLedger(prev => prev.filter(l => l.id !== id))
     deleteDoc(doc(db, 'users', uid, 'ledger', id)).catch(console.error)
+  }, [uid])
+
+  const setCardPaymentDay = useCallback((day: number) => {
+    setCardPaymentDayState(day)
+    setDoc(doc(db, `users/${uid}/settings/config`), { cardPaymentDay: day }, { merge: true }).catch(console.error)
+  }, [uid])
+
+  const updateCardBill = useCallback((monthKey: string, amount: number) => {
+    setCardBills(prev => ({ ...prev, [monthKey]: amount }))
+    setDoc(doc(db, 'users', uid, 'cardBills', monthKey), { id: monthKey, actualAmount: amount }, { merge: true }).catch(console.error)
   }, [uid])
 
   const addEvent = useCallback((text: string, scheduledDate?: string) => {
@@ -466,7 +500,9 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
       updateItemOrders,
       addAnniversary, deleteAnniversary,
       addMonthlyEvent, deleteMonthlyEvent,
-      hasPin, isPrivateUnlocked, unlockPrivate, setPrivatePin, lockPrivate, resetPrivatePin
+      hasPin, isPrivateUnlocked, unlockPrivate, setPrivatePin, lockPrivate, resetPrivatePin,
+      cardPaymentDay, setCardPaymentDay,
+      cardBills, updateCardBill,
     }}>
       {children}
     </StoreCtx.Provider>

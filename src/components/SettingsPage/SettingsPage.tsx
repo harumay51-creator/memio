@@ -3,16 +3,17 @@ import { useAppStore } from '../../store/AppStore'
 import { auth } from '../../config/firebase'
 import { EmailAuthProvider, reauthenticateWithCredential, updatePassword } from 'firebase/auth'
 
-type TabType = 'categories' | 'security' | 'anniversaries' | 'monthly'
+type TabType = 'ledger' | 'security' | 'anniversaries' | 'monthly'
 
 const SettingsPage: React.FC = () => {
   const { 
     expenseCategories, addCategoryKeyword, removeCategoryKeyword, addCategory,
     anniversaries, addAnniversary, deleteAnniversary,
-    monthlyEvents, addMonthlyEvent, deleteMonthlyEvent
+    monthlyEvents, addMonthlyEvent, deleteMonthlyEvent,
+    cardPaymentDay, setCardPaymentDay
   } = useAppStore()
   
-  const [activeTab, setActiveTab] = useState<TabType>('categories')
+  const [activeTab, setActiveTab] = useState<TabType>('ledger')
 
   // ── Category States ────────
   const [newCatName, setNewCatName] = useState('')
@@ -36,7 +37,7 @@ const SettingsPage: React.FC = () => {
   const [monthlyName, setMonthlyName] = useState('')
   const [monthlyDay, setMonthlyDay] = useState('')
 
-  // ── Category Handlers ────────
+  // ── Ledger Handlers ────────
   const toggleCategory = (catName: string) => {
     setExpanded(prev => ({ ...prev, [catName]: !prev[catName] }))
   }
@@ -129,7 +130,7 @@ const SettingsPage: React.FC = () => {
 
   const getTabTitle = (tab: TabType) => {
     switch (tab) {
-      case 'categories': return '가계부 카테고리 관리'
+      case 'ledger': return '가계부 설정'
       case 'security': return '보안 및 비밀번호'
       case 'anniversaries': return '기념일 관리'
       case 'monthly': return '매월 반복 일정'
@@ -144,12 +145,12 @@ const SettingsPage: React.FC = () => {
         </header>
         <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-2">
           <button 
-            onClick={() => setActiveTab('categories')}
+            onClick={() => setActiveTab('ledger')}
             className={`w-full text-left px-4 py-3 rounded-lg font-bold text-sm transition-colors ${
-              activeTab === 'categories' ? 'bg-yuri-100 text-yuri-900' : 'text-yuri-600 hover:bg-yuri-50'
+              activeTab === 'ledger' ? 'bg-yuri-100 text-yuri-900' : 'text-yuri-600 hover:bg-yuri-50'
             }`}
           >
-            가계부 카테고리 관리
+            가계부 설정
           </button>
           <button 
             onClick={() => setActiveTab('anniversaries')}
@@ -187,12 +188,36 @@ const SettingsPage: React.FC = () => {
 
         <div className="flex-1 overflow-y-auto p-8 pb-32">
           <div className="max-w-2xl">
-            {activeTab === 'categories' && (
+            {activeTab === 'ledger' && (
               <>
-                <p className="text-sm text-yuri-500 mb-8 leading-relaxed">
-                  가계부에 자주 쓰는 단어를 등록해 두세요. 하단 입력창(Quick Capture)에 해당 단어가 포함된 문장을 입력하면, 설정된 카테고리로 <strong>자동 분류</strong>됩니다.<br/>
-                  <span className="text-xs text-yuri-400 mt-1 inline-block">예: 카페 카테고리에 "메가커피" 추가 → "메가커피 3000원" 입력 시 카페 지출로 저장</span>
-                </p>
+                <div className="bg-white border border-yuri-200 rounded-xl p-8 shadow-sm mb-8">
+                  <h3 className="text-lg font-bold text-yuri-900 mb-2">신용카드 결제일 설정</h3>
+                  <p className="text-sm text-yuri-500 mb-6">가계부에서 카드값 청구 예정액을 정확히 계산하기 위해 결제일을 입력해주세요.</p>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="number"
+                      min="1" max="31"
+                      value={cardPaymentDay}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value, 10);
+                        if (!isNaN(val) && val >= 1 && val <= 31) {
+                          setCardPaymentDay(val);
+                        }
+                      }}
+                      className="w-32 px-4 py-3 bg-yuri-50 border border-yuri-200 rounded-lg text-sm outline-none focus:border-accent focus:bg-white transition-colors"
+                    />
+                    <span className="text-sm font-bold text-yuri-700">일</span>
+                    <span className="text-xs text-yuri-400 ml-2">※ 입력 시 자동 저장됩니다.</span>
+                  </div>
+                </div>
+
+                <div className="mb-6">
+                  <h3 className="text-lg font-bold text-yuri-900 mb-2">가계부 카테고리 키워드</h3>
+                  <p className="text-sm text-yuri-500 leading-relaxed">
+                    하단 입력창(Quick Capture)에 등록된 단어가 포함된 문장을 입력하면, 설정된 카테고리로 <strong>자동 분류</strong>됩니다.<br/>
+                    <span className="text-xs text-yuri-400 mt-1 inline-block">예: 카페 카테고리에 "메가커피" 추가 → "메가커피 3000원" 입력 시 카페 지출로 저장</span>
+                  </p>
+                </div>
 
                 <div className="flex flex-col gap-6">
                   {expenseCategories.map(cat => (
