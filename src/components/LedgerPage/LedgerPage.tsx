@@ -56,7 +56,7 @@ function fmtCreatedAt(dateStr: string): string {
 // ── Component ─────────────────────────────────────────────────────────────────
 const LedgerPage: React.FC = () => {
   const { 
-    ledger, addLedgerEntry, updateLedgerEntry, deleteLedgerEntry, 
+    ledger, updateLedgerEntry, deleteLedgerEntry, 
     fixedExpenses, addFixedExpense, updateFixedExpense, deleteFixedExpense,
     expenseCategories, isPrivateUnlocked, lockPrivate
   } = useAppStore()
