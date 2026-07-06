@@ -191,17 +191,17 @@ const TaskListItem: React.FC<TaskListItemProps> = ({ task, isSelected, onSelect,
         <span className="text-xs">✓</span>
       </div>
       
-      <div className="flex-1 min-w-0 pr-6">
+      <div className="flex-1 min-w-0">
         <h3 className={`text-sm font-semibold truncate ${task.done ? 'text-yuri-400 line-through' : isSelected ? 'text-yuri-900' : 'text-yuri-800'}`}>
           {task.text}
         </h3>
         {task.note && (
           <p className="text-xs text-yuri-400 truncate mt-1.5 line-clamp-1">{task.note.replace(/\n/g, ' ')}</p>
         )}
-        <div className="flex flex-col gap-0.5 mt-1.5">
-          <span className="text-[11px] text-yuri-400">생성일 {createdAtStr}</span>
-          {updatedAtStr && <span className="text-[11px] text-yuri-400">최종 저장 {updatedAtStr}</span>}
-        </div>
+      </div>
+      <div className="flex flex-col items-end gap-0.5 mt-0.5 shrink-0 mr-6">
+        <span className="text-[10px] text-yuri-400">생성일 {createdAtStr}</span>
+        {updatedAtStr && <span className="text-[10px] text-yuri-400">최종 저장 {updatedAtStr}</span>}
       </div>
 
       <button

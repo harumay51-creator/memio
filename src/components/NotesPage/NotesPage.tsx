@@ -98,16 +98,18 @@ const NotesPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId })
                   key={note.id}
                   onClick={() => setSelNoteId(note.id)}
                   className={`
-                    group p-3 rounded-xl cursor-pointer border transition-all duration-150 relative
+                    group p-3 rounded-xl cursor-pointer border transition-all duration-150 relative flex items-start gap-2
                     ${isSelected ? 'bg-white border-yuri-300 shadow-sm' : 'bg-transparent border-transparent hover:bg-yuri-100/50 hover:border-yuri-200'}
                   `}
                 >
+                  <div className="flex-1 min-w-0">
                   <h3 className={`text-sm font-bold truncate ${isSelected ? 'text-yuri-900' : 'text-yuri-800'}`}>
                     {getTitle(note.text)}
                   </h3>
-                  <div className="flex flex-col gap-0.5 mt-1.5">
-                    <span className="text-[11px] text-yuri-400">생성일 {createdAtStr}</span>
-                    {updatedAtStr && <span className="text-[11px] text-yuri-400">최종 저장 {updatedAtStr}</span>}
+                  </div>
+                  <div className="flex flex-col items-end gap-0.5 shrink-0 mr-6 mt-0.5">
+                    <span className="text-[10px] text-yuri-400">생성일 {createdAtStr}</span>
+                    {updatedAtStr && <span className="text-[10px] text-yuri-400">최종 저장 {updatedAtStr}</span>}
                   </div>
 
                   {/* Delete Button (Hover) */}
