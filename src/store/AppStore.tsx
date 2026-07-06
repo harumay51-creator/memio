@@ -1,12 +1,21 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react'
 import type { Task, LedgerEntry, ScheduleEvent, Note, FixedExpense, CategoryConfig, AgendaItem, Anniversary, MonthlyEvent } from '../types'
 import { DEFAULT_EXPENSE_CATS } from '../utils/parser'
-import { collection, getDocs, setDoc, updateDoc, deleteDoc, doc, writeBatch } from 'firebase/firestore'
+import { collection, getDocs, setDoc, updateDoc, deleteDoc, doc, writeBatch, getDoc } from 'firebase/firestore'
 import { db } from '../config/firebase'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function genId(): string {
   return crypto.randomUUID()
+}
+
+async function hashPin(pin: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(pin);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  return hashHex;
 }
 
 // ── Store shape ───────────────────────────────────────────────────────────────
@@ -51,6 +60,13 @@ interface StoreValue {
   deleteAnniversary: (id: string) => void
   addMonthlyEvent: (name: string, day: number) => void
   deleteMonthlyEvent: (id: string) => void
+  
+  hasPin: boolean
+  isPrivateUnlocked: boolean
+  unlockPrivate: (pin: string) => Promise<boolean>
+  setPrivatePin: (newPin: string) => Promise<void>
+  lockPrivate: () => void
+  resetPrivatePin: () => Promise<void>
 }
 
 const StoreCtx = createContext<StoreValue | null>(null)
@@ -68,6 +84,13 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
   const [agendas, setAgendas] = useState<AgendaItem[]>([])
   const [anniversaries, setAnniversaries] = useState<Anniversary[]>([])
   const [monthlyEvents, setMonthlyEvents] = useState<MonthlyEvent[]>([])
+  
+  const [isPrivateUnlocked, setIsPrivateUnlocked] = useState(() => {
+    return sessionStorage.getItem('yuri-private-unlocked') === 'true'
+  })
+  const [pinHash, setPinHash] = useState<string | null>(null)
+  const hasPin = pinHash !== null
+
   const [navDate, setNavDate] = useState<Date | null>(null)
 
   useEffect(() => {
@@ -77,6 +100,15 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
         const fetchCol = async (colName: string) => {
           const snap = await getDocs(collection(db, 'users', uid, colName))
           return snap.docs.map(doc => doc.data())
+        }
+        
+        // Load PIN settings
+        const settingsDocRef = doc(db, `users/${uid}/journal_settings/config`)
+        const settingsSnap = await getDoc(settingsDocRef)
+        if (settingsSnap.exists()) {
+          setPinHash(settingsSnap.data().pinHash || null)
+        } else {
+          setPinHash(null)
         }
         
         const [
@@ -380,6 +412,39 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
     deleteDoc(doc(db, 'users', uid, 'monthlyEvents', id)).catch(console.error)
   }, [uid])
 
+  const unlockPrivate = async (pin: string) => {
+    if (!pinHash) return false
+    const inputHash = await hashPin(pin)
+    if (inputHash === pinHash) {
+      setIsPrivateUnlocked(true)
+      sessionStorage.setItem('yuri-private-unlocked', 'true')
+      return true
+    }
+    return false
+  }
+
+  const setPrivatePin = async (newPin: string) => {
+    const hash = await hashPin(newPin)
+    const settingsDocRef = doc(db, `users/${uid}/journal_settings/config`)
+    await setDoc(settingsDocRef, { pinHash: hash }, { merge: true })
+    setPinHash(hash)
+    setIsPrivateUnlocked(true)
+    sessionStorage.setItem('yuri-private-unlocked', 'true')
+  }
+
+  const lockPrivate = () => {
+    setIsPrivateUnlocked(false)
+    sessionStorage.removeItem('yuri-private-unlocked')
+  }
+
+  const resetPrivatePin = async () => {
+    const settingsDocRef = doc(db, `users/${uid}/journal_settings/config`)
+    await setDoc(settingsDocRef, { pinHash: null }, { merge: true })
+    setPinHash(null)
+    setIsPrivateUnlocked(false)
+    sessionStorage.removeItem('yuri-private-unlocked')
+  }
+
   return (
     <StoreCtx.Provider value={{
       isLoading, loadError,
@@ -394,7 +459,8 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
       addAgenda, toggleAgenda, deleteAgenda,
       updateItemOrders,
       addAnniversary, deleteAnniversary,
-      addMonthlyEvent, deleteMonthlyEvent
+      addMonthlyEvent, deleteMonthlyEvent,
+      hasPin, isPrivateUnlocked, unlockPrivate, setPrivatePin, lockPrivate, resetPrivatePin
     }}>
       {children}
     </StoreCtx.Provider>

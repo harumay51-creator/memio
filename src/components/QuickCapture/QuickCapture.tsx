@@ -48,11 +48,11 @@ const QuickCapture: React.FC = () => {
     switch (result.type) {
       case 'expense':
         addLedgerEntry(result.text, result.amount ?? 0, 'expense', result.category ?? '기타', result.scheduledDate)
-        flashToast('expense', `지출 저장 · ${fmtAmt(result.amount ?? 0)}`)
+        flashToast('expense', `저장되었습니다.`)
         break
       case 'income':
         addLedgerEntry(result.text, result.amount ?? 0, 'income', result.category ?? '기타수입', result.scheduledDate)
-        flashToast('income', `수입 저장 · ${fmtAmt(result.amount ?? 0)}`)
+        flashToast('income', `저장되었습니다.`)
         break
     }
 

@@ -1,10 +1,12 @@
 import React, { useState, useMemo, useEffect } from 'react'
 import { useJournalStore } from '../../store/JournalStore'
+import { useAppStore } from '../../store/AppStore'
 import PinScreen from './PinScreen'
 import { Lock } from 'lucide-react'
 
 const JournalPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId }) => {
-  const { journals, addJournal, updateJournal, deleteJournal, isUnlocked, lock, isLoading } = useJournalStore()
+  const { journals, addJournal, updateJournal, deleteJournal, isLoading } = useJournalStore()
+  const { isPrivateUnlocked, lockPrivate } = useAppStore()
   const [selNoteId, setSelNoteId] = useState<string | null>(activeItemId || null)
   const [searchQuery, setSearchQuery] = useState('')
   const [inputText, setInputText] = useState('')
@@ -64,7 +66,7 @@ const JournalPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId 
     )
   }
 
-  if (!isUnlocked) {
+  if (!isPrivateUnlocked) {
     return <PinScreen />
   }
 
@@ -76,7 +78,7 @@ const JournalPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId 
           <div className="flex items-center justify-between">
             <h1 className="text-xl font-bold text-yuri-900 tracking-tight">개인 기록</h1>
             <button
-              onClick={lock}
+              onClick={lockPrivate}
               className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-yuri-500 bg-yuri-50 hover:bg-yuri-100 rounded-lg transition-colors cursor-pointer"
             >
               <Lock size={14} />

@@ -2,6 +2,8 @@ import React, { useState, useMemo } from 'react'
 import type { LedgerEntry, FixedExpense } from '../../types'
 import { useAppStore } from '../../store/AppStore'
 import { classifyLedgerCategory } from '../../utils/parser'
+import PinScreen from '../JournalPage/PinScreen'
+import { Lock } from 'lucide-react'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const MONTH_KO = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'] as const
@@ -67,7 +69,7 @@ const LedgerPage: React.FC = () => {
   const { 
     ledger, deleteLedgerEntry, updateLedgerEntry, 
     fixedExpenses, addFixedExpense, updateFixedExpense, deleteFixedExpense,
-    expenseCategories
+    expenseCategories, isPrivateUnlocked, lockPrivate
   } = useAppStore()
 
   const today = useMemo(() => new Date(), [])
@@ -92,6 +94,8 @@ const LedgerPage: React.FC = () => {
       .sort((a, b) => new Date(b.scheduledDate ?? b.createdAt).getTime() - new Date(a.scheduledDate ?? a.createdAt).getTime()),
     [ledger, year, month],
   )
+
+  // ── Render ──────────────────────────────────────────────────────────────────
 
   // ── Totals ─────────────────────────────────────────────────────────────────
   const totalIncome  = monthEntries.filter(e => e.type === 'income' ).reduce((s, e) => s + e.amount, 0)
@@ -194,6 +198,10 @@ const LedgerPage: React.FC = () => {
   const handleMonthSelect = (m: number) => {
     setView(new Date(pickerYear, m, 1))
     setShowPicker(false)
+  }
+
+  if (!isPrivateUnlocked) {
+    return <PinScreen />
   }
 
   return (
@@ -347,8 +355,15 @@ const LedgerPage: React.FC = () => {
 
       {/* ── Right Panel: Transactions (~70%) ───────────────────────────────────── */}
       <main className="flex-1 flex flex-col h-full bg-white relative min-w-0">
-        <header className="shrink-0 h-16 border-b border-yuri-100 flex items-center px-8 bg-white">
+        <header className="shrink-0 h-16 border-b border-yuri-100 flex items-center justify-between px-8 bg-white">
           <h2 className="text-lg font-bold text-yuri-900 tracking-tight">거래 내역</h2>
+          <button
+            onClick={lockPrivate}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-yuri-500 bg-yuri-50 hover:bg-yuri-100 rounded-lg transition-colors cursor-pointer"
+          >
+            <Lock size={14} />
+            잠금
+          </button>
         </header>
 
         <div className="flex-1 overflow-y-auto p-8 pb-32">

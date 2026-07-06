@@ -1,11 +1,11 @@
 import React, { useState } from 'react'
-import { useJournalStore } from '../../store/JournalStore'
+import { useAppStore } from '../../store/AppStore'
 import { auth } from '../../config/firebase'
 import { signInWithEmailAndPassword } from 'firebase/auth'
 import { Lock, Unlock, KeyRound, RefreshCcw, LogOut } from 'lucide-react'
 
 const PinScreen: React.FC = () => {
-  const { hasPin, unlock, setPin, resetPin } = useJournalStore()
+  const { hasPin, unlockPrivate, setPrivatePin, resetPrivatePin } = useAppStore()
   
   const [mode, setMode] = useState<'UNLOCK' | 'SETUP' | 'CHANGE' | 'RESET'>(
     hasPin ? 'UNLOCK' : 'SETUP'
@@ -26,7 +26,7 @@ const PinScreen: React.FC = () => {
       
       if (newPin.length === 4) {
         if (mode === 'UNLOCK') {
-          const success = await unlock(newPin)
+          const success = await unlockPrivate(newPin)
           if (!success) {
             setError('PIN 번호가 일치하지 않습니다.')
             setPinInput('')
@@ -35,7 +35,7 @@ const PinScreen: React.FC = () => {
           if (step === 1) {
             if (mode === 'CHANGE' && hasPin) {
               // verify current pin first
-              const success = await unlock(newPin)
+              const success = await unlockPrivate(newPin)
               if (success) {
                 setStep(2)
                 setPinInput('')
@@ -55,7 +55,7 @@ const PinScreen: React.FC = () => {
           } else {
             // step 2 for SETUP, step 3 for CHANGE
             if (newPin === confirmPin) {
-              await setPin(newPin)
+              await setPrivatePin(newPin)
               // success!
             } else {
               setError('PIN 번호가 일치하지 않습니다.')
@@ -78,7 +78,7 @@ const PinScreen: React.FC = () => {
     if (!auth.currentUser?.email) return
     try {
       await signInWithEmailAndPassword(auth, auth.currentUser.email, password)
-      await resetPin()
+      await resetPrivatePin()
       setMode('SETUP')
       setStep(1)
       setPinInput('')
