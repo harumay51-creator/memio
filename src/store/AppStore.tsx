@@ -209,32 +209,36 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
   }, [fixedExpenses, ledger, isLoading, uid])
 
   const addTask = useCallback((text: string) => {
-    const newItem: Task = { id: genId(), text, done: false, createdAt: new Date().toISOString(), order: tasks.length }
+    const now = new Date().toISOString()
+    const newItem: Task = { id: genId(), text, done: false, createdAt: now, updatedAt: now, order: tasks.length }
     setTasks(prev => [newItem, ...prev])
     setDoc(doc(db, 'users', uid, 'tasks', newItem.id), newItem).catch(console.error)
   }, [tasks.length, uid])
 
   const toggleTask = useCallback((id: string) => {
+    const updatedAt = new Date().toISOString()
     setTasks(prev => {
-      const next = prev.map(t => t.id === id ? { ...t, done: !t.done } : t)
+      const next = prev.map(t => t.id === id ? { ...t, done: !t.done, updatedAt } : t)
       const updated = next.find(t => t.id === id)
-      if (updated) updateDoc(doc(db, 'users', uid, 'tasks', id), { done: updated.done }).catch(console.error)
+      if (updated) updateDoc(doc(db, 'users', uid, 'tasks', id), { done: updated.done, updatedAt }).catch(console.error)
       return next
     })
   }, [uid])
 
   const updateTaskNote = useCallback((id: string, note: string) => {
+    const updatedAt = new Date().toISOString()
     setTasks(prev => {
-      const next = prev.map(t => t.id === id ? { ...t, note } : t)
-      updateDoc(doc(db, 'users', uid, 'tasks', id), { note }).catch(console.error)
+      const next = prev.map(t => t.id === id ? { ...t, note, updatedAt } : t)
+      updateDoc(doc(db, 'users', uid, 'tasks', id), { note, updatedAt }).catch(console.error)
       return next
     })
   }, [uid])
 
   const updateTaskText = useCallback((id: string, text: string) => {
+    const updatedAt = new Date().toISOString()
     setTasks(prev => {
-      const next = prev.map(t => t.id === id ? { ...t, text } : t)
-      updateDoc(doc(db, 'users', uid, 'tasks', id), { text }).catch(console.error)
+      const next = prev.map(t => t.id === id ? { ...t, text, updatedAt } : t)
+      updateDoc(doc(db, 'users', uid, 'tasks', id), { text, updatedAt }).catch(console.error)
       return next
     })
   }, [uid])
@@ -273,7 +277,8 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
   }, [uid])
 
   const addNote = useCallback((text: string) => {
-    const newItem: Note = { id: genId(), text, createdAt: new Date().toISOString() }
+    const now = new Date().toISOString()
+    const newItem: Note = { id: genId(), text, createdAt: now, updatedAt: now }
     setNotes(prev => [newItem, ...prev])
     setDoc(doc(db, 'users', uid, 'notes', newItem.id), newItem).catch(console.error)
     return newItem.id
@@ -285,8 +290,9 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
   }, [uid])
 
   const updateNote = useCallback((id: string, text: string) => {
-    setNotes(prev => prev.map(n => n.id === id ? { ...n, text } : n))
-    updateDoc(doc(db, 'users', uid, 'notes', id), { text }).catch(console.error)
+    const updatedAt = new Date().toISOString()
+    setNotes(prev => prev.map(n => n.id === id ? { ...n, text, updatedAt } : n))
+    updateDoc(doc(db, 'users', uid, 'notes', id), { text, updatedAt }).catch(console.error)
   }, [uid])
 
   const addFixedExpense = useCallback((label: string, amount: number, day: number, category: string) => {

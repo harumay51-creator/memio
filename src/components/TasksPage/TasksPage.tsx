@@ -166,6 +166,14 @@ interface TaskListItemProps {
 }
 
 const TaskListItem: React.FC<TaskListItemProps> = ({ task, isSelected, onSelect, onToggle, onDelete }) => {
+  const d = new Date(task.createdAt)
+  const createdAtStr = `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+  let updatedAtStr = ''
+  if (task.updatedAt) {
+    const u = new Date(task.updatedAt)
+    updatedAtStr = `${u.getFullYear()}.${String(u.getMonth() + 1).padStart(2, '0')}.${String(u.getDate()).padStart(2, '0')} ${String(u.getHours()).padStart(2, '0')}:${String(u.getMinutes()).padStart(2, '0')}`
+  }
+
   return (
     <div
       onClick={onSelect}
@@ -190,6 +198,10 @@ const TaskListItem: React.FC<TaskListItemProps> = ({ task, isSelected, onSelect,
         {task.note && (
           <p className="text-xs text-yuri-400 truncate mt-1.5 line-clamp-1">{task.note.replace(/\n/g, ' ')}</p>
         )}
+        <div className="flex flex-col gap-0.5 mt-1.5">
+          <span className="text-[11px] text-yuri-400">생성일 {createdAtStr}</span>
+          {updatedAtStr && <span className="text-[11px] text-yuri-400">최종 저장 {updatedAtStr}</span>}
+        </div>
       </div>
 
       <button

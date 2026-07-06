@@ -62,10 +62,12 @@ export const JournalStoreProvider: React.FC<{ uid: string, children: React.React
 
   const addJournal = (text: string) => {
     const id = genId()
+    const now = new Date().toISOString()
     const newEntry: Note = {
       id,
       text,
-      createdAt: new Date().toISOString()
+      createdAt: now,
+      updatedAt: now
     }
     setJournals(prev => [...prev, newEntry])
     setDoc(doc(db, `users/${uid}/journal_entries/${id}`), newEntry).catch(e => console.error(e))
@@ -73,8 +75,9 @@ export const JournalStoreProvider: React.FC<{ uid: string, children: React.React
   }
 
   const updateJournal = (id: string, text: string) => {
-    setJournals(prev => prev.map(j => j.id === id ? { ...j, text } : j))
-    setDoc(doc(db, `users/${uid}/journal_entries/${id}`), { text }, { merge: true }).catch(e => console.error(e))
+    const updatedAt = new Date().toISOString()
+    setJournals(prev => prev.map(j => j.id === id ? { ...j, text, updatedAt } : j))
+    setDoc(doc(db, `users/${uid}/journal_entries/${id}`), { text, updatedAt }, { merge: true }).catch(e => console.error(e))
   }
 
   const deleteJournal = (id: string) => {

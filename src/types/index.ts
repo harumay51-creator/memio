@@ -27,6 +27,7 @@ export interface Task {
   done: boolean
   note?: string      // detailed note content
   createdAt: string  // ISO string
+  updatedAt?: string // ISO string
   order?: number     // sorting order
 }
 
@@ -35,6 +36,7 @@ export interface Note {
   id: string
   text: string
   createdAt: string
+  updatedAt?: string
 }
 
 // ─── Ledger ───────────────────────────────────────────────────────────────────

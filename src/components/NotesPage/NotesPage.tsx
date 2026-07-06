@@ -93,7 +93,12 @@ const NotesPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId })
             filteredNotes.map(note => {
               const isSelected = selNoteId === note.id
               const d = new Date(note.createdAt)
-              const dateStr = d.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' })
+              const createdAtStr = `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+              let updatedAtStr = ''
+              if (note.updatedAt) {
+                const u = new Date(note.updatedAt)
+                updatedAtStr = `${u.getFullYear()}.${String(u.getMonth() + 1).padStart(2, '0')}.${String(u.getDate()).padStart(2, '0')} ${String(u.getHours()).padStart(2, '0')}:${String(u.getMinutes()).padStart(2, '0')}`
+              }
 
               return (
                 <div
@@ -107,9 +112,9 @@ const NotesPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId })
                   <h3 className={`text-sm font-bold truncate ${isSelected ? 'text-yuri-900' : 'text-yuri-800'}`}>
                     {getTitle(note.text)}
                   </h3>
-                  <div className="flex items-center gap-2 mt-1">
-                    <span className="text-[11px] font-semibold text-yuri-400 shrink-0">{dateStr}</span>
-                    <span className="text-[11px] text-yuri-400 truncate">{getPreview(note.text)}</span>
+                  <div className="flex flex-col gap-0.5 mt-1.5">
+                    <span className="text-[11px] text-yuri-400">생성일 {createdAtStr}</span>
+                    {updatedAtStr && <span className="text-[11px] text-yuri-400">최종 저장 {updatedAtStr}</span>}
                   </div>
 
                   {/* Delete Button (Hover) */}
