@@ -11,6 +11,7 @@ export type PageId =
   | 'bookmarks'
   | 'stats'
   | 'settings'
+  | 'journal'
 
 export interface NavItem {
   id: PageId

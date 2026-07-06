@@ -82,7 +82,10 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage, onNavigate, onLogout }) =
       </div>
 
       {/* User avatar placeholder */}
-      <div className="flex items-center gap-2.5 px-3 pt-3 mt-1">
+      <button 
+        onClick={() => onNavigate('journal')}
+        className="flex items-center gap-2.5 px-3 py-2 mt-1 rounded-xl hover:bg-yuri-100 transition-colors text-left cursor-pointer"
+      >
         <div className="
           w-8 h-8 rounded-full bg-[#8B7CF8]
           flex items-center justify-center text-white text-xs font-semibold
@@ -92,9 +95,9 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage, onNavigate, onLogout }) =
         </div>
         <div className="min-w-0">
           <p className="text-xs font-semibold text-[#2D334A] truncate">Yuri</p>
-          <p className="text-[10px] text-[#717A8C] truncate">Personal</p>
+          <p className="text-[10px] text-[#717A8C] truncate">개인 기록 (PIN)</p>
         </div>
-      </div>
+      </button>
     </aside>
   )
 }

@@ -10,6 +10,9 @@ import SearchPage      from '../components/SearchPage'
 import TodayPage       from '../components/TodayPage'
 import SettingsPage    from '../components/SettingsPage'
 import PlaceholderPage from '../components/PlaceholderPage'
+import JournalPage     from '../components/JournalPage/JournalPage'
+import { JournalStoreProvider } from '../store/JournalStore'
+import { auth } from '../config/firebase'
 
 interface RouterProps {
   page: PageId
@@ -24,24 +27,31 @@ interface RouterProps {
  */
 const Router: React.FC<RouterProps> = ({ page, activeItemId }) => {
   switch (page) {
-    // ── Implemented pages ─────────────────────────────────────────────
-    case 'dashboard':
-      return <TodayPage />
+      // ── Implemented pages ─────────────────────────────────────────────
+      case 'dashboard':
+        return <TodayPage />
 
-    case 'search':
-      return <SearchPage />
+      case 'search':
+        return <SearchPage />
 
-    case 'calendar':
-      return <CalendarPage />
+      case 'calendar':
+        return <CalendarPage />
 
-    case 'ledger':
-      return <LedgerPage />
+      case 'ledger':
+        return <LedgerPage />
 
-    case 'notes':
-      return <NotesPage activeItemId={activeItemId} />
+      case 'notes':
+        return <NotesPage activeItemId={activeItemId} />
 
-    case 'tasks':
-      return <TasksPage activeItemId={activeItemId} />
+      case 'tasks':
+        return <TasksPage activeItemId={activeItemId} />
+
+      case 'journal':
+        return (
+          <JournalStoreProvider uid={auth.currentUser?.uid || ''}>
+            <JournalPage activeItemId={activeItemId} />
+          </JournalStoreProvider>
+        )
 
     case 'history':
       return <HistoryPage />
