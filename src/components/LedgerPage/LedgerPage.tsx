@@ -289,7 +289,10 @@ const LedgerPage: React.FC = () => {
             </div>
             <div className="pt-3 border-t border-yuri-100 flex justify-between items-center">
               <span className="text-sm font-bold text-yuri-800">잔액</span>
-              <span className={`text-lg font-black ${net >= 0 ? 'text-slate-800' : 'text-rose-400'}`}>
+              <span 
+                className="text-base font-black" 
+                style={{ color: net >= 0 ? '#3F9E7A' : '#D45D6E' }}
+              >
                 {net >= 0 ? `+${fmtAmt(net)}` : `-${fmtAmt(Math.abs(net))}`}
               </span>
             </div>
@@ -420,16 +423,49 @@ const LedgerPage: React.FC = () => {
                                   {e.fixedExpenseId && <span className="text-[9px] bg-yuri-200 text-yuri-600 px-1 py-0.5 rounded font-bold uppercase shrink-0">고정</span>}
                                 </h4>
                                 <div className="flex items-center gap-2">
-                                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-sm shrink-0" style={{ backgroundColor: catColor(e.category) + '33', color: catColor(e.category).replace('B4A2','C060').replace('CDB4DB','8A5A9E') /* Approximate darker shade for text */ }}>
-                                    {e.category}
-                                  </span>
-                                  <span className="text-[10px] text-yuri-400 shrink-0">
+                                  <div className="relative flex items-center justify-center shrink-0">
+                                    <select
+                                      value={e.category}
+                                      onChange={(ev) => updateLedgerEntry(e.id, { category: ev.target.value })}
+                                      onClick={(ev) => ev.stopPropagation()}
+                                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                    >
+                                      {e.type === 'expense' ? (
+                                        <>
+                                          {expenseCategories.map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
+                                          {!expenseCategories.some(c => c.name === '기타') && <option value="기타">기타</option>}
+                                          {!expenseCategories.some(c => c.name === e.category) && e.category !== '기타' && <option value={e.category}>{e.category}</option>}
+                                        </>
+                                      ) : (
+                                        <>
+                                          {['급여', '용돈', '이자/배당', '환급', '기타수입'].map(name => (
+                                            <option key={name} value={name}>{name}</option>
+                                          ))}
+                                          {![ '급여', '용돈', '이자/배당', '환급', '기타수입'].includes(e.category) && <option value={e.category}>{e.category}</option>}
+                                        </>
+                                      )}
+                                    </select>
+                                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-sm pointer-events-none" style={{ backgroundColor: catColor(e.category) + '33', color: catColor(e.category).replace('B4A2','C060').replace('CDB4DB','8A5A9E') }}>
+                                      {e.category}
+                                    </span>
+                                  </div>
+                                  <button 
+                                    onClick={(ev) => { ev.stopPropagation(); updateLedgerEntry(e.id, { paymentMethod: (e.paymentMethod || '카드') === '카드' ? '계좌이체' : '카드' }); }}
+                                    className={`shrink-0 w-14 text-[10px] font-bold py-0.5 rounded transition-colors text-center cursor-pointer ${
+                                      (e.paymentMethod || '카드') === '카드' 
+                                        ? 'bg-blue-50/50 text-blue-500 hover:bg-blue-100' 
+                                        : 'bg-teal-50 text-teal-600 hover:bg-teal-100'
+                                    }`}
+                                  >
                                     {e.paymentMethod || '카드'}
-                                  </span>
+                                  </button>
                                 </div>
                               </div>
-                              <div className="flex flex-col items-end gap-1 shrink-0">
-                                <span className={`text-sm font-black ${e.type === 'income' ? 'text-teal-500' : 'text-slate-800'}`}>
+                              <div className="flex flex-col items-end gap-1 shrink-0" onClick={() => startEdit(e)}>
+                                <span 
+                                  className="text-sm font-black"
+                                  style={{ color: e.type === 'income' ? '#3F9E7A' : '#D45D6E' }}
+                                >
                                   {e.type === 'income' ? '+' : '-'}{fmtAmt(e.amount)}
                                 </span>
                                 <span className="text-[10px] text-yuri-400">
