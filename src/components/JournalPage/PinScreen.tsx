@@ -43,6 +43,9 @@ const PinScreen: React.FC = () => {
                 setError('기존 PIN 번호가 일치하지 않습니다.')
                 setPinInput('')
               }
+            } else if (mode === 'SETUP') {
+              // Skip confirm step for SETUP, just save it directly
+              await setPrivatePin(newPin)
             } else {
               setConfirmPin(newPin)
               setPinInput('')
@@ -88,12 +91,14 @@ const PinScreen: React.FC = () => {
     }
   }
 
-  let title = '개인 기록 잠금 해제'
-  let subtitle = 'PIN 번호를 입력해주세요.'
-  
-  if (mode === 'SETUP') {
-    title = '개인 기록 PIN 설정'
-    subtitle = step === 1 ? '새로운 4자리 PIN을 입력해주세요.' : '확인을 위해 다시 한번 입력해주세요.'
+  let title = ''
+  let subtitle = ''
+  if (mode === 'UNLOCK') {
+    title = '개인 기록 잠금 해제'
+    subtitle = 'PIN 번호를 입력해주세요.'
+  } else if (mode === 'SETUP') {
+    title = '새 PIN 번호 설정'
+    subtitle = '사용할 4자리 PIN 번호를 입력해주세요.'
   } else if (mode === 'CHANGE') {
     title = 'PIN 번호 변경'
     if (step === 1) subtitle = '현재 PIN 번호를 입력해주세요.'
