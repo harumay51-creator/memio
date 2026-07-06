@@ -170,7 +170,7 @@ const LedgerPage: React.FC = () => {
         type: res.type,
         category: res.category || '기타',
         scheduledDate: res.scheduledDate,
-        memo: editMemo.trim() || undefined
+        memo: editMemo.trim()
       })
     }
     setEditingEntryId(null)
@@ -397,7 +397,14 @@ const LedgerPage: React.FC = () => {
                           `}
                         >
                           {isEditing ? (
-                            <div className="flex flex-col gap-2">
+                            <div 
+                              className="flex flex-col gap-2"
+                              onBlur={(ev) => {
+                                if (!ev.currentTarget.contains(ev.relatedTarget as Node)) {
+                                  saveEdit(e);
+                                }
+                              }}
+                            >
                               <div className="flex items-center gap-2">
                                 <input
                                   autoFocus
@@ -407,8 +414,6 @@ const LedgerPage: React.FC = () => {
                                   onKeyDown={(ev) => handleEditKeyDown(ev, e)}
                                   className="flex-1 bg-white border border-yuri-200 rounded px-2 py-1.5 text-sm outline-none focus:border-accent"
                                 />
-                                <button onClick={(ev) => { ev.stopPropagation(); saveEdit(e); }} className="text-xs font-bold text-white bg-accent px-3 py-1.5 rounded hover:bg-accent/90">저장</button>
-                                <button onClick={(ev) => { ev.stopPropagation(); setEditingEntryId(null); }} className="text-xs font-bold text-yuri-500 bg-yuri-100 px-3 py-1.5 rounded hover:bg-yuri-200">취소</button>
                               </div>
                               <input
                                 type="text"
