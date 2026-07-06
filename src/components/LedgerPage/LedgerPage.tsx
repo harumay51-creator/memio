@@ -143,15 +143,7 @@ const LedgerPage: React.FC = () => {
     return [...map.values()]
   }, [displayEntries])
 
-  // ── Quick Capture ───────────────────────────────────────────────────────────
-  const [captureInput, setCaptureInput] = useState('')
-  const handleQuickCapture = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && captureInput.trim()) {
-      const res = parseCapture(captureInput, expenseCategories)
-      addLedgerEntry(res.text, res.amount || 0, res.type, res.category || '기타', res.scheduledDate)
-      setCaptureInput('')
-    }
-  }
+
 
   // ── Transaction Editing ─────────────────────────────────────────────────────
   const [editingEntryId, setEditingEntryId] = useState<string | null>(null)
