@@ -53,7 +53,7 @@ const LedgerPage: React.FC = () => {
     ledger, updateLedgerEntry, deleteLedgerEntry, 
     fixedExpenses, addFixedExpense, updateFixedExpense, deleteFixedExpense,
     expenseCategories, isPrivateUnlocked, lockPrivate,
-    cardPaymentDay, cardBills, updateCardBill,
+    cardBills, updateCardBill,
     cardBillingStartDay, cardBillingEndDay
   } = useAppStore()
 

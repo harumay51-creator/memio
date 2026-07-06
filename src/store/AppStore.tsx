@@ -493,10 +493,6 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
     sessionStorage.removeItem('yuri-private-unlocked')
   }
 
-  const setCardPaymentDay = useCallback((day: number) => {
-    setCardPaymentDayState(day)
-    setDoc(doc(db, `users/${uid}/settings/config`), { cardPaymentDay: day }, { merge: true }).catch(console.error)
-  }, [uid])
 
   const setCardBillingDays = useCallback((start: number, end: number) => {
     setCardBillingStartDay(start)
