@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { auth } from '../config/firebase'
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth'
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, setPersistence, browserSessionPersistence } from 'firebase/auth'
 
 const AuthScreen: React.FC = () => {
   const [isLogin, setIsLogin] = useState(true)
@@ -15,6 +15,7 @@ const AuthScreen: React.FC = () => {
     setLoading(true)
 
     try {
+      await setPersistence(auth, browserSessionPersistence)
       if (isLogin) {
         await signInWithEmailAndPassword(auth, email, password)
       } else {

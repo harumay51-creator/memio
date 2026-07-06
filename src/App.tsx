@@ -6,7 +6,7 @@ import QuickCapture from './components/QuickCapture'
 import Router       from './router/Router'
 import AuthScreen   from './components/AuthScreen'
 import { auth }     from './config/firebase'
-import { onAuthStateChanged, User } from 'firebase/auth'
+import { onAuthStateChanged, User, signOut } from 'firebase/auth'
 
 // ── Inner app (needs to be inside AppStoreProvider to access useAppStore) ─────
 const AppInner: React.FC = () => {
@@ -105,11 +105,48 @@ export default function App() {
   const [isAuthLoading, setIsAuthLoading] = useState(true)
 
   useEffect(() => {
+    let timerId: ReturnType<typeof setTimeout> | null = null;
+    
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser)
-      setIsAuthLoading(false)
+      if (currentUser) {
+        const now = Date.now();
+        let loginTime = sessionStorage.getItem('yuri-login-time');
+        if (!loginTime) {
+          loginTime = now.toString();
+          sessionStorage.setItem('yuri-login-time', loginTime);
+        }
+        
+        // 3 hours = 3 * 60 * 60 * 1000 = 10800000 ms
+        const LOGOUT_TIME_MS = 3 * 60 * 60 * 1000; 
+        const elapsed = now - parseInt(loginTime, 10);
+        const remaining = LOGOUT_TIME_MS - elapsed;
+        
+        if (remaining <= 0) {
+          signOut(auth);
+          sessionStorage.removeItem('yuri-login-time');
+          setUser(null);
+          setIsAuthLoading(false);
+        } else {
+          setUser(currentUser);
+          setIsAuthLoading(false);
+          
+          if (timerId) clearTimeout(timerId);
+          timerId = setTimeout(() => {
+            signOut(auth);
+            sessionStorage.removeItem('yuri-login-time');
+          }, remaining);
+        }
+      } else {
+        if (timerId) clearTimeout(timerId);
+        setUser(null);
+        setIsAuthLoading(false);
+        sessionStorage.removeItem('yuri-login-time');
+      }
     })
-    return () => unsubscribe()
+    return () => {
+      if (timerId) clearTimeout(timerId);
+      unsubscribe();
+    }
   }, [])
 
   if (isAuthLoading) {
