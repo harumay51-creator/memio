@@ -100,7 +100,7 @@ const LedgerPage: React.FC = () => {
       if (e.paymentMethod !== '카드' || e.type !== 'expense') return false;
       const d = new Date(e.scheduledDate || e.createdAt);
       return d.getTime() >= billingStart.getTime() && d.getTime() <= billingEnd.getTime();
-    }).sort((a, b) => new Date(b.scheduledDate || b.createdAt).getTime() - new Date(a.scheduledDate || a.createdAt));
+    }).sort((a, b) => new Date(b.scheduledDate || b.createdAt).getTime() - new Date(a.scheduledDate || a.createdAt).getTime());
   }, [ledger, billingStart, billingEnd]);
 
   const expectedCardBill = cardBillEntries.reduce((sum, e) => sum + e.amount, 0);
