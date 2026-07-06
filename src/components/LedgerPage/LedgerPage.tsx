@@ -9,30 +9,24 @@ import { Lock, X } from 'lucide-react'
 const MONTH_KO = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'] as const
 const WDAY_KO  = ['일','월','화','수','목','금','토'] as const
 
-const CAT_COLOR: Record<string, string> = {
-  '식비':     '#FFB4A2',
-  '카페':     '#FFD6A5',
-  '교통':     '#A0C4FF',
-  '쇼핑':     '#CDB4DB',
-  '문화':     '#FFC6FF',
-  '의료':     '#FFAFCC',
-  '통신':     '#9BF6FF',
-  '기타':     '#E0E0E0',
-  '급여':     '#B9FBC0',
-  '용돈':     '#CAFFBF',
-  '이자/배당': '#A0E8AF',
-  '환급':     '#C4FAF8',
-  '기타수입':  '#D8E2DC',
+const CAT_TW_CLASSES: Record<string, { bg: string, text: string }> = {
+  '식비':     { bg: 'bg-orange-50', text: 'text-orange-600' },
+  '카페':     { bg: 'bg-yellow-50', text: 'text-yellow-600' },
+  '교통':     { bg: 'bg-blue-50',   text: 'text-blue-600' },
+  '쇼핑':     { bg: 'bg-fuchsia-50',text: 'text-fuchsia-600' },
+  '문화':     { bg: 'bg-purple-50', text: 'text-purple-600' },
+  '의료':     { bg: 'bg-rose-50',   text: 'text-rose-600' },
+  '통신':     { bg: 'bg-cyan-50',   text: 'text-cyan-600' },
+  '급여':     { bg: 'bg-emerald-50',text: 'text-emerald-600' },
+  '용돈':     { bg: 'bg-lime-50',   text: 'text-lime-600' },
+  '이자/배당': { bg: 'bg-teal-50',   text: 'text-teal-600' },
+  '환급':     { bg: 'bg-sky-50',    text: 'text-sky-600' },
+  '기타':     { bg: 'bg-slate-100', text: 'text-slate-600' },
+  '기타수입':  { bg: 'bg-slate-100', text: 'text-slate-600' },
 }
 
-function catColor(name: string): string {
-  return CAT_COLOR[name] ?? '#94a3b8'
-}
-
-function catTextColor(bgHex: string): string {
-  const greyHexes = ['#E0E0E0', '#D8E2DC', '#94a3b8'];
-  if (greyHexes.includes(bgHex)) return '#374151';
-  return bgHex.replace('B4A2','C060').replace('CDB4DB','8A5A9E');
+function getCatClasses(name: string) {
+  return CAT_TW_CLASSES[name] ?? { bg: 'bg-slate-100', text: 'text-slate-600' }
 }
 
 // ── Formatters ────────────────────────────────────────────────────────────────
@@ -148,10 +142,12 @@ const LedgerPage: React.FC = () => {
   // ── Transaction Editing ─────────────────────────────────────────────────────
   const [editingEntryId, setEditingEntryId] = useState<string | null>(null)
   const [editInput, setEditInput] = useState('')
+  const [editMemo, setEditMemo] = useState('')
 
   const startEdit = (entry: LedgerEntry) => {
     setEditingEntryId(entry.id)
     setEditInput(`${entry.label} ${entry.type === 'income' ? '+' : ''}${entry.amount}원`)
+    setEditMemo(entry.memo || '')
   }
 
   const saveEdit = (entry: LedgerEntry) => {
@@ -162,7 +158,8 @@ const LedgerPage: React.FC = () => {
         amount: res.amount || 0,
         type: res.type,
         category: res.category || '기타',
-        scheduledDate: res.scheduledDate
+        scheduledDate: res.scheduledDate,
+        memo: editMemo.trim() || undefined
       })
     }
     setEditingEntryId(null)
@@ -288,8 +285,8 @@ const LedgerPage: React.FC = () => {
             <div className="pt-3 border-t border-yuri-100 flex justify-between items-center">
               <span className="text-sm font-bold text-yuri-800">잔액</span>
               <span 
-                className="text-base font-black" 
-                style={{ color: net >= 0 ? '#3F9E7A' : '#D45D6E' }}
+                className="text-[15px] font-extrabold" 
+                style={{ color: '#3A3550' }}
               >
                 {net >= 0 ? `+${fmtAmt(net)}` : `-${fmtAmt(Math.abs(net))}`}
               </span>
@@ -367,7 +364,7 @@ const LedgerPage: React.FC = () => {
               </p>
             </div>
           ) : (
-            <div className="flex flex-col gap-6">
+            <div className="flex flex-col gap-6 max-w-[760px]">
               {groups.map(g => (
                 <section key={dayKey(g.date)} className="animate-fade-in">
                   <h3 className="text-xs font-bold text-yuri-500 mb-2 flex items-center gap-2">
@@ -389,15 +386,26 @@ const LedgerPage: React.FC = () => {
                           `}
                         >
                           {isEditing ? (
-                            <div className="flex items-center gap-2">
+                            <div className="flex flex-col gap-2">
+                              <div className="flex items-center gap-2">
+                                <input
+                                  autoFocus
+                                  type="text"
+                                  value={editInput}
+                                  onChange={(ev) => setEditInput(ev.target.value)}
+                                  onKeyDown={(ev) => handleEditKeyDown(ev, e)}
+                                  className="flex-1 bg-white border border-yuri-200 rounded px-2 py-1.5 text-sm outline-none focus:border-accent"
+                                />
+                                <button onClick={(ev) => { ev.stopPropagation(); saveEdit(e); }} className="text-xs font-bold text-white bg-accent px-3 py-1.5 rounded hover:bg-accent/90">저장</button>
+                                <button onClick={(ev) => { ev.stopPropagation(); setEditingEntryId(null); }} className="text-xs font-bold text-yuri-500 bg-yuri-100 px-3 py-1.5 rounded hover:bg-yuri-200">취소</button>
+                              </div>
                               <input
-                                autoFocus
                                 type="text"
-                                value={editInput}
-                                onChange={(ev) => setEditInput(ev.target.value)}
+                                placeholder="메모 추가 (선택)"
+                                value={editMemo}
+                                onChange={(ev) => setEditMemo(ev.target.value)}
                                 onKeyDown={(ev) => handleEditKeyDown(ev, e)}
-                                onBlur={() => saveEdit(e)}
-                                className="flex-1 bg-white border border-yuri-200 rounded px-2 py-1.5 text-sm outline-none focus:border-accent"
+                                className="w-full bg-white border border-yuri-200 rounded px-2 py-1.5 text-xs outline-none focus:border-accent"
                               />
                             </div>
                           ) : (
@@ -407,6 +415,9 @@ const LedgerPage: React.FC = () => {
                                   {e.label}
                                   {e.fixedExpenseId && <span className="text-[9px] bg-yuri-200 text-yuri-600 px-1 py-0.5 rounded font-bold uppercase shrink-0">고정</span>}
                                 </h4>
+                                {e.memo && (
+                                  <p className="text-[12px] text-[#9CA3AF] mb-0.5 whitespace-pre-wrap leading-snug">{e.memo}</p>
+                                )}
                                 <div className="flex items-center gap-2">
                                   <div className="relative flex items-center justify-center shrink-0">
                                     <select
@@ -430,17 +441,13 @@ const LedgerPage: React.FC = () => {
                                         </>
                                       )}
                                     </select>
-                                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-sm pointer-events-none" style={{ backgroundColor: catColor(e.category) + '33', color: catTextColor(catColor(e.category)) }}>
+                                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-sm pointer-events-none ${getCatClasses(e.category).bg} ${getCatClasses(e.category).text}`}>
                                       {e.category}
                                     </span>
                                   </div>
                                   <button 
                                     onClick={(ev) => { ev.stopPropagation(); updateLedgerEntry(e.id, { paymentMethod: (e.paymentMethod || '카드') === '카드' ? '계좌이체' : '카드' }); }}
-                                    className={`shrink-0 w-14 text-[10px] font-bold py-0.5 rounded transition-colors text-center cursor-pointer ${
-                                      (e.paymentMethod || '카드') === '카드' 
-                                        ? 'bg-blue-50/50 text-blue-500 hover:bg-blue-100' 
-                                        : 'bg-teal-50 text-teal-600 hover:bg-teal-100'
-                                    }`}
+                                    className="shrink-0 w-14 text-[10px] font-bold py-0.5 rounded transition-colors text-center cursor-pointer bg-[#F1F0F5] text-[#6B7280] hover:bg-gray-200"
                                   >
                                     {e.paymentMethod || '카드'}
                                   </button>

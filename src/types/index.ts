@@ -43,6 +43,7 @@ export interface Note {
 export interface LedgerEntry {
   id: string
   label: string
+  memo?: string
   amount: number            // always positive integer (in 원)
   type: 'income' | 'expense'
   category: string          // auto-classified from label; defaults to '기타'
