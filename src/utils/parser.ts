@@ -136,6 +136,8 @@ interface KSTDate {
   month0:  number   // 0-indexed (January = 0)
   date:    number
   weekday: number   // 0 = Sunday … 6 = Saturday
+  hour:    number
+  minute:  number
 }
 
 /** Returns the current date components in KST regardless of system timezone. */
@@ -143,22 +145,24 @@ function kstNow(): KSTDate {
   const now   = new Date()
   const kstMs = now.getTime() + (now.getTimezoneOffset() + 9 * 60) * 60000
   const kst   = new Date(kstMs)
-  return {
     year:    kst.getFullYear(),
     month0:  kst.getMonth(),
     date:    kst.getDate(),
     weekday: kst.getDay(),
+    hour:    kst.getHours(),
+    minute:  kst.getMinutes(),
   }
 }
 
 /** Add `days` to a KSTDate and return the resulting KSTDate. */
 function addDaysKST(base: KSTDate, days: number): KSTDate {
   const d = new Date(Date.UTC(base.year, base.month0, base.date + days))
-  return {
     year:    d.getUTCFullYear(),
     month0:  d.getUTCMonth(),
     date:    d.getUTCDate(),
     weekday: d.getUTCDay(),
+    hour:    base.hour,
+    minute:  base.minute,
   }
 }
 
@@ -256,7 +260,7 @@ interface TimeResult { hour: number; minute: number }
  *   Hours 1–8 with no AM/PM prefix are assumed to be PM.
  *   Default (no time found): 09:00 KST.
  */
-function parseTime(text: string): TimeResult {
+function parseTime(text: string): TimeResult | null {
   // 오후 N시 (M분)?
   const pmM = text.match(/오후\s*([0-9]+)\s*시(?:\s*([0-9]+)\s*분)?/)
   if (pmM) {
@@ -277,7 +281,7 @@ function parseTime(text: string): TimeResult {
     return { hour: h >= 1 && h <= 8 ? h + 12 : h, minute: bareM[2] ? parseInt(bareM[2]) : 0 }
   }
 
-  return { hour: 9, minute: 0 }  // default: 09:00 KST
+  return null
 }
 
 // ── Date parsing ──────────────────────────────────────────────────────────────
@@ -346,7 +350,7 @@ function parseDate(text: string, today: KSTDate): KSTDate {
       year = today.year + 1
     }
     const d = new Date(Date.UTC(year, month0, date))
-    return { year: d.getUTCFullYear(), month0: d.getUTCMonth(), date: d.getUTCDate(), weekday: d.getUTCDay() }
+    return { year: d.getUTCFullYear(), month0: d.getUTCMonth(), date: d.getUTCDate(), weekday: d.getUTCDay(), hour: 9, minute: 0 }
   }
 
   // 6. Bare weekday ("목요일", "월요일", …) → next occurrence (≥ today)
@@ -363,8 +367,20 @@ function parseDate(text: string, today: KSTDate): KSTDate {
 /** Returns a UTC ISO string representing the KST schedule date/time parsed from `text`. */
 function parseScheduledDate(text: string): string {
   const today              = kstNow()
-  const { hour, minute }   = parseTime(text)
+  const time               = parseTime(text)
   const { year, month0, date } = parseDate(text, today)
+  
+  let hour = 9
+  let minute = 0
+  
+  if (time) {
+    hour = time.hour
+    minute = time.minute
+  } else if (year === today.year && month0 === today.month0 && date === today.date) {
+    hour = today.hour
+    minute = today.minute
+  }
+  
   return kstToIso(year, month0, date, hour, minute)
 }
 
