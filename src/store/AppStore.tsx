@@ -332,7 +332,7 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
     setTasks(prev => {
       const item = prev.find(t => t.id === id)
       if (item) {
-        setTrashedItems(curr => [{ id, type: 'task', label: item.text, deletedAt: Date.now() }, ...curr].sort((a,b)=>b.deletedAt-a.deletedAt))
+        setTrashedItems(curr => [{ id, type: 'task' as const, label: item.text, deletedAt: Date.now() }, ...curr].sort((a,b)=>b.deletedAt-a.deletedAt))
       }
       return prev.filter(t => t.id !== id)
     })
@@ -356,7 +356,7 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
       if (item) {
         const dateStr = item.scheduledDate ? new Date(item.scheduledDate).toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' }) : ''
         const label = `${dateStr} ${item.label} ${item.amount.toLocaleString()}원`.trim()
-        setTrashedItems(curr => [{ id, type: 'ledger', label, deletedAt: Date.now() }, ...curr].sort((a,b)=>b.deletedAt-a.deletedAt))
+        setTrashedItems(curr => [{ id, type: 'ledger' as const, label, deletedAt: Date.now() }, ...curr].sort((a,b)=>b.deletedAt-a.deletedAt))
       }
       return prev.filter(l => l.id !== id)
     })
@@ -398,7 +398,7 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
       const item = prev.find(n => n.id === id)
       if (item) {
         const label = item.text.trim().split('\n')[0].slice(0, 30) || '새로운 메모'
-        setTrashedItems(curr => [{ id, type: 'note', label, deletedAt: Date.now() }, ...curr].sort((a,b)=>b.deletedAt-a.deletedAt))
+        setTrashedItems(curr => [{ id, type: 'note' as const, label, deletedAt: Date.now() }, ...curr].sort((a,b)=>b.deletedAt-a.deletedAt))
       }
       return prev.filter(n => n.id !== id)
     })
@@ -427,7 +427,7 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
       const item = prev.find(f => f.id === id)
       if (item) {
         const label = `${item.label} ${item.amount.toLocaleString()}원`
-        setTrashedItems(curr => [{ id, type: 'fixedExpense', label, deletedAt: Date.now() }, ...curr].sort((a,b)=>b.deletedAt-a.deletedAt))
+        setTrashedItems(curr => [{ id, type: 'fixedExpense' as const, label, deletedAt: Date.now() }, ...curr].sort((a,b)=>b.deletedAt-a.deletedAt))
       }
       return prev.filter(f => f.id !== id)
     })
