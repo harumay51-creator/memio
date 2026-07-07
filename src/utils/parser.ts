@@ -145,6 +145,7 @@ function kstNow(): KSTDate {
   const now   = new Date()
   const kstMs = now.getTime() + (now.getTimezoneOffset() + 9 * 60) * 60000
   const kst   = new Date(kstMs)
+  return {
     year:    kst.getFullYear(),
     month0:  kst.getMonth(),
     date:    kst.getDate(),
@@ -157,6 +158,7 @@ function kstNow(): KSTDate {
 /** Add `days` to a KSTDate and return the resulting KSTDate. */
 function addDaysKST(base: KSTDate, days: number): KSTDate {
   const d = new Date(Date.UTC(base.year, base.month0, base.date + days))
+  return {
     year:    d.getUTCFullYear(),
     month0:  d.getUTCMonth(),
     date:    d.getUTCDate(),
