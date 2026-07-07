@@ -122,7 +122,7 @@ const JournalPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId 
             filteredNotes.map(note => {
               const isSelected = selNoteId === note.id
               const d = new Date(note.createdAt)
-              const dateStr = d.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' })
+              const dateStr = d.toLocaleDateString('ko-KR', { year: 'numeric', month: 'short', day: 'numeric' })
 
               return (
                 <div
