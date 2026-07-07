@@ -221,30 +221,6 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ initialContent, onChang
       >
         <EditorContent editor={editor} className="h-full" />
       </div>
-      
-      <style>{`
-        .ProseMirror p.is-editor-empty:first-child::before {
-          content: attr(data-placeholder);
-          float: left;
-          color: #9CA3AF;
-          pointer-events: none;
-          height: 0;
-        }
-        .ProseMirror {
-           font-size: 14px;
-           line-height: 1.6;
-           color: #374151;
-           outline: none !important;
-           height: 100%;
-        }
-        .ProseMirror p { margin-top: 0; margin-bottom: 0.5em; }
-        .ProseMirror h2 { font-size: 1.5em; font-weight: bold; margin-top: 1em; margin-bottom: 0.5em; }
-        .ProseMirror h3 { font-size: 1.25em; font-weight: bold; margin-top: 1em; margin-bottom: 0.5em; }
-        .ProseMirror ul { list-style-type: disc; padding-left: 1.5em; margin-top: 0.5em; margin-bottom: 0.5em; }
-        .ProseMirror hr { border-top: 2px solid #B8AEDE; margin: 1em 0; }
-        .ProseMirror a { text-decoration: underline; color: #4F46E5; }
-        .ProseMirror mark { padding: 0.1em 0.2em; border-radius: 0.2em; }
-      `}</style>
     </div>
   );
 };
