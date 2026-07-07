@@ -2,8 +2,9 @@ import React, { useState } from 'react'
 import { useAppStore } from '../../store/AppStore'
 import { auth } from '../../config/firebase'
 import { EmailAuthProvider, reauthenticateWithCredential, updatePassword } from 'firebase/auth'
+import TrashSection from './TrashSection'
 
-type TabType = 'ledger' | 'security' | 'anniversaries' | 'monthly'
+type TabType = 'ledger' | 'security' | 'anniversaries' | 'monthly' | 'trash'
 
 const SettingsPage: React.FC = () => {
   const { 
@@ -135,6 +136,7 @@ const SettingsPage: React.FC = () => {
       case 'security': return '보안 및 비밀번호'
       case 'anniversaries': return '기념일 관리'
       case 'monthly': return '매월 반복 일정'
+      case 'trash': return '휴지통'
     }
   }
 
@@ -176,6 +178,14 @@ const SettingsPage: React.FC = () => {
             }`}
           >
             보안 및 비밀번호
+          </button>
+          <button 
+            onClick={() => setActiveTab('trash')}
+            className={`w-full text-left px-4 py-3 rounded-lg font-bold text-sm transition-colors ${
+              activeTab === 'trash' ? 'bg-yuri-100 text-yuri-900' : 'text-yuri-600 hover:bg-yuri-50'
+            }`}
+          >
+            휴지통
           </button>
         </div>
       </aside>
@@ -527,6 +537,10 @@ const SettingsPage: React.FC = () => {
                   </button>
                 </form>
               </div>
+            )}
+
+            {activeTab === 'trash' && (
+              <TrashSection />
             )}
           </div>
         </div>

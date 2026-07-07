@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react'
 import type { Task, LedgerEntry, ScheduleEvent, Note, FixedExpense, CategoryConfig, AgendaItem, Anniversary, MonthlyEvent } from '../types'
 import { DEFAULT_EXPENSE_CATS } from '../utils/parser'
-import { collection, getDocs, setDoc, updateDoc, deleteDoc, doc, writeBatch, getDoc } from 'firebase/firestore'
+import { collection, getDocs, setDoc, updateDoc, deleteDoc, doc, writeBatch, getDoc, deleteField } from 'firebase/firestore'
 import { db } from '../config/firebase'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -18,7 +18,13 @@ async function hashPin(pin: string): Promise<string> {
   return hashHex;
 }
 
-// ── Store shape ───────────────────────────────────────────────────────────────
+// ─── Store shape ───────────────────────────────────────────────────────────────
+export interface TrashedItem {
+  id: string
+  type: 'note' | 'task' | 'ledger' | 'fixedExpense'
+  label: string
+  deletedAt: number
+}
 interface StoreValue {
   isLoading: boolean
   loadError: string | null
@@ -28,6 +34,7 @@ interface StoreValue {
   notes:  Note[]
   fixedExpenses: FixedExpense[]
   expenseCategories: CategoryConfig[]
+  trashedItems: TrashedItem[]
   agendas: AgendaItem[]
   anniversaries: Anniversary[]
   monthlyEvents: MonthlyEvent[]
@@ -49,6 +56,8 @@ interface StoreValue {
   addFixedExpense: (label: string, amount: number, day: number, category: string, paymentMethod?: '카드' | '계좌이체') => void
   updateFixedExpense: (id: string, updates: Partial<FixedExpense>) => void
   deleteFixedExpense: (id: string) => void
+  restoreItem: (type: 'note' | 'task' | 'ledger' | 'fixedExpense', id: string) => void
+  hardDeleteItem: (type: 'note' | 'task' | 'ledger' | 'fixedExpense', id: string) => void
   addCategory: (name: string) => void
   addCategoryKeyword: (categoryName: string, keyword: string) => void
   removeCategoryKeyword: (categoryName: string, keyword: string) => void
@@ -89,6 +98,7 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
   const [notes,  setNotes]  = useState<Note[]>([])
   const [fixedExpenses, setFixedExpenses] = useState<FixedExpense[]>([])
   const [expenseCategories, setExpenseCategories] = useState<CategoryConfig[]>([])
+  const [trashedItems, setTrashedItems] = useState<TrashedItem[]>([])
   const [agendas, setAgendas] = useState<AgendaItem[]>([])
   const [anniversaries, setAnniversaries] = useState<Anniversary[]>([])
   const [monthlyEvents, setMonthlyEvents] = useState<MonthlyEvent[]>([])
@@ -164,11 +174,54 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
         const customCats = fetchedExpenseCats.filter((c: any) => !DEFAULT_EXPENSE_CATS.some(defCat => defCat.name === c.name)) as CategoryConfig[]
         const finalCats = [...mergedCats, ...customCats]
 
-        setTasks((fetchedTasks as Task[]).sort((a, b) => (a.order || 0) - (b.order || 0)))
-        setLedger(fetchedLedger as LedgerEntry[])
+        const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+        const nowMs = Date.now();
+        const batch = writeBatch(db);
+        let hasHardDeletes = false;
+
+        const processItems = (items: any[], type: 'note' | 'task' | 'ledger' | 'fixedExpense', labelExtractor: (item: any) => string) => {
+          const active: any[] = [];
+          const trashed: TrashedItem[] = [];
+          items.forEach(item => {
+            if (item.isDeleted) {
+              if (item.deletedAt && (nowMs - item.deletedAt > THIRTY_DAYS_MS)) {
+                let colName = '';
+                if (type === 'note') colName = 'notes';
+                if (type === 'task') colName = 'tasks';
+                if (type === 'ledger') colName = 'ledger';
+                if (type === 'fixedExpense') colName = 'fixedExpenses';
+                batch.delete(doc(db, 'users', uid, colName, item.id));
+                hasHardDeletes = true;
+              } else {
+                trashed.push({ id: item.id, type, label: labelExtractor(item), deletedAt: item.deletedAt || 0 });
+              }
+            } else {
+              active.push(item);
+            }
+          });
+          return { active, trashed };
+        };
+
+        const notesData = processItems(fetchedNotes, 'note', n => n.text.trim().split('\n')[0].slice(0, 30) || '새로운 메모');
+        const tasksData = processItems(fetchedTasks, 'task', t => t.text);
+        const ledgerData = processItems(fetchedLedger, 'ledger', l => {
+          const dateStr = l.scheduledDate ? new Date(l.scheduledDate).toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' }) : '';
+          return `${dateStr} ${l.label} ${l.amount.toLocaleString()}원`.trim();
+        });
+        const fixedExpData = processItems(fetchedFixedExpenses, 'fixedExpense', f => `${f.label} ${f.amount.toLocaleString()}원`);
+
+        if (hasHardDeletes) {
+          batch.commit().catch(console.error);
+        }
+
+        const allTrashed = [...notesData.trashed, ...tasksData.trashed, ...ledgerData.trashed, ...fixedExpData.trashed];
+        setTrashedItems(allTrashed.sort((a, b) => b.deletedAt - a.deletedAt));
+
+        setTasks((tasksData.active as Task[]).sort((a, b) => (a.order || 0) - (b.order || 0)))
+        setLedger(ledgerData.active as LedgerEntry[])
         setEvents((fetchedEvents as ScheduleEvent[]).sort((a, b) => (a.order || 0) - (b.order || 0)))
-        setNotes(fetchedNotes as Note[])
-        setFixedExpenses(fetchedFixedExpenses as FixedExpense[])
+        setNotes(notesData.active as Note[])
+        setFixedExpenses(fixedExpData.active as FixedExpense[])
         setExpenseCategories(finalCats)
         setAgendas(fetchedAgendas as AgendaItem[])
         setAnniversaries(fetchedAnnivs as Anniversary[])
@@ -276,8 +329,14 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
   }, [uid])
 
   const deleteTask = useCallback((id: string) => {
-    setTasks(prev => prev.filter(t => t.id !== id))
-    deleteDoc(doc(db, 'users', uid, 'tasks', id)).catch(console.error)
+    setTasks(prev => {
+      const item = prev.find(t => t.id === id)
+      if (item) {
+        setTrashedItems(curr => [{ id, type: 'task', label: item.text, deletedAt: Date.now() }, ...curr].sort((a,b)=>b.deletedAt-a.deletedAt))
+      }
+      return prev.filter(t => t.id !== id)
+    })
+    updateDoc(doc(db, 'users', uid, 'tasks', id), { isDeleted: true, deletedAt: Date.now() }).catch(console.error)
   }, [uid])
 
   const addLedgerEntry = useCallback((text: string, amount: number, type: 'income' | 'expense', category: string, date?: string) => {
@@ -292,8 +351,16 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
   }, [uid])
 
   const deleteLedgerEntry = useCallback((id: string) => {
-    setLedger(prev => prev.filter(l => l.id !== id))
-    deleteDoc(doc(db, 'users', uid, 'ledger', id)).catch(console.error)
+    setLedger(prev => {
+      const item = prev.find(l => l.id === id)
+      if (item) {
+        const dateStr = item.scheduledDate ? new Date(item.scheduledDate).toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' }) : ''
+        const label = `${dateStr} ${item.label} ${item.amount.toLocaleString()}원`.trim()
+        setTrashedItems(curr => [{ id, type: 'ledger', label, deletedAt: Date.now() }, ...curr].sort((a,b)=>b.deletedAt-a.deletedAt))
+      }
+      return prev.filter(l => l.id !== id)
+    })
+    updateDoc(doc(db, 'users', uid, 'ledger', id), { isDeleted: true, deletedAt: Date.now() }).catch(console.error)
   }, [uid])
 
   const setCardPaymentDay = useCallback((day: number) => {
@@ -327,8 +394,15 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
   }, [uid])
 
   const deleteNote = useCallback((id: string) => {
-    setNotes(prev => prev.filter(n => n.id !== id))
-    deleteDoc(doc(db, 'users', uid, 'notes', id)).catch(console.error)
+    setNotes(prev => {
+      const item = prev.find(n => n.id === id)
+      if (item) {
+        const label = item.text.trim().split('\n')[0].slice(0, 30) || '새로운 메모'
+        setTrashedItems(curr => [{ id, type: 'note', label, deletedAt: Date.now() }, ...curr].sort((a,b)=>b.deletedAt-a.deletedAt))
+      }
+      return prev.filter(n => n.id !== id)
+    })
+    updateDoc(doc(db, 'users', uid, 'notes', id), { isDeleted: true, deletedAt: Date.now() }).catch(console.error)
   }, [uid])
 
   const updateNote = useCallback((id: string, text: string) => {
@@ -349,8 +423,15 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
   }, [uid])
 
   const deleteFixedExpense = useCallback((id: string) => {
-    setFixedExpenses(prev => prev.filter(f => f.id !== id))
-    deleteDoc(doc(db, 'users', uid, 'fixedExpenses', id)).catch(console.error)
+    setFixedExpenses(prev => {
+      const item = prev.find(f => f.id === id)
+      if (item) {
+        const label = `${item.label} ${item.amount.toLocaleString()}원`
+        setTrashedItems(curr => [{ id, type: 'fixedExpense', label, deletedAt: Date.now() }, ...curr].sort((a,b)=>b.deletedAt-a.deletedAt))
+      }
+      return prev.filter(f => f.id !== id)
+    })
+    updateDoc(doc(db, 'users', uid, 'fixedExpenses', id), { isDeleted: true, deletedAt: Date.now() }).catch(console.error)
   }, [uid])
 
   const addCategoryKeyword = useCallback((categoryName: string, keyword: string) => {
@@ -485,14 +566,52 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
     sessionStorage.removeItem('yuri-private-unlocked')
   }
 
-  const resetPrivatePin = async () => {
-    const settingsDocRef = doc(db, `users/${uid}/journal_settings/config`)
-    await setDoc(settingsDocRef, { pinHash: null }, { merge: true })
+  const resetPrivatePin = useCallback(async () => {
     setPinHash(null)
     setIsPrivateUnlocked(false)
     sessionStorage.removeItem('yuri-private-unlocked')
-  }
+    await setDoc(doc(db, `users/${uid}/journal_settings/config`), { pinHash: null }, { merge: true })
+  }, [uid])
 
+  const restoreItem = useCallback(async (type: 'note'|'task'|'ledger'|'fixedExpense', id: string) => {
+    let collectionName = ''
+    if (type === 'note') collectionName = 'notes'
+    if (type === 'task') collectionName = 'tasks'
+    if (type === 'ledger') collectionName = 'ledger'
+    if (type === 'fixedExpense') collectionName = 'fixedExpenses'
+
+    setTrashedItems(prev => prev.filter(t => t.id !== id))
+    
+    try {
+      const docRef = doc(db, 'users', uid, collectionName, id)
+      const snap = await getDoc(docRef)
+      if (snap.exists()) {
+        const data = snap.data()
+        delete data.isDeleted
+        delete data.deletedAt
+        
+        await updateDoc(docRef, { isDeleted: deleteField(), deletedAt: deleteField() })
+        
+        if (type === 'note') setNotes(prev => [data as Note, ...prev])
+        if (type === 'task') setTasks(prev => [...prev, data as Task].sort((a, b) => (a.order || 0) - (b.order || 0)))
+        if (type === 'ledger') setLedger(prev => [data as LedgerEntry, ...prev])
+        if (type === 'fixedExpense') setFixedExpenses(prev => [data as FixedExpense, ...prev])
+      }
+    } catch (err) {
+      console.error(err)
+    }
+  }, [uid])
+
+  const hardDeleteItem = useCallback((type: 'note'|'task'|'ledger'|'fixedExpense', id: string) => {
+    let collectionName = ''
+    if (type === 'note') collectionName = 'notes'
+    if (type === 'task') collectionName = 'tasks'
+    if (type === 'ledger') collectionName = 'ledger'
+    if (type === 'fixedExpense') collectionName = 'fixedExpenses'
+
+    setTrashedItems(prev => prev.filter(t => t.id !== id))
+    deleteDoc(doc(db, 'users', uid, collectionName, id)).catch(console.error)
+  }, [uid])
 
   const setCardBillingDays = useCallback((start: number, end: number) => {
     setCardBillingStartDay(start)
@@ -503,13 +622,14 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
   return (
     <StoreCtx.Provider value={{
       isLoading, loadError,
-      tasks, ledger, events, notes, fixedExpenses, expenseCategories, agendas, anniversaries, monthlyEvents,
+      tasks, ledger, events, notes, fixedExpenses, expenseCategories, agendas, anniversaries, monthlyEvents, trashedItems,
       addTask, toggleTask, updateTaskText, updateTaskNote, deleteTask,
       addLedgerEntry, updateLedgerEntry, deleteLedgerEntry,
       addEvent, deleteEvent,
       addNote, updateNote, deleteNote,
       navDate, setNavDate,
       addFixedExpense, updateFixedExpense, deleteFixedExpense,
+      restoreItem, hardDeleteItem,
       addCategory, addCategoryKeyword, removeCategoryKeyword,
       addAgenda, toggleAgenda, deleteAgenda,
       updateItemOrders,

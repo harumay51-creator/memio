@@ -29,6 +29,8 @@ export interface Task {
   createdAt: string  // ISO string
   updatedAt?: string // ISO string
   order?: number     // sorting order
+  isDeleted?: boolean
+  deletedAt?: number
 }
 
 // ─── Notes (Memos) ────────────────────────────────────────────────────────────
@@ -37,6 +39,8 @@ export interface Note {
   text: string
   createdAt: string
   updatedAt?: string
+  isDeleted?: boolean
+  deletedAt?: number
 }
 
 // ─── Ledger ───────────────────────────────────────────────────────────────────
@@ -51,6 +55,8 @@ export interface LedgerEntry {
   fixedExpenseId?: string   // ID of the fixed expense if generated automatically
   paymentMethod?: '카드' | '계좌이체'
   createdAt: string
+  isDeleted?: boolean
+  deletedAt?: number
 }
 
 export interface FixedExpense {
@@ -61,6 +67,8 @@ export interface FixedExpense {
   category: string          // auto-classified
   paymentMethod?: '카드' | '계좌이체'
   createdAt: string
+  isDeleted?: boolean
+  deletedAt?: number
 }
 
 // ─── Settings ─────────────────────────────────────────────────────────────────
