@@ -219,7 +219,7 @@ const SearchPage: React.FC = () => {
 
             <div className="flex-1 w-full p-8 overflow-y-auto">
               {selectedItem.type === 'memo' && (
-                <div className="text-yuri-800 text-base leading-relaxed prose prose-sm max-w-none">
+                <div className="text-yuri-800 text-base leading-relaxed prose prose-sm max-w-none prose-hr:border-t-2 prose-hr:border-t-[#B8AEDE] prose-hr:my-4">
                   <div dangerouslySetInnerHTML={{ 
                     __html: selectedItem.text.split('\n').length > 1 
                       ? selectedItem.text.split('\n').slice(1).join('\n') 
@@ -228,7 +228,7 @@ const SearchPage: React.FC = () => {
                 </div>
               )}
               {selectedItem.type === 'task' && (
-                <div className="text-yuri-800 text-base leading-relaxed prose prose-sm max-w-none">
+                <div className="text-yuri-800 text-base leading-relaxed prose prose-sm max-w-none prose-hr:border-t-2 prose-hr:border-t-[#B8AEDE] prose-hr:my-4">
                   {selectedItem.note ? (
                     <div dangerouslySetInnerHTML={{ __html: selectedItem.note }} />
                   ) : (
