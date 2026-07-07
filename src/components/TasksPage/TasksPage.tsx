@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect, KeyboardEvent } from 'react'
 import { useAppStore } from '../../store/AppStore'
+import RichTextEditor from '../common/RichTextEditor'
 import type { Task } from '../../types'
 
 const TasksPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId }) => {
@@ -136,13 +137,13 @@ const TasksPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId })
                 삭제
               </button>
             </header>
-
-            <textarea
-              className="flex-1 w-full p-8 resize-none outline-none text-yuri-800 text-sm leading-relaxed bg-transparent placeholder:text-yuri-300"
-              placeholder="여기에 진행 상황이나 메모를 자유롭게 작성하세요..."
-              value={selectedTask.note || ''}
-              onChange={(e) => updateTaskNote(selectedTask.id, e.target.value)}
-            />
+            <div className="flex-1 overflow-hidden p-6 pb-2">
+              <RichTextEditor
+                initialContent={selectedTask.note || ''}
+                onChange={(html) => updateTaskNote(selectedTask.id, html)}
+                placeholder="여기에 진행 상황이나 메모를 자유롭게 작성하세요..."
+              />
+            </div>
           </>
         ) : (
           <div className="flex-1 flex items-center justify-center bg-yuri-50/20">
@@ -196,7 +197,7 @@ const TaskListItem: React.FC<TaskListItemProps> = ({ task, isSelected, onSelect,
           {task.text}
         </h3>
         {task.note && (
-          <p className="text-xs text-yuri-400 truncate mt-1.5 line-clamp-1">{task.note.replace(/\n/g, ' ')}</p>
+          <p className="text-xs text-yuri-400 truncate mt-1.5 line-clamp-1">{task.note.replace(/<[^>]*>?/gm, '').replace(/\n/g, ' ')}</p>
         )}
       </div>
       <div className="flex flex-col items-end gap-0.5 mt-0.5 shrink-0 mr-6">

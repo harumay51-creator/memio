@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react'
 import { useJournalStore } from '../../store/JournalStore'
 import { useAppStore } from '../../store/AppStore'
+import RichTextEditor from '../common/RichTextEditor'
 import PinScreen from './PinScreen'
 import { Lock } from 'lucide-react'
 
@@ -43,17 +44,20 @@ const JournalPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId 
 
   const getPreview = (text: string) => {
     const trimmed = text.trim()
+    if (!trimmed) return '새로운 기록'
     const lines = trimmed.split('\n')
-    if (lines.length <= 1) return '추가 내용 없음'
-    const preview = lines.slice(1).join(' ')
+    const previewRaw = lines.length > 1 ? lines[1] : lines[0]
+    const preview = previewRaw.replace(/<[^>]*>?/gm, '')
     return preview.length > 40 ? preview.slice(0, 40) + '...' : preview
   }
+
+  const stripHtml = (html: string) => html.replace(/<[^>]*>?/gm, '')
 
   const filteredNotes = useMemo(() => {
     let result = journals
     if (searchQuery.trim()) {
       const lowerQ = searchQuery.toLowerCase()
-      result = journals.filter(n => n.text.toLowerCase().includes(lowerQ))
+      result = journals.filter(n => stripHtml(n.text).toLowerCase().includes(lowerQ))
     }
     return [...result].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
   }, [journals, searchQuery])
@@ -186,17 +190,17 @@ const JournalPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId 
                 className="text-2xl font-bold bg-transparent outline-none text-yuri-900 placeholder:text-yuri-300 w-full"
                 placeholder="제목"
               />
-              <textarea
-                value={selectedNote.text.split('\n').length > 1 ? selectedNote.text.split('\n').slice(1).join('\n') : ''}
-                onChange={(e) => {
-                  const lines = selectedNote.text.split('\n')
-                  const firstLine = lines[0] || ''
-                  updateJournal(selectedNote.id, firstLine + '\n' + e.target.value)
-                }}
-                placeholder="여기에 비공개 기록을 작성하세요..."
-                className="flex-1 w-full resize-none bg-transparent outline-none text-yuri-800 text-sm leading-relaxed placeholder:text-yuri-300"
-                spellCheck={false}
-              />
+              <div className="flex-1 overflow-hidden">
+                <RichTextEditor
+                  initialContent={selectedNote.text.split('\n').length > 1 ? selectedNote.text.split('\n').slice(1).join('\n') : ''}
+                  onChange={(html) => {
+                    const lines = selectedNote.text.split('\n')
+                    const firstLine = lines[0] || ''
+                    updateJournal(selectedNote.id, firstLine + '\n' + html)
+                  }}
+                  placeholder="여기에 비공개 기록을 작성하세요..."
+                />
+              </div>
             </div>
           </>
         ) : (
