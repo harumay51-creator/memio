@@ -241,7 +241,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ initialContent, onChang
         .ProseMirror h2 { font-size: 1.5em; font-weight: bold; margin-top: 1em; margin-bottom: 0.5em; }
         .ProseMirror h3 { font-size: 1.25em; font-weight: bold; margin-top: 1em; margin-bottom: 0.5em; }
         .ProseMirror ul { list-style-type: disc; padding-left: 1.5em; margin-top: 0.5em; margin-bottom: 0.5em; }
-        .ProseMirror hr { border-top: 1px solid #E5E7EB; margin: 1em 0; }
+        .ProseMirror hr { border-top: 2px solid #B8AEDE; margin: 1em 0; }
         .ProseMirror a { text-decoration: underline; color: #4F46E5; }
         .ProseMirror mark { padding: 0.1em 0.2em; border-radius: 0.2em; }
       `}</style>

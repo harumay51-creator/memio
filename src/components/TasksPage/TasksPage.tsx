@@ -139,6 +139,7 @@ const TasksPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId })
             </header>
             <div className="flex-1 overflow-hidden p-6 pb-2">
               <RichTextEditor
+                key={selectedTask.id}
                 initialContent={selectedTask.note || ''}
                 onChange={(html) => updateTaskNote(selectedTask.id, html)}
                 placeholder="여기에 진행 상황이나 메모를 자유롭게 작성하세요..."

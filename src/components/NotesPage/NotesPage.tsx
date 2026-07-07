@@ -166,6 +166,7 @@ const NotesPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId })
               />
               <div className="flex-1 overflow-hidden">
                 <RichTextEditor
+                  key={selectedNote.id}
                   initialContent={selectedNote.text.split('\n').length > 1 ? selectedNote.text.split('\n').slice(1).join('\n') : ''}
                   onChange={(html) => {
                     const lines = selectedNote.text.split('\n')
