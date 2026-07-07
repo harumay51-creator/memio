@@ -11,11 +11,26 @@ const TasksPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId })
   useEffect(() => {
     if (activeItemId) setSelTaskId(activeItemId)
   }, [activeItemId])
+  
   const [inputText, setInputText] = useState('')
+  const [searchQuery, setSearchQuery] = useState('')
+
+  const stripHtml = (html: string) => html ? html.replace(/<[^>]*>?/gm, '') : ''
 
   // Split tasks into pending and completed
-  const pendingTasks = useMemo(() => tasks.filter(t => !t.done).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()), [tasks])
-  const completedTasks = useMemo(() => tasks.filter(t => t.done).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()), [tasks])
+  const pendingTasks = useMemo(() => tasks.filter(t => {
+    if (t.done) return false
+    if (!searchQuery.trim()) return true
+    const lowerQ = searchQuery.toLowerCase()
+    return t.text.toLowerCase().includes(lowerQ) || stripHtml(t.note || '').toLowerCase().includes(lowerQ)
+  }).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()), [tasks, searchQuery])
+
+  const completedTasks = useMemo(() => tasks.filter(t => {
+    if (!t.done) return false
+    if (!searchQuery.trim()) return true
+    const lowerQ = searchQuery.toLowerCase()
+    return t.text.toLowerCase().includes(lowerQ) || stripHtml(t.note || '').toLowerCase().includes(lowerQ)
+  }).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()), [tasks, searchQuery])
 
   const selectedTask = useMemo(() => tasks.find(t => t.id === selTaskId) || null, [tasks, selTaskId])
 
@@ -41,14 +56,22 @@ const TasksPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId })
         </header>
 
         {/* Input box */}
-        <div className="p-4 pb-2 shrink-0">
+        <div className="p-4 pb-2 shrink-0 flex flex-col gap-3 border-b border-yuri-100 bg-white">
+          <input
+            type="text"
+            placeholder="업무 검색..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full bg-yuri-50 border border-yuri-200 rounded-lg px-3 py-1.5 text-sm outline-none focus:border-accent transition-colors"
+          />
+          <div className="border-t border-yuri-100 my-0.5" />
           <input
             type="text"
             placeholder="새 업무 추가 (Enter)"
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
             onKeyDown={handleAdd}
-            className="w-full px-4 py-2.5 rounded-xl border border-yuri-200 bg-white outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-all text-sm font-medium"
+            className="w-full bg-transparent border-none rounded-none px-1 py-1 text-sm outline-none placeholder:text-accent/60 text-accent font-medium focus:border-b focus:border-accent/30 transition-all"
           />
         </div>
 
@@ -59,7 +82,9 @@ const TasksPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId })
             <div className="flex-1 overflow-y-auto flex flex-col gap-1 pr-1">
               {pendingTasks.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-yuri-400 p-6 text-center">
-                  <p className="text-sm">진행 중인 업무가 없습니다.<br />위 입력창에서 바로 추가해보세요!</p>
+                  <p className="text-sm">
+                    {searchQuery.trim() ? '검색 결과가 없습니다.' : '진행 중인 업무가 없습니다.\n위 입력창에서 바로 추가해보세요!'}
+                  </p>
                 </div>
               ) : (
                 pendingTasks.map(t => (
@@ -84,7 +109,7 @@ const TasksPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId })
             <div className="flex-1 overflow-y-auto flex flex-col gap-1 pr-1">
               {completedTasks.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-yuri-400 p-2 text-center">
-                  <p className="text-xs">완료된 업무가 없습니다.</p>
+                  <p className="text-xs">{searchQuery.trim() ? '검색 결과가 없습니다.' : '완료된 업무가 없습니다.'}</p>
                 </div>
               ) : (
                 completedTasks.map(t => (
