@@ -174,10 +174,10 @@ const SearchPage: React.FC = () => {
                               {item.text}
                             </p>
                             {item.type === 'memo' && (
-                              <p className="text-xs text-yuri-400 mt-1 line-clamp-1">{item.text.replace(/\n/g, ' ')}</p>
+                              <p className="text-xs text-yuri-400 mt-1 line-clamp-1">{item.text.replace(/<[^>]*>?/gm, '').replace(/\n/g, ' ')}</p>
                             )}
                             {item.type === 'task' && item.note && (
-                              <p className="text-xs text-yuri-400 mt-1 line-clamp-1">{item.note.replace(/\n/g, ' ')}</p>
+                              <p className="text-xs text-yuri-400 mt-1 line-clamp-1">{item.note.replace(/<[^>]*>?/gm, '').replace(/\n/g, ' ')}</p>
                             )}
                           </div>
                         </div>
@@ -219,13 +219,19 @@ const SearchPage: React.FC = () => {
 
             <div className="flex-1 w-full p-8 overflow-y-auto">
               {selectedItem.type === 'memo' && (
-                <div className="whitespace-pre-wrap text-yuri-800 text-base leading-relaxed">
-                  {selectedItem.text}
+                <div className="text-yuri-800 text-base leading-relaxed prose prose-sm max-w-none">
+                  <div dangerouslySetInnerHTML={{ 
+                    __html: selectedItem.text.split('\n').length > 1 
+                      ? selectedItem.text.split('\n').slice(1).join('\n') 
+                      : selectedItem.text 
+                  }} />
                 </div>
               )}
               {selectedItem.type === 'task' && (
-                <div className="whitespace-pre-wrap text-yuri-800 text-base leading-relaxed">
-                  {selectedItem.note ? selectedItem.note : (
+                <div className="text-yuri-800 text-base leading-relaxed prose prose-sm max-w-none">
+                  {selectedItem.note ? (
+                    <div dangerouslySetInnerHTML={{ __html: selectedItem.note }} />
+                  ) : (
                     <span className="text-yuri-300 italic">진행 메모가 없습니다.</span>
                   )}
                 </div>
