@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react'
+import React, { useState, useMemo, useEffect, useRef } from 'react'
 import type { LedgerEntry, FixedExpense } from '../../types'
 import { useAppStore } from '../../store/AppStore'
 import { parseCapture, classifyLedgerCategory } from '../../utils/parser'
@@ -27,6 +27,84 @@ const CAT_TW_CLASSES: Record<string, { bg: string, text: string }> = {
 
 function getCatClasses(name: string) {
   return CAT_TW_CLASSES[name] ?? { bg: 'bg-slate-100', text: 'text-slate-600' }
+}
+
+function getCategoryOptions(type: 'income' | 'expense', currentCat: string, expenseCats: { name: string }[]) {
+  if (type === 'expense') {
+    const list = expenseCats.map(c => c.name);
+    if (!list.includes('기타')) list.push('기타');
+    if (currentCat && !list.includes(currentCat) && currentCat !== '기타') list.push(currentCat);
+    return list;
+  } else {
+    const list = ['급여', '용돈', '이자/배당', '환급', '기타수입'];
+    if (currentCat && !list.includes(currentCat)) list.push(currentCat);
+    return list;
+  }
+}
+
+function CategoryDropdown({ 
+  value, 
+  onChange, 
+  options, 
+  fallbackText 
+}: { 
+  value: string; 
+  onChange: (val: string) => void; 
+  options: string[]; 
+  fallbackText?: string;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isOpen]);
+
+  const classes = value ? getCatClasses(value) : { bg: 'bg-yuri-100', text: 'text-yuri-500' };
+
+  return (
+    <div className="relative inline-block" ref={containerRef}>
+      <div 
+        onClick={(e) => { e.stopPropagation(); setIsOpen(!isOpen); }}
+        className={`text-[10px] font-bold px-1.5 py-0.5 rounded-sm cursor-pointer select-none ${classes.bg} ${classes.text}`}
+      >
+        {value || fallbackText}
+      </div>
+      
+      {isOpen && (
+        <div 
+          className="absolute left-0 top-full mt-1 min-w-[140px] bg-[#FAFBFF] rounded-[10px] shadow-lg border border-yuri-200 z-[9999] flex flex-col py-2"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {options.map(opt => {
+            const optClasses = getCatClasses(opt);
+            return (
+              <div 
+                key={opt}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onChange(opt);
+                  setIsOpen(false);
+                }}
+                className="px-4 py-2.5 hover:bg-yuri-100/50 cursor-pointer flex items-center transition-colors"
+              >
+                <span className={`text-[11px] font-bold px-2 py-1 rounded-sm ${optClasses.bg} ${optClasses.text}`}>
+                  {opt}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
 }
 
 // ── Formatters ────────────────────────────────────────────────────────────────
@@ -554,30 +632,11 @@ const LedgerPage: React.FC = () => {
                                 )}
                                 <div className="flex items-center gap-2">
                                   <div className="relative flex items-center justify-center shrink-0">
-                                    <select
+                                    <CategoryDropdown
                                       value={e.category}
-                                      onChange={(ev) => updateLedgerEntry(e.id, { category: ev.target.value })}
-                                      onClick={(ev) => ev.stopPropagation()}
-                                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                                    >
-                                      {e.type === 'expense' ? (
-                                        <>
-                                          {expenseCategories.map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
-                                          {!expenseCategories.some(c => c.name === '기타') && <option value="기타">기타</option>}
-                                          {!expenseCategories.some(c => c.name === e.category) && e.category !== '기타' && <option value={e.category}>{e.category}</option>}
-                                        </>
-                                      ) : (
-                                        <>
-                                          {['급여', '용돈', '이자/배당', '환급', '기타수입'].map(name => (
-                                            <option key={name} value={name}>{name}</option>
-                                          ))}
-                                          {![ '급여', '용돈', '이자/배당', '환급', '기타수입'].includes(e.category) && <option value={e.category}>{e.category}</option>}
-                                        </>
-                                      )}
-                                    </select>
-                                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-sm pointer-events-none ${getCatClasses(e.category).bg} ${getCatClasses(e.category).text}`}>
-                                      {e.category}
-                                    </span>
+                                      onChange={(val) => updateLedgerEntry(e.id, { category: val })}
+                                      options={getCategoryOptions(e.type, e.category, expenseCategories)}
+                                    />
                                   </div>
                                   <button 
                                     onClick={(ev) => { ev.stopPropagation(); updateLedgerEntry(e.id, { paymentMethod: (e.paymentMethod || '카드') === '카드' ? '계좌이체' : '카드' }); }}
@@ -670,19 +729,12 @@ const LedgerPage: React.FC = () => {
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="relative flex items-center justify-center shrink-0">
-                    <select
-                      value={feCategory || ''}
-                      onChange={(ev) => setFeCategory(ev.target.value)}
-                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                    >
-                      <option value="" disabled>카테고리</option>
-                      {expenseCategories.map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
-                      {!expenseCategories.some(c => c.name === '기타') && <option value="기타">기타</option>}
-                      {feCategory && !expenseCategories.some(c => c.name === feCategory) && feCategory !== '기타' && <option value={feCategory}>{feCategory}</option>}
-                    </select>
-                    <span className={`text-[10px] font-bold px-2 py-1 rounded-sm pointer-events-none ${feCategory ? `${getCatClasses(feCategory).bg} ${getCatClasses(feCategory).text}` : 'bg-yuri-100 text-yuri-500'}`}>
-                      {feCategory || '카테고리 (자동)'}
-                    </span>
+                    <CategoryDropdown
+                      value={feCategory}
+                      onChange={setFeCategory}
+                      options={getCategoryOptions('expense', feCategory, expenseCategories)}
+                      fallbackText="카테고리 (자동)"
+                    />
                   </div>
                   <button 
                     type="button"
