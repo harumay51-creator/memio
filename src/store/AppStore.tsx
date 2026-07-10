@@ -75,6 +75,9 @@ interface StoreValue {
   cardBillingStartDay: number
   cardBillingEndDay: number
   setCardBillingDays: (start: number, end: number) => void
+  payday: number
+  setPayday: (day: number) => void
+  resetLedgerData: () => Promise<void>
   cardBills: Record<string, number>
   updateCardBill: (monthKey: string, amount: number) => void
   
@@ -106,6 +109,7 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
   const [cardPaymentDay, setCardPaymentDayState] = useState<number>(14)
   const [cardBillingStartDay, setCardBillingStartDay] = useState<number>(28)
   const [cardBillingEndDay, setCardBillingEndDay] = useState<number>(27)
+  const [payday, setPaydayState] = useState<number>(25)
   const [cardBills, setCardBills] = useState<Record<string, number>>({})
   
   const [isPrivateUnlocked, setIsPrivateUnlocked] = useState(() => {
@@ -141,6 +145,7 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
           setCardPaymentDayState(data.cardPaymentDay || 14)
           setCardBillingStartDay(data.cardBillingStartDay || 28)
           setCardBillingEndDay(data.cardBillingEndDay || 27)
+          setPaydayState(data.payday || 25)
         }
         
         const [
@@ -619,6 +624,46 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
     setDoc(doc(db, `users/${uid}/settings/config`), { cardBillingStartDay: start, cardBillingEndDay: end }, { merge: true }).catch(console.error)
   }, [uid])
 
+  const setPayday = useCallback((day: number) => {
+    setPaydayState(day)
+    setDoc(doc(db, `users/${uid}/settings/config`), { payday: day }, { merge: true }).catch(console.error)
+  }, [uid])
+
+  const resetLedgerData = useCallback(async () => {
+    if (!uid) return;
+    try {
+      const batch = writeBatch(db);
+      
+      const cols = ['ledger', 'cardBills', 'fixedExpenses'];
+      for (const c of cols) {
+        const snap = await getDocs(collection(db, 'users', uid, c));
+        snap.forEach(docSnap => batch.delete(docSnap.ref));
+      }
+      
+      batch.set(doc(db, `users/${uid}/settings/config`), {
+        cardPaymentDay: 14,
+        cardBillingStartDay: 28,
+        cardBillingEndDay: 27,
+        payday: 25
+      }, { merge: true });
+      
+      await batch.commit();
+      
+      setLedger([]);
+      setCardBills({});
+      setFixedExpenses([]);
+      setCardPaymentDayState(14);
+      setCardBillingStartDay(28);
+      setCardBillingEndDay(27);
+      setPaydayState(25);
+      
+      alert('가계부 데이터가 성공적으로 초기화되었습니다.');
+    } catch (e) {
+      console.error(e);
+      alert('데이터 초기화 실패: ' + e);
+    }
+  }, [uid]);
+
   return (
     <StoreCtx.Provider value={{
       isLoading, loadError,
@@ -638,6 +683,7 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
       hasPin, isPrivateUnlocked, unlockPrivate, setPrivatePin, lockPrivate, resetPrivatePin,
       cardPaymentDay, setCardPaymentDay,
       cardBillingStartDay, cardBillingEndDay, setCardBillingDays,
+      payday, setPayday, resetLedgerData,
       cardBills, updateCardBill,
     }}>
       {children}

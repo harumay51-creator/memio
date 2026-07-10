@@ -12,7 +12,8 @@ const SettingsPage: React.FC = () => {
     anniversaries, addAnniversary, deleteAnniversary,
     monthlyEvents, addMonthlyEvent, deleteMonthlyEvent,
     cardPaymentDay, setCardPaymentDay,
-    cardBillingStartDay, cardBillingEndDay, setCardBillingDays
+    cardBillingStartDay, cardBillingEndDay, setCardBillingDays,
+    payday, setPayday, resetLedgerData
   } = useAppStore()
   
   const [activeTab, setActiveTab] = useState<TabType>('ledger')
@@ -231,6 +232,27 @@ const SettingsPage: React.FC = () => {
                     <div className="h-px bg-yuri-100 my-1"></div>
 
                     <div className="flex items-center gap-4">
+                      <span className="text-sm font-bold text-yuri-700 w-24">월급일</span>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="number"
+                          min="1" max="31"
+                          value={payday}
+                          onChange={(e) => {
+                            const val = parseInt(e.target.value, 10);
+                            if (!isNaN(val) && val >= 1 && val <= 31) {
+                              setPayday(val);
+                            }
+                          }}
+                          className="w-20 px-3 py-2 bg-yuri-50 border border-yuri-200 rounded-lg text-sm outline-none focus:border-accent focus:bg-white transition-colors"
+                        />
+                        <span className="text-sm font-bold text-yuri-700">일</span>
+                      </div>
+                    </div>
+
+                    <div className="h-px bg-yuri-100 my-1"></div>
+
+                    <div className="flex items-center gap-4">
                       <span className="text-sm font-bold text-yuri-700 w-24">사용기간 시작</span>
                       <div className="flex items-center gap-2">
                         <span className="text-xs text-yuri-500">전전월</span>
@@ -363,6 +385,24 @@ const SettingsPage: React.FC = () => {
                       </button>
                     </form>
                   </div>
+                </div>
+
+                <div className="bg-red-50 border border-red-200 rounded-xl p-8 shadow-sm mb-8 mt-12">
+                  <h3 className="text-lg font-bold text-red-700 mb-2">가계부 초기화 (위험)</h3>
+                  <p className="text-sm text-red-600 mb-6 leading-relaxed">
+                    가계부 내역, 카드 결제 대금, 고정 지출 등 모든 가계부 데이터가 영구적으로 삭제됩니다.<br />
+                    (메모, 할 일, 일정, 개인 기록은 유지됩니다.)
+                  </p>
+                  <button
+                    onClick={() => {
+                      if (window.confirm('정말로 가계부 데이터를 초기화하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
+                        resetLedgerData();
+                      }
+                    }}
+                    className="px-4 py-2 bg-red-600 text-white text-sm font-bold rounded-lg shadow-sm hover:bg-red-700 transition-colors"
+                  >
+                    데이터 초기화
+                  </button>
                 </div>
               </>
             )}
