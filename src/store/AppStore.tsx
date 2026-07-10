@@ -61,6 +61,8 @@ interface StoreValue {
   addCategory: (name: string) => void
   addCategoryKeyword: (categoryName: string, keyword: string) => void
   removeCategoryKeyword: (categoryName: string, keyword: string) => void
+  categoryOrder: string[]
+  setCategoryOrder: (order: string[]) => void
   addAgenda: (text: string, monthKey: string) => void
   toggleAgenda: (id: string) => void
   deleteAgenda: (id: string) => void
@@ -111,6 +113,7 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
   const [cardBillingEndDay, setCardBillingEndDay] = useState<number>(27)
   const [payday, setPaydayState] = useState<number>(25)
   const [cardBills, setCardBills] = useState<Record<string, number>>({})
+  const [categoryOrder, setCategoryOrderState] = useState<string[]>([])
   
   const [isPrivateUnlocked, setIsPrivateUnlocked] = useState(() => {
     return sessionStorage.getItem('yuri-private-unlocked') === 'true'
@@ -146,6 +149,7 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
           setCardBillingStartDay(data.cardBillingStartDay || 28)
           setCardBillingEndDay(data.cardBillingEndDay || 27)
           setPaydayState(data.payday || 25)
+          if (data.categoryOrder) setCategoryOrderState(data.categoryOrder)
         }
         
         const [
@@ -629,6 +633,11 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
     setDoc(doc(db, `users/${uid}/settings/config`), { payday: day }, { merge: true }).catch(console.error)
   }, [uid])
 
+  const setCategoryOrder = useCallback((order: string[]) => {
+    setCategoryOrderState(order)
+    setDoc(doc(db, `users/${uid}/settings/config`), { categoryOrder: order }, { merge: true }).catch(console.error)
+  }, [uid])
+
   const resetLedgerData = useCallback(async () => {
     if (!uid) return;
     try {
@@ -676,6 +685,7 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
       addFixedExpense, updateFixedExpense, deleteFixedExpense,
       restoreItem, hardDeleteItem,
       addCategory, addCategoryKeyword, removeCategoryKeyword,
+      categoryOrder, setCategoryOrder,
       addAgenda, toggleAgenda, deleteAgenda,
       updateItemOrders,
       addAnniversary, deleteAnniversary,
