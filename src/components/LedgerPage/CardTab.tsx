@@ -153,7 +153,7 @@ export default function CardTab({ year, month }: { year: number, month: number }
 
         {/* Masonry Grid */}
         <div className="columns-1 md:columns-2 lg:columns-3 gap-6">
-          {sortedCategories.map(cat => {
+          {sortedCategories.filter(cat => (groupedEntries[cat] || []).length > 0).map(cat => {
             const items = groupedEntries[cat] || []
             const total = items.reduce((sum, e) => sum + e.amount, 0)
             const isDragging = draggedCat === cat
@@ -177,29 +177,23 @@ export default function CardTab({ year, month }: { year: number, month: number }
 
                 {/* Card Body (Scrollable if too tall) */}
                 <div className="p-2 max-h-[400px] overflow-y-auto custom-scrollbar">
-                  {items.length === 0 ? (
-                    <div className="py-8 text-center text-xs font-medium text-gray-400">
-                      내역이 없습니다
-                    </div>
-                  ) : (
-                    <div className="flex flex-col gap-1">
-                      {items.map(item => {
-                        const d = new Date(item.scheduledDate || item.createdAt)
-                        const dStr = `${d.getMonth() + 1}/${d.getDate()}`
-                        return (
-                          <div key={item.id} className="flex justify-between items-center px-3 py-2.5 hover:bg-gray-50 rounded-lg transition-colors group">
-                            <div className="flex items-center gap-3 overflow-hidden">
-                              <span className="text-[11px] font-semibold text-gray-400 w-8 shrink-0">{dStr}</span>
-                              <span className="text-[13px] font-medium text-gray-700 truncate">{item.label}</span>
-                            </div>
-                            <span className="text-[13px] font-bold text-gray-900 shrink-0 ml-4 group-hover:text-black transition-colors">
-                              {item.amount.toLocaleString()}원
-                            </span>
+                  <div className="flex flex-col gap-1">
+                    {items.map(item => {
+                      const d = new Date(item.scheduledDate || item.createdAt)
+                      const dStr = `${d.getMonth() + 1}/${d.getDate()}`
+                      return (
+                        <div key={item.id} className="flex justify-between items-center px-3 py-2.5 hover:bg-gray-50 rounded-lg transition-colors group">
+                          <div className="flex items-center gap-3 overflow-hidden">
+                            <span className="text-[11px] font-semibold text-gray-400 w-8 shrink-0">{dStr}</span>
+                            <span className="text-[13px] font-medium text-gray-700 truncate">{item.label}</span>
                           </div>
-                        )
-                      })}
-                    </div>
-                  )}
+                          <span className="text-[13px] font-bold text-gray-900 shrink-0 ml-4 group-hover:text-black transition-colors">
+                            {item.amount.toLocaleString()}원
+                          </span>
+                        </div>
+                      )
+                    })}
+                  </div>
                 </div>
 
                 {/* Card Footer (Total) */}
