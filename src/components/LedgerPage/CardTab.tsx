@@ -11,8 +11,12 @@ const NewRow = ({ cycle, onAdd }: { cycle: any, onAdd: (d: string, l: string, a:
   const [amount, setAmount] = useState('')
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
+    console.log('[NewRow] handleKeyDown:', e.key, 'label:', label, 'amount:', amount)
     if (e.key === 'Enter') {
-      if (!label.trim() || !amount) return
+      if (!label.trim() || !amount) {
+        console.log('[NewRow] validation failed: empty label or amount')
+        return
+      }
       const val = parseInt(amount.replace(/,/g, ''), 10)
       if (isNaN(val)) return
 
@@ -32,6 +36,7 @@ const NewRow = ({ cycle, onAdd }: { cycle: any, onAdd: (d: string, l: string, a:
       }
 
       const iso = new Date(y, m, d, 9, 0, 0).toISOString()
+      console.log('[NewRow] calling onAdd with:', {iso, label: label.trim(), val})
       onAdd(iso, label.trim(), val)
       
       setDate('')
@@ -298,7 +303,9 @@ export default function CardTab({ year, month }: { year: number, month: number }
 
   const handleActualBillBlur = () => {
     const val = parseInt(actualBillInput.replace(/,/g, ''), 10)
+    console.log('[CardTab] handleActualBillBlur:', { monthKey, val, memoInput })
     if (!isNaN(val)) {
+      console.log('[CardTab] calling updateCardBill with:', { amount: val, memo: memoInput })
       updateCardBill(monthKey, { amount: val, memo: memoInput })
       setActualBillInput(val.toLocaleString('ko-KR'))
     } else if (actualBillInput.trim() === '') {
@@ -308,7 +315,9 @@ export default function CardTab({ year, month }: { year: number, month: number }
   }
 
   const handleMemoBlur = () => {
+    console.log('[CardTab] handleMemoBlur:', { monthKey, hasActualBill, memoInput })
     if (hasActualBill) {
+      console.log('[CardTab] calling updateCardBill with memo:', memoInput)
       updateCardBill(monthKey, { memo: memoInput })
     }
   }

@@ -240,16 +240,19 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
         setMonthlyEvents(fetchedMonthly as MonthlyEvent[])
         
         const billsMap: Record<string, { amount: number, memo?: string }> = {}
+        console.log('[AppStore] fetchedCardBills raw:', fetchedCardBills)
         ;(fetchedCardBills as any[]).forEach((b: any) => {
           if (b.id) {
             if (typeof b.actualAmount === 'number') {
-              // Migrate old structure
               billsMap[b.id] = { amount: b.actualAmount }
             } else if (typeof b.amount === 'number') {
               billsMap[b.id] = { amount: b.amount, memo: b.memo }
+            } else {
+              console.log('[AppStore] b.amount is not number:', b)
             }
           }
         })
+        console.log('[AppStore] resulting billsMap:', billsMap)
         setCardBills(billsMap)
       } catch (err: any) {
         console.error("Firebase load error:", err)
@@ -373,8 +376,11 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
     if (paymentMethod !== undefined) newEntry.paymentMethod = paymentMethod
     if (memo !== undefined) newEntry.memo = memo
 
+    console.log('[AppStore] addLedgerEntry executing. id:', id, 'newEntry:', newEntry)
     setLedger(prev => [...prev, newEntry as LedgerEntry])
-    setDoc(doc(db, 'users', uid, 'ledger', id), newEntry).catch(console.error)
+    setDoc(doc(db, 'users', uid, 'ledger', id), newEntry)
+      .then(() => console.log('[AppStore] addLedgerEntry Firestore save success!'))
+      .catch(err => console.error('[AppStore] addLedgerEntry Firestore error:', err))
   }, [uid])
 
   const updateLedgerEntry = useCallback((id: string, updates: Partial<LedgerEntry>) => {
@@ -417,7 +423,10 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
         if (newBill[k] === undefined) delete newBill[k]
       })
 
-      setDoc(doc(db, `users/${uid}/cardBills/${monthKey}`), newBill, { merge: true }).catch(console.error)
+      console.log('[AppStore] updateCardBill executing. monthKey:', monthKey, 'newBill:', newBill)
+      setDoc(doc(db, `users/${uid}/cardBills/${monthKey}`), newBill, { merge: true })
+        .then(() => console.log('[AppStore] updateCardBill Firestore save success!'))
+        .catch(err => console.error('[AppStore] updateCardBill Firestore error:', err))
       return { ...prev, [monthKey]: newBill }
     })
   }, [uid])
