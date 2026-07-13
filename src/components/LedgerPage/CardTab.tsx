@@ -13,6 +13,7 @@ const NewRow = ({ cycle, onAdd }: { cycle: any, onAdd: (d: string, l: string, a:
   const dateRef = useRef<HTMLInputElement>(null)
   const labelRef = useRef<HTMLInputElement>(null)
   const amountRef = useRef<HTMLInputElement>(null)
+  const isSubmitting = useRef(false)
 
   const handleDateKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
@@ -31,12 +32,14 @@ const NewRow = ({ cycle, onAdd }: { cycle: any, onAdd: (d: string, l: string, a:
   const handleAmountKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       e.preventDefault()
-      if (!label.trim() || !amount) {
-        console.log('[NewRow] validation failed: empty label or amount')
-        return
-      }
+      
+      if (isSubmitting.current) return
+      if (!label.trim() || !amount) return
+      
       const val = parseInt(amount.replace(/,/g, ''), 10)
       if (isNaN(val)) return
+
+      isSubmitting.current = true
 
       let y = cycle.cardBillingStart.getFullYear()
       let m = cycle.cardBillingStart.getMonth()
@@ -53,15 +56,16 @@ const NewRow = ({ cycle, onAdd }: { cycle: any, onAdd: (d: string, l: string, a:
       }
 
       const iso = new Date(y, m, d, 9, 0, 0).toISOString()
-      console.log('[NewRow] calling onAdd with:', {iso, label: label.trim(), val})
       onAdd(iso, label.trim(), val)
       
-      setDate('')
-      setLabel('')
-      setAmount('')
-      
-      // return focus to date for continuous entry
-      dateRef.current?.focus()
+      setTimeout(() => {
+        setDate('')
+        setLabel('')
+        setAmount('')
+        isSubmitting.current = false
+        // return focus to date for continuous entry
+        dateRef.current?.focus()
+      }, 0)
     }
   }
 

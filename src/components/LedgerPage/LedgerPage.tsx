@@ -132,7 +132,7 @@ const LedgerPage: React.FC = () => {
     ledger, updateLedgerEntry, deleteLedgerEntry, 
     fixedExpenses, addFixedExpense, updateFixedExpense, deleteFixedExpense,
     expenseCategories, isPrivateUnlocked, lockPrivate,
-    cardBills, updateCardBill,
+    cardBills,
     cardBillingStartDay, cardBillingEndDay
   } = useAppStore()
 
@@ -193,33 +193,9 @@ const LedgerPage: React.FC = () => {
   const hasActualBill = typeof actualCardBill?.amount === 'number';
   const [showBillDetails, setShowBillDetails] = useState(false);
 
-  const [actualBillInput, setActualBillInput] = useState<string>('');
-
   useEffect(() => {
-    setActualBillInput(hasActualBill ? actualCardBill.amount.toLocaleString('ko-KR') : '');
     setShowBillDetails(false);
   }, [monthKey, hasActualBill, actualCardBill]);
-
-  const handleActualBillChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const raw = e.target.value.replace(/,/g, '');
-    if (!/^\d*$/.test(raw)) return;
-    if (raw === '') {
-      setActualBillInput('');
-      return;
-    }
-    setActualBillInput(parseInt(raw, 10).toLocaleString('ko-KR'));
-  };
-
-  const handleActualBillBlur = () => {
-    if (actualBillInput.trim() === '') {
-      return;
-    }
-    const val = parseInt(actualBillInput.replace(/,/g, ''), 10);
-    if (!isNaN(val)) {
-      updateCardBill(monthKey, { amount: val });
-      setActualBillInput(val.toLocaleString('ko-KR'));
-    }
-  };
 
   // ── Computed Totals ─────────────────────────────────────────────────────────
   const totalIncome  = monthEntries.filter(e => e.type === 'income' ).reduce((s, e) => s + e.amount, 0)
@@ -487,25 +463,6 @@ const LedgerPage: React.FC = () => {
                 </div>
               )}
 
-              <div className="flex flex-col gap-1.5 pt-3 border-t border-yuri-200">
-                <span className="text-xs font-bold text-yuri-600">실제 청구액 입력</span>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    value={actualBillInput}
-                    onChange={handleActualBillChange}
-                    onBlur={handleActualBillBlur}
-                    placeholder="실제 금액 (미입력시 예정액 적용)"
-                    className="flex-1 px-3 py-1.5 bg-white border border-yuri-200 rounded text-xs outline-none focus:border-accent text-right"
-                  />
-                  <span className="text-xs font-bold text-yuri-700">원</span>
-                </div>
-                {hasActualBill && (
-                  <span className="text-[10px] text-accent mt-0.5 text-right font-bold">
-                    예정 {fmtAmt(expectedCardBill)} / 실제 {fmtAmt(actualCardBill.amount)}
-                  </span>
-                )}
-              </div>
             </div>
 
             <div className="pt-3 flex flex-col gap-1 border-t border-yuri-100">

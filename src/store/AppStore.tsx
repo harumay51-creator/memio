@@ -132,7 +132,7 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
         // Fetch from Firestore
         const fetchCol = async (colName: string) => {
           const snap = await getDocs(collection(db, 'users', uid, colName))
-          return snap.docs.map(doc => doc.data())
+          return snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as any))
         }
         
         // Load PIN settings
