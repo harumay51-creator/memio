@@ -48,7 +48,7 @@ export function calculatePaydayCycle(
   let paymentYear = baseYear;
   let paymentMonth0 = month0;
   
-  if (cardPaymentDay > payday) {
+  if (cardPaymentDay >= payday) {
     paymentMonth0 = month0;
   } else {
     paymentMonth0 = month0 + 1;
