@@ -394,7 +394,7 @@ export function parseCapture(raw: string, customExpenseCats: CategoryConfig[] = 
   const amountObj = extractAmount(text)
 
   let paymentMethod: '카드' | '계좌이체' = '카드'
-  if (/(계좌이체|현금|이체)/.test(text)) {
+  if (/(계좌이체|이체)/.test(text)) {
     paymentMethod = '계좌이체'
   }
 

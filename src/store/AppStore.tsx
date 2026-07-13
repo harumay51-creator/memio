@@ -82,6 +82,8 @@ interface StoreValue {
   setCardBillingDays: (start: number, end: number) => void
   payday: number
   setPayday: (day: number) => void
+  monthlySalary: number
+  setMonthlySalary: (amount: number) => void
   resetLedgerData: () => Promise<void>
   cardBills: Record<string, { amount: number, memo?: string }>
   updateCardBill: (monthKey: string, updates: { amount?: number, memo?: string }) => void
@@ -115,6 +117,7 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
   const [cardBillingStartDay, setCardBillingStartDay] = useState<number>(28)
   const [cardBillingEndDay, setCardBillingEndDay] = useState<number>(27)
   const [payday, setPaydayState] = useState<number>(25)
+  const [monthlySalary, setMonthlySalaryState] = useState<number>(3000000)
   const [cardBills, setCardBills] = useState<Record<string, { amount: number, memo?: string }>>({})
   const [categoryOrder, setCategoryOrderState] = useState<string[]>([])
   
@@ -144,15 +147,16 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
           setPinHash(null)
         }
         
-        // Load General settings
-        const genSettingsSnap = await getDoc(doc(db, `users/${uid}/settings/config`))
-        if (genSettingsSnap.exists()) {
-          const data = genSettingsSnap.data()
+        // Load general settings
+        const settingsDoc = await getDoc(doc(db, `users/${uid}/settings/config`))
+        if (settingsDoc.exists()) {
+          const data = settingsDoc.data()
           setCardPaymentDayState(data.cardPaymentDay || 14)
           setCardBillingStartDay(data.cardBillingStartDay || 28)
           setCardBillingEndDay(data.cardBillingEndDay || 27)
           setPaydayState(data.payday || 25)
-          if (data.categoryOrder) setCategoryOrderState(data.categoryOrder)
+          setMonthlySalaryState(data.monthlySalary || 3000000)
+          setCategoryOrderState(data.categoryOrder || [])
         }
         
         const [
@@ -684,6 +688,11 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
     setDoc(doc(db, `users/${uid}/settings/config`), { payday: day }, { merge: true }).catch(console.error)
   }, [uid])
 
+  const setMonthlySalary = useCallback((amount: number) => {
+    setMonthlySalaryState(amount)
+    setDoc(doc(db, `users/${uid}/settings/config`), { monthlySalary: amount }, { merge: true }).catch(console.error)
+  }, [uid])
+
   const setCategoryOrder = useCallback((order: string[]) => {
     setCategoryOrderState(order)
     setDoc(doc(db, `users/${uid}/settings/config`), { categoryOrder: order }, { merge: true }).catch(console.error)
@@ -744,7 +753,9 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
       hasPin, isPrivateUnlocked, unlockPrivate, setPrivatePin, lockPrivate, resetPrivatePin,
       cardPaymentDay, setCardPaymentDay,
       cardBillingStartDay, cardBillingEndDay, setCardBillingDays,
-      payday, setPayday, resetLedgerData,
+      payday, setPayday, 
+      monthlySalary, setMonthlySalary,
+      resetLedgerData,
       cardBills, updateCardBill,
     }}>
       {children}

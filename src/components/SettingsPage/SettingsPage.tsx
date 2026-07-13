@@ -13,7 +13,7 @@ const SettingsPage: React.FC = () => {
     monthlyEvents, addMonthlyEvent, deleteMonthlyEvent,
     cardPaymentDay, setCardPaymentDay,
     cardBillingStartDay, cardBillingEndDay, setCardBillingDays,
-    payday, setPayday, resetLedgerData
+    payday, setPayday, monthlySalary, setMonthlySalary, resetLedgerData
   } = useAppStore()
   
   const [activeTab, setActiveTab] = useState<TabType>('ledger')
@@ -247,6 +247,29 @@ const SettingsPage: React.FC = () => {
                           className="w-20 px-3 py-2 bg-yuri-50 border border-yuri-200 rounded-lg text-sm outline-none focus:border-accent focus:bg-white transition-colors"
                         />
                         <span className="text-sm font-bold text-yuri-700">일</span>
+                      </div>
+                    </div>
+
+                    <div className="h-px bg-yuri-100 my-1"></div>
+
+                    <div className="flex items-center gap-4">
+                      <span className="text-sm font-bold text-yuri-700 w-24">월급액</span>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          value={monthlySalary.toLocaleString('ko-KR')}
+                          onChange={(e) => {
+                            const raw = e.target.value.replace(/[^0-9]/g, '');
+                            const val = parseInt(raw, 10);
+                            if (!isNaN(val)) {
+                              setMonthlySalary(val);
+                            } else if (raw === '') {
+                              setMonthlySalary(0);
+                            }
+                          }}
+                          className="w-32 px-3 py-2 bg-yuri-50 border border-yuri-200 rounded-lg text-sm text-right outline-none focus:border-accent focus:bg-white transition-colors"
+                        />
+                        <span className="text-sm font-bold text-yuri-700">원</span>
                       </div>
                     </div>
 
