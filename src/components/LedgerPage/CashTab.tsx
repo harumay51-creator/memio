@@ -69,9 +69,10 @@ export default function CashTab({ year, month, onOpenFixedExpense }: { year: num
   }, [ledger, cycle])
 
   const expectedCardBill = cardEntries.reduce((s, e) => s + e.amount, 0)
-  const monthKey = `${year}-${String(month + 1).padStart(2, '0')}`
-  const actualCardBill = cardBills[monthKey]
-  const hasActualBill = typeof actualCardBill?.amount === 'number'
+  const salaryMonthKey = `${year}-${String(month + 1).padStart(2, '0')}`
+  const cardMonthKey = `${cycle.targetCardPaymentDate.getFullYear()}-${String(cycle.targetCardPaymentDate.getMonth() + 1).padStart(2, '0')}`
+  const actualCardBill = cardBills[cardMonthKey]
+  const hasActualBill = typeof actualCardBill?.amount === 'number' && actualCardBill.amount > 0
   const cardBillAmount = hasActualBill ? actualCardBill.amount : expectedCardBill
 
   // 2. Fetch Cash / Transfer entries in cash cycle
@@ -123,7 +124,7 @@ export default function CashTab({ year, month, onOpenFixedExpense }: { year: num
   }, [fixedExpenses, cycle])
 
   // Compute Total Deductions
-  const currentSalary = salaryRecords[monthKey]?.amount || 0
+  const currentSalary = salaryRecords[salaryMonthKey]?.amount || 0
   const totalCashExpense = cashEntries.reduce((s, e) => s + e.amount, 0)
   const totalFixedExpense = simulatedFixedExpenses.reduce((s, e) => s + e.amount, 0)
   const totalDeductions = totalCashExpense + totalFixedExpense + cardBillAmount
@@ -185,14 +186,14 @@ export default function CashTab({ year, month, onOpenFixedExpense }: { year: num
               <input
                 type="text"
                 placeholder="미입력 (0원)"
-                value={salaryRecords[monthKey]?.amount ? salaryRecords[monthKey].amount.toLocaleString('ko-KR') : ''}
+                value={salaryRecords[salaryMonthKey]?.amount ? salaryRecords[salaryMonthKey].amount.toLocaleString('ko-KR') : ''}
                 onChange={(e) => {
                   const raw = e.target.value.replace(/[^0-9]/g, '')
                   const val = parseInt(raw, 10)
                   if (!isNaN(val)) {
-                    updateSalaryRecord(monthKey, val)
+                    updateSalaryRecord(salaryMonthKey, val)
                   } else if (raw === '') {
-                    updateSalaryRecord(monthKey, 0)
+                    updateSalaryRecord(salaryMonthKey, 0)
                   }
                 }}
                 className="w-28 bg-transparent text-right text-lg font-bold text-yuri-900 outline-none border-b border-dashed border-yuri-300 focus:border-yuri-500 transition-colors placeholder:text-yuri-300 placeholder:text-base"

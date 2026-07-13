@@ -139,15 +139,19 @@ export default function CardTab({ year, month }: { year: number, month: number }
   
   const monthKey = `${cycle.targetCardPaymentDate.getFullYear()}-${String(cycle.targetCardPaymentDate.getMonth() + 1).padStart(2, '0')}`
   const actualCardBill = cardBills[monthKey]
-  const hasActualBill = typeof actualCardBill?.amount === 'number'
+  const hasActualBill = typeof actualCardBill?.amount === 'number' && actualCardBill.amount > 0
 
   const [actualBillInput, setActualBillInput] = useState<string>('')
   const [memoInput, setMemoInput] = useState<string>('')
 
   React.useEffect(() => {
-    setActualBillInput(hasActualBill ? actualCardBill.amount.toLocaleString('ko-KR') : '')
+    if (typeof actualCardBill?.amount === 'number') {
+      setActualBillInput(actualCardBill.amount.toLocaleString('ko-KR'))
+    } else {
+      setActualBillInput('')
+    }
     setMemoInput(actualCardBill?.memo || '')
-  }, [monthKey, hasActualBill, actualCardBill])
+  }, [monthKey, actualCardBill])
 
   const handleActualBillChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const raw = e.target.value.replace(/,/g, '')
@@ -160,15 +164,15 @@ export default function CardTab({ year, month }: { year: number, month: number }
   }
 
   const handleActualBillBlur = () => {
-    const val = parseInt(actualBillInput.replace(/,/g, ''), 10)
-    console.log('[CardTab] handleActualBillBlur:', { monthKey, val, memoInput })
-    if (!isNaN(val)) {
-      console.log('[CardTab] calling updateCardBill with:', { amount: val, memo: memoInput })
-      updateCardBill(monthKey, { amount: val, memo: memoInput })
-      setActualBillInput(val.toLocaleString('ko-KR'))
-    } else if (actualBillInput.trim() === '') {
-      // Clear it? The appStore doesn't natively support deleting, but we can set amount to NaN or just keep it 0.
-      // For now, if empty, we do nothing.
+    const raw = actualBillInput.replace(/,/g, '')
+    if (raw === '') {
+      updateCardBill(monthKey, { amount: undefined })
+    } else {
+      const val = parseInt(raw, 10)
+      if (!isNaN(val)) {
+        updateCardBill(monthKey, { amount: val, memo: memoInput })
+        setActualBillInput(val.toLocaleString('ko-KR'))
+      }
     }
   }
 

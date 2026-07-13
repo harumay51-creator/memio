@@ -81,7 +81,7 @@ function CategoryDropdown({
       
       {isOpen && (
         <div 
-          className="absolute left-0 top-full mt-1 min-w-[140px] bg-[#FAFBFF] rounded-[10px] shadow-lg border border-yuri-200 z-[9999] flex flex-col py-2"
+          className="absolute left-0 top-full mt-1 min-w-[140px] max-h-[200px] overflow-y-auto custom-scrollbar bg-[#FAFBFF] rounded-[10px] shadow-lg border border-yuri-200 z-[9999] flex flex-col py-2"
           onClick={(e) => e.stopPropagation()}
         >
           {options.map(opt => {
