@@ -87,26 +87,33 @@ export default function CashTab({ year, month, onOpenFixedExpense }: { year: num
   // 3. Generate Simulated Fixed Expenses
   const simulatedFixedExpenses = useMemo(() => {
     return fixedExpenses.map(fe => {
-      // Create a date for the fixed expense in the current cash cycle
-      let feYear = cycle.cashStart.getFullYear()
-      let feMonth = cycle.cashStart.getMonth()
+      // 1. Use the exact selected calendar month for fixed expenses
+      const feYear = year
+      const feMonth = month
       let feDate = fe.day
       
-      // Handle edge cases where day might exceed max days in month
       const maxDays = new Date(feYear, feMonth + 1, 0).getDate()
       if (feDate > maxDays) feDate = maxDays
 
-      const d = new Date(feYear, feMonth, feDate, 9, 0, 0)
+      const finalDate = new Date(feYear, feMonth, feDate, 9, 0, 0)
       
-      // If the generated date is before cashStart, it means it should be in cashEnd's month
-      if (d.getTime() < cycle.cashStart.getTime()) {
-        feMonth = cycle.cashEnd.getMonth()
-        feYear = cycle.cashEnd.getFullYear()
-        const maxDaysEnd = new Date(feYear, feMonth + 1, 0).getDate()
-        if (feDate > maxDaysEnd) feDate = maxDaysEnd
+      // 2. Prevent retroactive injection for past months (before creation)
+      const createdDate = new Date(fe.createdAt)
+      if (
+        feYear < createdDate.getFullYear() || 
+        (feYear === createdDate.getFullYear() && feMonth < createdDate.getMonth())
+      ) {
+        return null
       }
 
-      const finalDate = new Date(feYear, feMonth, feDate, 9, 0, 0)
+      // 3. Prevent duplicate if AppStore already auto-injected this into the ledger
+      const alreadyInjected = ledger.some(l => {
+        if (l.fixedExpenseId !== fe.id) return false
+        const lDate = new Date(l.scheduledDate || l.createdAt)
+        return lDate.getFullYear() === feYear && lDate.getMonth() === feMonth
+      })
+
+      if (alreadyInjected) return null
 
       return {
         id: `fe-${fe.id}`, // pseudo id
@@ -120,8 +127,8 @@ export default function CashTab({ year, month, onOpenFixedExpense }: { year: num
         isFixed: true,
         originalFeId: fe.id
       } as LedgerEntry & { isFixed: true, originalFeId: string }
-    })
-  }, [fixedExpenses, cycle])
+    }).filter(e => e !== null) as (LedgerEntry & { isFixed: true, originalFeId: string })[]
+  }, [fixedExpenses, cycle, ledger, year, month])
 
   // Compute Total Deductions
   const currentSalary = salaryRecords[salaryMonthKey]?.amount || 0
@@ -265,7 +272,8 @@ export default function CashTab({ year, month, onOpenFixedExpense }: { year: num
                 {g.entries.map(e => {
                   const isEditing = editingRowId === e.id
 
-                  if (isEditing && !e.isFixed) {
+                  const isFixed = e.isFixed || !!e.fixedExpenseId
+                  if (isEditing && !isFixed) {
                     return (
                       <EditRow 
                         key={e.id}
@@ -284,7 +292,7 @@ export default function CashTab({ year, month, onOpenFixedExpense }: { year: num
                     <div 
                       key={e.id} 
                       onClick={() => {
-                        if (e.isFixed) {
+                        if (isFixed) {
                           onOpenFixedExpense()
                         } else {
                           setEditingRowId(e.id)
@@ -299,7 +307,7 @@ export default function CashTab({ year, month, onOpenFixedExpense }: { year: num
                           </span>
                           <span className="text-[13px] font-bold text-gray-900 truncate flex items-center gap-1.5">
                             {e.label}
-                            {e.isFixed && <span className="text-[9px] bg-yuri-200 text-yuri-600 px-1 py-0.5 rounded font-bold uppercase shrink-0">고정</span>}
+                            {isFixed && <span className="text-[9px] bg-yuri-200 text-yuri-600 px-1 py-0.5 rounded font-bold uppercase shrink-0">고정</span>}
                           </span>
                         </div>
                         <div className="flex items-center gap-3 shrink-0">
