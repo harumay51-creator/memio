@@ -268,7 +268,7 @@ export default function CardTab({ year, month }: { year: number, month: number }
         const randomTime = startMs + Math.random() * (endMs - startMs)
         const dateStr = new Date(randomTime).toISOString()
         const amount = (Math.floor(Math.random() * 20) + 1) * 1000 // 1000 ~ 20000
-        addLedgerEntry(`${cat} 테스트 내역 ${i+1}`, amount, 'expense', cat, dateStr)
+        addLedgerEntry(`${cat} 테스트 내역 ${i+1}`, amount, 'expense', cat, dateStr, '카드')
       }
     })
   }

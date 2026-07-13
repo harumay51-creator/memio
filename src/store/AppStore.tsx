@@ -411,7 +411,12 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
   const updateCardBill = useCallback((monthKey: string, updates: { amount?: number, memo?: string }) => {
     setCardBills(prev => {
       const existing = prev[monthKey] || { amount: 0 }
-      const newBill = { ...existing, ...updates }
+      const newBill: any = { ...existing, ...updates }
+      
+      Object.keys(newBill).forEach(k => {
+        if (newBill[k] === undefined) delete newBill[k]
+      })
+
       setDoc(doc(db, `users/${uid}/cardBills/${monthKey}`), newBill, { merge: true }).catch(console.error)
       return { ...prev, [monthKey]: newBill }
     })
