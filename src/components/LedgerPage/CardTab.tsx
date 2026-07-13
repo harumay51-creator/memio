@@ -1,112 +1,17 @@
-import React, { useMemo, useState, useRef } from 'react'
+import React, { useMemo, useState } from 'react'
 import { useAppStore } from '../../store/AppStore'
 import { calculatePaydayCycle } from '../../utils/ledgerCycle'
 import type { LedgerEntry } from '../../types'
 import { Trash2, MessageSquare } from 'lucide-react'
 
 // ── Sub-components for Inline Editing ───────────────────────────────────────
-const NewRow = ({ cycle, onAdd }: { cycle: any, onAdd: (d: string, l: string, a: number) => void }) => {
-  const [date, setDate] = useState('')
-  const [label, setLabel] = useState('')
-  const [amount, setAmount] = useState('')
-
-  const dateRef = useRef<HTMLInputElement>(null)
-  const labelRef = useRef<HTMLInputElement>(null)
-  const amountRef = useRef<HTMLInputElement>(null)
-  const isSubmitting = useRef(false)
-
-  const handleDateKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      e.preventDefault()
-      labelRef.current?.focus()
-    }
-  }
-
-  const handleLabelKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      e.preventDefault()
-      amountRef.current?.focus()
-    }
-  }
-
-  const handleAmountKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      e.preventDefault()
-      
-      if (isSubmitting.current) return
-      if (!label.trim() || !amount) return
-      
-      const val = parseInt(amount.replace(/,/g, ''), 10)
-      if (isNaN(val)) return
-
-      isSubmitting.current = true
-
-      let y = cycle.cardBillingStart.getFullYear()
-      let m = cycle.cardBillingStart.getMonth()
-      let d = cycle.cardBillingStart.getDate()
-      
-      const dMatch = date.match(/^(\d{1,2})\/(\d{1,2})$/)
-      if (dMatch) {
-        m = parseInt(dMatch[1], 10) - 1
-        d = parseInt(dMatch[2], 10)
-      } else if (/^\d{1,2}$/.test(date)) {
-        d = parseInt(date, 10)
-      } else {
-        d = new Date().getDate()
-      }
-
-      const iso = new Date(y, m, d, 9, 0, 0).toISOString()
-      onAdd(iso, label.trim(), val)
-      
-      setTimeout(() => {
-        setDate('')
-        setLabel('')
-        setAmount('')
-        isSubmitting.current = false
-        // return focus to date for continuous entry
-        dateRef.current?.focus()
-      }, 0)
-    }
-  }
-
-  return (
-    <div className="flex justify-between items-center px-2 py-1.5 mt-1 border border-transparent focus-within:border-gray-200 focus-within:bg-white rounded-lg transition-colors group">
-      <div className="flex items-center gap-2 flex-1">
-        <input 
-          ref={dateRef}
-          className="w-10 text-[11px] font-bold text-gray-400 bg-transparent outline-none placeholder-gray-300" 
-          placeholder="M/D"
-          value={date} onChange={e => setDate(e.target.value)} onKeyDown={handleDateKeyDown}
-        />
-        <input
-          ref={labelRef}
-          className="flex-1 text-[13px] font-semibold text-gray-900 bg-transparent outline-none placeholder-gray-300 min-w-0"
-          placeholder="내역 입력 후 Enter..."
-          value={label} onChange={e => setLabel(e.target.value)} onKeyDown={handleLabelKeyDown}
-        />
-      </div>
-      <div className="flex items-center gap-2">
-        <input
-          ref={amountRef}
-          className="w-20 text-right text-[13px] font-bold text-gray-900 bg-transparent outline-none placeholder-gray-300"
-          placeholder="0"
-          value={amount} onChange={e => {
-            const raw = e.target.value.replace(/[^0-9]/g, '')
-            setAmount(raw ? parseInt(raw, 10).toLocaleString('ko-KR') : '')
-          }} onKeyDown={handleAmountKeyDown}
-        />
-        <span className="text-[13px] font-bold text-gray-400">원</span>
-      </div>
-    </div>
-  )
-}
-
-const EditRow = ({ item, onUpdate, onDelete, onCancel }: { item: LedgerEntry, onUpdate: (id: string, updates: Partial<LedgerEntry>) => void, onDelete: (id: string) => void, onCancel: () => void }) => {
+const EditRow = ({ item, expenseCategories, onUpdate, onDelete, onCancel }: { item: LedgerEntry, expenseCategories: {name: string}[], onUpdate: (id: string, updates: Partial<LedgerEntry>) => void, onDelete: (id: string) => void, onCancel: () => void }) => {
   const d = new Date(item.scheduledDate || item.createdAt)
   const [date, setDate] = useState(`${d.getMonth() + 1}/${d.getDate()}`)
   const [label, setLabel] = useState(item.label)
   const [amount, setAmount] = useState(item.amount.toLocaleString('ko-KR'))
   const [memo, setMemo] = useState(item.memo || '')
+  const [category, setCategory] = useState(item.category || '기타')
 
   const handleSave = () => {
     const val = parseInt(amount.replace(/,/g, ''), 10)
@@ -126,7 +31,8 @@ const EditRow = ({ item, onUpdate, onDelete, onCancel }: { item: LedgerEntry, on
       label: label.trim(), 
       amount: isNaN(val) ? item.amount : val, 
       scheduledDate: iso,
-      memo: memo.trim()
+      memo: memo.trim(),
+      category: category
     })
     onCancel()
   }
@@ -160,7 +66,15 @@ const EditRow = ({ item, onUpdate, onDelete, onCancel }: { item: LedgerEntry, on
         </div>
       </div>
       <div className="flex items-center gap-2 mt-1">
-        <MessageSquare size={12} className="text-gray-400 shrink-0" />
+        <select 
+          className="text-[11px] font-bold text-gray-500 bg-gray-50 border border-gray-200 rounded px-1 py-0.5 outline-none focus:border-accent"
+          value={category}
+          onChange={e => setCategory(e.target.value)}
+        >
+          {expenseCategories.map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
+          <option value="기타">기타</option>
+        </select>
+        <MessageSquare size={12} className="text-gray-400 shrink-0 ml-1" />
         <input
           className="text-[11px] font-medium text-gray-600 flex-1 bg-transparent outline-none border-b border-gray-200 focus:border-gray-400 placeholder-gray-300"
           placeholder="메모를 입력하세요..."
@@ -173,6 +87,7 @@ const EditRow = ({ item, onUpdate, onDelete, onCancel }: { item: LedgerEntry, on
     </div>
   )
 }
+
 
 
 export default function CardTab({ year, month }: { year: number, month: number }) {
@@ -441,7 +356,7 @@ export default function CardTab({ year, month }: { year: number, month: number }
                   <div className="flex flex-col">
                     {items.map(item => {
                       if (editingRowId === item.id) {
-                        return <EditRow key={item.id} item={item} onUpdate={updateLedgerEntry} onDelete={deleteLedgerEntry} onCancel={() => setEditingRowId(null)} />
+                        return <EditRow key={item.id} item={item} expenseCategories={expenseCategories} onUpdate={updateLedgerEntry} onDelete={deleteLedgerEntry} onCancel={() => setEditingRowId(null)} />
                       }
 
                       const d = new Date(item.scheduledDate || item.createdAt)
@@ -463,11 +378,6 @@ export default function CardTab({ year, month }: { year: number, month: number }
                         </div>
                       )
                     })}
-                    
-                    <NewRow 
-                      cycle={cycle} 
-                      onAdd={(d, l, a) => addLedgerEntry(l, a, 'expense', cat, d, '카드')}
-                    />
                   </div>
                 </div>
 
