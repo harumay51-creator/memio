@@ -190,12 +190,50 @@ const LedgerPage: React.FC = () => {
   }
 
   return (
-    <div className="flex h-full w-full bg-white overflow-hidden relative">
-      {/* ── Left Panel (~30%) ────────────────────────────────────────────── */}
-      <aside className="w-[30%] min-w-[320px] max-w-[400px] border-r border-yuri-100 bg-yuri-50/30 flex flex-col shrink-0 h-full">
-        <header className="shrink-0 flex flex-col border-b border-yuri-100 bg-white px-6 pt-4 gap-3">
-          <div className="flex justify-between items-center">
+    <div className="flex flex-col h-full w-full bg-white overflow-hidden relative">
+      {/* ── Top Header ────────────────────────────────────────────── */}
+      <header className="shrink-0 flex flex-col border-b border-yuri-100 bg-white relative z-10">
+        <div className="flex justify-between items-center px-6 pt-4 pb-0">
+          <div className="flex items-center gap-8">
             <h1 className="text-xl font-bold text-yuri-900 tracking-tight">가계부</h1>
+            
+            <div className="flex gap-4">
+              <button 
+                onClick={() => setActiveTab('cash')}
+                className={`pb-3 px-1 text-sm font-bold transition-colors border-b-2 ${
+                  activeTab === 'cash' ? 'text-yuri-900 border-yuri-900' : 'text-yuri-400 border-transparent hover:text-yuri-600'
+                }`}
+              >
+                현금/계좌
+              </button>
+              <button 
+                onClick={() => setActiveTab('card')}
+                className={`pb-3 px-1 text-sm font-bold transition-colors border-b-2 ${
+                  activeTab === 'card' ? 'text-yuri-900 border-yuri-900' : 'text-yuri-400 border-transparent hover:text-yuri-600'
+                }`}
+              >
+                카드
+              </button>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-6 pb-2">
+            {/* Month Navigator */}
+            <div className="flex items-center gap-4">
+              <button onClick={prevMonth} className="text-yuri-400 hover:text-yuri-800 transition-colors flex items-center justify-center">←</button>
+              <div className="flex flex-col items-center relative">
+                <button 
+                  onClick={() => { setPickerYear(year); setShowPicker(!showPicker); }}
+                  className="text-base font-bold text-yuri-900 hover:text-accent transition-colors flex items-center gap-1"
+                >
+                  {year}년 {MONTH_KO[month]}
+                  <span className="text-[10px] text-yuri-400">{showPicker ? '▲' : '▼'}</span>
+                </button>
+                {!isCurrentMonth && <button onClick={goToday} className="absolute top-full mt-1 text-[10px] text-accent font-semibold hover:underline whitespace-nowrap">이번 달로 이동</button>}
+              </div>
+              <button onClick={nextMonth} className="text-yuri-400 hover:text-yuri-800 transition-colors flex items-center justify-center">→</button>
+            </div>
+
             <button
               onClick={lockPrivate}
               className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-yuri-500 hover:bg-yuri-100 rounded-lg transition-colors cursor-pointer"
@@ -204,86 +242,35 @@ const LedgerPage: React.FC = () => {
               잠금
             </button>
           </div>
-          
-          <div className="flex gap-4 border-b border-transparent">
-            <button 
-              onClick={() => setActiveTab('cash')}
-              className={`pb-3 px-1 text-sm font-bold transition-colors border-b-2 ${
-                activeTab === 'cash' ? 'text-yuri-900 border-yuri-900' : 'text-yuri-400 border-transparent hover:text-yuri-600'
-              }`}
-            >
-              현금/계좌
-            </button>
-            <button 
-              onClick={() => setActiveTab('card')}
-              className={`pb-3 px-1 text-sm font-bold transition-colors border-b-2 ${
-                activeTab === 'card' ? 'text-yuri-900 border-yuri-900' : 'text-yuri-400 border-transparent hover:text-yuri-600'
-              }`}
-            >
-              카드
-            </button>
-          </div>
-        </header>
-
-        <div className="flex-1 overflow-y-auto relative z-0 flex flex-col">
-          {/* Month Navigator */}
-          <div className="flex items-center justify-between px-6 py-4 bg-white border-b border-yuri-100">
-            <button onClick={prevMonth} className="text-yuri-400 hover:text-yuri-800 transition-colors w-6 h-6 flex items-center justify-center">←</button>
-            <div className="flex flex-col items-center">
-              <button 
-                onClick={() => { setPickerYear(year); setShowPicker(!showPicker); }}
-                className="text-base font-bold text-yuri-900 hover:text-accent transition-colors flex items-center gap-1"
-              >
-                {year}년 {MONTH_KO[month]}
-                <span className="text-[10px] text-yuri-400">{showPicker ? '▲' : '▼'}</span>
-              </button>
-              {!isCurrentMonth && <button onClick={goToday} className="text-[10px] text-accent font-semibold hover:underline mt-0.5">이번 달로 이동</button>}
-            </div>
-            <button onClick={nextMonth} className="text-yuri-400 hover:text-yuri-800 transition-colors w-6 h-6 flex items-center justify-center">→</button>
-          </div>
-          
-          {showPicker && (
-            <div className="absolute top-[72px] left-0 w-full bg-white border-b border-yuri-200 shadow-lg p-4 z-50 animate-fade-in">
-              <div className="flex justify-between items-center mb-4 px-2">
-                <button onClick={() => setPickerYear(y => y - 1)} className="text-yuri-400 hover:text-yuri-800 font-bold p-1">←</button>
-                <span className="font-bold text-yuri-900">{pickerYear}년</span>
-                <button onClick={() => setPickerYear(y => y + 1)} className="text-yuri-400 hover:text-yuri-800 font-bold p-1">→</button>
-              </div>
-              <div className="grid grid-cols-4 gap-2">
-                {MONTH_KO.map((mName, i) => (
-                  <button
-                    key={i}
-                    onClick={() => handleMonthSelect(i)}
-                    className={`py-2 rounded-lg text-sm font-bold transition-colors ${
-                      pickerYear === year && i === month 
-                        ? 'bg-yuri-900 text-white' 
-                        : pickerYear === today.getFullYear() && i === today.getMonth()
-                          ? 'bg-accent/10 text-accent hover:bg-accent/20'
-                          : 'hover:bg-yuri-100 text-yuri-700'
-                    }`}
-                  >
-                    {mName}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-
-
-          <div className="flex-1" />
-
-          {/* Fixed Expense Button */}
-          <div className="p-6 border-t border-yuri-100 bg-white shrink-0">
-            <button 
-              onClick={() => setShowFeModal(true)}
-              className="w-full py-2 bg-yuri-100 hover:bg-yuri-200 text-yuri-700 font-bold text-sm rounded-lg transition-colors border border-yuri-200"
-            >
-              고정지출 관리 ({fixedExpenses.length})
-            </button>
-          </div>
         </div>
-      </aside>
+
+        {showPicker && (
+          <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 w-[320px] bg-white border border-yuri-200 shadow-xl p-4 rounded-xl z-50 animate-fade-in">
+            <div className="flex justify-between items-center mb-4 px-2">
+              <button onClick={() => setPickerYear(y => y - 1)} className="text-yuri-400 hover:text-yuri-800 font-bold p-1">←</button>
+              <span className="font-bold text-yuri-900">{pickerYear}년</span>
+              <button onClick={() => setPickerYear(y => y + 1)} className="text-yuri-400 hover:text-yuri-800 font-bold p-1">→</button>
+            </div>
+            <div className="grid grid-cols-4 gap-2">
+              {MONTH_KO.map((mName, i) => (
+                <button
+                  key={i}
+                  onClick={() => handleMonthSelect(i)}
+                  className={`py-2 rounded-lg text-sm font-bold transition-colors ${
+                    pickerYear === year && i === month 
+                      ? 'bg-yuri-900 text-white' 
+                      : pickerYear === today.getFullYear() && i === today.getMonth()
+                        ? 'bg-accent/10 text-accent hover:bg-accent/20'
+                        : 'hover:bg-yuri-100 text-yuri-700'
+                  }`}
+                >
+                  {mName}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </header>
 
       {/* ── Main Content Area ─────────────────────────────────────────────── */}
       {activeTab === 'cash' ? (
@@ -295,15 +282,15 @@ const LedgerPage: React.FC = () => {
       {/* ── Fixed Expense Modal ────────────────────────────────────────────── */}
       {showFeModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white rounded-2xl shadow-xl w-[400px] overflow-hidden flex flex-col animate-slide-up">
-            <header className="px-6 py-4 border-b border-yuri-100 flex justify-between items-center bg-yuri-50">
+          <div className="bg-white rounded-2xl shadow-xl w-[400px] max-h-[85vh] flex flex-col animate-slide-up relative">
+            <header className="px-6 py-4 border-b border-yuri-100 flex justify-between items-center bg-yuri-50 rounded-t-2xl shrink-0 z-20">
               <h3 className="font-bold text-yuri-900">{editingFeId ? '고정지출 수정' : '고정지출 등록'}</h3>
               <button onClick={() => { setShowFeModal(false); setEditingFeId(null); }} className="text-yuri-400 hover:text-yuri-900 transition-colors">
                 <X size={20} />
               </button>
             </header>
             
-            <div className="p-4 border-b border-yuri-100 bg-yuri-50/20 shrink-0">
+            <div className="p-4 border-b border-yuri-100 bg-yuri-50/20 shrink-0 z-10">
               <form onSubmit={handleSaveFe} className="bg-white p-4 rounded-xl border border-yuri-200 flex flex-col gap-3 shadow-sm">
                 <h3 className="text-xs font-bold text-accent">{editingFeId ? '고정지출 수정' : '새 고정지출 추가'}</h3>
                 <input
@@ -353,7 +340,7 @@ const LedgerPage: React.FC = () => {
               </form>
             </div>
 
-            <div className="p-4 overflow-y-auto flex-1 bg-yuri-50/20">
+            <div className="p-4 overflow-y-auto flex-1 bg-yuri-50/20 rounded-b-2xl">
               <div className="flex flex-col gap-2">
                 <h3 className="text-xs font-bold text-yuri-500 mb-1 ml-1">등록된 고정지출 목록</h3>
                 {fixedExpenses.map(fe => (
