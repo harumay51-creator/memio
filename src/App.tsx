@@ -33,6 +33,7 @@ const AppInner: React.FC = () => {
   }, [navigate])
 
   const handleLogout = () => {
+    sessionStorage.removeItem('yuri-private-unlocked')
     auth.signOut()
   }
 
@@ -124,6 +125,7 @@ export default function App() {
         if (remaining <= 0) {
           signOut(auth);
           sessionStorage.removeItem('yuri-login-time');
+          sessionStorage.removeItem('yuri-private-unlocked');
           setUser(null);
           setIsAuthLoading(false);
         } else {
@@ -134,6 +136,7 @@ export default function App() {
           timerId = setTimeout(() => {
             signOut(auth);
             sessionStorage.removeItem('yuri-login-time');
+            sessionStorage.removeItem('yuri-private-unlocked');
           }, remaining);
         }
       } else {
@@ -141,6 +144,7 @@ export default function App() {
         setUser(null);
         setIsAuthLoading(false);
         sessionStorage.removeItem('yuri-login-time');
+        sessionStorage.removeItem('yuri-private-unlocked');
       }
     })
     return () => {
