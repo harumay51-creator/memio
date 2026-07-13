@@ -87,6 +87,9 @@ export default function CashTab({ year, month, onOpenFixedExpense }: { year: num
   // 3. Generate Simulated Fixed Expenses
   const simulatedFixedExpenses = useMemo(() => {
     return fixedExpenses.map(fe => {
+      // 0. Only show cash/transfer fixed expenses in CashTab
+      if (fe.paymentMethod === '카드') return null
+
       // 1. Use the exact selected calendar month for fixed expenses
       const feYear = year
       const feMonth = month
