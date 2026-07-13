@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import React, { useMemo, useState, useRef } from 'react'
 import { useAppStore } from '../../store/AppStore'
 import { calculatePaydayCycle } from '../../utils/ledgerCycle'
 import type { LedgerEntry } from '../../types'
@@ -10,9 +10,27 @@ const NewRow = ({ cycle, onAdd }: { cycle: any, onAdd: (d: string, l: string, a:
   const [label, setLabel] = useState('')
   const [amount, setAmount] = useState('')
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    console.log('[NewRow] handleKeyDown:', e.key, 'label:', label, 'amount:', amount)
+  const dateRef = useRef<HTMLInputElement>(null)
+  const labelRef = useRef<HTMLInputElement>(null)
+  const amountRef = useRef<HTMLInputElement>(null)
+
+  const handleDateKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
+      e.preventDefault()
+      labelRef.current?.focus()
+    }
+  }
+
+  const handleLabelKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      amountRef.current?.focus()
+    }
+  }
+
+  const handleAmountKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault()
       if (!label.trim() || !amount) {
         console.log('[NewRow] validation failed: empty label or amount')
         return
@@ -20,7 +38,6 @@ const NewRow = ({ cycle, onAdd }: { cycle: any, onAdd: (d: string, l: string, a:
       const val = parseInt(amount.replace(/,/g, ''), 10)
       if (isNaN(val)) return
 
-      // Parse date (e.g. "8/14" or "14")
       let y = cycle.cardBillingStart.getFullYear()
       let m = cycle.cardBillingStart.getMonth()
       let d = cycle.cardBillingStart.getDate()
@@ -42,32 +59,39 @@ const NewRow = ({ cycle, onAdd }: { cycle: any, onAdd: (d: string, l: string, a:
       setDate('')
       setLabel('')
       setAmount('')
+      
+      // return focus to date for continuous entry
+      dateRef.current?.focus()
     }
   }
 
   return (
     <div className="flex justify-between items-center px-2 py-1.5 mt-1 border border-transparent focus-within:border-gray-200 focus-within:bg-white rounded-lg transition-colors group">
-      <div className="flex items-center gap-2 overflow-hidden flex-1">
+      <div className="flex items-center gap-2 flex-1">
         <input 
-          className="text-[11px] font-semibold text-gray-500 w-8 shrink-0 bg-transparent outline-none placeholder-gray-300"
+          ref={dateRef}
+          className="w-10 text-[11px] font-bold text-gray-400 bg-transparent outline-none placeholder-gray-300" 
           placeholder="M/D"
-          value={date} onChange={e => setDate(e.target.value)} onKeyDown={handleKeyDown}
+          value={date} onChange={e => setDate(e.target.value)} onKeyDown={handleDateKeyDown}
         />
         <input
-          className="text-[13px] font-medium text-gray-700 flex-1 bg-transparent outline-none placeholder-gray-300"
+          ref={labelRef}
+          className="flex-1 text-[13px] font-semibold text-gray-900 bg-transparent outline-none placeholder-gray-300 min-w-0"
           placeholder="내역 입력 후 Enter..."
-          value={label} onChange={e => setLabel(e.target.value)} onKeyDown={handleKeyDown}
+          value={label} onChange={e => setLabel(e.target.value)} onKeyDown={handleLabelKeyDown}
         />
       </div>
-      <div className="flex items-center">
+      <div className="flex items-center gap-2">
         <input
-          className="text-[13px] font-bold text-gray-900 w-16 text-right bg-transparent outline-none placeholder-gray-300"
+          ref={amountRef}
+          className="w-20 text-right text-[13px] font-bold text-gray-900 bg-transparent outline-none placeholder-gray-300"
           placeholder="0"
           value={amount} onChange={e => {
             const raw = e.target.value.replace(/[^0-9]/g, '')
             setAmount(raw ? parseInt(raw, 10).toLocaleString('ko-KR') : '')
-          }} onKeyDown={handleKeyDown}
+          }} onKeyDown={handleAmountKeyDown}
         />
+        <span className="text-[13px] font-bold text-gray-400">원</span>
       </div>
     </div>
   )

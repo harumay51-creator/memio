@@ -243,12 +243,14 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
         console.log('[AppStore] fetchedCardBills raw:', fetchedCardBills)
         ;(fetchedCardBills as any[]).forEach((b: any) => {
           if (b.id) {
-            if (typeof b.actualAmount === 'number') {
-              billsMap[b.id] = { amount: b.actualAmount }
-            } else if (typeof b.amount === 'number') {
-              billsMap[b.id] = { amount: b.amount, memo: b.memo }
-            } else {
-              console.log('[AppStore] b.amount is not number:', b)
+            let amt = 0
+            if (b.amount !== undefined) amt = Number(b.amount)
+            else if (b.actualAmount !== undefined) amt = Number(b.actualAmount)
+            
+            if (!isNaN(amt)) {
+              billsMap[b.id] = { amount: amt, memo: b.memo || '' }
+            } else if (b.memo) {
+              billsMap[b.id] = { amount: 0, memo: b.memo }
             }
           }
         })
