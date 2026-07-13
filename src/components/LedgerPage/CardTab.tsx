@@ -38,12 +38,24 @@ const EditRow = ({ item, expenseCategories, onUpdate, onDelete, onCancel }: { it
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') handleSave()
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      handleSave()
+    }
     if (e.key === 'Escape') onCancel()
   }
 
+  const handleBlur = (e: React.FocusEvent) => {
+    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+      handleSave()
+    }
+  }
+
   return (
-    <div className="flex flex-col gap-2 p-3 bg-white rounded-lg shadow-[0_2px_10px_rgba(0,0,0,0.06)] border border-accent/20 z-10 my-1 animate-fade-in">
+    <div 
+      className="flex flex-col gap-2 p-3 bg-white rounded-lg shadow-[0_2px_10px_rgba(0,0,0,0.06)] border border-accent/20 z-10 my-1 animate-fade-in"
+      onBlur={handleBlur}
+    >
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-2 overflow-hidden flex-1">
           <input 
@@ -70,6 +82,7 @@ const EditRow = ({ item, expenseCategories, onUpdate, onDelete, onCancel }: { it
           className="text-[11px] font-bold text-gray-500 bg-gray-50 border border-gray-200 rounded px-1 py-0.5 outline-none focus:border-accent"
           value={category}
           onChange={e => setCategory(e.target.value)}
+          onKeyDown={handleKeyDown}
         >
           {expenseCategories.map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
           <option value="기타">기타</option>
