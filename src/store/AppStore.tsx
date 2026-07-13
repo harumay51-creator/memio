@@ -360,7 +360,7 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
     if (!uid) return
     const id = genId()
     const scheduledDate = date || new Date().toISOString()
-    const newEntry: LedgerEntry = {
+    const newEntry: any = {
       id,
       type,
       label: text,
@@ -369,16 +369,25 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
       scheduledDate,
       createdAt: new Date().toISOString(),
       isDeleted: false,
-      paymentMethod,
-      memo
     }
-    setLedger(prev => [...prev, newEntry])
+    if (paymentMethod !== undefined) newEntry.paymentMethod = paymentMethod
+    if (memo !== undefined) newEntry.memo = memo
+
+    setLedger(prev => [...prev, newEntry as LedgerEntry])
     setDoc(doc(db, 'users', uid, 'ledger', id), newEntry).catch(console.error)
   }, [uid])
 
   const updateLedgerEntry = useCallback((id: string, updates: Partial<LedgerEntry>) => {
     setLedger(prev => prev.map(l => l.id === id ? { ...l, ...updates } : l))
-    updateDoc(doc(db, 'users', uid, 'ledger', id), updates).catch(console.error)
+    
+    const sanitizedUpdates: any = { ...updates }
+    Object.keys(sanitizedUpdates).forEach(k => {
+      if (sanitizedUpdates[k] === undefined) {
+        delete sanitizedUpdates[k]
+      }
+    })
+    
+    updateDoc(doc(db, 'users', uid, 'ledger', id), sanitizedUpdates).catch(console.error)
   }, [uid])
 
   const deleteLedgerEntry = useCallback((id: string) => {
