@@ -8,6 +8,7 @@ export interface ParseResult {
   amount?:        number   // positive integer in 원; present for expense / income
   category?:      string   // expense/income category label
   scheduledDate?: string   // UTC ISO string (KST-aware); present for schedule (optional for fixed expense)
+  paymentMethod?: '카드' | '계좌이체'
 }
 
 // ── Ledger category classification ───────────────────────────────────────────
@@ -392,10 +393,15 @@ export function parseCapture(raw: string, customExpenseCats: CategoryConfig[] = 
   const text   = raw.trim()
   const amountObj = extractAmount(text)
 
+  let paymentMethod: '카드' | '계좌이체' = '카드'
+  if (/(계좌이체|현금|이체)/.test(text)) {
+    paymentMethod = '계좌이체'
+  }
+
   if (amountObj && amountObj.hasPlusPrefix) {
-    return { type: 'income', text, amount: amountObj.amount, category: classifyLedgerCategory(text, 'income', customExpenseCats), scheduledDate: parseScheduledDate(text) }
+    return { type: 'income', text, amount: amountObj.amount, category: classifyLedgerCategory(text, 'income', customExpenseCats), scheduledDate: parseScheduledDate(text), paymentMethod }
   }
 
   const finalAmount = amountObj ? amountObj.amount : 0
-  return { type: 'expense', text, amount: finalAmount, category: classifyLedgerCategory(text, 'expense', customExpenseCats), scheduledDate: parseScheduledDate(text) }
+  return { type: 'expense', text, amount: finalAmount, category: classifyLedgerCategory(text, 'expense', customExpenseCats), scheduledDate: parseScheduledDate(text), paymentMethod }
 }

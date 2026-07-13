@@ -1,6 +1,146 @@
 import React, { useMemo, useState } from 'react'
 import { useAppStore } from '../../store/AppStore'
 import { calculatePaydayCycle } from '../../utils/ledgerCycle'
+import type { LedgerEntry } from '../../types'
+import { Trash2, MessageSquare } from 'lucide-react'
+
+// ── Sub-components for Inline Editing ───────────────────────────────────────
+const NewRow = ({ cycle, onAdd }: { cycle: any, onAdd: (d: string, l: string, a: number) => void }) => {
+  const [date, setDate] = useState('')
+  const [label, setLabel] = useState('')
+  const [amount, setAmount] = useState('')
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      if (!label.trim() || !amount) return
+      const val = parseInt(amount.replace(/,/g, ''), 10)
+      if (isNaN(val)) return
+
+      // Parse date (e.g. "8/14" or "14")
+      let y = cycle.cardBillingStart.getFullYear()
+      let m = cycle.cardBillingStart.getMonth()
+      let d = cycle.cardBillingStart.getDate()
+      
+      const dMatch = date.match(/^(\d{1,2})\/(\d{1,2})$/)
+      if (dMatch) {
+        m = parseInt(dMatch[1], 10) - 1
+        d = parseInt(dMatch[2], 10)
+      } else if (/^\d{1,2}$/.test(date)) {
+        d = parseInt(date, 10)
+      } else {
+        d = new Date().getDate()
+      }
+
+      const iso = new Date(y, m, d, 9, 0, 0).toISOString()
+      onAdd(iso, label.trim(), val)
+      
+      setDate('')
+      setLabel('')
+      setAmount('')
+    }
+  }
+
+  return (
+    <div className="flex justify-between items-center px-2 py-1.5 mt-1 border border-transparent focus-within:border-gray-200 focus-within:bg-white rounded-lg transition-colors group">
+      <div className="flex items-center gap-2 overflow-hidden flex-1">
+        <input 
+          className="text-[11px] font-semibold text-gray-500 w-8 shrink-0 bg-transparent outline-none placeholder-gray-300"
+          placeholder="M/D"
+          value={date} onChange={e => setDate(e.target.value)} onKeyDown={handleKeyDown}
+        />
+        <input
+          className="text-[13px] font-medium text-gray-700 flex-1 bg-transparent outline-none placeholder-gray-300"
+          placeholder="내역 입력 후 Enter..."
+          value={label} onChange={e => setLabel(e.target.value)} onKeyDown={handleKeyDown}
+        />
+      </div>
+      <div className="flex items-center">
+        <input
+          className="text-[13px] font-bold text-gray-900 w-16 text-right bg-transparent outline-none placeholder-gray-300"
+          placeholder="0"
+          value={amount} onChange={e => {
+            const raw = e.target.value.replace(/[^0-9]/g, '')
+            setAmount(raw ? parseInt(raw, 10).toLocaleString('ko-KR') : '')
+          }} onKeyDown={handleKeyDown}
+        />
+      </div>
+    </div>
+  )
+}
+
+const EditRow = ({ item, onUpdate, onDelete, onCancel }: { item: LedgerEntry, onUpdate: (id: string, updates: Partial<LedgerEntry>) => void, onDelete: (id: string) => void, onCancel: () => void }) => {
+  const d = new Date(item.scheduledDate || item.createdAt)
+  const [date, setDate] = useState(`${d.getMonth() + 1}/${d.getDate()}`)
+  const [label, setLabel] = useState(item.label)
+  const [amount, setAmount] = useState(item.amount.toLocaleString('ko-KR'))
+  const [memo, setMemo] = useState(item.memo || '')
+
+  const handleSave = () => {
+    const val = parseInt(amount.replace(/,/g, ''), 10)
+    let y = d.getFullYear()
+    let m = d.getMonth()
+    let day = d.getDate()
+    const dMatch = date.match(/^(\d{1,2})\/(\d{1,2})$/)
+    if (dMatch) {
+      m = parseInt(dMatch[1], 10) - 1
+      day = parseInt(dMatch[2], 10)
+    } else if (/^\d{1,2}$/.test(date)) {
+      day = parseInt(date, 10)
+    }
+    const iso = new Date(y, m, day, 9, 0, 0).toISOString()
+
+    onUpdate(item.id, { 
+      label: label.trim(), 
+      amount: isNaN(val) ? item.amount : val, 
+      scheduledDate: iso,
+      memo: memo.trim()
+    })
+    onCancel()
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') handleSave()
+    if (e.key === 'Escape') onCancel()
+  }
+
+  return (
+    <div className="flex flex-col gap-2 p-3 bg-white rounded-lg shadow-[0_2px_10px_rgba(0,0,0,0.06)] border border-accent/20 z-10 my-1 animate-fade-in">
+      <div className="flex justify-between items-center">
+        <div className="flex items-center gap-2 overflow-hidden flex-1">
+          <input 
+            className="text-[11px] font-semibold text-accent w-8 shrink-0 bg-transparent outline-none border-b border-accent/30 focus:border-accent"
+            value={date} onChange={e => setDate(e.target.value)} onKeyDown={handleKeyDown} autoFocus
+          />
+          <input
+            className="text-[13px] font-bold text-gray-900 flex-1 bg-transparent outline-none border-b border-gray-300 focus:border-gray-500"
+            value={label} onChange={e => setLabel(e.target.value)} onKeyDown={handleKeyDown}
+          />
+        </div>
+        <div className="flex items-center gap-2 ml-2">
+          <input
+            className="text-[13px] font-bold text-gray-900 w-16 text-right bg-transparent outline-none border-b border-gray-300 focus:border-gray-500"
+            value={amount} onChange={e => {
+              const raw = e.target.value.replace(/[^0-9]/g, '')
+              setAmount(raw ? parseInt(raw, 10).toLocaleString('ko-KR') : '')
+            }} onKeyDown={handleKeyDown}
+          />
+        </div>
+      </div>
+      <div className="flex items-center gap-2 mt-1">
+        <MessageSquare size={12} className="text-gray-400 shrink-0" />
+        <input
+          className="text-[11px] font-medium text-gray-600 flex-1 bg-transparent outline-none border-b border-gray-200 focus:border-gray-400 placeholder-gray-300"
+          placeholder="메모를 입력하세요..."
+          value={memo} onChange={e => setMemo(e.target.value)} onKeyDown={handleKeyDown}
+        />
+        <button onClick={() => onDelete(item.id)} className="p-1 text-gray-300 hover:text-red-500 transition-colors ml-1" aria-label="삭제">
+          <Trash2 size={12} />
+        </button>
+      </div>
+    </div>
+  )
+}
+
 
 export default function CardTab({ year, month }: { year: number, month: number }) {
   const { 
@@ -12,7 +152,11 @@ export default function CardTab({ year, month }: { year: number, month: number }
     cardPaymentDay,
     cardBillingStartDay,
     cardBillingEndDay,
-    addLedgerEntry
+    addLedgerEntry,
+    updateLedgerEntry,
+    deleteLedgerEntry,
+    cardBills,
+    updateCardBill
   } = useAppStore()
 
   // Calculate the cycle dates based on the currently viewed year and month
@@ -127,28 +271,106 @@ export default function CardTab({ year, month }: { year: number, month: number }
     })
   }
 
+  // ── Estimated vs Actual Bill ──
+  const expectedBill = useMemo(() => cardEntries.reduce((s, e) => s + e.amount, 0), [cardEntries])
+  
+  const monthKey = `${cycle.targetCardPaymentDate.getFullYear()}-${String(cycle.targetCardPaymentDate.getMonth() + 1).padStart(2, '0')}`
+  const actualCardBill = cardBills[monthKey]
+  const hasActualBill = typeof actualCardBill?.amount === 'number'
+
+  const [actualBillInput, setActualBillInput] = useState<string>('')
+  const [memoInput, setMemoInput] = useState<string>('')
+
+  React.useEffect(() => {
+    setActualBillInput(hasActualBill ? actualCardBill.amount.toLocaleString('ko-KR') : '')
+    setMemoInput(actualCardBill?.memo || '')
+  }, [monthKey, hasActualBill, actualCardBill])
+
+  const handleActualBillChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value.replace(/,/g, '')
+    if (!/^\d*$/.test(raw)) return
+    if (raw === '') {
+      setActualBillInput('')
+      return
+    }
+    setActualBillInput(parseInt(raw, 10).toLocaleString('ko-KR'))
+  }
+
+  const handleActualBillBlur = () => {
+    const val = parseInt(actualBillInput.replace(/,/g, ''), 10)
+    if (!isNaN(val)) {
+      updateCardBill(monthKey, { amount: val, memo: memoInput })
+      setActualBillInput(val.toLocaleString('ko-KR'))
+    } else if (actualBillInput.trim() === '') {
+      // Clear it? The appStore doesn't natively support deleting, but we can set amount to NaN or just keep it 0.
+      // For now, if empty, we do nothing.
+    }
+  }
+
+  const handleMemoBlur = () => {
+    if (hasActualBill) {
+      updateCardBill(monthKey, { memo: memoInput })
+    }
+  }
+
+  // ── Inline Edit State ──
+  const [editingRowId, setEditingRowId] = useState<string | null>(null)
+
   return (
     <div className="flex-1 p-8 overflow-y-auto bg-gray-50/50">
       <div className="max-w-[1200px] mx-auto">
         
         {/* Header section */}
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h2 className="text-xl font-bold text-gray-900 tracking-tight">카드 지출</h2>
-            <p className="text-sm text-gray-500 mt-1">
-              {cycle.cardBillingStart.getMonth() + 1}월 {cycle.cardBillingStart.getDate()}일 ~ {cycle.cardBillingEnd.getMonth() + 1}월 {cycle.cardBillingEnd.getDate()}일 사용분
-              <span className="ml-2 px-2 py-0.5 bg-gray-100 text-gray-600 rounded-md text-xs font-semibold">
-                결제일: {cycle.targetCardPaymentDate.getMonth() + 1}월 {cycle.targetCardPaymentDate.getDate()}일
-              </span>
-            </p>
+        <div className="flex flex-col gap-4 mb-8">
+          <div className="flex justify-between items-start">
+            <div>
+              <h2 className="text-xl font-bold text-gray-900 tracking-tight">카드 지출</h2>
+              <p className="text-sm text-gray-500 mt-1">
+                {cycle.cardBillingStart.getMonth() + 1}월 {cycle.cardBillingStart.getDate()}일 ~ {cycle.cardBillingEnd.getMonth() + 1}월 {cycle.cardBillingEnd.getDate()}일 사용분
+                <span className="ml-2 px-2 py-0.5 bg-gray-100 text-gray-600 rounded-md text-xs font-semibold">
+                  결제일: {cycle.targetCardPaymentDate.getMonth() + 1}월 {cycle.targetCardPaymentDate.getDate()}일
+                </span>
+              </p>
+            </div>
+            <button 
+              onClick={generateDummyData}
+              className="px-4 py-2 bg-white border border-gray-200 text-gray-600 text-sm font-bold rounded-lg shadow-sm hover:bg-gray-50 transition-colors"
+            >
+              테스트 데이터 생성
+            </button>
           </div>
-          
-          <button 
-            onClick={generateDummyData}
-            className="px-4 py-2 bg-white border border-gray-200 text-gray-600 text-sm font-bold rounded-lg shadow-sm hover:bg-gray-50 transition-colors"
-          >
-            테스트 데이터 생성
-          </button>
+
+          <div className="flex flex-col gap-2 p-4 bg-white rounded-xl border border-gray-200 shadow-sm max-w-lg">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-bold text-gray-700">예상 결제액</span>
+              <span className="text-base font-bold text-gray-500 line-through decoration-1">{expectedBill.toLocaleString('ko-KR')}원</span>
+            </div>
+            <div className="flex items-center justify-between gap-4">
+              <span className="text-sm font-bold text-gray-900 whitespace-nowrap">실제 확정액</span>
+              <div className="flex items-center gap-2 flex-1 max-w-[200px]">
+                <input
+                  type="text"
+                  value={actualBillInput}
+                  onChange={handleActualBillChange}
+                  onBlur={handleActualBillBlur}
+                  placeholder={expectedBill.toLocaleString('ko-KR')}
+                  className="w-full px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-sm font-bold outline-none focus:border-accent text-right transition-colors"
+                />
+                <span className="text-sm font-bold text-gray-700">원</span>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 mt-1">
+              <span className="text-[11px] font-bold text-gray-500 whitespace-nowrap">메모</span>
+              <input
+                type="text"
+                value={memoInput}
+                onChange={e => setMemoInput(e.target.value)}
+                onBlur={handleMemoBlur}
+                placeholder="결제 관련 메모 (예: 카드사 5천원 할인 적용)"
+                className="flex-1 px-3 py-1.5 bg-transparent border-b border-gray-200 text-[11px] outline-none focus:border-accent transition-colors"
+              />
+            </div>
+          </div>
         </div>
 
         {/* Masonry Grid */}
@@ -177,15 +399,24 @@ export default function CardTab({ year, month }: { year: number, month: number }
 
                 {/* Card Body (Scrollable if too tall) */}
                 <div className="p-2 max-h-[400px] overflow-y-auto custom-scrollbar">
-                  <div className="flex flex-col gap-1">
+                  <div className="flex flex-col">
                     {items.map(item => {
+                      if (editingRowId === item.id) {
+                        return <EditRow key={item.id} item={item} onUpdate={updateLedgerEntry} onDelete={deleteLedgerEntry} onCancel={() => setEditingRowId(null)} />
+                      }
+
                       const d = new Date(item.scheduledDate || item.createdAt)
                       const dStr = `${d.getMonth() + 1}/${d.getDate()}`
                       return (
-                        <div key={item.id} className="flex justify-between items-center px-3 py-2.5 hover:bg-gray-50 rounded-lg transition-colors group">
-                          <div className="flex items-center gap-3 overflow-hidden">
+                        <div 
+                          key={item.id} 
+                          onClick={() => setEditingRowId(item.id)}
+                          className="flex justify-between items-center px-3 py-2.5 hover:bg-gray-50 rounded-lg transition-colors group cursor-pointer"
+                        >
+                          <div className="flex items-center gap-2 overflow-hidden">
                             <span className="text-[11px] font-semibold text-gray-400 w-8 shrink-0">{dStr}</span>
                             <span className="text-[13px] font-medium text-gray-700 truncate">{item.label}</span>
+                            {item.memo && <MessageSquare size={10} className="text-gray-400 shrink-0" />}
                           </div>
                           <span className="text-[13px] font-bold text-gray-900 shrink-0 ml-4 group-hover:text-black transition-colors">
                             {item.amount.toLocaleString()}원
@@ -193,6 +424,11 @@ export default function CardTab({ year, month }: { year: number, month: number }
                         </div>
                       )
                     })}
+                    
+                    <NewRow 
+                      cycle={cycle} 
+                      onAdd={(d, l, a) => addLedgerEntry(l, a, 'expense', cat, d, '카드')}
+                    />
                   </div>
                 </div>
 

@@ -43,7 +43,7 @@ interface StoreValue {
   updateTaskText: (id: string, text: string) => void
   updateTaskNote: (id: string, note: string) => void
   deleteTask:     (id: string)  => void
-  addLedgerEntry: (text: string, amount: number, type: 'income' | 'expense', category: string, date?: string) => void
+  addLedgerEntry: (text: string, amount: number, type: 'income' | 'expense', category: string, date?: string, paymentMethod?: '카드' | '계좌이체', memo?: string) => void
   updateLedgerEntry: (id: string, updates: Partial<LedgerEntry>) => void
   deleteLedgerEntry: (id: string) => void
   addEvent:       (text: string, scheduledDate?: string) => void
@@ -80,8 +80,8 @@ interface StoreValue {
   payday: number
   setPayday: (day: number) => void
   resetLedgerData: () => Promise<void>
-  cardBills: Record<string, number>
-  updateCardBill: (monthKey: string, amount: number) => void
+  cardBills: Record<string, { amount: number, memo?: string }>
+  updateCardBill: (monthKey: string, updates: { amount?: number, memo?: string }) => void
   
   hasPin: boolean
   isPrivateUnlocked: boolean
@@ -112,7 +112,7 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
   const [cardBillingStartDay, setCardBillingStartDay] = useState<number>(28)
   const [cardBillingEndDay, setCardBillingEndDay] = useState<number>(27)
   const [payday, setPaydayState] = useState<number>(25)
-  const [cardBills, setCardBills] = useState<Record<string, number>>({})
+  const [cardBills, setCardBills] = useState<Record<string, { amount: number, memo?: string }>>({})
   const [categoryOrder, setCategoryOrderState] = useState<string[]>([])
   
   const [isPrivateUnlocked, setIsPrivateUnlocked] = useState(() => {
@@ -236,10 +236,15 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
         setAnniversaries(fetchedAnnivs as Anniversary[])
         setMonthlyEvents(fetchedMonthly as MonthlyEvent[])
         
-        const billsMap: Record<string, number> = {}
+        const billsMap: Record<string, { amount: number, memo?: string }> = {}
         ;(fetchedCardBills as any[]).forEach((b: any) => {
-          if (b.id && typeof b.actualAmount === 'number') {
-            billsMap[b.id] = b.actualAmount
+          if (b.id) {
+            if (typeof b.actualAmount === 'number') {
+              // Migrate old structure
+              billsMap[b.id] = { amount: b.actualAmount }
+            } else if (typeof b.amount === 'number') {
+              billsMap[b.id] = { amount: b.amount, memo: b.memo }
+            }
           }
         })
         setCardBills(billsMap)
@@ -348,10 +353,24 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
     updateDoc(doc(db, 'users', uid, 'tasks', id), { isDeleted: true, deletedAt: Date.now() }).catch(console.error)
   }, [uid])
 
-  const addLedgerEntry = useCallback((text: string, amount: number, type: 'income' | 'expense', category: string, date?: string) => {
-    const newItem: LedgerEntry = { id: genId(), type, amount, category, label: text, scheduledDate: date, paymentMethod: '카드', createdAt: new Date().toISOString() }
-    setLedger(prev => [newItem, ...prev])
-    setDoc(doc(db, 'users', uid, 'ledger', newItem.id), newItem).catch(console.error)
+  const addLedgerEntry = useCallback((text: string, amount: number, type: 'income' | 'expense', category: string, date?: string, paymentMethod?: '카드' | '계좌이체', memo?: string) => {
+    if (!uid) return
+    const id = genId()
+    const scheduledDate = date || new Date().toISOString()
+    const newEntry: LedgerEntry = {
+      id,
+      type,
+      label: text,
+      amount,
+      category,
+      scheduledDate,
+      createdAt: new Date().toISOString(),
+      isDeleted: false,
+      paymentMethod,
+      memo
+    }
+    setLedger(prev => [...prev, newEntry])
+    setDoc(doc(db, 'users', uid, 'ledger', id), newEntry).catch(console.error)
   }, [uid])
 
   const updateLedgerEntry = useCallback((id: string, updates: Partial<LedgerEntry>) => {
@@ -377,9 +396,13 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
     setDoc(doc(db, `users/${uid}/settings/config`), { cardPaymentDay: day }, { merge: true }).catch(console.error)
   }, [uid])
 
-  const updateCardBill = useCallback((monthKey: string, amount: number) => {
-    setCardBills(prev => ({ ...prev, [monthKey]: amount }))
-    setDoc(doc(db, 'users', uid, 'cardBills', monthKey), { id: monthKey, actualAmount: amount }, { merge: true }).catch(console.error)
+  const updateCardBill = useCallback((monthKey: string, updates: { amount?: number, memo?: string }) => {
+    setCardBills(prev => {
+      const existing = prev[monthKey] || { amount: 0 }
+      const newBill = { ...existing, ...updates }
+      setDoc(doc(db, `users/${uid}/cardBills/${monthKey}`), newBill, { merge: true }).catch(console.error)
+      return { ...prev, [monthKey]: newBill }
+    })
   }, [uid])
 
   const addEvent = useCallback((text: string, scheduledDate?: string) => {

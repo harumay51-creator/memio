@@ -190,13 +190,13 @@ const LedgerPage: React.FC = () => {
   
   const monthKey = `${year}-${String(month + 1).padStart(2, '0')}`;
   const actualCardBill = cardBills[monthKey];
-  const hasActualBill = typeof actualCardBill === 'number';
+  const hasActualBill = typeof actualCardBill?.amount === 'number';
   const [showBillDetails, setShowBillDetails] = useState(false);
 
   const [actualBillInput, setActualBillInput] = useState<string>('');
 
   useEffect(() => {
-    setActualBillInput(hasActualBill ? actualCardBill.toLocaleString('ko-KR') : '');
+    setActualBillInput(hasActualBill ? actualCardBill.amount.toLocaleString('ko-KR') : '');
     setShowBillDetails(false);
   }, [monthKey, hasActualBill, actualCardBill]);
 
@@ -216,7 +216,7 @@ const LedgerPage: React.FC = () => {
     }
     const val = parseInt(actualBillInput.replace(/,/g, ''), 10);
     if (!isNaN(val)) {
-      updateCardBill(monthKey, val);
+      updateCardBill(monthKey, { amount: val });
       setActualBillInput(val.toLocaleString('ko-KR'));
     }
   };
@@ -226,7 +226,7 @@ const LedgerPage: React.FC = () => {
   const totalExpense = monthEntries.filter(e => e.type === 'expense').reduce((s, e) => s + e.amount, 0)
   const transferExpense = monthEntries.filter(e => e.type === 'expense' && e.paymentMethod === '계좌이체').reduce((s, e) => s + e.amount, 0)
   
-  const net = totalIncome - transferExpense - (hasActualBill ? (actualCardBill as number) : expectedCardBill)
+  const net = totalIncome - transferExpense - (hasActualBill ? actualCardBill.amount : expectedCardBill)
 
   // ── Filtered & Sorted Entries ───────────────────────────────────────────────
   const displayEntries = useMemo(() => {
@@ -502,7 +502,7 @@ const LedgerPage: React.FC = () => {
                 </div>
                 {hasActualBill && (
                   <span className="text-[10px] text-accent mt-0.5 text-right font-bold">
-                    예정 {fmtAmt(expectedCardBill)} / 실제 {fmtAmt(actualCardBill)}
+                    예정 {fmtAmt(expectedCardBill)} / 실제 {fmtAmt(actualCardBill.amount)}
                   </span>
                 )}
               </div>
