@@ -82,8 +82,8 @@ interface StoreValue {
   setCardBillingDays: (start: number, end: number) => void
   payday: number
   setPayday: (day: number) => void
-  monthlySalary: number
-  setMonthlySalary: (amount: number) => void
+  salaryRecords: Record<string, { amount: number }>
+  updateSalaryRecord: (monthKey: string, amount: number) => void
   resetLedgerData: () => Promise<void>
   cardBills: Record<string, { amount: number, memo?: string }>
   updateCardBill: (monthKey: string, updates: { amount?: number, memo?: string }) => void
@@ -117,7 +117,7 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
   const [cardBillingStartDay, setCardBillingStartDay] = useState<number>(28)
   const [cardBillingEndDay, setCardBillingEndDay] = useState<number>(27)
   const [payday, setPaydayState] = useState<number>(25)
-  const [monthlySalary, setMonthlySalaryState] = useState<number>(3000000)
+  const [salaryRecords, setSalaryRecords] = useState<Record<string, { amount: number }>>({})
   const [cardBills, setCardBills] = useState<Record<string, { amount: number, memo?: string }>>({})
   const [categoryOrder, setCategoryOrderState] = useState<string[]>([])
   
@@ -155,7 +155,7 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
           setCardBillingStartDay(data.cardBillingStartDay || 28)
           setCardBillingEndDay(data.cardBillingEndDay || 27)
           setPaydayState(data.payday || 25)
-          setMonthlySalaryState(data.monthlySalary || 3000000)
+
           setCategoryOrderState(data.categoryOrder || [])
         }
         
@@ -169,7 +169,8 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
           fetchedAgendas,
           fetchedAnnivs,
           fetchedMonthly,
-          fetchedCardBills
+          fetchedCardBills,
+          fetchedSalaryRecords
         ] = await Promise.all([
           fetchCol('tasks'),
           fetchCol('ledger'),
@@ -180,7 +181,8 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
           fetchCol('agendas'),
           fetchCol('anniversaries'),
           fetchCol('monthlyEvents'),
-          fetchCol('cardBills')
+          fetchCol('cardBills'),
+          fetchCol('salaryRecords')
         ])
 
         const mergedCats = DEFAULT_EXPENSE_CATS.map(defCat => {
@@ -260,6 +262,14 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
         })
         console.log('[AppStore] resulting billsMap:', billsMap)
         setCardBills(billsMap)
+
+        const salaryMap: Record<string, { amount: number }> = {}
+        ;(fetchedSalaryRecords as any[]).forEach((s: any) => {
+          if (s.id && s.amount !== undefined) {
+            salaryMap[s.id] = { amount: Number(s.amount) }
+          }
+        })
+        setSalaryRecords(salaryMap)
       } catch (err: any) {
         console.error("Firebase load error:", err)
         setLoadError(err.message || '데이터를 불러오는 중 알 수 없는 오류가 발생했습니다.')
@@ -688,9 +698,12 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
     setDoc(doc(db, `users/${uid}/settings/config`), { payday: day }, { merge: true }).catch(console.error)
   }, [uid])
 
-  const setMonthlySalary = useCallback((amount: number) => {
-    setMonthlySalaryState(amount)
-    setDoc(doc(db, `users/${uid}/settings/config`), { monthlySalary: amount }, { merge: true }).catch(console.error)
+  const updateSalaryRecord = useCallback((monthKey: string, amount: number) => {
+    setSalaryRecords(prev => {
+      const newRecord = { amount }
+      setDoc(doc(db, `users/${uid}/salaryRecords/${monthKey}`), newRecord, { merge: true }).catch(console.error)
+      return { ...prev, [monthKey]: newRecord }
+    })
   }, [uid])
 
   const setCategoryOrder = useCallback((order: string[]) => {
@@ -754,7 +767,7 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
       cardPaymentDay, setCardPaymentDay,
       cardBillingStartDay, cardBillingEndDay, setCardBillingDays,
       payday, setPayday, 
-      monthlySalary, setMonthlySalary,
+      salaryRecords, updateSalaryRecord,
       resetLedgerData,
       cardBills, updateCardBill,
     }}>

@@ -111,7 +111,7 @@ export const EditRow = ({
           title="클릭하여 결제수단 변경"
         >
           {paymentMethod === '카드' ? <CreditCard size={10} /> : <Banknote size={10} />}
-          {paymentMethod === '카드' ? '카드' : '현금/이체'}
+          {paymentMethod === '카드' ? '카드' : '현금'}
         </button>
 
         <MessageSquare size={12} className="text-gray-400 shrink-0 ml-1" />

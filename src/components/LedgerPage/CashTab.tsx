@@ -46,7 +46,8 @@ export default function CashTab({ year, month, onOpenFixedExpense }: { year: num
     cardPaymentDay,
     cardBillingStartDay,
     cardBillingEndDay,
-    monthlySalary,
+    salaryRecords,
+    updateSalaryRecord,
     cardBills,
     updateLedgerEntry,
     deleteLedgerEntry
@@ -122,10 +123,11 @@ export default function CashTab({ year, month, onOpenFixedExpense }: { year: num
   }, [fixedExpenses, cycle])
 
   // Compute Total Deductions
+  const currentSalary = salaryRecords[monthKey]?.amount || 0
   const totalCashExpense = cashEntries.reduce((s, e) => s + e.amount, 0)
   const totalFixedExpense = simulatedFixedExpenses.reduce((s, e) => s + e.amount, 0)
   const totalDeductions = totalCashExpense + totalFixedExpense + cardBillAmount
-  const salaryBalance = monthlySalary - totalDeductions
+  const salaryBalance = currentSalary - totalDeductions
 
   // Category Sums (Cash + Card in this cycle)
   const categorySums = useMemo(() => {
@@ -178,8 +180,25 @@ export default function CashTab({ year, month, onOpenFixedExpense }: { year: num
       <div className="p-5 md:p-8 bg-yuri-50 shrink-0 border-b border-yuri-100 flex flex-col gap-6">
         <div className="bg-white rounded-2xl shadow-sm border border-yuri-100 p-5 md:p-6 flex flex-col gap-4">
           <div className="flex justify-between items-center">
-            <span className="text-sm font-bold text-yuri-500">월급액</span>
-            <span className="text-lg font-bold text-yuri-900">{fmtAmt(monthlySalary)}</span>
+            <span className="text-sm font-bold text-yuri-500">이번 달 월급</span>
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                placeholder="미입력 (0원)"
+                value={salaryRecords[monthKey]?.amount ? salaryRecords[monthKey].amount.toLocaleString('ko-KR') : ''}
+                onChange={(e) => {
+                  const raw = e.target.value.replace(/[^0-9]/g, '')
+                  const val = parseInt(raw, 10)
+                  if (!isNaN(val)) {
+                    updateSalaryRecord(monthKey, val)
+                  } else if (raw === '') {
+                    updateSalaryRecord(monthKey, 0)
+                  }
+                }}
+                className="w-28 bg-transparent text-right text-lg font-bold text-yuri-900 outline-none border-b border-dashed border-yuri-300 focus:border-yuri-500 transition-colors placeholder:text-yuri-300 placeholder:text-base"
+              />
+              <span className="text-sm font-bold text-yuri-900">원</span>
+            </div>
           </div>
           
           <div className="flex justify-between items-center">
