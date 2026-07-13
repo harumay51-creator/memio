@@ -230,6 +230,32 @@ const LedgerPage: React.FC = () => {
                   <span className="text-[10px] text-yuri-400">{showPicker ? '▲' : '▼'}</span>
                 </button>
                 {!isCurrentMonth && <button onClick={goToday} className="absolute top-full mt-1 text-[10px] text-accent font-semibold hover:underline whitespace-nowrap">이번 달로 이동</button>}
+                {showPicker && (
+                  <div className="absolute top-full right-1/2 translate-x-1/2 md:translate-x-0 md:right-0 mt-2 w-[320px] bg-white border border-yuri-200 shadow-xl p-4 rounded-xl z-50 animate-fade-in">
+                    <div className="flex justify-between items-center mb-4 px-2">
+                      <button onClick={() => setPickerYear(y => y - 1)} className="text-yuri-400 hover:text-yuri-800 font-bold p-1">←</button>
+                      <span className="font-bold text-yuri-900">{pickerYear}년</span>
+                      <button onClick={() => setPickerYear(y => y + 1)} className="text-yuri-400 hover:text-yuri-800 font-bold p-1">→</button>
+                    </div>
+                    <div className="grid grid-cols-4 gap-2">
+                      {MONTH_KO.map((mName, i) => (
+                        <button
+                          key={i}
+                          onClick={() => handleMonthSelect(i)}
+                          className={`py-2 rounded-lg text-sm font-bold transition-colors ${
+                            pickerYear === year && i === month 
+                              ? 'bg-yuri-900 text-white' 
+                              : pickerYear === today.getFullYear() && i === today.getMonth()
+                                ? 'bg-accent/10 text-accent hover:bg-accent/20'
+                                : 'hover:bg-yuri-100 text-yuri-700'
+                          }`}
+                        >
+                          {mName}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
               <button onClick={nextMonth} className="text-yuri-400 hover:text-yuri-800 transition-colors flex items-center justify-center">→</button>
             </div>
@@ -244,32 +270,7 @@ const LedgerPage: React.FC = () => {
           </div>
         </div>
 
-        {showPicker && (
-          <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 w-[320px] bg-white border border-yuri-200 shadow-xl p-4 rounded-xl z-50 animate-fade-in">
-            <div className="flex justify-between items-center mb-4 px-2">
-              <button onClick={() => setPickerYear(y => y - 1)} className="text-yuri-400 hover:text-yuri-800 font-bold p-1">←</button>
-              <span className="font-bold text-yuri-900">{pickerYear}년</span>
-              <button onClick={() => setPickerYear(y => y + 1)} className="text-yuri-400 hover:text-yuri-800 font-bold p-1">→</button>
-            </div>
-            <div className="grid grid-cols-4 gap-2">
-              {MONTH_KO.map((mName, i) => (
-                <button
-                  key={i}
-                  onClick={() => handleMonthSelect(i)}
-                  className={`py-2 rounded-lg text-sm font-bold transition-colors ${
-                    pickerYear === year && i === month 
-                      ? 'bg-yuri-900 text-white' 
-                      : pickerYear === today.getFullYear() && i === today.getMonth()
-                        ? 'bg-accent/10 text-accent hover:bg-accent/20'
-                        : 'hover:bg-yuri-100 text-yuri-700'
-                  }`}
-                >
-                  {mName}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
+
       </header>
 
       {/* ── Main Content Area ─────────────────────────────────────────────── */}
