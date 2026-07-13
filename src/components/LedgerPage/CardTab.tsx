@@ -11,7 +11,6 @@ const NewRow = ({ cycle, onAdd }: { cycle: any, onAdd: (d: string, l: string, a:
   const [amount, setAmount] = useState('')
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.nativeEvent.isComposing) return
     if (e.key === 'Enter') {
       if (!label.trim() || !amount) return
       const val = parseInt(amount.replace(/,/g, ''), 10)
@@ -100,7 +99,6 @@ const EditRow = ({ item, onUpdate, onDelete, onCancel }: { item: LedgerEntry, on
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.nativeEvent.isComposing) return
     if (e.key === 'Enter') handleSave()
     if (e.key === 'Escape') onCancel()
   }
@@ -355,6 +353,7 @@ export default function CardTab({ year, month }: { year: number, month: number }
                   value={actualBillInput}
                   onChange={handleActualBillChange}
                   onBlur={handleActualBillBlur}
+                  onKeyDown={e => { if (e.key === 'Enter') handleActualBillBlur() }}
                   placeholder={expectedBill.toLocaleString('ko-KR')}
                   className="w-full px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-sm font-bold outline-none focus:border-accent text-right transition-colors"
                 />
@@ -368,6 +367,7 @@ export default function CardTab({ year, month }: { year: number, month: number }
                 value={memoInput}
                 onChange={e => setMemoInput(e.target.value)}
                 onBlur={handleMemoBlur}
+                onKeyDown={e => { if (e.key === 'Enter') handleMemoBlur() }}
                 placeholder="결제 관련 메모 (예: 카드사 5천원 할인 적용)"
                 className="flex-1 px-3 py-1.5 bg-transparent border-b border-gray-200 text-[11px] outline-none focus:border-accent transition-colors"
               />
