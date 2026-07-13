@@ -67,6 +67,7 @@ export interface FixedExpense {
   category: string          // auto-classified
   paymentMethod?: '카드' | '계좌이체'
   createdAt: string
+  updatedAt?: string
   isDeleted?: boolean
   deletedAt?: number
 }

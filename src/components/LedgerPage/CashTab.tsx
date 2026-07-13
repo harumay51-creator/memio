@@ -41,7 +41,6 @@ export default function CashTab({ year, month, onOpenFixedExpense }: { year: num
   const { 
     ledger, 
     expenseCategories, 
-    fixedExpenses,
     payday,
     cardPaymentDay,
     cardBillingStartDay,
@@ -84,60 +83,11 @@ export default function CashTab({ year, month, onOpenFixedExpense }: { year: num
     })
   }, [ledger, cycle])
 
-  // 3. Generate Simulated Fixed Expenses
-  const simulatedFixedExpenses = useMemo(() => {
-    return fixedExpenses.map(fe => {
-      // 0. Only show cash/transfer fixed expenses in CashTab
-      if (fe.paymentMethod === '카드') return null
-
-      // 1. Use the exact selected calendar month for fixed expenses
-      const feYear = year
-      const feMonth = month
-      let feDate = fe.day
-      
-      const maxDays = new Date(feYear, feMonth + 1, 0).getDate()
-      if (feDate > maxDays) feDate = maxDays
-
-      const finalDate = new Date(feYear, feMonth, feDate, 9, 0, 0)
-      
-      // 2. Prevent retroactive injection for past months (before creation)
-      const createdDate = new Date(fe.createdAt)
-      if (
-        feYear < createdDate.getFullYear() || 
-        (feYear === createdDate.getFullYear() && feMonth < createdDate.getMonth())
-      ) {
-        return null
-      }
-
-      // 3. Prevent duplicate if AppStore already auto-injected this into the ledger
-      const alreadyInjected = ledger.some(l => {
-        if (l.fixedExpenseId !== fe.id) return false
-        const lDate = new Date(l.scheduledDate || l.createdAt)
-        return lDate.getFullYear() === feYear && lDate.getMonth() === feMonth
-      })
-
-      if (alreadyInjected) return null
-
-      return {
-        id: `fe-${fe.id}`, // pseudo id
-        type: 'expense' as const,
-        label: fe.label,
-        amount: fe.amount,
-        category: fe.category,
-        paymentMethod: fe.paymentMethod || '계좌이체',
-        createdAt: finalDate.toISOString(),
-        scheduledDate: finalDate.toISOString(),
-        isFixed: true,
-        originalFeId: fe.id
-      } as LedgerEntry & { isFixed: true, originalFeId: string }
-    }).filter(e => e !== null) as (LedgerEntry & { isFixed: true, originalFeId: string })[]
-  }, [fixedExpenses, cycle, ledger, year, month])
 
   // Compute Total Deductions
   const currentSalary = salaryRecords[salaryMonthKey]?.amount || 0
   const totalCashExpense = cashEntries.reduce((s, e) => s + e.amount, 0)
-  const totalFixedExpense = simulatedFixedExpenses.reduce((s, e) => s + e.amount, 0)
-  const totalDeductions = totalCashExpense + totalFixedExpense + cardBillAmount
+  const totalDeductions = totalCashExpense + cardBillAmount
   const salaryBalance = currentSalary - totalDeductions
 
   // Category Sums (Cash + Card in this cycle)
@@ -157,18 +107,18 @@ export default function CashTab({ year, month, onOpenFixedExpense }: { year: num
 
     cardEntries.forEach(addSum)
     cashEntries.forEach(addSum)
-    simulatedFixedExpenses.forEach(addSum)
+
 
     // Filter out 0 sums and sort by amount descending
     const result = Object.entries(sums)
       .filter(([_, amt]) => amt > 0)
       .sort((a, b) => b[1] - a[1])
     return result
-  }, [expenseCategories, cardEntries, cashEntries, simulatedFixedExpenses])
+  }, [expenseCategories, cardEntries, cashEntries])
 
   // Combined timeline list
   const displayList = useMemo(() => {
-    const all = [...cashEntries, ...simulatedFixedExpenses]
+    const all = [...cashEntries]
     all.sort((a, b) => {
       const ta = new Date(a.scheduledDate || a.createdAt).getTime()
       const tb = new Date(b.scheduledDate || b.createdAt).getTime()
@@ -183,7 +133,7 @@ export default function CashTab({ year, month, onOpenFixedExpense }: { year: num
       map.get(k)!.entries.push(e)
     }
     return [...map.values()]
-  }, [cashEntries, simulatedFixedExpenses])
+  }, [cashEntries])
 
   return (
     <div className="flex-1 overflow-y-auto flex flex-col">

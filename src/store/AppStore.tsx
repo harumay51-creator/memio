@@ -297,6 +297,15 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
       const targetDay = fe.day === 99 ? lastDayOfMonth : fe.day
 
       if (currentDay >= targetDay) {
+        // Check if this fixed expense was created/updated after the target date of THIS month.
+        const feDateStr = fe.updatedAt || fe.createdAt
+        const feDate = new Date(feDateStr)
+        const targetDateForThisMonth = new Date(currentYear, currentMonth - 1, targetDay, 23, 59, 59)
+
+        if (feDate.getTime() > targetDateForThisMonth.getTime()) {
+          return // Skip injection if it was registered/updated AFTER this month's target date
+        }
+
         const hasInjectedThisMonth = ledger.some(l => {
           if (l.fixedExpenseId !== fe.id) return false
           const lDate = new Date(l.scheduledDate || l.createdAt)
@@ -492,8 +501,9 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
   }, [uid])
 
   const updateFixedExpense = useCallback((id: string, updates: Partial<FixedExpense>) => {
-    setFixedExpenses(prev => prev.map(f => f.id === id ? { ...f, ...updates } : f))
-    updateDoc(doc(db, 'users', uid, 'fixedExpenses', id), updates).catch(console.error)
+    const finalUpdates = { ...updates, updatedAt: new Date().toISOString() }
+    setFixedExpenses(prev => prev.map(f => f.id === id ? { ...f, ...finalUpdates } : f))
+    updateDoc(doc(db, 'users', uid, 'fixedExpenses', id), finalUpdates).catch(console.error)
   }, [uid])
 
   const deleteFixedExpense = useCallback((id: string) => {
