@@ -11,6 +11,7 @@ const NewRow = ({ cycle, onAdd }: { cycle: any, onAdd: (d: string, l: string, a:
   const [amount, setAmount] = useState('')
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.nativeEvent.isComposing) return
     if (e.key === 'Enter') {
       if (!label.trim() || !amount) return
       const val = parseInt(amount.replace(/,/g, ''), 10)
@@ -99,6 +100,7 @@ const EditRow = ({ item, onUpdate, onDelete, onCancel }: { item: LedgerEntry, on
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.nativeEvent.isComposing) return
     if (e.key === 'Enter') handleSave()
     if (e.key === 'Escape') onCancel()
   }
