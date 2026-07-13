@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect, useRef } from 'react'
 import type { LedgerEntry, FixedExpense } from '../../types'
 import { useAppStore } from '../../store/AppStore'
 import { parseCapture, classifyLedgerCategory } from '../../utils/parser'
+import { calculatePaydayCycle } from '../../utils/ledgerCycle'
 import PinScreen from '../JournalPage/PinScreen'
 import { Lock, X } from 'lucide-react'
 import CardTab from './CardTab'
@@ -133,7 +134,8 @@ const LedgerPage: React.FC = () => {
     fixedExpenses, addFixedExpense, updateFixedExpense, deleteFixedExpense,
     expenseCategories, isPrivateUnlocked, lockPrivate,
     cardBills,
-    cardBillingStartDay, cardBillingEndDay
+    cardBillingStartDay, cardBillingEndDay,
+    payday, cardPaymentDay
   } = useAppStore()
 
   const today = useMemo(() => new Date(), [])
@@ -175,8 +177,12 @@ const LedgerPage: React.FC = () => {
   }, [ledger, year, month])
 
   // ── Card Billing Logic ──────────────────────────────────────────────────────
-  const billingEnd = useMemo(() => new Date(year, month - 1, cardBillingEndDay, 23, 59, 59), [year, month, cardBillingEndDay]);
-  const billingStart = useMemo(() => new Date(year, month - 2, cardBillingStartDay, 0, 0, 0), [year, month, cardBillingStartDay]);
+  const cycle = useMemo(() => {
+    return calculatePaydayCycle(year, month + 1, payday, cardPaymentDay, cardBillingStartDay, cardBillingEndDay)
+  }, [year, month, payday, cardPaymentDay, cardBillingStartDay, cardBillingEndDay]);
+
+  const billingStart = cycle.cardBillingStart;
+  const billingEnd = cycle.cardBillingEnd;
   
   const cardBillEntries = useMemo(() => {
     return ledger.filter(e => {
@@ -191,11 +197,6 @@ const LedgerPage: React.FC = () => {
   const monthKey = `${year}-${String(month + 1).padStart(2, '0')}`;
   const actualCardBill = cardBills[monthKey];
   const hasActualBill = typeof actualCardBill?.amount === 'number';
-  const [showBillDetails, setShowBillDetails] = useState(false);
-
-  useEffect(() => {
-    setShowBillDetails(false);
-  }, [monthKey, hasActualBill, actualCardBill]);
 
   // ── Computed Totals ─────────────────────────────────────────────────────────
   const totalIncome  = monthEntries.filter(e => e.type === 'income' ).reduce((s, e) => s + e.amount, 0)
@@ -431,39 +432,6 @@ const LedgerPage: React.FC = () => {
               <span className="text-sm font-bold text-rose-400">{totalExpense > 0 ? `-${fmtAmt(totalExpense)}` : '0원'}</span>
             </div>
             
-            <div className="bg-yuri-50 rounded-xl p-4 flex flex-col gap-3 mt-2 border border-yuri-100">
-              <div 
-                className="flex flex-col cursor-pointer group"
-                onClick={() => setShowBillDetails(!showBillDetails)}
-              >
-                <div className="flex justify-between items-center mb-1">
-                  <span className="text-xs font-bold text-yuri-600 flex items-center gap-1">
-                    카드값 청구 예정액
-                    <span className="text-[10px] text-yuri-400 group-hover:text-accent transition-colors">{showBillDetails ? '▲' : '▼'}</span>
-                  </span>
-                  <span className="text-sm font-bold text-yuri-900">{fmtAmt(expectedCardBill)}</span>
-                </div>
-                <span className="text-[10px] text-yuri-400">
-                  {billingStart.getFullYear()}년 {billingStart.getMonth() + 1}월 {billingStart.getDate()}일 ~ {billingEnd.getFullYear()}년 {billingEnd.getMonth() + 1}월 {billingEnd.getDate()}일 사용분
-                </span>
-              </div>
-              
-              {showBillDetails && (
-                <div className="flex flex-col gap-2 pt-2 border-t border-yuri-200 max-h-32 overflow-y-auto">
-                  {cardBillEntries.length === 0 ? (
-                    <div className="text-[11px] text-yuri-400 text-center py-2">청구 내역이 없습니다.</div>
-                  ) : (
-                    cardBillEntries.map(e => (
-                      <div key={e.id} className="flex justify-between items-center text-[11px]">
-                        <span className="text-yuri-500 truncate mr-2 flex-1">{new Date(e.scheduledDate || e.createdAt).getDate()}일 {e.label}</span>
-                        <span className="text-yuri-700 font-bold">{fmtAmt(e.amount)}</span>
-                      </div>
-                    ))
-                  )}
-                </div>
-              )}
-
-            </div>
 
             <div className="pt-3 flex flex-col gap-1 border-t border-yuri-100">
               <div className="flex justify-between items-center">
