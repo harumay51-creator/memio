@@ -13,11 +13,8 @@ const firebaseConfig = {
   measurementId: "G-EJEQC6ZT9Q"
 }
 
-import { getStorage } from "firebase/storage"
-
 // Initialize Firebase
 const app = initializeApp(firebaseConfig)
 typeof window !== 'undefined' ? getAnalytics(app) : null
 export const db = getFirestore(app)
 export const auth = getAuth(app)
-export const storage = getStorage(app)

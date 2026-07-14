@@ -1,35 +1,29 @@
-import { ref, deleteObject } from 'firebase/storage'
-import { storage } from '../config/firebase'
+import { doc, deleteDoc } from 'firebase/firestore'
+import { db, auth } from '../config/firebase'
 
 // Parses HTML and returns all Firebase Storage image URLs
 export function extractFirebaseImageUrls(html: string): string[] {
   const urls: string[] = []
-  // Matches <img src="URL"> where URL contains firebasestorage.googleapis.com
-  const imgRegex = /<img[^>]+src="([^">]+)"/g
+  // Matches <img src="memio-img://IMAGE_ID">
+  const imgRegex = /<img[^>]+src="memio-img:\/\/([^">]+)"/g
   let match
   while ((match = imgRegex.exec(html)) !== null) {
-    const url = match[1]
-    if (url.includes('firebasestorage.googleapis.com')) {
-      urls.push(url)
-    }
+    const id = match[1]
+    urls.push(id)
   }
   return urls
 }
 
-// Deletes a list of Firebase Storage URLs
-export async function deleteFirebaseImages(urls: string[]) {
-  const promises = urls.map(async (url) => {
+// Deletes a list of Firestore image documents
+export async function deleteFirestoreImages(imageIds: string[]) {
+  const uid = auth.currentUser?.uid
+  if (!uid) return
+
+  const promises = imageIds.map(async (id) => {
     try {
-      const decodedUrl = decodeURIComponent(url)
-      // Extracts the actual path inside storage (e.g. users/uid/notes/123.webp)
-      const pathMatch = decodedUrl.match(/\/o\/([^?]+)/)
-      if (pathMatch && pathMatch[1]) {
-        const filePath = pathMatch[1]
-        const fileRef = ref(storage, filePath)
-        await deleteObject(fileRef)
-      }
+      await deleteDoc(doc(db, `users/${uid}/images/${id}`))
     } catch (err) {
-      console.error('Failed to delete image from storage:', url, err)
+      console.error('Failed to delete image from firestore:', id, err)
     }
   })
   await Promise.allSettled(promises)
@@ -40,8 +34,8 @@ export async function cleanupRemovedImages(oldHtml: string, newHtml: string) {
   const oldUrls = extractFirebaseImageUrls(oldHtml)
   const newUrls = extractFirebaseImageUrls(newHtml)
   
-  const removedUrls = oldUrls.filter(url => !newUrls.includes(url))
-  if (removedUrls.length > 0) {
-    await deleteFirebaseImages(removedUrls)
+  const removedIds = oldUrls.filter(id => !newUrls.includes(id))
+  if (removedIds.length > 0) {
+    await deleteFirestoreImages(removedIds)
   }
 }

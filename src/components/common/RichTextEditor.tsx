@@ -7,13 +7,13 @@ import { Highlight } from '@tiptap/extension-highlight';
 import { Link } from '@tiptap/extension-link';
 import { Placeholder } from '@tiptap/extension-placeholder';
 import EmojiPicker, { Theme } from 'emoji-picker-react';
-import Image from '@tiptap/extension-image';
+import { auth, db } from '../../config/firebase';
+import { doc, setDoc } from 'firebase/firestore';
+import { AsyncImage } from './AsyncImageNode';
 import { 
   Bold, Italic, Strikethrough, Heading2, Heading3, 
   List, Minus, Smile, Link as LinkIcon 
 } from 'lucide-react';
-import { auth, storage } from '../../config/firebase';
-import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 
 const COLORS = ['#5B4FCF', '#D45D6E', '#C96A95', '#3F9E7A'];
 
@@ -91,7 +91,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ initialContent, onChang
         placeholder: placeholder || '내용을 작성하세요...',
         emptyEditorClass: 'is-editor-empty',
       }),
-      Image.configure({
+      AsyncImage.configure({
         inline: true,
         allowBase64: true,
       })
@@ -117,32 +117,43 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ initialContent, onChang
               const uid = auth.currentUser?.uid;
               if (!uid) return true;
               
+              // Check image limit (max 5)
+              const htmlContent = editor?.getHTML() || '';
+              const imgCount = (htmlContent.match(/<img/g) || []).length;
+              if (imgCount >= 5) {
+                alert('이미지는 메모당 최대 5장까지 첨부할 수 있어요');
+                return true;
+              }
+
               const tempUrl = URL.createObjectURL(file);
               // Insert placeholder image
               editor?.chain().focus().setImage({ src: tempUrl, alt: 'uploading...' }).run();
 
               resizeImage(file).then(blob => {
-                const timestamp = Date.now();
-                const randomStr = Math.random().toString(36).substring(2, 8);
-                const filePath = `users/${uid}/notes/${timestamp}_${randomStr}.webp`;
-                const fileRef = ref(storage, filePath);
-                
-                const uploadTask = uploadBytesResumable(fileRef, blob);
-                uploadTask.on('state_changed', 
-                  null, 
-                  (error) => {
-                    console.error('Upload failed', error);
-                  }, 
-                  async () => {
-                    const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+                const reader = new FileReader();
+                reader.readAsDataURL(blob);
+                reader.onloadend = async () => {
+                  const base64data = reader.result as string;
+                  const timestamp = Date.now();
+                  const randomStr = Math.random().toString(36).substring(2, 8);
+                  const imageId = `${timestamp}_${randomStr}`;
+                  
+                  try {
+                    await setDoc(doc(db, `users/${uid}/images/${imageId}`), {
+                      base64: base64data,
+                      createdAt: new Date().toISOString()
+                    });
+
+                    const finalUrl = `memio-img://${imageId}`;
                     const html = editor?.getHTML() || '';
-                    const updatedHtml = html.replace(tempUrl, downloadURL);
+                    const updatedHtml = html.replace(tempUrl, finalUrl);
                     editor?.commands.setContent(updatedHtml);
                     onChange(updatedHtml);
                     URL.revokeObjectURL(tempUrl);
-                    URL.revokeObjectURL(tempUrl);
+                  } catch (e) {
+                    console.error('Failed to save image to firestore', e);
                   }
-                );
+                };
               }).catch(console.error);
             }
             return true;

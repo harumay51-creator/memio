@@ -164,6 +164,9 @@ const NotesPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId })
                 className="text-2xl font-bold bg-transparent outline-none text-yuri-900 placeholder:text-yuri-300 w-full"
                 placeholder="메모 제목"
               />
+              <div className="text-[11px] text-yuri-300 font-medium px-1">
+                ※ 이미지는 메모당 최대 5장까지 첨부할 수 있어요 (Ctrl+V)
+              </div>
               <div className="flex-1 overflow-hidden">
                 <RichTextEditor
                   key={selectedNote.id}

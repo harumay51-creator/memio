@@ -3,7 +3,7 @@ import type { Task, LedgerEntry, ScheduleEvent, Note, FixedExpense, CategoryConf
 import { DEFAULT_EXPENSE_CATS } from '../utils/parser'
 import { collection, getDocs, setDoc, updateDoc, deleteDoc, doc, writeBatch, getDoc, deleteField } from 'firebase/firestore'
 import { db } from '../config/firebase'
-import { extractFirebaseImageUrls, deleteFirebaseImages, cleanupRemovedImages } from '../utils/imageUtils'
+import { extractFirebaseImageUrls, deleteFirestoreImages, cleanupRemovedImages } from '../utils/imageUtils'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function genId(): string {
@@ -212,7 +212,7 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
                 if (type === 'note' && item.text) {
                   const urls = extractFirebaseImageUrls(item.text);
                   if (urls.length > 0) {
-                    deleteFirebaseImages(urls).catch(console.error);
+                    deleteFirestoreImages(urls).catch(console.error);
                   }
                 }
                 batch.delete(doc(db, 'users', uid, colName, item.id));
@@ -715,7 +715,7 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
           const data = snap.data()
           const urls = extractFirebaseImageUrls(data.text || '')
           if (urls.length > 0) {
-            await deleteFirebaseImages(urls)
+            await deleteFirestoreImages(urls)
           }
         }
       } catch (err) {
