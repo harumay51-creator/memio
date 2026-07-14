@@ -1,12 +1,36 @@
 import React, { useState } from 'react'
 import { auth } from '../config/firebase'
-import { signInWithEmailAndPassword, setPersistence, browserSessionPersistence } from 'firebase/auth'
+import { signInWithEmailAndPassword, setPersistence, browserSessionPersistence, sendPasswordResetEmail } from 'firebase/auth'
 
 const AuthScreen: React.FC = () => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [isResetMode, setIsResetMode] = useState(false)
+  const [resetMessage, setResetMessage] = useState<string | null>(null)
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError(null)
+    setResetMessage(null)
+    setLoading(true)
+
+    try {
+      auth.languageCode = 'ko'
+      await sendPasswordResetEmail(auth, email)
+      setResetMessage('입력하신 이메일이 가입되어 있다면 재설정 메일이 발송됩니다.')
+    } catch (err: any) {
+      console.error(err)
+      if (err.code === 'auth/invalid-email') {
+        setError('유효하지 않은 이메일 형식입니다.')
+      } else {
+        setResetMessage('입력하신 이메일이 가입되어 있다면 재설정 메일이 발송됩니다.')
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -45,9 +69,9 @@ const AuthScreen: React.FC = () => {
           <p className="text-yuri-500 font-medium">나만의 완벽한 데이터 허브</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="bg-white rounded-2xl p-6 shadow-sm border border-yuri-100">
+        <form onSubmit={isResetMode ? handleResetPassword : handleSubmit} className="bg-white rounded-2xl p-6 shadow-sm border border-yuri-100">
           <h2 className="text-xl font-bold text-yuri-900 mb-6 text-center">
-            로그인
+            {isResetMode ? '비밀번호 재설정' : '로그인'}
           </h2>
 
           <div className="flex flex-col gap-4 mb-6">
@@ -61,28 +85,45 @@ const AuthScreen: React.FC = () => {
                 className="w-full bg-yuri-50 border border-yuri-200 focus:border-accent text-yuri-900 rounded-xl px-4 py-3 text-sm outline-none transition-colors"
               />
             </div>
-            <div>
-              <label className="block text-xs font-bold text-yuri-500 mb-1.5 ml-1">비밀번호</label>
-              <input spellCheck={false}
-                type="password"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                required
-                className="w-full bg-yuri-50 border border-yuri-200 focus:border-accent text-yuri-900 rounded-xl px-4 py-3 text-sm outline-none transition-colors"
-                placeholder="비밀번호 (6자리 이상)"
-              />
-            </div>
+            {!isResetMode && (
+              <div>
+                <label className="block text-xs font-bold text-yuri-500 mb-1.5 ml-1">비밀번호</label>
+                <input spellCheck={false}
+                  type="password"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  required
+                  className="w-full bg-yuri-50 border border-yuri-200 focus:border-accent text-yuri-900 rounded-xl px-4 py-3 text-sm outline-none transition-colors"
+                  placeholder="비밀번호 (6자리 이상)"
+                />
+              </div>
+            )}
           </div>
 
           {error && <p className="text-red-500 text-xs text-center mb-4 font-medium">{error}</p>}
+          {resetMessage && <p className="text-accent text-xs text-center mb-4 font-medium">{resetMessage}</p>}
 
           <button
             type="submit"
-            disabled={loading || !email || !password}
+            disabled={loading || !email || (!isResetMode && !password)}
             className="w-full bg-accent hover:bg-accent/90 text-white font-bold py-3.5 rounded-xl transition-colors disabled:opacity-50"
           >
-            {loading ? '처리 중...' : '로그인'}
+            {loading ? '처리 중...' : (isResetMode ? '재설정 메일 보내기' : '로그인')}
           </button>
+
+          <div className="mt-6 text-center">
+            <button
+              type="button"
+              onClick={() => {
+                setIsResetMode(!isResetMode)
+                setError(null)
+                setResetMessage(null)
+              }}
+              className="text-sm font-bold text-yuri-500 hover:text-accent transition-colors"
+            >
+              {isResetMode ? '로그인 화면으로 돌아가기' : '비밀번호를 잊으셨나요?'}
+            </button>
+          </div>
         </form>
       </div>
     </div>
