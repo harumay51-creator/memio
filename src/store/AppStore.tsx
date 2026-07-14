@@ -3,6 +3,7 @@ import type { Task, LedgerEntry, ScheduleEvent, Note, FixedExpense, CategoryConf
 import { DEFAULT_EXPENSE_CATS } from '../utils/parser'
 import { collection, getDocs, setDoc, updateDoc, deleteDoc, doc, writeBatch, getDoc, deleteField } from 'firebase/firestore'
 import { db } from '../config/firebase'
+import { extractFirebaseImageUrls, deleteFirebaseImages, cleanupRemovedImages } from '../utils/imageUtils'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function genId(): string {
@@ -208,6 +209,12 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
                 if (type === 'task') colName = 'tasks';
                 if (type === 'ledger') colName = 'ledger';
                 if (type === 'fixedExpense') colName = 'fixedExpenses';
+                if (type === 'note' && item.text) {
+                  const urls = extractFirebaseImageUrls(item.text);
+                  if (urls.length > 0) {
+                    deleteFirebaseImages(urls).catch(console.error);
+                  }
+                }
                 batch.delete(doc(db, 'users', uid, colName, item.id));
                 hasHardDeletes = true;
               } else {
@@ -490,7 +497,14 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
 
   const updateNote = useCallback((id: string, text: string) => {
     const updatedAt = new Date().toISOString()
-    setNotes(prev => prev.map(n => n.id === id ? { ...n, text, updatedAt } : n))
+    
+    setNotes(prev => {
+      const oldNote = prev.find(n => n.id === id)
+      if (oldNote) {
+        cleanupRemovedImages(oldNote.text, text).catch(console.error)
+      }
+      return prev.map(n => n.id === id ? { ...n, text, updatedAt } : n)
+    })
     updateDoc(doc(db, 'users', uid, 'notes', id), { text, updatedAt }).catch(console.error)
   }, [uid])
 
@@ -686,12 +700,28 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
     }
   }, [uid])
 
-  const hardDeleteItem = useCallback((type: 'note'|'task'|'ledger'|'fixedExpense', id: string) => {
+  const hardDeleteItem = useCallback(async (type: 'note'|'task'|'ledger'|'fixedExpense', id: string) => {
     let collectionName = ''
     if (type === 'note') collectionName = 'notes'
     if (type === 'task') collectionName = 'tasks'
     if (type === 'ledger') collectionName = 'ledger'
     if (type === 'fixedExpense') collectionName = 'fixedExpenses'
+
+    if (type === 'note') {
+      try {
+        const docRef = doc(db, 'users', uid, 'notes', id)
+        const snap = await getDoc(docRef)
+        if (snap.exists()) {
+          const data = snap.data()
+          const urls = extractFirebaseImageUrls(data.text || '')
+          if (urls.length > 0) {
+            await deleteFirebaseImages(urls)
+          }
+        }
+      } catch (err) {
+        console.error(err)
+      }
+    }
 
     setTrashedItems(prev => prev.filter(t => t.id !== id))
     deleteDoc(doc(db, 'users', uid, collectionName, id)).catch(console.error)

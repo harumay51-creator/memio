@@ -7,10 +7,13 @@ import { Highlight } from '@tiptap/extension-highlight';
 import { Link } from '@tiptap/extension-link';
 import { Placeholder } from '@tiptap/extension-placeholder';
 import EmojiPicker, { Theme } from 'emoji-picker-react';
+import Image from '@tiptap/extension-image';
 import { 
   Bold, Italic, Strikethrough, Heading2, Heading3, 
   List, Minus, Smile, Link as LinkIcon 
 } from 'lucide-react';
+import { auth, storage } from '../../config/firebase';
+import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 
 const COLORS = ['#5B4FCF', '#D45D6E', '#C96A95', '#3F9E7A'];
 
@@ -33,6 +36,34 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ initialContent, onChang
     
     // Convert plain text to HTML paragraphs
     return text.split('\n').map(line => `<p>${line.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p>`).join('');
+  };
+
+  const resizeImage = (file: File): Promise<Blob> => {
+    return new Promise((resolve, reject) => {
+      const img = document.createElement('img');
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        let width = img.width;
+        let height = img.height;
+        const MAX_WIDTH = 1200;
+        if (width > MAX_WIDTH) {
+          height = Math.round((height * MAX_WIDTH) / width);
+          width = MAX_WIDTH;
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx?.drawImage(img, 0, 0, width, height);
+        canvas.toBlob((blob) => {
+          if (blob) resolve(blob);
+          else reject(new Error('Canvas toBlob failed'));
+        }, 'image/webp', 0.8);
+      };
+      img.onerror = () => reject(new Error('Image load failed'));
+      img.src = url;
+    });
   };
 
   const editor = useEditor({
@@ -59,6 +90,10 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ initialContent, onChang
       Placeholder.configure({
         placeholder: placeholder || '내용을 작성하세요...',
         emptyEditorClass: 'is-editor-empty',
+      }),
+      Image.configure({
+        inline: true,
+        allowBase64: true,
       })
     ],
     content: getSafeContent(initialContent),
@@ -69,6 +104,50 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ initialContent, onChang
       attributes: {
         class: 'prose prose-sm max-w-none focus:outline-none min-h-[150px] w-full',
       },
+      handlePaste: (_view, event) => {
+        const items = event.clipboardData?.items;
+        if (!items) return false;
+
+        for (let i = 0; i < items.length; i++) {
+          const item = items[i];
+          if (item.type.indexOf('image') === 0) {
+            event.preventDefault();
+            const file = item.getAsFile();
+            if (file) {
+              const uid = auth.currentUser?.uid;
+              if (!uid) return true;
+              
+              const tempUrl = URL.createObjectURL(file);
+              // Insert placeholder image
+              editor?.chain().focus().setImage({ src: tempUrl, alt: 'uploading...' }).run();
+
+              resizeImage(file).then(blob => {
+                const timestamp = Date.now();
+                const randomStr = Math.random().toString(36).substring(2, 8);
+                const filePath = `users/${uid}/notes/${timestamp}_${randomStr}.webp`;
+                const fileRef = ref(storage, filePath);
+                
+                const uploadTask = uploadBytesResumable(fileRef, blob);
+                uploadTask.on('state_changed', 
+                  null, 
+                  (error) => {
+                    console.error('Upload failed', error);
+                  }, 
+                  async () => {
+                    const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+                    const html = editor?.getHTML() || '';
+                    const updatedHtml = html.replace(tempUrl, downloadURL);
+                    editor?.commands.setContent(updatedHtml);
+                    URL.revokeObjectURL(tempUrl);
+                  }
+                );
+              }).catch(console.error);
+            }
+            return true;
+          }
+        }
+        return false;
+      }
     },
   });
 
