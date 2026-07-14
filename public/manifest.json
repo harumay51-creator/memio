@@ -1,0 +1,15 @@
+{
+  "name": "Memio",
+  "short_name": "Memio",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#FAFBFF",
+  "theme_color": "#FAFBFF",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

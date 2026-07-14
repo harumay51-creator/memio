@@ -5,6 +5,8 @@ import Sidebar      from './components/Sidebar'
 import QuickCapture from './components/QuickCapture'
 import Router       from './router/Router'
 import AuthScreen   from './components/AuthScreen'
+import MobileApp    from './components/Mobile/MobileApp'
+import { useIsMobile } from './hooks/useIsMobile'
 import { auth }     from './config/firebase'
 import { onAuthStateChanged, User, signOut } from 'firebase/auth'
 
@@ -13,6 +15,8 @@ const AppInner: React.FC = () => {
   const { isLoading, loadError } = useAppStore()
   const [activePage,    setActivePage]    = useState<PageId>('calendar')
   const [activeItemId,  setActiveItemId]  = useState<string | null>(null)
+  
+  const isMobile = useIsMobile(768)
 
   const navigate = useCallback((page: PageId, itemId?: string) => {
     setActiveItemId(itemId || null)
@@ -73,6 +77,16 @@ service cloud.firestore {
           </button>
         </div>
       </div>
+    )
+  }
+
+  if (isMobile) {
+    return (
+      <MobileApp
+        activePage={activePage}
+        onNavigate={navigate}
+        onLogout={handleLogout}
+      />
     )
   }
 

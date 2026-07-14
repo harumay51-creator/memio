@@ -50,7 +50,7 @@ interface StoreValue {
   addLedgerEntry: (text: string, amount: number, type: 'income' | 'expense', category: string, date?: string, paymentMethod?: '카드' | '계좌이체', memo?: string) => void
   updateLedgerEntry: (id: string, updates: Partial<LedgerEntry>) => void
   deleteLedgerEntry: (id: string) => void
-  addEvent:       (text: string, scheduledDate?: string) => void
+  addEvent:       (text: string, scheduledDate?: string, color?: string) => void
   updateEvent:    (id: string, updates: Partial<ScheduleEvent>) => void
   deleteEvent:    (id: string)  => void
   addNote:        (text: string) => string
@@ -464,9 +464,9 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
     })
   }, [uid])
 
-  const addEvent = useCallback((text: string, scheduledDate?: string) => {
-    console.log('addEvent called with:', text, scheduledDate)
-    const newItem: ScheduleEvent = { id: genId(), text, scheduledDate, createdAt: new Date().toISOString(), order: events.length }
+  const addEvent = useCallback((text: string, scheduledDate?: string, color?: string) => {
+    console.log('addEvent called with:', text, scheduledDate, color)
+    const newItem: ScheduleEvent = { id: genId(), text, scheduledDate, color, createdAt: new Date().toISOString(), order: events.length }
     setEvents(prev => [newItem, ...prev])
     setDoc(doc(db, 'users', uid, 'events', newItem.id), newItem).catch(console.error)
   }, [events.length, uid])
