@@ -64,7 +64,6 @@ const AuthScreen: React.FC = () => {
                 onChange={e => setEmail(e.target.value)}
                 required
                 className="w-full bg-yuri-50 border border-yuri-200 focus:border-accent text-yuri-900 rounded-xl px-4 py-3 text-sm outline-none transition-colors"
-                placeholder="yuri@memio.app"
               />
             </div>
             <div>
