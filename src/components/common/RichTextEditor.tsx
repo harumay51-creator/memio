@@ -138,6 +138,8 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ initialContent, onChang
                     const html = editor?.getHTML() || '';
                     const updatedHtml = html.replace(tempUrl, downloadURL);
                     editor?.commands.setContent(updatedHtml);
+                    onChange(updatedHtml);
+                    URL.revokeObjectURL(tempUrl);
                     URL.revokeObjectURL(tempUrl);
                   }
                 );
