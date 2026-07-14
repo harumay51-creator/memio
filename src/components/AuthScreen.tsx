@@ -1,9 +1,8 @@
 import React, { useState } from 'react'
 import { auth } from '../config/firebase'
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, setPersistence, browserSessionPersistence } from 'firebase/auth'
+import { signInWithEmailAndPassword, setPersistence, browserSessionPersistence } from 'firebase/auth'
 
 const AuthScreen: React.FC = () => {
-  const [isLogin, setIsLogin] = useState(true)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -16,11 +15,7 @@ const AuthScreen: React.FC = () => {
 
     try {
       await setPersistence(auth, browserSessionPersistence)
-      if (isLogin) {
-        await signInWithEmailAndPassword(auth, email, password)
-      } else {
-        await createUserWithEmailAndPassword(auth, email, password)
-      }
+      await signInWithEmailAndPassword(auth, email, password)
     } catch (err: any) {
       console.error(err)
       if (err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found') {
@@ -52,7 +47,7 @@ const AuthScreen: React.FC = () => {
 
         <form onSubmit={handleSubmit} className="bg-white rounded-2xl p-6 shadow-sm border border-yuri-100">
           <h2 className="text-xl font-bold text-yuri-900 mb-6 text-center">
-            {isLogin ? '로그인' : '회원가입'}
+            로그인
           </h2>
 
           <div className="flex flex-col gap-4 mb-6">
@@ -86,21 +81,8 @@ const AuthScreen: React.FC = () => {
             disabled={loading || !email || !password}
             className="w-full bg-accent hover:bg-accent/90 text-white font-bold py-3.5 rounded-xl transition-colors disabled:opacity-50"
           >
-            {loading ? '처리 중...' : (isLogin ? '로그인' : '가입하기')}
+            {loading ? '처리 중...' : '로그인'}
           </button>
-
-          <div className="mt-6 text-center">
-            <button
-              type="button"
-              onClick={() => {
-                setIsLogin(!isLogin)
-                setError(null)
-              }}
-              className="text-sm font-bold text-yuri-500 hover:text-accent transition-colors"
-            >
-              {isLogin ? '계정이 없으신가요? 회원가입' : '이미 계정이 있으신가요? 로그인'}
-            </button>
-          </div>
         </form>
       </div>
     </div>
