@@ -159,7 +159,7 @@ const PinScreen: React.FC = () => {
           </>
         ) : (
           <form onSubmit={handleResetAuth} className="w-full flex flex-col gap-4">
-            <input
+            <input spellCheck={false}
               type="password"
               placeholder="계정 비밀번호"
               value={password}

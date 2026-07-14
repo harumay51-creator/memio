@@ -58,7 +58,7 @@ const AuthScreen: React.FC = () => {
           <div className="flex flex-col gap-4 mb-6">
             <div>
               <label className="block text-xs font-bold text-yuri-500 mb-1.5 ml-1">이메일</label>
-              <input
+              <input spellCheck={false}
                 type="email"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
@@ -69,7 +69,7 @@ const AuthScreen: React.FC = () => {
             </div>
             <div>
               <label className="block text-xs font-bold text-yuri-500 mb-1.5 ml-1">비밀번호</label>
-              <input
+              <input spellCheck={false}
                 type="password"
                 value={password}
                 onChange={e => setPassword(e.target.value)}

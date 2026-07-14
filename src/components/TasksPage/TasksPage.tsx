@@ -57,7 +57,7 @@ const TasksPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId })
 
         {/* Input box */}
         <div className="p-4 pb-2 shrink-0 flex flex-col gap-3 border-b border-yuri-100 bg-white">
-          <input
+          <input spellCheck={false}
             type="text"
             placeholder="업무 검색..."
             value={searchQuery}
@@ -65,7 +65,7 @@ const TasksPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId })
             className="w-full bg-yuri-50 border border-yuri-200 rounded-lg px-3 py-1.5 text-sm outline-none focus:border-accent transition-colors"
           />
           <div className="border-t border-yuri-100 my-0.5" />
-          <input
+          <input spellCheck={false}
             type="text"
             placeholder="새 업무 추가 (Enter)"
             value={inputText}
@@ -141,7 +141,7 @@ const TasksPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId })
                   ✓
                 </button>
                 <div className="flex flex-col flex-1 min-w-0">
-                  <input
+                  <input spellCheck={false}
                     type="text"
                     value={selectedTask.text}
                     onChange={(e) => updateTaskText(selectedTask.id, e.target.value)}

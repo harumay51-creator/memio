@@ -103,7 +103,7 @@ const QuickCapture: React.FC = () => {
           </div>
 
           {/* Text input */}
-          <input
+          <input spellCheck={false}
             id="quick-capture-input"
             ref={inputRef}
             type="text"

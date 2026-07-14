@@ -325,7 +325,7 @@ const CalendarPage: React.FC = () => {
                 </div>
                 {inlineDate && sameDay(inlineDate, date) && (
                   <div className="mt-0.5 shrink-0" onClick={e => e.stopPropagation()}>
-                    <input
+                    <input spellCheck={false}
                       autoFocus
                       type="text"
                       className="w-full text-[10px] bg-white border border-yuri-300 rounded px-1 py-0.5 outline-none shadow-sm focus:border-amber-400 text-yuri-900 box-border"
@@ -442,7 +442,7 @@ const CalendarPage: React.FC = () => {
                       <div className="flex-1 bg-transparent p-1.5 flex gap-2 items-start transition-colors rounded-lg hover:bg-[#F7F6FF]">
                         {isEditing ? (
                           <div className="flex-1 flex flex-col gap-2 bg-white p-2 rounded-lg border border-yuri-200 shadow-sm" onClick={e => e.stopPropagation()}>
-                            <input
+                            <input spellCheck={false}
                               autoFocus
                               type="text"
                               value={editTitle}
@@ -456,7 +456,7 @@ const CalendarPage: React.FC = () => {
                               placeholder="일정 내용"
                             />
                             <div className="flex justify-between items-center">
-                              <input 
+                              <input spellCheck={false} 
                                 type="date" 
                                 value={editDate}
                                 onChange={e => setEditDate(e.target.value)}
@@ -563,7 +563,7 @@ const CalendarPage: React.FC = () => {
           
           <div className="flex-1 overflow-y-auto px-5 pb-5 pt-2">
             <form onSubmit={handleAddAgenda} className="mb-3 flex gap-2">
-              <input
+              <input spellCheck={false}
                 type="text" placeholder="새 목표 입력..."
                 value={newAgenda} onChange={e => setNewAgenda(e.target.value)}
                 className="flex-1 px-3 py-1.5 text-xs bg-[#FAFBFF] border-none rounded-lg outline-none focus:ring-1 focus:ring-[#8B7CF8] text-[#2D334A] placeholder:text-[#717A8C]"

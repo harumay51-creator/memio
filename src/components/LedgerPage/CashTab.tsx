@@ -143,7 +143,7 @@ export default function CashTab({ year, month, onOpenFixedExpense }: { year: num
           <div className="flex justify-between items-center">
             <span className="text-sm font-bold text-yuri-500">이번 달 월급</span>
             <div className="flex items-center gap-2">
-              <input
+              <input spellCheck={false}
                 type="text"
                 placeholder="미입력 (0원)"
                 value={salaryRecords[salaryMonthKey]?.amount ? salaryRecords[salaryMonthKey].amount.toLocaleString('ko-KR') : ''}

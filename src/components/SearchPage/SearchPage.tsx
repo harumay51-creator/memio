@@ -105,7 +105,7 @@ const SearchPage: React.FC = () => {
           <div className="absolute inset-y-0 left-4 pl-4 pt-4 flex pointer-events-none text-yuri-400">
             <span className="text-lg">⌕</span>
           </div>
-          <input
+          <input spellCheck={false}
             ref={inputRef}
             type="text"
             value={query}

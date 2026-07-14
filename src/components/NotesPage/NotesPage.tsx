@@ -56,7 +56,7 @@ const NotesPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId })
       <aside className="w-2/5 border-r border-yuri-100 bg-yuri-50/30 flex flex-col shrink-0 h-full">
         <header className="shrink-0 flex flex-col border-b border-yuri-100 bg-white px-6 py-4 gap-3">
           <h1 className="text-xl font-bold text-yuri-900 tracking-tight">메모</h1>
-          <input
+          <input spellCheck={false}
             type="text"
             placeholder="메모 검색..."
             value={searchQuery}
@@ -64,7 +64,7 @@ const NotesPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId })
             className="w-full bg-yuri-50 border border-yuri-200 rounded-lg px-3 py-1.5 text-sm outline-none focus:border-accent transition-colors"
           />
           <div className="border-t border-yuri-100 my-1" />
-          <input
+          <input spellCheck={false}
             type="text"
             placeholder="새 메모 입력 (Enter)"
             value={inputText}
@@ -153,7 +153,7 @@ const NotesPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId })
             </header>
             
             <div className="flex-1 overflow-hidden flex flex-col px-8 pb-8 gap-4 mt-2">
-              <input
+              <input spellCheck={false}
                 type="text"
                 value={selectedNote.text.split('\n')[0] || ''}
                 onChange={(e) => {

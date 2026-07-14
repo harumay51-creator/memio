@@ -294,16 +294,16 @@ const LedgerPage: React.FC = () => {
             <div className="p-4 border-b border-yuri-100 bg-yuri-50/20 shrink-0 z-10">
               <form onSubmit={handleSaveFe} className="bg-white p-4 rounded-xl border border-yuri-200 flex flex-col gap-3 shadow-sm">
                 <h3 className="text-xs font-bold text-accent">{editingFeId ? '고정지출 수정' : '새 고정지출 추가'}</h3>
-                <input
+                <input spellCheck={false}
                   type="text" placeholder="항목명 (예: 넷플릭스)" value={feLabel} onChange={e => setFeLabel(e.target.value)}
                   className="w-full px-3 py-2 bg-yuri-50 border border-yuri-200 rounded-lg text-sm outline-none focus:border-accent"
                 />
                 <div className="flex gap-2">
-                  <input
+                  <input spellCheck={false}
                     type="text" placeholder="매월 (일)" value={feDay} onChange={e => setFeDay(e.target.value)}
                     className="w-24 px-3 py-2 bg-yuri-50 border border-yuri-200 rounded-lg text-sm outline-none focus:border-accent"
                   />
-                  <input
+                  <input spellCheck={false}
                     type="text" placeholder="금액" value={feAmount} onChange={e => {
                       const raw = e.target.value.replace(/[^0-9]/g, '')
                       setFeAmount(raw ? parseInt(raw, 10).toLocaleString('ko-KR') : '')

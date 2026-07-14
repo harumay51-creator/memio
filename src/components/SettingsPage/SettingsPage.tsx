@@ -250,7 +250,7 @@ const SettingsPage: React.FC = () => {
                     <div className="flex items-center gap-4">
                       <span className="text-sm font-bold text-yuri-700 w-24">카드 결제일</span>
                       <div className="flex items-center gap-2">
-                        <input
+                        <input spellCheck={false}
                           type="number"
                           min="1" max="31"
                           value={cardPaymentDay}
@@ -271,7 +271,7 @@ const SettingsPage: React.FC = () => {
                     <div className="flex items-center gap-4">
                       <span className="text-sm font-bold text-yuri-700 w-24">월급일</span>
                       <div className="flex items-center gap-2">
-                        <input
+                        <input spellCheck={false}
                           type="number"
                           min="1" max="31"
                           value={payday}
@@ -295,7 +295,7 @@ const SettingsPage: React.FC = () => {
                       <span className="text-sm font-bold text-yuri-700 w-24">사용기간 시작</span>
                       <div className="flex items-center gap-2">
                         <span className="text-xs text-yuri-500">전전월</span>
-                        <input
+                        <input spellCheck={false}
                           type="number"
                           min="1" max="31"
                           value={cardBillingStartDay}
@@ -315,7 +315,7 @@ const SettingsPage: React.FC = () => {
                       <span className="text-sm font-bold text-yuri-700 w-24">사용기간 종료</span>
                       <div className="flex items-center gap-2">
                         <span className="text-xs text-yuri-500">전월</span>
-                        <input
+                        <input spellCheck={false}
                           type="number"
                           min="1" max="31"
                           value={cardBillingEndDay}
@@ -385,7 +385,7 @@ const SettingsPage: React.FC = () => {
                         </div>
 
                         <form onSubmit={(e) => handleAddKeyword(e, cat.name)} className="flex gap-2 pt-2 border-t border-yuri-50">
-                          <input
+                          <input spellCheck={false}
                             type="text"
                             placeholder={`${cat.name} 키워드 추가`}
                             value={newKeywords[cat.name] || ''}
@@ -408,7 +408,7 @@ const SettingsPage: React.FC = () => {
                   <div className="bg-yuri-50/50 border border-dashed border-yuri-300 rounded-xl overflow-hidden shadow-sm p-5 mt-4">
                     <h3 className="text-sm font-bold text-yuri-900 mb-3">새 카테고리 만들기</h3>
                     <form onSubmit={handleCreateCategory} className="flex gap-2">
-                      <input
+                      <input spellCheck={false}
                         type="text"
                         placeholder="카테고리 이름"
                         value={newCatName}
@@ -452,7 +452,7 @@ const SettingsPage: React.FC = () => {
                 <p className="text-sm text-yuri-500 mb-6">매년 반복되는 기념일을 추가하면 달력에 자동으로 표시됩니다.</p>
 
                 <form onSubmit={handleAddAnniv} className="flex gap-3 mb-8">
-                  <input
+                  <input spellCheck={false}
                     type="text"
                     placeholder="이름 (예: 엄마 생일)"
                     value={annivName}
@@ -460,7 +460,7 @@ const SettingsPage: React.FC = () => {
                     className="flex-1 px-4 py-3 bg-yuri-50 border border-yuri-200 rounded-lg text-sm outline-none focus:border-accent focus:bg-white transition-colors"
                     required
                   />
-                  <input
+                  <input spellCheck={false}
                     type="number"
                     min="1" max="12"
                     placeholder="월 (1-12)"
@@ -469,7 +469,7 @@ const SettingsPage: React.FC = () => {
                     className="w-24 px-4 py-3 bg-yuri-50 border border-yuri-200 rounded-lg text-sm outline-none focus:border-accent focus:bg-white transition-colors"
                     required
                   />
-                  <input
+                  <input spellCheck={false}
                     type="number"
                     min="1" max="31"
                     placeholder="일 (1-31)"
@@ -509,7 +509,7 @@ const SettingsPage: React.FC = () => {
                 <p className="text-sm text-yuri-500 mb-6">매달 고정적으로 있는 일정을 추가하면 달력에 자동으로 표시됩니다.</p>
 
                 <form onSubmit={handleAddMonthly} className="flex gap-3 mb-8">
-                  <input
+                  <input spellCheck={false}
                     type="text"
                     placeholder="일정 이름 (예: VC레포트 제출)"
                     value={monthlyName}
@@ -517,7 +517,7 @@ const SettingsPage: React.FC = () => {
                     className="flex-1 px-4 py-3 bg-yuri-50 border border-yuri-200 rounded-lg text-sm outline-none focus:border-accent focus:bg-white transition-colors"
                     required
                   />
-                  <input
+                  <input spellCheck={false}
                     type="number"
                     min="1" max="31"
                     placeholder="며칠 (1-31)"
@@ -559,7 +559,7 @@ const SettingsPage: React.FC = () => {
                 <form onSubmit={handleChangePassword} className="flex flex-col gap-5">
                   <div>
                     <label className="block text-sm font-bold text-yuri-700 mb-2">현재 비밀번호</label>
-                    <input
+                    <input spellCheck={false}
                       type="password"
                       value={currentPassword}
                       onChange={e => setCurrentPassword(e.target.value)}
@@ -571,7 +571,7 @@ const SettingsPage: React.FC = () => {
 
                   <div>
                     <label className="block text-sm font-bold text-yuri-700 mb-2">새 비밀번호</label>
-                    <input
+                    <input spellCheck={false}
                       type="password"
                       value={newPassword}
                       onChange={e => setNewPassword(e.target.value)}
@@ -584,7 +584,7 @@ const SettingsPage: React.FC = () => {
 
                   <div>
                     <label className="block text-sm font-bold text-yuri-700 mb-2">새 비밀번호 확인</label>
-                    <input
+                    <input spellCheck={false}
                       type="password"
                       value={confirmPassword}
                       onChange={e => setConfirmPassword(e.target.value)}

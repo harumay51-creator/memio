@@ -103,6 +103,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ initialContent, onChang
     editorProps: {
       attributes: {
         class: 'prose prose-sm max-w-none focus:outline-none min-h-[150px] w-full',
+        spellcheck: 'false',
       },
       handlePaste: (_view, event) => {
         const items = event.clipboardData?.items;

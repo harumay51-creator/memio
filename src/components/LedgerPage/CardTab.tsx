@@ -219,7 +219,7 @@ export default function CardTab({ year, month }: { year: number, month: number }
             <div className="flex items-center justify-between gap-4">
               <span className="text-sm font-bold text-gray-900 whitespace-nowrap">실제 확정액</span>
               <div className="flex items-center gap-2 flex-1 max-w-[200px]">
-                <input
+                <input spellCheck={false}
                   type="text"
                   value={actualBillInput}
                   onChange={handleActualBillChange}
@@ -233,7 +233,7 @@ export default function CardTab({ year, month }: { year: number, month: number }
             </div>
             <div className="flex items-center gap-2 mt-1">
               <span className="text-[11px] font-bold text-gray-500 whitespace-nowrap">메모</span>
-              <input
+              <input spellCheck={false}
                 type="text"
                 value={memoInput}
                 onChange={e => setMemoInput(e.target.value)}

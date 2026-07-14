@@ -71,17 +71,17 @@ export const EditRow = ({
     >
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-2 overflow-hidden flex-1">
-          <input 
+          <input spellCheck={false} 
             className="text-[11px] font-semibold text-accent w-8 shrink-0 bg-transparent outline-none border-b border-accent/30 focus:border-accent"
             value={date} onChange={e => setDate(e.target.value)} onKeyDown={handleKeyDown} autoFocus
           />
-          <input
+          <input spellCheck={false}
             className="text-[13px] font-bold text-gray-900 flex-1 bg-transparent outline-none border-b border-gray-300 focus:border-gray-500"
             value={label} onChange={e => setLabel(e.target.value)} onKeyDown={handleKeyDown}
           />
         </div>
         <div className="flex items-center gap-2 ml-2">
-          <input
+          <input spellCheck={false}
             className="text-[13px] font-bold text-gray-900 w-16 text-right bg-transparent outline-none border-b border-gray-300 focus:border-gray-500"
             value={amount} onChange={e => {
               const raw = e.target.value.replace(/[^0-9]/g, '')
@@ -115,7 +115,7 @@ export const EditRow = ({
         </button>
 
         <MessageSquare size={12} className="text-gray-400 shrink-0 ml-1" />
-        <input
+        <input spellCheck={false}
           className="text-[11px] font-medium text-gray-600 flex-1 bg-transparent outline-none border-b border-gray-200 focus:border-gray-400 placeholder-gray-300"
           placeholder="메모를 입력하세요..."
           value={memo} onChange={e => setMemo(e.target.value)} onKeyDown={handleKeyDown}
