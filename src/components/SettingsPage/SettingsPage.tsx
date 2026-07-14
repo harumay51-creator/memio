@@ -4,7 +4,7 @@ import { auth } from '../../config/firebase'
 import { EmailAuthProvider, reauthenticateWithCredential, updatePassword } from 'firebase/auth'
 import TrashSection from './TrashSection'
 
-type TabType = 'ledger' | 'security' | 'anniversaries' | 'monthly' | 'trash'
+type TabType = 'ledger' | 'security' | 'anniversaries' | 'monthly' | 'trash' | 'usage'
 
 const SettingsPage: React.FC = () => {
   const { 
@@ -13,7 +13,8 @@ const SettingsPage: React.FC = () => {
     monthlyEvents, addMonthlyEvent, deleteMonthlyEvent,
     cardPaymentDay, setCardPaymentDay,
     cardBillingStartDay, cardBillingEndDay, setCardBillingDays,
-    payday, setPayday, resetLedgerData
+    payday, setPayday, resetLedgerData,
+    notes, tasks, events, ledger
   } = useAppStore()
   
   const [activeTab, setActiveTab] = useState<TabType>('ledger')
@@ -22,6 +23,10 @@ const SettingsPage: React.FC = () => {
   const [newCatName, setNewCatName] = useState('')
   const [newKeywords, setNewKeywords] = useState<Record<string, string>>({})
   const [expanded, setExpanded] = useState<Record<string, boolean>>({})
+
+  // ── Usage States ────────
+  const [imageCount, setImageCount] = useState<number | null>(null)
+  const [isUsageLoading, setIsUsageLoading] = useState(false)
 
   // ── Security States ────────
   const [currentPassword, setCurrentPassword] = useState('')
@@ -131,12 +136,36 @@ const SettingsPage: React.FC = () => {
     setMonthlyDay('')
   }
 
+  // ── Usage Fetcher ─────────
+  React.useEffect(() => {
+    if (activeTab === 'usage' && imageCount === null && !isUsageLoading) {
+      const fetchUsage = async () => {
+        setIsUsageLoading(true)
+        try {
+          const uid = auth.currentUser?.uid
+          if (uid) {
+            const { getCountFromServer, collection } = await import('firebase/firestore')
+            const { db } = await import('../../config/firebase')
+            const snap = await getCountFromServer(collection(db, `users/${uid}/images`))
+            setImageCount(snap.data().count)
+          }
+        } catch (e) {
+          console.error('Failed to get image count', e)
+        } finally {
+          setIsUsageLoading(false)
+        }
+      }
+      fetchUsage()
+    }
+  }, [activeTab, imageCount, isUsageLoading])
+
   const getTabTitle = (tab: TabType) => {
     switch (tab) {
       case 'ledger': return '가계부 설정'
       case 'security': return '보안 및 비밀번호'
       case 'anniversaries': return '기념일 관리'
       case 'monthly': return '매월 반복 일정'
+      case 'usage': return '데이터 사용량'
       case 'trash': return '휴지통'
     }
   }
@@ -179,6 +208,14 @@ const SettingsPage: React.FC = () => {
             }`}
           >
             보안 및 비밀번호
+          </button>
+          <button 
+            onClick={() => setActiveTab('usage')}
+            className={`w-full text-left px-4 py-3 rounded-lg font-bold text-sm transition-colors ${
+              activeTab === 'usage' ? 'bg-yuri-100 text-yuri-900' : 'text-yuri-600 hover:bg-yuri-50'
+            }`}
+          >
+            데이터 사용량
           </button>
           <button 
             onClick={() => setActiveTab('trash')}
@@ -578,6 +615,60 @@ const SettingsPage: React.FC = () => {
                     {isUpdating ? '변경 중...' : '비밀번호 변경하기'}
                   </button>
                 </form>
+              </div>
+            )}
+
+            {activeTab === 'usage' && (
+              <div className="bg-white border border-yuri-200 rounded-xl p-8 shadow-sm mb-8">
+                <div className="flex justify-between items-end mb-2">
+                  <h3 className="text-lg font-bold text-yuri-900">앱 데이터 사용량</h3>
+                </div>
+                <p className="text-sm text-yuri-500 mb-6 leading-relaxed">
+                  현재 기기에 동기화된 데이터 개수입니다. <span className="text-yuri-400 text-xs">※ 실제 사용량과 차이가 있을 수 있는 추정치입니다.</span>
+                </p>
+                <div className="flex flex-col gap-4">
+                  <div className="flex items-center justify-between border-b border-yuri-100 pb-3">
+                    <span className="text-sm font-bold text-yuri-700">작성된 메모</span>
+                    <span className="text-sm text-yuri-900 font-semibold">{notes.length}개</span>
+                  </div>
+                  <div className="flex items-center justify-between border-b border-yuri-100 pb-3">
+                    <span className="text-sm font-bold text-yuri-700">등록된 할 일(업무)</span>
+                    <span className="text-sm text-yuri-900 font-semibold">{tasks.length}개</span>
+                  </div>
+                  <div className="flex items-center justify-between border-b border-yuri-100 pb-3">
+                    <span className="text-sm font-bold text-yuri-700">일정(캘린더)</span>
+                    <span className="text-sm text-yuri-900 font-semibold">{events.length}개</span>
+                  </div>
+                  <div className="flex items-center justify-between border-b border-yuri-100 pb-3">
+                    <span className="text-sm font-bold text-yuri-700">가계부 내역 (카드+현금)</span>
+                    <span className="text-sm text-yuri-900 font-semibold">{ledger.length}개</span>
+                  </div>
+                  <div className="flex items-center justify-between border-b border-yuri-100 pb-3">
+                    <span className="text-sm font-bold text-yuri-700">첨부된 이미지</span>
+                    <span className="text-sm text-yuri-900 font-semibold">
+                      {isUsageLoading ? '계산 중...' : `${imageCount || 0}장`}
+                    </span>
+                  </div>
+                  
+                  <div className="mt-4 p-4 bg-yuri-50 rounded-lg">
+                    <h4 className="text-sm font-bold text-yuri-900 mb-2">무료 저장소(1GB) 사용 현황</h4>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-xs text-yuri-600">
+                        {isUsageLoading ? '...' : `추정 이미지 용량 (평균 300KB/장): 약 ${Math.round((imageCount || 0) * 0.3)}MB`}
+                      </span>
+                      <span className="text-xs font-bold text-accent">
+                        {isUsageLoading ? '...' : `약 ${(((imageCount || 0) * 0.3) / 1024 * 100).toFixed(2)}%`}
+                      </span>
+                    </div>
+                    <div className="w-full h-2 bg-yuri-200 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-accent transition-all duration-500" 
+                        style={{ width: `${Math.min(100, ((imageCount || 0) * 0.3) / 1024 * 100)}%` }}
+                      ></div>
+                    </div>
+                    <p className="text-[10px] text-yuri-400 mt-2 text-right">텍스트 데이터는 용량을 거의 차지하지 않아 제외되었습니다.</p>
+                  </div>
+                </div>
               </div>
             )}
 
