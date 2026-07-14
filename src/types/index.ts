@@ -84,6 +84,7 @@ export interface ScheduleEvent {
   scheduledDate?: string   // UTC ISO — the date/time the event is FOR (parsed from text)
   createdAt:      string   // UTC ISO — when the entry was saved
   order?:         number   // sorting order
+  color?:         string
 }
 
 export interface AgendaItem {

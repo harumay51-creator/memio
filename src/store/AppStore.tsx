@@ -51,6 +51,7 @@ interface StoreValue {
   updateLedgerEntry: (id: string, updates: Partial<LedgerEntry>) => void
   deleteLedgerEntry: (id: string) => void
   addEvent:       (text: string, scheduledDate?: string) => void
+  updateEvent:    (id: string, updates: Partial<ScheduleEvent>) => void
   deleteEvent:    (id: string)  => void
   addNote:        (text: string) => string
   updateNote:     (id: string, text: string) => void
@@ -470,6 +471,11 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
     setDoc(doc(db, 'users', uid, 'events', newItem.id), newItem).catch(console.error)
   }, [events.length, uid])
 
+  const updateEvent = useCallback((id: string, updates: Partial<ScheduleEvent>) => {
+    setEvents(prev => prev.map(e => e.id === id ? { ...e, ...updates } : e))
+    updateDoc(doc(db, 'users', uid, 'events', id), updates).catch(console.error)
+  }, [uid])
+
   const deleteEvent = useCallback((id: string) => {
     setEvents(prev => prev.filter(e => e.id !== id))
     deleteDoc(doc(db, 'users', uid, 'events', id)).catch(console.error)
@@ -791,8 +797,12 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
       isLoading, loadError,
       tasks, ledger, events, notes, fixedExpenses, expenseCategories, agendas, anniversaries, monthlyEvents, trashedItems,
       addTask, toggleTask, updateTaskText, updateTaskNote, deleteTask,
-      addLedgerEntry, updateLedgerEntry, deleteLedgerEntry,
-      addEvent, deleteEvent,
+      addLedgerEntry,
+      updateLedgerEntry,
+      deleteLedgerEntry,
+      addEvent,
+      updateEvent,
+      deleteEvent,
       addNote, updateNote, deleteNote,
       navDate, setNavDate,
       addFixedExpense, updateFixedExpense, deleteFixedExpense,
