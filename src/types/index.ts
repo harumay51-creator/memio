@@ -1,6 +1,5 @@
 // ─── Navigation ──────────────────────────────────────────────────────────────
 export type PageId =
-  | 'dashboard'
   | 'search'
   | 'tasks'
   | 'history'

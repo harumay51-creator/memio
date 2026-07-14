@@ -1,8 +1,6 @@
 import type { NavItem } from '../types'
 
 export const NAV_ITEMS: NavItem[] = [
-  // ── Home ──────────────────────────────────────────────
-  { id: 'dashboard',  label: '홈',          icon: '⌂',  group: 'home' },
   // ── Input ──────────────────────────────────────────────
   { id: 'calendar',   label: '달력',        icon: '◷',  group: 'input' },
   { id: 'tasks',      label: '업무',        icon: '✓',  group: 'input' },

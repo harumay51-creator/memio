@@ -7,7 +7,6 @@ import NotesPage       from '../components/NotesPage'
 import TasksPage       from '../components/TasksPage'
 import HistoryPage     from '../components/HistoryPage'
 import SearchPage      from '../components/SearchPage'
-import TodayPage       from '../components/TodayPage'
 import SettingsPage    from '../components/SettingsPage'
 import PlaceholderPage from '../components/PlaceholderPage'
 import JournalPage     from '../components/JournalPage/JournalPage'
@@ -28,9 +27,6 @@ interface RouterProps {
 const Router: React.FC<RouterProps> = ({ page, activeItemId }) => {
   switch (page) {
       // ── Implemented pages ─────────────────────────────────────────────
-      case 'dashboard':
-        return <TodayPage />
-
       case 'search':
         return <SearchPage />
 

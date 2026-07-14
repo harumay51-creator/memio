@@ -11,13 +11,12 @@ import { onAuthStateChanged, User, signOut } from 'firebase/auth'
 // ── Inner app (needs to be inside AppStoreProvider to access useAppStore) ─────
 const AppInner: React.FC = () => {
   const { isLoading, loadError } = useAppStore()
-  const [activePage,    setActivePage]    = useState<PageId>(() => (localStorage.getItem('yuri-active-page') as PageId) || 'dashboard')
+  const [activePage,    setActivePage]    = useState<PageId>('calendar')
   const [activeItemId,  setActiveItemId]  = useState<string | null>(null)
 
   const navigate = useCallback((page: PageId, itemId?: string) => {
     setActiveItemId(itemId || null)
     setActivePage(page)
-    localStorage.setItem('yuri-active-page', page)
   }, [])
 
   // Ctrl+K / Cmd+K → open search page

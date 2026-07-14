@@ -10,7 +10,6 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ activePage, onNavigate, onLogout }) => {
-  const homeItems    = NAV_ITEMS.filter(i => i.group === 'home')
   const inputItems   = NAV_ITEMS.filter(i => i.group === 'input')
   const exploreItems = NAV_ITEMS.filter(i => i.group === 'explore')
   const utilityItems = NAV_ITEMS.filter(i => i.group === 'utility')
@@ -37,15 +36,6 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage, onNavigate, onLogout }) =
       </div>
 
       <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden gap-1">
-        {/* Home nav */}
-        <nav className="flex flex-col gap-0.5">
-          {homeItems.map(item => (
-            <NavItemButton key={item.id} item={item} active={activePage === item.id} onClick={() => onNavigate(item.id)} />
-          ))}
-        </nav>
-
-        <div className="border-t border-[#e2e4ea] opacity-60 my-2 mx-3" />
-
         {/* Input nav */}
         <nav className="flex flex-col gap-0.5">
           {inputItems.map(item => (
@@ -111,7 +101,6 @@ interface NavItemButtonProps {
 
 const NavItemButton: React.FC<NavItemButtonProps> = ({ item, active, onClick }) => {
   const IconComponent = (({
-    'dashboard': Home,
     'calendar': Calendar,
     'tasks': CheckSquare,
     'notes': FileText,
