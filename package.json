@@ -17,6 +17,7 @@
     "@tiptap/extension-text-style": "^3.27.2",
     "@tiptap/react": "^3.27.2",
     "@tiptap/starter-kit": "^3.27.2",
+    "date-fns": "^4.4.0",
     "emoji-picker-react": "^4.19.1",
     "firebase": "^12.15.0",
     "lucide-react": "^1.23.0",
