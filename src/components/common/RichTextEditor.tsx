@@ -105,6 +105,11 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ initialContent, onChang
         class: 'prose prose-sm max-w-none focus:outline-none min-h-[150px] w-full',
         spellcheck: 'false',
       },
+      transformPastedHTML(html) {
+        // Memio 에디터 내부 복사/붙여넣기 시 문단 사이의 불필요한 공백(엔터)이 
+        // 여러 줄의 빈 문단으로 파싱되는 현상을 막기 위해 태그 사이 공백 제거
+        return html.replace(/>\s+</g, '><');
+      },
       handlePaste: (_view, event) => {
         const items = event.clipboardData?.items;
         if (!items) return false;
