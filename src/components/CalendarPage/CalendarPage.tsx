@@ -339,17 +339,24 @@ const CalendarPage: React.FC = () => {
                           setInlineText('')
                         }, 100)
                       }}
-                      onKeyDown={e => {
+                      onKeyDown={async e => {
                         if (e.nativeEvent.isComposing) return
                         if (e.key === 'Enter') {
                           e.preventDefault()
                           e.stopPropagation()
                           if (inlineText.trim()) {
                             const iso = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), -9, 0)).toISOString()
-                            addEvent(inlineText.trim(), iso)
+                            try {
+                              await addEvent(inlineText.trim(), iso)
+                              setInlineDate(null)
+                              setInlineText('')
+                            } catch (err) {
+                              console.error('Failed to save inline event', err)
+                            }
+                          } else {
+                            setInlineDate(null)
+                            setInlineText('')
                           }
-                          setInlineDate(null)
-                          setInlineText('')
                         } else if (e.key === 'Escape') {
                           setInlineDate(null)
                           setInlineText('')

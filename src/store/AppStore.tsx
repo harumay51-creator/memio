@@ -63,7 +63,7 @@ interface StoreValue {
   addLedgerEntry: (text: string, amount: number, type: 'income' | 'expense', category: string, date?: string, paymentMethod?: '카드' | '계좌이체', memo?: string) => void
   updateLedgerEntry: (id: string, updates: Partial<LedgerEntry>) => void
   deleteLedgerEntry: (id: string) => void
-  addEvent:       (text: string, scheduledDate?: string, color?: string) => void
+  addEvent:       (text: string, scheduledDate?: string, color?: string) => Promise<void>
   updateEvent:    (id: string, updates: Partial<ScheduleEvent>) => void
   deleteEvent:    (id: string)  => void
   addNote:        (text: string) => string
@@ -485,11 +485,19 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
     })
   }, [uid])
 
-  const addEvent = useCallback((text: string, scheduledDate?: string, color?: string) => {
+  const addEvent = useCallback(async (text: string, scheduledDate?: string, color?: string) => {
     console.log('addEvent called with:', text, scheduledDate, color)
-    const newItem: ScheduleEvent = { id: genId(), text, scheduledDate, color, createdAt: new Date().toISOString(), order: events.length }
-    setEvents(prev => [newItem, ...prev])
-    setDoc(doc(db, 'users', uid, 'events', newItem.id), newItem).catch(console.error)
+    const newItem: any = { id: genId(), text, createdAt: new Date().toISOString(), order: events.length }
+    if (scheduledDate) newItem.scheduledDate = scheduledDate
+    if (color) newItem.color = color
+    setEvents(prev => [newItem as ScheduleEvent, ...prev])
+    try {
+      await setDoc(doc(db, 'users', uid, 'events', newItem.id), newItem)
+      console.log('addEvent success!')
+    } catch (err) {
+      console.error('addEvent error:', err)
+      throw err
+    }
   }, [events.length, uid])
 
   const updateEvent = useCallback((id: string, updates: Partial<ScheduleEvent>) => {
