@@ -182,7 +182,7 @@ const HistoryPage: React.FC = () => {
                             </div>
                             
                             <p className={`text-sm leading-relaxed ${item.done ? 'text-yuri-400 line-through' : 'text-yuri-800'}`}>
-                              {item.text}
+                              {item.text.replace(/<[^>]*>?/gm, '').replace(/&nbsp;/g, ' ')}
                             </p>
                           </div>
                         </li>

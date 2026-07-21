@@ -15,7 +15,6 @@ export default function CardTab({ year, month }: { year: number, month: number }
     cardPaymentDay,
     cardBillingStartDay,
     cardBillingEndDay,
-    addLedgerEntry,
     updateLedgerEntry,
     deleteLedgerEntry,
     cardBills,
@@ -118,27 +117,6 @@ export default function CardTab({ year, month }: { year: number, month: number }
     setDraggedCat(null)
   }
 
-  // ── Dummy Data Generator ──
-  const generateDummyData = () => {
-    if (!window.confirm('현재 보고 있는 결제 주기에 맞춰 더미 데이터를 생성하시겠습니까?')) return
-
-    const catsToUse = ['식비', '카페', '교통', '쇼핑', '기타'].filter(c => sortedCategories.includes(c))
-    
-    // Generate dates within the billing period
-    const startMs = cycle.cardBillingStart.getTime()
-    const endMs = cycle.cardBillingEnd.getTime()
-    
-    catsToUse.forEach(cat => {
-      const numItems = Math.floor(Math.random() * 4) + 2 // 2~5 items
-      for (let i = 0; i < numItems; i++) {
-        const randomTime = startMs + Math.random() * (endMs - startMs)
-        const dateStr = new Date(randomTime).toISOString()
-        const amount = (Math.floor(Math.random() * 20) + 1) * 1000 // 1000 ~ 20000
-        addLedgerEntry(`${cat} 테스트 내역 ${i+1}`, amount, 'expense', cat, dateStr, '카드')
-      }
-    })
-  }
-
   // ── Estimated vs Actual Bill ──
   const expectedBill = useMemo(() => cardEntries.reduce((s, e) => s + e.amount, 0), [cardEntries])
   
@@ -208,12 +186,6 @@ export default function CardTab({ year, month }: { year: number, month: number }
                 </span>
               </p>
             </div>
-            <button 
-              onClick={generateDummyData}
-              className="px-4 py-2 bg-white border border-gray-200 text-gray-600 text-sm font-bold rounded-lg shadow-sm hover:bg-gray-50 transition-colors"
-            >
-              테스트 데이터 생성
-            </button>
           </div>
 
           <div className="flex flex-col gap-2 p-4 bg-white rounded-xl border border-gray-200 shadow-sm max-w-lg">
