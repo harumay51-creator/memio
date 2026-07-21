@@ -282,8 +282,14 @@ const LedgerPage: React.FC = () => {
 
       {/* ── Fixed Expense Modal ────────────────────────────────────────────── */}
       {showFeModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white rounded-2xl shadow-xl w-[400px] max-h-[85vh] flex flex-col animate-slide-up relative">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm animate-fade-in"
+          onClick={() => { setShowFeModal(false); setEditingFeId(null); }}
+        >
+          <div 
+            className="bg-white rounded-2xl shadow-xl w-[400px] max-h-[85vh] flex flex-col animate-slide-up relative"
+            onClick={(e) => e.stopPropagation()}
+          >
             <header className="px-6 py-4 border-b border-yuri-100 flex justify-between items-center bg-yuri-50 rounded-t-2xl shrink-0 z-20">
               <h3 className="font-bold text-yuri-900">{editingFeId ? '고정지출 수정' : '고정지출 등록'}</h3>
               <button onClick={() => { setShowFeModal(false); setEditingFeId(null); }} className="text-yuri-400 hover:text-yuri-900 transition-colors">
