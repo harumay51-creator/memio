@@ -64,6 +64,7 @@ interface StoreValue {
   restoreItem: (type: 'note' | 'task' | 'ledger' | 'fixedExpense', id: string) => void
   hardDeleteItem: (type: 'note' | 'task' | 'ledger' | 'fixedExpense', id: string) => void
   addCategory: (name: string) => void
+  deleteCategory: (name: string) => void
   addCategoryKeyword: (categoryName: string, keyword: string) => void
   removeCategoryKeyword: (categoryName: string, keyword: string) => void
   categoryOrder: string[]
@@ -576,6 +577,14 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
     })
   }, [uid])
 
+  const deleteCategory = useCallback((name: string) => {
+    setExpenseCategories(prev => {
+      const next = prev.filter(c => c.name !== name)
+      deleteDoc(doc(db, 'users', uid, 'expenseCategories', name)).catch(console.error)
+      return next
+    })
+  }, [uid])
+
   const addAgenda = useCallback((text: string, monthKey: string) => {
     const newItem: AgendaItem = { id: genId(), monthKey, text, done: false, createdAt: new Date().toISOString() }
     setAgendas(prev => [...prev, newItem])
@@ -807,7 +816,7 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
       navDate, setNavDate,
       addFixedExpense, updateFixedExpense, deleteFixedExpense,
       restoreItem, hardDeleteItem,
-      addCategory, addCategoryKeyword, removeCategoryKeyword,
+      addCategory, deleteCategory, addCategoryKeyword, removeCategoryKeyword,
       categoryOrder, setCategoryOrder,
       addAgenda, toggleAgenda, deleteAgenda,
       updateItemOrders,

@@ -8,7 +8,7 @@ type TabType = 'ledger' | 'security' | 'anniversaries' | 'monthly' | 'trash' | '
 
 const SettingsPage: React.FC = () => {
   const { 
-    expenseCategories, addCategoryKeyword, removeCategoryKeyword, addCategory,
+    expenseCategories, addCategoryKeyword, removeCategoryKeyword, addCategory, deleteCategory,
     anniversaries, addAnniversary, deleteAnniversary,
     monthlyEvents, addMonthlyEvent, deleteMonthlyEvent,
     cardPaymentDay, setCardPaymentDay,
@@ -347,18 +347,35 @@ const SettingsPage: React.FC = () => {
                 <div className="flex flex-col gap-6">
                   {expenseCategories.map(cat => (
                     <div key={cat.name} className="bg-white border border-yuri-200 rounded-xl overflow-hidden shadow-sm">
-                      <button 
-                        onClick={() => toggleCategory(cat.name)}
-                        className="w-full bg-yuri-50 px-5 py-4 border-b border-yuri-200 flex justify-between items-center hover:bg-yuri-100 transition-colors cursor-pointer"
-                      >
-                        <h3 className="text-sm font-bold text-yuri-900 flex items-center gap-2">
-                          <span className="w-2 h-2 rounded-full bg-yuri-400" />
-                          {cat.name}
-                        </h3>
-                        <span className="text-yuri-400 text-xs font-bold">
-                          {expanded[cat.name] ? '접기 ▲' : '펼치기 ▼'}
-                        </span>
-                      </button>
+                      <div className="w-full bg-yuri-50 px-5 py-4 border-b border-yuri-200 flex justify-between items-center transition-colors">
+                        <button 
+                          onClick={() => toggleCategory(cat.name)}
+                          className="flex-1 text-left flex items-center gap-2 hover:opacity-70 transition-opacity"
+                        >
+                          <h3 className="text-sm font-bold text-yuri-900 flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-yuri-400" />
+                            {cat.name}
+                          </h3>
+                        </button>
+                        <div className="flex items-center gap-4">
+                          <button
+                            onClick={() => {
+                              if (confirm(`정말 '${cat.name}' 카테고리를 삭제하시겠어요?\n이미 저장된 거래는 유지되지만, 앞으로 이 카테고리는 선택할 수 없습니다.`)) {
+                                deleteCategory(cat.name)
+                              }
+                            }}
+                            className="text-yuri-400 hover:text-red-500 text-xs font-bold transition-colors"
+                          >
+                            삭제
+                          </button>
+                          <button 
+                            onClick={() => toggleCategory(cat.name)}
+                            className="text-yuri-400 text-xs font-bold hover:text-yuri-600 transition-colors"
+                          >
+                            {expanded[cat.name] ? '접기 ▲' : '펼치기 ▼'}
+                          </button>
+                        </div>
+                      </div>
                       
                       {expanded[cat.name] && (
                         <div className="p-5 flex flex-col gap-4">

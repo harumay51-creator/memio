@@ -72,6 +72,11 @@ export default function CardTab({ year, month }: { year: number, month: number }
   // Order categories based on `categoryOrder`
   const sortedCategories = useMemo(() => {
     const defaultCats = expenseCategories.map(c => c.name)
+    Object.keys(groupedEntries).forEach(cat => {
+      if (!defaultCats.includes(cat) && cat !== '기타') {
+        defaultCats.push(cat)
+      }
+    })
     if (!defaultCats.includes('기타')) defaultCats.push('기타')
     
     const ordered = [...defaultCats].sort((a, b) => {

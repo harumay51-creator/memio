@@ -98,11 +98,10 @@ export default function CashTab({ year, month, onOpenFixedExpense }: { year: num
 
     const addSum = (e: LedgerEntry | { category: string, amount: number }) => {
       const cat = e.category || '기타'
-      if (sums[cat] !== undefined) {
-        sums[cat] += e.amount
-      } else {
-        sums['기타'] += e.amount
+      if (sums[cat] === undefined) {
+        sums[cat] = 0
       }
+      sums[cat] += e.amount
     }
 
     cardEntries.forEach(addSum)
