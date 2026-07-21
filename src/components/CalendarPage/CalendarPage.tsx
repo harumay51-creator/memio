@@ -371,233 +371,256 @@ const CalendarPage: React.FC = () => {
         </div>
       </main>
 
-      {/* ── Right: Timeline & Agenda ─────────────────────────────────────────── */}
-      <aside className="w-[360px] flex flex-col self-stretch bg-[#FAFBFF] shrink-0 border-l border-[#EEF1F6] p-5 gap-6">
-        
-        {/* 1. Selected Day Events */}
-        <div className="flex-[3.5] min-h-0 flex flex-col bg-[#FFFFFF] rounded-[14px] shadow-[0_1px_4px_rgba(0,0,0,0.08)] overflow-hidden">
-          <header className="shrink-0 px-5 pt-5 pb-3">
-            <h1 className="text-lg font-semibold text-[#2D334A] tracking-tight">
-              {isSelDayToday ? `오늘, ${selDayFormatted}` : selDayFormatted}
-            </h1>
-          </header>
+      {/* ── Right: Unified Panel ────────────────────────────────────────────── */}
+      <aside className="relative w-[360px] flex flex-col self-stretch bg-[#FCFCFF] shrink-0 border-l border-[#EEF1F6] overflow-hidden">
+        {/* Background Decorative Layer */}
+        <div className="absolute inset-0 z-0 pointer-events-none" />
 
-          <div className="px-5 pb-5 flex-1 overflow-y-auto">
-            {selectedDayEvents.length > 0 || getDayItems(selDay).dayAnnivs.length > 0 || getDayItems(selDay).dayMonthly.length > 0 ? (
-              <ul className="flex flex-col gap-1.5 relative before:absolute before:inset-y-3 before:left-[9px] before:w-px before:bg-[#EEF1F6]">
-                
-                {getDayItems(selDay).dayAnnivs.map(a => (
-                  <li key={`sa-${a.id}`} className="flex items-start gap-3 relative group">
-                    <div className="w-5 h-5 rounded-full bg-[#FFFFFF] flex items-center justify-center z-10 shrink-0 mt-0.5">
-                      <div className="w-1.5 h-1.5 rounded-full bg-[#F5A5C4]" />
-                    </div>
-                    
-                    <div className="flex-1 bg-transparent p-1.5 flex gap-2 items-start transition-colors rounded-lg hover:bg-[#F7F6FF]">
-                      <span className="shrink-0 text-[11px] mt-0.5">🎂</span>
-                      <div className="flex-1">
-                        <span className="text-xs text-[#2D334A] font-medium whitespace-pre-wrap leading-relaxed">
-                          {a.name}
-                        </span>
-                      </div>
-                      <div className="flex gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button onClick={() => deleteAnniversary(a.id)} className="w-5 h-5 flex items-center justify-center rounded text-[#717A8C] hover:text-[#EF6A7B] text-[10px]">✕</button>
-                      </div>
-                    </div>
-                  </li>
-                ))}
-
-                {getDayItems(selDay).dayMonthly.map(m => (
-                  <li key={`sm-${m.id}`} className="flex items-start gap-3 relative group">
-                    <div className="w-5 h-5 rounded-full bg-[#FFFFFF] flex items-center justify-center z-10 shrink-0 mt-0.5">
-                      <div className="w-1.5 h-1.5 rounded-full bg-[#63D2B0]" />
-                    </div>
-                    
-                    <div className="flex-1 bg-transparent p-1.5 flex gap-2 items-start transition-colors rounded-lg hover:bg-[#F7F6FF]">
-                      <span className="shrink-0 text-[11px] mt-0.5">🔄</span>
-                      <div className="flex-1">
-                        <span className="text-xs text-[#2D334A] font-medium whitespace-pre-wrap leading-relaxed">
-                          {m.name}
-                        </span>
-                      </div>
-                      <div className="flex gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button onClick={() => deleteMonthlyEvent(m.id)} className="w-5 h-5 flex items-center justify-center rounded text-[#717A8C] hover:text-[#EF6A7B] text-[10px]">✕</button>
-                      </div>
-                    </div>
-                  </li>
-                ))}
-                
-                {selectedDayEvents.map((e, index) => {
-                  const isEditing = editingEventId === e.id;
-                  const eColor = e.color || '#8B7CF8';
-
-                  const handleSaveEdit = () => {
-                    if (editTitle.trim()) {
-                      const parts = editDate.split('-');
-                      if (parts.length === 3) {
-                        const iso = new Date(Date.UTC(parseInt(parts[0]), parseInt(parts[1])-1, parseInt(parts[2]), -9, 0)).toISOString();
-                        updateEvent(e.id, { text: editTitle.trim(), color: editColor, scheduledDate: iso });
-                      }
-                    }
-                    setEditingEventId(null);
-                  };
-
-                  return (
-                    <li key={e.id} className="flex items-start gap-3 relative group">
-                      <div className="w-5 h-5 rounded-full bg-[#FFFFFF] flex items-center justify-center z-10 shrink-0 mt-0.5">
-                        <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: eColor }} />
-                      </div>
-                      
-                      <div className="flex-1 bg-transparent p-1.5 flex gap-2 items-start transition-colors rounded-lg hover:bg-[#F7F6FF]">
-                        {isEditing ? (
-                          <div className="flex-1 flex flex-col gap-2 bg-white p-2 rounded-lg border border-yuri-200 shadow-sm" onClick={e => e.stopPropagation()}>
-                            <input spellCheck={false}
-                              autoFocus
-                              type="text"
-                              value={editTitle}
-                              onChange={e => setEditTitle(e.target.value)}
-                              onKeyDown={e => {
-                                if (e.nativeEvent.isComposing) return
-                                if (e.key === 'Enter') handleSaveEdit()
-                                if (e.key === 'Escape') setEditingEventId(null)
-                              }}
-                              className="w-full text-xs outline-none font-medium text-yuri-900 border-b border-yuri-100 pb-1"
-                              placeholder="일정 내용"
-                            />
-                            <div className="flex justify-between items-center">
-                              <input spellCheck={false} 
-                                type="date" 
-                                value={editDate}
-                                onChange={e => setEditDate(e.target.value)}
-                                className="text-[10px] text-yuri-600 outline-none bg-transparent"
-                              />
-                              <div className="flex gap-1.5">
-                                {EVENT_COLORS.map(c => (
-                                  <button
-                                    key={c}
-                                    onClick={() => setEditColor(c)}
-                                    className={`w-3.5 h-3.5 rounded-full transition-all ${editColor === c ? 'ring-2 ring-offset-1 ring-yuri-400 scale-110' : 'opacity-70 hover:opacity-100'}`}
-                                    style={{ backgroundColor: c }}
-                                  />
-                                ))}
-                              </div>
-                            </div>
-                            <div className="flex justify-end gap-1 mt-1">
-                               <button onClick={handleSaveEdit} className="text-[10px] bg-yuri-100 hover:bg-yuri-200 text-yuri-700 px-2 py-1 rounded transition-colors font-medium">저장</button>
-                               <button onClick={() => setEditingEventId(null)} className="text-[10px] bg-transparent hover:bg-gray-100 text-gray-500 px-2 py-1 rounded transition-colors">취소</button>
-                            </div>
-                          </div>
-                        ) : (
-                          <div 
-                            className="flex-1 cursor-pointer"
-                            onClick={() => {
-                              setEditingEventId(e.id);
-                              setEditTitle(e.text);
-                              setEditColor(eColor);
-                              const dt = new Date(eventDisplayDate(e.scheduledDate, e.createdAt));
-                              const localYMD = `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
-                              setEditDate(localYMD);
-                            }}
-                          >
-                            <span className="text-xs font-medium whitespace-pre-wrap leading-relaxed" style={{ color: eColor }}>
-                              {e.text}
+        <div className="relative z-10 flex-1 overflow-y-auto px-6 py-8 flex flex-col gap-10">
+          
+          {/* 1. Selected Day Events (Timeline) */}
+          <section className="relative flex flex-col">
+            <header className="mb-5">
+              <h1 className="text-lg font-semibold text-[#2D334A] tracking-tight">
+                {isSelDayToday ? `오늘, ${selDayFormatted}` : selDayFormatted}
+              </h1>
+            </header>
+            
+            <div className="relative">
+              {/* Timeline vertical line */}
+              {(selectedDayEvents.length > 0 || getDayItems(selDay).dayAnnivs.length > 0 || getDayItems(selDay).dayMonthly.length > 0) && (
+                <div className="absolute left-[9px] top-2 bottom-2 w-px bg-[#EEF1F6] z-0" />
+              )}
+              
+              {selectedDayEvents.length > 0 || getDayItems(selDay).dayAnnivs.length > 0 || getDayItems(selDay).dayMonthly.length > 0 ? (
+                <ul className="flex flex-col gap-4 relative z-10">
+                  
+                  {getDayItems(selDay).dayAnnivs.map(a => {
+                    const isPastDay = new Date(selDay.getFullYear(), selDay.getMonth(), selDay.getDate()).getTime() < new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+                    return (
+                      <li key={`sa-${a.id}`} className={`flex items-start gap-4 relative group transition-opacity ${isPastDay ? 'opacity-40' : 'opacity-100'}`}>
+                        <div className="w-5 h-5 rounded-full bg-[#FCFCFF] flex items-center justify-center shrink-0 mt-0.5 z-10">
+                          <div className="w-6 h-6 shrink-0 flex items-center justify-center rounded-full bg-[#FCEFF6] text-[11px] shadow-sm">🎂</div>
+                        </div>
+                        
+                        <div className="flex-1 bg-transparent py-1 flex gap-2 items-start rounded-lg">
+                          <div className="flex-1">
+                            <span className="text-xs text-[#2D334A] font-medium whitespace-pre-wrap leading-relaxed">
+                              {a.name}
                             </span>
                           </div>
-                        )}
-                        
-                        {!isEditing && (
                           <div className="flex gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <div className="flex flex-col mr-1 justify-center gap-0.5">
-                              <button onClick={() => handleMoveEventUp(index)} disabled={index === 0} className="w-4 h-3 flex items-center justify-center text-[#717A8C] hover:text-[#2D334A] disabled:opacity-30 text-[9px]" aria-label="위로 이동">▲</button>
-                              <button onClick={() => handleMoveEventDown(index)} disabled={index === selectedDayEvents.length - 1} className="w-4 h-3 flex items-center justify-center text-[#717A8C] hover:text-[#2D334A] disabled:opacity-30 text-[9px]" aria-label="아래로 이동">▼</button>
-                            </div>
-                            <button onClick={() => deleteEvent(e.id)} className="w-5 h-5 flex items-center justify-center rounded text-[#717A8C] hover:text-[#EF6A7B] text-[10px]">✕</button>
+                            <button onClick={() => deleteAnniversary(a.id)} className="w-5 h-5 flex items-center justify-center rounded text-[#717A8C] hover:text-[#EF6A7B] text-[10px]">✕</button>
                           </div>
-                        )}
+                        </div>
+                      </li>
+                    );
+                  })}
+
+                  {getDayItems(selDay).dayMonthly.map(m => {
+                    const isPastDay = new Date(selDay.getFullYear(), selDay.getMonth(), selDay.getDate()).getTime() < new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+                    return (
+                      <li key={`sm-${m.id}`} className={`flex items-start gap-4 relative group transition-opacity ${isPastDay ? 'opacity-40' : 'opacity-100'}`}>
+                        <div className="w-5 h-5 rounded-full bg-[#FCFCFF] flex items-center justify-center shrink-0 mt-0.5 z-10">
+                          <div className="w-6 h-6 shrink-0 flex items-center justify-center rounded-full bg-[#EDF9F4] text-[11px] shadow-sm">🔄</div>
+                        </div>
+                        
+                        <div className="flex-1 bg-transparent py-1 flex gap-2 items-start rounded-lg">
+                          <div className="flex-1">
+                            <span className="text-xs text-[#2D334A] font-medium whitespace-pre-wrap leading-relaxed">
+                              {m.name}
+                            </span>
+                          </div>
+                          <div className="flex gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button onClick={() => deleteMonthlyEvent(m.id)} className="w-5 h-5 flex items-center justify-center rounded text-[#717A8C] hover:text-[#EF6A7B] text-[10px]">✕</button>
+                          </div>
+                        </div>
+                      </li>
+                    );
+                  })}
+                  
+                  {selectedDayEvents.map((e, index) => {
+                    const isEditing = editingEventId === e.id;
+                    const eColor = e.color || '#8B7CF8';
+                    const dt = new Date(eventDisplayDate(e.scheduledDate, e.createdAt));
+                    const isPastDay = new Date(selDay.getFullYear(), selDay.getMonth(), selDay.getDate()).getTime() < new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+
+                    const handleSaveEdit = () => {
+                      if (editTitle.trim()) {
+                        const parts = editDate.split('-');
+                        if (parts.length === 3) {
+                          const iso = new Date(Date.UTC(parseInt(parts[0]), parseInt(parts[1])-1, parseInt(parts[2]), -9, 0)).toISOString();
+                          updateEvent(e.id, { text: editTitle.trim(), color: editColor, scheduledDate: iso });
+                        }
+                      }
+                      setEditingEventId(null);
+                    };
+
+                    return (
+                      <li key={e.id} className={`flex items-start gap-4 relative group transition-opacity ${isPastDay && !isEditing ? 'opacity-40' : 'opacity-100'}`}>
+                        <div className="w-5 h-5 rounded-full bg-[#FCFCFF] flex items-center justify-center shrink-0 mt-0.5 z-10">
+                          <div className="w-2.5 h-2.5 rounded-full border-[2.5px] bg-white" style={{ borderColor: eColor }} />
+                        </div>
+                        
+                        <div className="flex-1 bg-transparent py-1 flex gap-2 items-start">
+                          {isEditing ? (
+                            <div className="flex-1 flex flex-col gap-2 bg-white p-3 rounded-xl border border-[#EEF1F6] shadow-sm" onClick={ev => ev.stopPropagation()}>
+                              <input spellCheck={false}
+                                autoFocus
+                                type="text"
+                                value={editTitle}
+                                onChange={ev => setEditTitle(ev.target.value)}
+                                onKeyDown={ev => {
+                                  if (ev.nativeEvent.isComposing) return
+                                  if (ev.key === 'Enter') handleSaveEdit()
+                                  if (ev.key === 'Escape') setEditingEventId(null)
+                                }}
+                                className="w-full text-xs outline-none font-medium text-[#2D334A] border-b border-[#EEF1F6] pb-1.5 bg-transparent"
+                                placeholder="일정 내용"
+                              />
+                              <div className="flex justify-between items-center mt-1">
+                                <input spellCheck={false} 
+                                  type="date" 
+                                  value={editDate}
+                                  onChange={ev => setEditDate(ev.target.value)}
+                                  className="text-[10px] text-[#717A8C] outline-none bg-transparent"
+                                />
+                                <div className="flex gap-1.5">
+                                  {EVENT_COLORS.map(c => (
+                                    <button
+                                      key={c}
+                                      onClick={() => setEditColor(c)}
+                                      className={`w-3.5 h-3.5 rounded-full transition-all ${editColor === c ? 'ring-2 ring-offset-1 scale-110' : 'opacity-70 hover:opacity-100'}`}
+                                      style={{ backgroundColor: c, '--tw-ring-color': c } as React.CSSProperties}
+                                    />
+                                  ))}
+                                </div>
+                              </div>
+                              <div className="flex justify-end gap-1.5 mt-2">
+                                 <button onClick={handleSaveEdit} className="text-[10px] bg-[#8B7CF8] hover:bg-[#7A6AE6] text-white px-2.5 py-1.5 rounded-md transition-colors font-semibold">저장</button>
+                                 <button onClick={() => setEditingEventId(null)} className="text-[10px] bg-transparent hover:bg-[#F7F6FF] text-[#717A8C] px-2.5 py-1.5 rounded-md transition-colors font-medium">취소</button>
+                              </div>
+                            </div>
+                          ) : (
+                            <div 
+                              className="flex-1 cursor-pointer group-hover:bg-[#FFFFFF] group-hover:shadow-[0_2px_8px_rgba(0,0,0,0.04)] px-2 py-1 -ml-2 rounded-lg transition-all"
+                              onClick={() => {
+                                setEditingEventId(e.id);
+                                setEditTitle(e.text);
+                                setEditColor(eColor);
+                                const localYMD = `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+                                setEditDate(localYMD);
+                              }}
+                            >
+                              <span className="text-xs font-medium whitespace-pre-wrap leading-relaxed" style={{ color: isPastDay ? '#717A8C' : '#2D334A' }}>
+                                {e.text}
+                              </span>
+                            </div>
+                          )}
+                          
+                          {!isEditing && (
+                            <div className="flex gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity mt-1">
+                              <div className="flex flex-col justify-center gap-0.5 mr-0.5">
+                                <button onClick={() => handleMoveEventUp(index)} disabled={index === 0} className="w-4 h-3 flex items-center justify-center text-[#A0AABF] hover:text-[#2D334A] disabled:opacity-30 text-[9px]">▲</button>
+                                <button onClick={() => handleMoveEventDown(index)} disabled={index === selectedDayEvents.length - 1} className="w-4 h-3 flex items-center justify-center text-[#A0AABF] hover:text-[#2D334A] disabled:opacity-30 text-[9px]">▼</button>
+                              </div>
+                              <button onClick={() => deleteEvent(e.id)} className="w-5 h-5 flex items-center justify-center rounded text-[#A0AABF] hover:text-[#EF6A7B] text-[10px]">✕</button>
+                            </div>
+                          )}
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              ) : (
+                <p className="text-xs text-[#A0AABF] py-2 relative z-10">이 날짜의 일정이 없습니다.</p>
+              )}
+            </div>
+          </section>
+
+          {/* 2. Tasks (Checklist) */}
+          <section className="relative flex flex-col">
+            <header className="mb-4 flex justify-between items-end px-1">
+              <h2 className="text-base font-semibold text-[#2D334A] tracking-tight">업무</h2>
+              <span className="text-[11px] font-medium text-[#717A8C]">{activeTasks.length}건</span>
+            </header>
+            <div className="relative">
+              {activeTasks.length > 0 ? (
+                <ul className="flex flex-col gap-1.5">
+                  {activeTasks.map((t, index) => (
+                    <li key={t.id} className="flex items-start gap-3 group bg-transparent p-2 rounded-xl hover:bg-white hover:shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all">
+                      <button 
+                        onClick={() => toggleTask(t.id)} 
+                        className={`w-4 h-4 mt-0.5 rounded-full border-[1.5px] flex items-center justify-center shrink-0 transition-colors ${t.done ? 'bg-[#8B7CF8] border-[#8B7CF8] text-white' : 'border-[#A0AABF] text-transparent hover:border-[#8B7CF8]'}`}
+                      >
+                        <svg className="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      </button>
+                      
+                      <div className="flex-1 mt-0.5">
+                        <span className={`text-xs font-medium whitespace-pre-wrap leading-relaxed transition-all ${t.done ? 'text-[#A0AABF] line-through' : 'text-[#2D334A]'}`}>
+                          {t.text}
+                        </span>
+                      </div>
+                      
+                      <div className="flex gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity mt-0.5">
+                        <div className="flex flex-col justify-center gap-0.5 mr-0.5">
+                          <button onClick={() => handleMoveTaskUp(index)} disabled={index === 0} className="w-4 h-3 flex items-center justify-center text-[#A0AABF] hover:text-[#2D334A] disabled:opacity-30 text-[9px]">▲</button>
+                          <button onClick={() => handleMoveTaskDown(index)} disabled={index === activeTasks.length - 1} className="w-4 h-3 flex items-center justify-center text-[#A0AABF] hover:text-[#2D334A] disabled:opacity-30 text-[9px]">▼</button>
+                        </div>
+                        <button onClick={() => deleteTask(t.id)} className="w-5 h-5 flex items-center justify-center rounded text-[#A0AABF] hover:text-[#EF6A7B] text-[10px]">✕</button>
                       </div>
                     </li>
-                  );
-                })}
-              </ul>
-            ) : (
-              <p className="text-xs text-[#717A8C] text-center py-4">이 날짜의 일정이 없습니다.</p>
-            )}
-          </div>
-        </div>
-
-        {/* 2. Active Tasks */}
-        <div className="flex-[3.5] min-h-0 flex flex-col bg-[#FFFFFF] rounded-[14px] shadow-[0_1px_4px_rgba(0,0,0,0.08)] overflow-hidden">
-          <header className="shrink-0 px-5 pt-4 pb-2 flex justify-between items-center">
-            <h2 className="text-sm font-semibold text-[#2D334A]">진행 중인 업무</h2>
-            <span className="text-[10px] font-medium text-[#717A8C]">{activeTasks.length}건</span>
-          </header>
-
-          <div className="px-5 pb-4 flex-1 overflow-y-auto">
-            {activeTasks.length > 0 ? (
-              <ul className="flex flex-col gap-1">
-                {activeTasks.map((t, index) => (
-                  <li key={t.id} className="flex items-start gap-2.5 bg-transparent p-1.5 rounded-lg hover:bg-[#F7F6FF] transition-colors group">
-                    <button onClick={() => toggleTask(t.id)} className="w-4 h-4 mt-0.5 flex items-center justify-center border-[1.5px] rounded border-[#717A8C] text-transparent hover:border-[#8B7CF8] shrink-0">
-                      <svg className="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                    </button>
-                    
-                    <div className="flex-1">
-                      <span className="text-xs text-[#2D334A] font-medium whitespace-pre-wrap leading-relaxed">
-                        {t.text}
-                      </span>
-                    </div>
-                    
-                    <div className="flex gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <div className="flex flex-col mr-1 justify-center gap-0.5">
-                        <button onClick={() => handleMoveTaskUp(index)} disabled={index === 0} className="w-4 h-3 flex items-center justify-center text-[#717A8C] hover:text-[#2D334A] disabled:opacity-30 text-[9px]" aria-label="위로 이동">▲</button>
-                        <button onClick={() => handleMoveTaskDown(index)} disabled={index === activeTasks.length - 1} className="w-4 h-3 flex items-center justify-center text-[#717A8C] hover:text-[#2D334A] disabled:opacity-30 text-[9px]" aria-label="아래로 이동">▼</button>
-                      </div>
-                      <button onClick={() => deleteTask(t.id)} className="w-5 h-5 flex items-center justify-center rounded text-[#717A8C] hover:text-[#EF6A7B] text-[10px]">✕</button>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-xs text-[#717A8C] text-center py-4">모든 업무를 완료했습니다!</p>
-            )}
-          </div>
-        </div>
-
-        {/* 3. Monthly Agenda */}
-        <div className="flex-[3] min-h-0 flex flex-col bg-[#FFFFFF] rounded-[14px] shadow-[0_1px_4px_rgba(0,0,0,0.08)] overflow-hidden">
-          <header className="shrink-0 px-5 pt-4 pb-2 flex justify-between items-center bg-[#FFFFFF]">
-            <h2 className="text-sm font-semibold text-[#2D334A]">이달 목표</h2>
-            <span className="text-[10px] font-medium text-[#717A8C]">{monthKey}</span>
-          </header>
-          
-          <div className="flex-1 overflow-y-auto px-5 pb-5 pt-2">
-            <form onSubmit={handleAddAgenda} className="mb-3 flex gap-2">
-              <input spellCheck={false}
-                type="text" placeholder="새 목표 입력..."
-                value={newAgenda} onChange={e => setNewAgenda(e.target.value)}
-                className="flex-1 px-3 py-1.5 text-xs bg-[#FAFBFF] border-none rounded-lg outline-none focus:ring-1 focus:ring-[#8B7CF8] text-[#2D334A] placeholder:text-[#717A8C]"
-              />
-              <button type="submit" disabled={!newAgenda.trim()} className="px-3 py-1.5 bg-[#8B7CF8] text-white text-xs font-semibold rounded-lg disabled:opacity-50 hover:bg-[#7A6AE6] transition-colors">
-                추가
-              </button>
-            </form>
-
-            <ul className="flex flex-col gap-1 pb-1">
-              {monthAgendas.map(ag => (
-                <li key={ag.id} className="group flex items-start gap-2.5 bg-transparent p-1.5 rounded-lg hover:bg-[#F7F6FF] transition-colors">
-                  <button onClick={() => toggleAgenda(ag.id)} className={`w-4 h-4 mt-0.5 flex items-center justify-center border-[1.5px] rounded shrink-0 ${ag.done ? 'bg-[#8B7CF8] border-[#8B7CF8] text-white' : 'border-[#717A8C] text-transparent hover:border-[#8B7CF8]'}`}>
-                    <svg className="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                  </button>
-                  <span className={`flex-1 text-xs leading-relaxed ${ag.done ? 'text-[#717A8C] line-through' : 'text-[#2D334A] font-medium'}`}>{ag.text}</span>
-                  <button onClick={() => deleteAgenda(ag.id)} className="w-5 h-5 flex items-center justify-center rounded text-[#717A8C] hover:text-[#EF6A7B] opacity-0 group-hover:opacity-100 transition-opacity text-[10px]">
-                    ✕
-                  </button>
-                </li>
-              ))}
-              {monthAgendas.length === 0 && (
-                <p className="text-xs text-[#717A8C] text-center py-4">등록된 어젠다가 없습니다.</p>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-xs text-[#A0AABF] py-2 px-1">모든 업무를 완료했습니다!</p>
               )}
-            </ul>
-          </div>
+            </div>
+          </section>
+
+          {/* 3. Monthly Agenda (Card Style) */}
+          <section className="relative flex flex-col mt-auto pt-4">
+            <div className="bg-[#FFFFFF] rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.03)] border border-[#EEF1F6] p-5 relative overflow-hidden">
+              {/* Subtle card top decoration */}
+              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#F4B73F] via-[#EF6A7B] to-[#8B7CF8] opacity-80" />
+              
+              <header className="mb-4 flex justify-between items-center mt-1">
+                <h2 className="text-sm font-semibold text-[#2D334A]">이달 목표</h2>
+                <span className="text-[10px] font-medium bg-[#FAFBFF] px-2 py-0.5 rounded-full text-[#717A8C] border border-[#EEF1F6]">{monthKey}</span>
+              </header>
+              
+              <div className="flex-1 relative">
+                <form onSubmit={handleAddAgenda} className="mb-4 flex gap-2">
+                  <input spellCheck={false}
+                    type="text" placeholder="새 목표 입력..."
+                    value={newAgenda} onChange={e => setNewAgenda(e.target.value)}
+                    className="flex-1 px-3 py-2 text-xs bg-[#FAFBFF] border border-[#EEF1F6] rounded-lg outline-none focus:border-[#8B7CF8] focus:bg-white text-[#2D334A] placeholder:text-[#A0AABF] transition-colors"
+                  />
+                  <button type="submit" disabled={!newAgenda.trim()} className="px-3 py-2 bg-[#2D334A] text-white text-xs font-semibold rounded-lg disabled:opacity-50 hover:bg-[#1A1F2E] transition-colors shadow-sm">
+                    추가
+                  </button>
+                </form>
+
+                <ul className="flex flex-col gap-2 pb-1">
+                  {monthAgendas.map(ag => (
+                    <li key={ag.id} className="group flex items-start gap-2.5 bg-transparent p-1.5 -mx-1.5 rounded-lg hover:bg-[#FAFBFF] transition-colors">
+                      <button onClick={() => toggleAgenda(ag.id)} className={`w-4 h-4 mt-0.5 flex items-center justify-center rounded shrink-0 transition-colors ${ag.done ? 'bg-[#63D2B0] text-white' : 'bg-[#EEF1F6] text-transparent hover:bg-[#E2E8F0]'}`}>
+                        <svg className="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      </button>
+                      <span className={`flex-1 text-xs leading-relaxed transition-colors ${ag.done ? 'text-[#A0AABF] line-through' : 'text-[#2D334A] font-medium'}`}>{ag.text}</span>
+                      <button onClick={() => deleteAgenda(ag.id)} className="w-5 h-5 flex items-center justify-center rounded text-[#A0AABF] hover:text-[#EF6A7B] opacity-0 group-hover:opacity-100 transition-opacity text-[10px]">
+                        ✕
+                      </button>
+                    </li>
+                  ))}
+                  {monthAgendas.length === 0 && (
+                    <p className="text-xs text-[#A0AABF] text-center py-3">등록된 이달 목표가 없습니다.</p>
+                  )}
+                </ul>
+              </div>
+            </div>
+          </section>
+
         </div>
       </aside>
     </div>
