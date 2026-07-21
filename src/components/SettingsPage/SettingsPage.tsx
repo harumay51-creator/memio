@@ -3,8 +3,9 @@ import { useAppStore } from '../../store/AppStore'
 import { auth } from '../../config/firebase'
 import { EmailAuthProvider, reauthenticateWithCredential, updatePassword } from 'firebase/auth'
 import TrashSection from './TrashSection'
+import HolidaySection from './HolidaySection'
 
-type TabType = 'ledger' | 'security' | 'anniversaries' | 'monthly' | 'trash' | 'usage'
+type TabType = 'ledger' | 'security' | 'anniversaries' | 'monthly' | 'holidays' | 'trash' | 'usage'
 
 const SettingsPage: React.FC = () => {
   const { 
@@ -202,6 +203,14 @@ const SettingsPage: React.FC = () => {
             매월 반복 일정
           </button>
           <button 
+            onClick={() => setActiveTab('holidays')}
+            className={`w-full text-left px-4 py-3 rounded-lg font-bold text-sm transition-colors ${
+              activeTab === 'holidays' ? 'bg-yuri-100 text-yuri-900' : 'text-yuri-600 hover:bg-yuri-50'
+            }`}
+          >
+            공휴일 관리
+          </button>
+          <button 
             onClick={() => setActiveTab('security')}
             className={`w-full text-left px-4 py-3 rounded-lg font-bold text-sm transition-colors ${
               activeTab === 'security' ? 'bg-yuri-100 text-yuri-900' : 'text-yuri-600 hover:bg-yuri-50'
@@ -243,7 +252,7 @@ const SettingsPage: React.FC = () => {
                   <h3 className="text-lg font-bold text-yuri-900 mb-2">신용카드 청구 설정</h3>
                   <p className="text-sm text-yuri-500 mb-6 leading-relaxed">
                     가계부에서 카드값 청구 예정액을 정확히 계산하기 위해 <strong>사용기간 시작일과 종료일</strong>을 설정해주세요.<br />
-                    (결제일은 단순 참고용으로 화면에 표시되며 실제 계산은 사용기간 설정값을 기준으로 이루어집니다.)
+                    (결제일은 단순 참고용으로 화면에 표시되며 실제 계산은 사용기간 설정값을 기준으로 이루어짐.)
                   </p>
                   
                   <div className="flex flex-col gap-5">
@@ -566,6 +575,10 @@ const SettingsPage: React.FC = () => {
                   )}
                 </div>
               </div>
+            )}
+
+            {activeTab === 'holidays' && (
+              <HolidaySection />
             )}
 
             {activeTab === 'security' && (

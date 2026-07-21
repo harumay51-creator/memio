@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react'
 import { useAppStore } from '../../store/AppStore'
-import { HOLIDAYS } from '../../utils/holidays'
+import { useMergedHolidays } from '../../hooks/useMergedHolidays'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'] as const
@@ -61,6 +61,7 @@ const CalendarPage: React.FC = () => {
   const year  = view.getFullYear()
   const month = view.getMonth()
   const grid  = useMemo(() => buildGrid(year, month), [year, month])
+  const mergedHolidays = useMergedHolidays(year)
 
   const goToToday = () => {
     setView(new Date(today.getFullYear(), today.getMonth(), 1))
@@ -157,7 +158,7 @@ const CalendarPage: React.FC = () => {
     const items: React.ReactNode[] = []
 
     const dStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-    const holidayInfo = HOLIDAYS[dStr]
+    const holidayInfo = mergedHolidays[dStr]
     if (holidayInfo) {
       items.push(
         <div key="holiday" className="text-[10px] shrink-0 h-5 px-1.5 bg-[#FDEEEE] text-[#D45D6E] rounded-md flex gap-[6px] items-center w-full overflow-hidden">

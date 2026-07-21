@@ -23,6 +23,17 @@ async function hashPin(pin: string): Promise<string> {
 }
 
 // ─── Store shape ───────────────────────────────────────────────────────────────
+export interface HolidayConfig {
+  hiddenRules: string[];
+  hiddenDates: string[];
+  customHolidays: {
+    id: string;
+    date: string;
+    name: string;
+    isRedDay: boolean;
+  }[];
+}
+
 export interface TrashedItem {
   id: string
   type: 'note' | 'task' | 'ledger' | 'fixedExpense'
@@ -42,6 +53,8 @@ interface StoreValue {
   agendas: AgendaItem[]
   anniversaries: Anniversary[]
   monthlyEvents: MonthlyEvent[]
+  holidayConfig: HolidayConfig
+  updateHolidayConfig: (updater: (prev: HolidayConfig) => HolidayConfig) => void
   addTask:        (text: string) => void
   toggleTask:     (id: string)  => void
   updateTaskText: (id: string, text: string) => void
@@ -116,6 +129,10 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
   const [anniversaries, setAnniversaries] = useState<Anniversary[]>([])
   const [monthlyEvents, setMonthlyEvents] = useState<MonthlyEvent[]>([])
   
+  const [holidayConfig, setHolidayConfig] = useState<HolidayConfig>({
+    hiddenRules: [], hiddenDates: [], customHolidays: []
+  })
+  
   const [cardPaymentDay, setCardPaymentDayState] = useState<number>(14)
   const [cardBillingStartDay, setCardBillingStartDay] = useState<number>(28)
   const [cardBillingEndDay, setCardBillingEndDay] = useState<number>(27)
@@ -160,6 +177,9 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
           setPaydayState(data.payday || 25)
 
           setCategoryOrderState(data.categoryOrder || [])
+          if (data.holidayConfig) {
+            setHolidayConfig(data.holidayConfig)
+          }
         }
         
         const [
@@ -686,6 +706,15 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
     await setDoc(doc(db, `users/${uid}/journal_settings/config`), { pinHash: null }, { merge: true })
   }, [uid])
 
+  const updateHolidayConfig = useCallback((updater: (prev: HolidayConfig) => HolidayConfig) => {
+    setHolidayConfig(prev => {
+      const next = updater(prev)
+      if (!uid) return next
+      setDoc(doc(db, `users/${uid}/settings/config`), { holidayConfig: next }, { merge: true }).catch(console.error)
+      return next
+    })
+  }, [uid])
+
   const restoreItem = useCallback(async (type: 'note'|'task'|'ledger'|'fixedExpense', id: string) => {
     let collectionName = ''
     if (type === 'note') collectionName = 'notes'
@@ -805,6 +834,7 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
     <StoreCtx.Provider value={{
       isLoading, loadError,
       tasks, ledger, events, notes, fixedExpenses, expenseCategories, agendas, anniversaries, monthlyEvents, trashedItems,
+      holidayConfig, updateHolidayConfig,
       addTask, toggleTask, updateTaskText, updateTaskNote, deleteTask,
       addLedgerEntry,
       updateLedgerEntry,

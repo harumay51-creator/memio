@@ -3,6 +3,7 @@ import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSam
 import { ko } from 'date-fns/locale'
 import { useAppStore } from '../../store/AppStore'
 import { type ScheduleEvent } from '../../types'
+import { useMergedHolidays } from '../../hooks/useMergedHolidays'
 
 const EVENT_COLORS = ['#8B7CF8', '#EF6A7B', '#63D2B0', '#F4B73F']
 
@@ -11,6 +12,7 @@ const MobileCalendarPage: React.FC = () => {
   
   const [currentDate, setCurrentDate] = useState(new Date())
   const [selectedDate, setSelectedDate] = useState(new Date())
+  const mergedHolidays = useMergedHolidays(currentDate.getFullYear())
 
   // Editor (adding new event)
   const [isAdding, setIsAdding] = useState(false)
@@ -119,6 +121,9 @@ const MobileCalendarPage: React.FC = () => {
       <div className="grid grid-cols-7 border-b border-yuri-100 pb-2">
         {days.map((d: Date) => {
           const dStr = format(d, 'yyyy-MM-dd')
+          const holidayInfo = mergedHolidays[dStr]
+          const isHoliday = !!holidayInfo
+          const isSunday = d.getDay() === 0
           const dayEvents = eventsByDate.get(dStr) || []
           const isSelected = isSameDay(d, selectedDate)
           const isCurrentMonth = isSameMonth(d, currentDate)
@@ -133,7 +138,7 @@ const MobileCalendarPage: React.FC = () => {
               } ${!isCurrentMonth ? 'opacity-30' : ''}`}
             >
               <span className={`text-sm font-semibold w-7 h-7 flex items-center justify-center rounded-full ${
-                isToday ? 'bg-accent text-white' : (isSelected ? 'text-accent' : 'text-yuri-900')
+                isToday ? 'bg-accent text-white' : (isSelected ? 'text-accent' : ((isHoliday && holidayInfo.isRedDay) || isSunday ? 'text-red-500' : 'text-yuri-900'))
               }`}>
                 {format(d, 'd')}
               </span>
@@ -154,8 +159,13 @@ const MobileCalendarPage: React.FC = () => {
 
       {/* Event List Section */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto bg-yuri-50 p-4">
-        <h3 className="text-sm font-bold text-yuri-700 mb-3 border-b border-yuri-200 pb-2">
+        <h3 className="text-sm font-bold text-yuri-700 mb-3 border-b border-yuri-200 pb-2 flex items-center gap-2">
           {format(selectedDate, 'M월 d일 (E)', { locale: ko })}
+          {mergedHolidays[format(selectedDate, 'yyyy-MM-dd')] && (
+            <span className={`text-xs px-2 py-0.5 rounded-full ${mergedHolidays[format(selectedDate, 'yyyy-MM-dd')].isRedDay ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-600'}`}>
+              {mergedHolidays[format(selectedDate, 'yyyy-MM-dd')].name}
+            </span>
+          )}
         </h3>
 
         {selectedDayEvents.length === 0 && !isAdding && (
