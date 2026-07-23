@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useDiaryStore, DiaryMemo } from '../../store/DiaryStore'
+import Emoji from '../common/Emoji'
 
 interface DiaryPanelProps {
   mode: 'day' | 'month'
@@ -16,7 +17,7 @@ const EMOJI_CATEGORIES = [
   { name: '상태', emojis: ['👍', '👎', '👏', '🙌', '💪', '🙏', '🤝', '✌️', '👌', '❤️', '💔', '💤', '💢', '💡', '✅', '❌'] }
 ]
 
-const QuestionItem = ({ q, initialAnswer, saveAnswer }: { q: any, initialAnswer: string, saveAnswer: (val: string) => void }) => {
+const QuestionItem = ({ q, initialAnswer, saveAnswer, deleteAnswer }: { q: any, initialAnswer: string, saveAnswer: (val: string) => void, deleteAnswer: () => void }) => {
   const [localVal, setLocalVal] = useState(initialAnswer)
 
   useEffect(() => {
@@ -24,8 +25,16 @@ const QuestionItem = ({ q, initialAnswer, saveAnswer }: { q: any, initialAnswer:
   }, [initialAnswer])
 
   return (
-    <div className="bg-white rounded-xl border border-[#E5E5EA] shadow-sm p-4">
-      <div className="text-xs font-semibold text-[#8B7CF8] mb-2">{q.text}</div>
+    <div className="group bg-white rounded-xl border border-[#E5E5EA] shadow-sm p-4 relative">
+      <div className="flex justify-between items-start mb-2 gap-2">
+        <div className="text-xs font-semibold text-[#8B7CF8]">{q.text}</div>
+        <button 
+          onClick={deleteAnswer}
+          className="w-5 h-5 flex items-center justify-center rounded text-[#A0AABF] hover:text-[#EF6A7B] opacity-0 group-hover:opacity-100 transition-opacity text-[10px] shrink-0"
+        >
+          ✕
+        </button>
+      </div>
       <textarea
         className="w-full bg-transparent resize-none outline-none text-xs text-[#1C1C1E] placeholder:text-[#A0AABF] leading-relaxed"
         placeholder="답변을 입력하세요..."
@@ -42,7 +51,8 @@ const QuestionItem = ({ q, initialAnswer, saveAnswer }: { q: any, initialAnswer:
 const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) => {
   const { 
     diaries, monthlyDiaries, settings,
-    saveDayDiaryEmojis, saveDayDiaryAnswer, addDayDiaryMemo, deleteDayDiaryMemo,
+    saveDayDiaryEmojis, saveDayDiaryAnswer, deleteDayDiaryAnswer,
+    addDayDiaryMemo, deleteDayDiaryMemo,
     saveMonthlyDiary
   } = useDiaryStore()
 
@@ -137,7 +147,7 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
           <div className="flex gap-2 min-h-[40px] items-center justify-center">
             {(dayDiary.emojis || []).length > 0 ? (
               (dayDiary.emojis || []).map((emoji: string, idx: number) => (
-                <span key={idx} className="text-3xl animate-fade-in">{emoji}</span>
+                <Emoji key={idx} emoji={emoji} className="w-8 h-8 animate-fade-in" />
               ))
             ) : (
               <span className="text-sm text-[#A0AABF]">이모지를 선택해주세요</span>
@@ -161,13 +171,13 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
                           <button
                             key={emoji}
                             onClick={() => handleEmojiSelect(emoji)}
-                            className={`w-8 h-8 flex items-center justify-center text-lg rounded-full shrink-0 transition-all ${
+                            className={`w-8 h-8 flex items-center justify-center rounded-full shrink-0 transition-all ${
                               isSelected 
                                 ? 'bg-[#8B7CF8] shadow-[0_2px_8px_rgba(139,124,248,0.4)] scale-110' 
                                 : 'hover:bg-[#F0F0F5] grayscale-[0.2]'
                             }`}
                           >
-                            {emoji}
+                            <Emoji emoji={emoji} className="w-5 h-5" />
                           </button>
                         )
                       })}
@@ -192,15 +202,26 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
                 q={q} 
                 initialAnswer={answerText} 
                 saveAnswer={(val) => saveDayDiaryAnswer(dateKey, q.id, q.text, val)} 
+                deleteAnswer={() => deleteDayDiaryAnswer(dateKey, q.id)}
               />
             )
           })}
           
           {/* Display snapshot answers that are no longer in settings.questions */}
           {(dayDiary.answers || []).filter(a => !settings.questions.some(q => q.id === a.questionId)).map(a => (
-            <div key={a.questionId} className="bg-white rounded-xl border border-[#E5E5EA] shadow-sm p-4 opacity-70">
-              <div className="text-[10px] font-bold text-[#A0AABF] mb-1">과거 질문</div>
-              <div className="text-xs font-semibold text-[#8B7CF8] mb-2">{a.question}</div>
+            <div key={a.questionId} className="group bg-white rounded-xl border border-[#E5E5EA] shadow-sm p-4 opacity-70 relative">
+              <div className="flex justify-between items-start mb-2 gap-2">
+                <div>
+                  <div className="text-[10px] font-bold text-[#A0AABF] mb-1">과거 질문</div>
+                  <div className="text-xs font-semibold text-[#8B7CF8]">{a.question}</div>
+                </div>
+                <button 
+                  onClick={() => deleteDayDiaryAnswer(dateKey, a.questionId)}
+                  className="w-5 h-5 flex items-center justify-center rounded text-[#A0AABF] hover:text-[#EF6A7B] opacity-0 group-hover:opacity-100 transition-opacity text-[10px] shrink-0"
+                >
+                  ✕
+                </button>
+              </div>
               <div className="text-xs text-[#1C1C1E] whitespace-pre-wrap">{a.answer}</div>
             </div>
           ))}

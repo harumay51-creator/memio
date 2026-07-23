@@ -42,6 +42,7 @@ interface DiaryStoreValue {
   updateQuestion: (id: string, text: string) => Promise<void>
   saveDayDiaryEmojis: (dateKey: string, emojis: string[]) => Promise<void>
   saveDayDiaryAnswer: (dateKey: string, questionId: string, question: string, answer: string) => Promise<void>
+  deleteDayDiaryAnswer: (dateKey: string, questionId: string) => Promise<void>
   addDayDiaryMemo: (dateKey: string, text: string) => Promise<void>
   deleteDayDiaryMemo: (dateKey: string, memoId: string) => Promise<void>
   saveMonthlyDiary: (monthKey: string, text: string) => Promise<void>
@@ -144,6 +145,17 @@ export const DiaryStoreProvider: React.FC<{ children: React.ReactNode, uid: stri
     }
   }
 
+  const deleteDayDiaryAnswer = async (dateKey: string, questionId: string) => {
+    if (!uid) return
+    const ref = doc(db, `users/${uid}/diaries`, dateKey)
+    const snap = await getDoc(ref)
+    if (snap.exists()) {
+      const data = snap.data() as DayDiary
+      const answers = (data.answers || []).filter(a => a.questionId !== questionId)
+      await updateDoc(ref, { answers })
+    }
+  }
+
   const addDayDiaryMemo = async (dateKey: string, text: string) => {
     if (!uid) return
     const ref = doc(db, `users/${uid}/diaries`, dateKey)
@@ -185,7 +197,7 @@ export const DiaryStoreProvider: React.FC<{ children: React.ReactNode, uid: stri
     <DiaryContext.Provider value={{
       diaries, monthlyDiaries, settings, isLoading,
       initialize: () => {}, addQuestion, deleteQuestion, updateQuestion,
-      saveDayDiaryEmojis, saveDayDiaryAnswer, addDayDiaryMemo, deleteDayDiaryMemo, saveMonthlyDiary
+      saveDayDiaryEmojis, saveDayDiaryAnswer, deleteDayDiaryAnswer, addDayDiaryMemo, deleteDayDiaryMemo, saveMonthlyDiary
     }}>
       {children}
     </DiaryContext.Provider>

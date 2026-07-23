@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react'
 import { useAppStore } from '../../store/AppStore'
 import { useDiaryStore } from '../../store/DiaryStore'
 import { useMergedHolidays } from '../../hooks/useMergedHolidays'
+import Emoji from '../common/Emoji'
 import DiaryPanel from './DiaryPanel'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -360,7 +361,7 @@ const CalendarPage: React.FC = () => {
                   ) : (
                     <div className="flex flex-nowrap items-center justify-center gap-0.5 h-full pb-2 overflow-hidden">
                       {(diaries[`${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`]?.emojis || []).map((emoji: string, idx: number) => (
-                        <span key={idx} className="text-[15px] shrink-0">{emoji}</span>
+                        <Emoji key={idx} emoji={emoji} className="w-3.5 h-3.5 shrink-0" />
                       ))}
                     </div>
                   )}
