@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import type { PageId } from './types'
 import { useAppStore, AppStoreProvider } from './store/AppStore'
+import { DiaryStoreProvider } from './store/DiaryStore'
 import Sidebar      from './components/Sidebar'
 import QuickCapture from './components/QuickCapture'
 import Router       from './router/Router'
@@ -182,7 +183,9 @@ export default function App() {
   return (
     <ToastProvider>
       <AppStoreProvider uid={user.uid}>
-        <AppInner />
+        <DiaryStoreProvider>
+          <AppInner />
+        </DiaryStoreProvider>
       </AppStoreProvider>
     </ToastProvider>
   )

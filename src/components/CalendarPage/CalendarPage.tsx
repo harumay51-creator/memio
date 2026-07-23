@@ -1,6 +1,8 @@
 import React, { useState, useMemo, useEffect } from 'react'
 import { useAppStore } from '../../store/AppStore'
+import { useDiaryStore } from '../../store/DiaryStore'
 import { useMergedHolidays } from '../../hooks/useMergedHolidays'
+import DiaryPanel from './DiaryPanel'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'] as const
@@ -51,10 +53,14 @@ const CalendarPage: React.FC = () => {
     addEvent, updateItemOrders, deleteAnniversary, deleteMonthlyEvent,
     navDate, setNavDate
   } = useAppStore()
+  
+  const { diaries } = useDiaryStore()
 
   const today = useMemo(() => new Date(), [])
   const [view, setView] = useState(() => new Date(today.getFullYear(), today.getMonth(), 1))
   const [selDay, setSelDay] = useState<Date>(today)
+  const [isDiaryMode, setIsDiaryMode] = useState(false)
+  const [diaryPanelMode, setDiaryPanelMode] = useState<'day' | 'month'>('day')
   
   const [inlineDate, setInlineDate] = useState<Date | null>(null)
   const [inlineText, setInlineText] = useState('')
@@ -236,7 +242,13 @@ const CalendarPage: React.FC = () => {
           <div className="flex items-center gap-4">
             <button onClick={prevMonth} className="w-8 h-8 flex items-center justify-center hover:bg-[#F7F6FF] rounded text-[#717A8C] font-bold transition-colors">←</button>
             <button 
-              onClick={() => { setPickerYear(year); setShowPicker(!showPicker); }}
+              onClick={() => { 
+                if (isDiaryMode) {
+                  setDiaryPanelMode('month');
+                } else {
+                  setPickerYear(year); setShowPicker(!showPicker); 
+                }
+              }}
               className="text-2xl font-semibold text-[#1C1C1E] tracking-tight hover:text-[#8B7CF8] transition-colors flex items-center gap-2"
             >
               {year}년 {MONTH_KO[month]}
@@ -245,9 +257,18 @@ const CalendarPage: React.FC = () => {
             <button onClick={nextMonth} className="w-8 h-8 flex items-center justify-center hover:bg-[#F7F6FF] rounded text-[#717A8C] font-bold transition-colors">→</button>
           </div>
           
-          <button onClick={goToToday} className="px-4 py-1.5 bg-white border border-[#E5E5EA] hover:bg-[#F9FAFB] rounded-lg text-sm font-semibold text-[#1C1C1E] shadow-sm transition-all">
-            오늘
-          </button>
+          <div className="flex items-center gap-2">
+            <button onClick={goToToday} className="px-4 py-1.5 bg-white border border-[#E5E5EA] hover:bg-[#F9FAFB] rounded-lg text-sm font-semibold text-[#1C1C1E] shadow-sm transition-all">
+              오늘
+            </button>
+            <button 
+              onClick={() => setIsDiaryMode(!isDiaryMode)} 
+              className="w-8 h-8 flex items-center justify-center bg-white border border-[#E5E5EA] hover:bg-[#F9FAFB] rounded-lg text-[#F4B73F] shadow-sm transition-all text-lg"
+              title={isDiaryMode ? "스케줄 모드로 전환" : "다이어리 모드로 전환"}
+            >
+              {isDiaryMode ? '★' : '☆'}
+            </button>
+          </div>
 
           {showPicker && (
             <div className="absolute top-full left-12 mt-2 w-64 bg-white border border-[#EEF1F6] shadow-float rounded-xl p-4 z-50 animate-fade-in">
@@ -302,6 +323,9 @@ const CalendarPage: React.FC = () => {
               <div 
                 key={idx} 
                 onClick={() => {
+                  if (isDiaryMode) {
+                    setDiaryPanelMode('day')
+                  }
                   if (inlineDate && !sameDay(inlineDate, date)) {
                     setInlineDate(null)
                     setInlineText('')
@@ -326,12 +350,22 @@ const CalendarPage: React.FC = () => {
                   {date.getDate()}
                 </div>
                 <div className="flex flex-col gap-1 overflow-hidden flex-1 min-h-0">
-                  {items.slice(0, 2)}
-                  {items.length > 2 && (
-                    <div className="text-[9px] shrink-0 text-[#A0AABF] font-medium px-1 bg-transparent">+ {items.length - 2}개</div>
+                  {!isDiaryMode ? (
+                    <>
+                      {items.slice(0, 2)}
+                      {items.length > 2 && (
+                        <div className="text-[9px] shrink-0 text-[#A0AABF] font-medium px-1 bg-transparent">+ {items.length - 2}개</div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="flex flex-wrap items-center justify-center gap-1 h-full pb-2">
+                      {(diaries[`${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`]?.emojis || []).map((emoji, idx) => (
+                        <span key={idx} className="text-xl">{emoji}</span>
+                      ))}
+                    </div>
                   )}
                 </div>
-                {inlineDate && sameDay(inlineDate, date) && (
+                {!isDiaryMode && inlineDate && sameDay(inlineDate, date) && (
                   <div className="mt-0.5 shrink-0" onClick={e => e.stopPropagation()}>
                     <input spellCheck={false}
                       autoFocus
@@ -379,10 +413,18 @@ const CalendarPage: React.FC = () => {
       </main>
 
       {/* ── Right: Unified Panel ────────────────────────────────────────────── */}
-      <aside className="relative w-[360px] flex flex-col h-full bg-[#F9FAFB] border-l border-[#E5E5EA] shrink-0 overflow-hidden px-6 py-8">
-        
-        {/* 1. Selected Day Events (Timeline) */}
-        <section className="flex flex-col flex-1 min-h-0 mb-6">
+      {isDiaryMode ? (
+        <DiaryPanel 
+          mode={diaryPanelMode} 
+          selDay={selDay} 
+          year={diaryPanelMode === 'month' ? pickerYear : year} 
+          month={diaryPanelMode === 'month' ? month : selDay.getMonth()} 
+        />
+      ) : (
+        <aside className="relative w-[360px] flex flex-col h-full bg-[#F9FAFB] border-l border-[#E5E5EA] shrink-0 overflow-hidden px-6 py-8">
+          
+          {/* 1. Selected Day Events (Timeline) */}
+          <section className="flex flex-col flex-1 min-h-0 mb-6">
           <header className="mb-4 shrink-0">
             <h1 className="text-lg font-semibold text-[#1C1C1E] tracking-tight">
               {isSelDayToday ? `오늘, ${selDayFormatted}` : selDayFormatted}
@@ -632,7 +674,8 @@ const CalendarPage: React.FC = () => {
           </div>
         </section>
 
-      </aside>
+        </aside>
+      )}
     </div>
   )
 }
