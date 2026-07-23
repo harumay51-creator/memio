@@ -101,6 +101,10 @@
 }
 
 @layer utilities {
+  .glass-card {
+    @apply bg-white/40 backdrop-blur-xl border border-white/60 shadow-[0_4px_30px_rgba(0,0,0,0.04)] rounded-2xl;
+  }
+  
   .scrollbar-hide {
     -ms-overflow-style: none;  /* IE and Edge */
     scrollbar-width: none;  /* Firefox */
