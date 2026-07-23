@@ -375,7 +375,7 @@ const CalendarPage: React.FC = () => {
       <aside className="relative w-[360px] flex flex-col h-full bg-[#FCFCFF] shrink-0 border-l border-[#EEF1F6] overflow-hidden px-6 py-8">
         
         {/* 1. Selected Day Events (Timeline) */}
-        <section className="flex flex-col flex-[1.5] min-h-0 mb-8">
+        <section className="flex flex-col flex-1 min-h-0 mb-6">
           <header className="mb-4 shrink-0">
             <h1 className="text-lg font-semibold text-[#2D334A] tracking-tight">
               {isSelDayToday ? `오늘, ${selDayFormatted}` : selDayFormatted}
@@ -389,7 +389,7 @@ const CalendarPage: React.FC = () => {
             )}
             
             {selectedDayEvents.length > 0 || getDayItems(selDay).dayAnnivs.length > 0 || getDayItems(selDay).dayMonthly.length > 0 ? (
-              <ul className="flex flex-col gap-4 relative z-10 pb-4">
+              <ul className="flex flex-col gap-2 relative z-10 pb-4">
                 
                 {getDayItems(selDay).dayAnnivs.map(a => {
                   const isPastDay = new Date(selDay.getFullYear(), selDay.getMonth(), selDay.getDate()).getTime() < new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
@@ -589,7 +589,7 @@ const CalendarPage: React.FC = () => {
              <h2 className="text-[11px] font-bold text-[#717A8C] tracking-widest uppercase">MONTHLY MEMO</h2>
           </header>
           
-          <div className="flex-1 flex flex-col min-h-0 bg-[#F4F9F8] rounded-xl shadow-[0_2px_12px_rgba(0,0,0,0.02)] border border-[#E8F2F0] relative overflow-hidden">
+          <div className="flex-1 flex flex-col min-h-0 bg-[#F5F6F8] rounded-xl border border-[#EEF1F6] relative overflow-hidden">
             {/* Solid left border */}
             <div className="absolute top-0 bottom-0 left-0 w-1.5 bg-[#1C7667]" />
             
@@ -617,7 +617,7 @@ const CalendarPage: React.FC = () => {
                 <input spellCheck={false}
                   type="text" placeholder="새 목표 입력..."
                   value={newAgenda} onChange={e => setNewAgenda(e.target.value)}
-                  className="flex-1 px-3 py-1.5 text-xs bg-white border border-[#E8F2F0] rounded-lg outline-none focus:border-[#1C7667] text-[#2D334A] placeholder:text-[#A0AABF] transition-colors"
+                  className="flex-1 px-3 py-1.5 text-xs bg-white border border-[#EEF1F6] rounded-lg outline-none focus:border-[#1C7667] text-[#2D334A] placeholder:text-[#A0AABF] transition-colors"
                 />
               </form>
             </div>
