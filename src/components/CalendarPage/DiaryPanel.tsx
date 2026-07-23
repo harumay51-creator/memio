@@ -143,29 +143,39 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
               <span className="text-sm text-[#A0AABF]">이모지를 선택해주세요</span>
             )}
           </div>
-
+          
           {isEmojiPickerOpen && (
-            <div className="mt-4 pt-4 border-t border-[#E5E5EA] animate-fade-in flex flex-col gap-3">
-              {EMOJI_CATEGORIES.map(cat => (
-                <div key={cat.name}>
-                  <div className="text-[10px] text-[#717A8C] mb-1.5">{cat.name}</div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {cat.emojis.map(emoji => {
-                      const isSelected = (dayDiary.emojis || []).includes(emoji)
-                      return (
-                        <button
-                          key={emoji}
-                          onClick={() => handleEmojiSelect(emoji)}
-                          className={`text-xl w-8 h-8 flex items-center justify-center rounded-lg transition-colors ${isSelected ? 'bg-[#F1EEFF] border border-[#8B7CF8]' : 'hover:bg-[#F9FAFB] border border-transparent'}`}
-                        >
-                          {emoji}
-                        </button>
-                      )
-                    })}
+            <>
+              <div 
+                className="fixed inset-0 z-40" 
+                onClick={() => setIsEmojiPickerOpen(false)}
+              />
+              <div className="mt-4 pt-4 border-t border-[#E5E5EA] flex flex-col gap-3 relative z-50 animate-slide-down">
+                {EMOJI_CATEGORIES.map(cat => (
+                  <div key={cat.name}>
+                    <div className="text-[10px] text-[#717A8C] mb-1.5">{cat.name}</div>
+                    <div className="flex flex-nowrap gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
+                      {cat.emojis.map(emoji => {
+                        const isSelected = (dayDiary.emojis || []).includes(emoji)
+                        return (
+                          <button
+                            key={emoji}
+                            onClick={() => handleEmojiSelect(emoji)}
+                            className={`w-8 h-8 flex items-center justify-center text-lg rounded-full shrink-0 transition-all ${
+                              isSelected 
+                                ? 'bg-[#8B7CF8] shadow-[0_2px_8px_rgba(139,124,248,0.4)] scale-110' 
+                                : 'hover:bg-[#F0F0F5] grayscale-[0.2]'
+                            }`}
+                          >
+                            {emoji}
+                          </button>
+                        )
+                      })}
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            </>
           )}
         </section>
 

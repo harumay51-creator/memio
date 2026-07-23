@@ -358,9 +358,9 @@ const CalendarPage: React.FC = () => {
                       )}
                     </>
                   ) : (
-                    <div className="flex flex-wrap items-center justify-center gap-0.5 h-full pb-2">
+                    <div className="flex flex-nowrap items-center justify-center gap-0.5 h-full pb-2 overflow-hidden">
                       {(diaries[`${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`]?.emojis || []).map((emoji: string, idx: number) => (
-                        <span key={idx} className="text-[15px]">{emoji}</span>
+                        <span key={idx} className="text-[15px] shrink-0">{emoji}</span>
                       ))}
                     </div>
                   )}
