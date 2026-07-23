@@ -4,8 +4,9 @@ import { auth } from '../../config/firebase'
 import { EmailAuthProvider, reauthenticateWithCredential, updatePassword } from 'firebase/auth'
 import TrashSection from './TrashSection'
 import HolidaySection from './HolidaySection'
+import { useDiaryStore } from '../../store/DiaryStore'
 
-type TabType = 'ledger' | 'security' | 'anniversaries' | 'monthly' | 'holidays' | 'trash' | 'usage'
+type TabType = 'ledger' | 'security' | 'anniversaries' | 'monthly' | 'holidays' | 'trash' | 'usage' | 'diary'
 
 const SettingsPage: React.FC = () => {
   const { 
@@ -18,6 +19,8 @@ const SettingsPage: React.FC = () => {
     notes, tasks, events, ledger
   } = useAppStore()
   
+  const { settings: diarySettings, addQuestion: addDiaryQuestion, deleteQuestion: deleteDiaryQuestion } = useDiaryStore()
+
   const [activeTab, setActiveTab] = useState<TabType>('ledger')
 
   // ── Category States ────────
@@ -42,9 +45,11 @@ const SettingsPage: React.FC = () => {
   const [annivMonth, setAnnivMonth] = useState('')
   const [annivDay, setAnnivDay] = useState('')
 
-  // ── Monthly Event States ───
   const [monthlyName, setMonthlyName] = useState('')
   const [monthlyDay, setMonthlyDay] = useState('')
+
+  // ── Diary States ────────
+  const [newDiaryQuestion, setNewDiaryQuestion] = useState('')
 
   // ── Ledger Handlers ────────
   const toggleCategory = (catName: string) => {
@@ -166,6 +171,8 @@ const SettingsPage: React.FC = () => {
       case 'security': return '보안 및 비밀번호'
       case 'anniversaries': return '기념일 관리'
       case 'monthly': return '매월 반복 일정'
+      case 'holidays': return '공휴일 설정'
+      case 'diary': return '다이어리 설정'
       case 'usage': return '데이터 사용량'
       case 'trash': return '휴지통'
     }
@@ -186,30 +193,34 @@ const SettingsPage: React.FC = () => {
           >
             가계부 설정
           </button>
+          
+          <div className="text-xs font-bold text-yuri-400 uppercase tracking-widest px-4 mb-2 mt-4">일정 및 기타</div>
           <button 
-            onClick={() => setActiveTab('anniversaries')}
-            className={`w-full text-left px-4 py-3 rounded-lg font-bold text-sm transition-colors ${
-              activeTab === 'anniversaries' ? 'bg-yuri-100 text-yuri-900' : 'text-yuri-600 hover:bg-yuri-50'
-            }`}
+            onClick={() => setActiveTab('anniversaries')} 
+            className={`w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium transition-colors ${activeTab === 'anniversaries' ? 'bg-white shadow-sm text-yuri-900 border border-yuri-200' : 'text-yuri-600 hover:bg-yuri-100/50 hover:text-yuri-900'}`}
           >
-            기념일 관리 (매년)
+            기념일 관리
           </button>
           <button 
-            onClick={() => setActiveTab('monthly')}
-            className={`w-full text-left px-4 py-3 rounded-lg font-bold text-sm transition-colors ${
-              activeTab === 'monthly' ? 'bg-yuri-100 text-yuri-900' : 'text-yuri-600 hover:bg-yuri-50'
-            }`}
+            onClick={() => setActiveTab('monthly')} 
+            className={`w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium transition-colors ${activeTab === 'monthly' ? 'bg-white shadow-sm text-yuri-900 border border-yuri-200' : 'text-yuri-600 hover:bg-yuri-100/50 hover:text-yuri-900'}`}
           >
             매월 반복 일정
           </button>
           <button 
-            onClick={() => setActiveTab('holidays')}
-            className={`w-full text-left px-4 py-3 rounded-lg font-bold text-sm transition-colors ${
-              activeTab === 'holidays' ? 'bg-yuri-100 text-yuri-900' : 'text-yuri-600 hover:bg-yuri-50'
-            }`}
+            onClick={() => setActiveTab('holidays')} 
+            className={`w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium transition-colors ${activeTab === 'holidays' ? 'bg-white shadow-sm text-yuri-900 border border-yuri-200' : 'text-yuri-600 hover:bg-yuri-100/50 hover:text-yuri-900'}`}
           >
-            공휴일 관리
+            공휴일 설정
           </button>
+          <button 
+            onClick={() => setActiveTab('diary')} 
+            className={`w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium transition-colors ${activeTab === 'diary' ? 'bg-white shadow-sm text-yuri-900 border border-yuri-200' : 'text-yuri-600 hover:bg-yuri-100/50 hover:text-yuri-900'}`}
+          >
+            다이어리 설정
+          </button>
+
+          <div className="text-xs font-bold text-yuri-400 uppercase tracking-widest px-4 mb-2 mt-4">시스템</div>
           <button 
             onClick={() => setActiveTab('security')}
             className={`w-full text-left px-4 py-3 rounded-lg font-bold text-sm transition-colors ${
@@ -579,6 +590,46 @@ const SettingsPage: React.FC = () => {
 
             {activeTab === 'holidays' && (
               <HolidaySection />
+            )}
+
+            {/* ── Diary Tab ── */}
+            {activeTab === 'diary' && (
+              <div className="flex flex-col gap-6 animate-fade-in max-w-2xl">
+                <section className="bg-white rounded-2xl border border-yuri-200 p-6 shadow-sm">
+                  <h3 className="text-[15px] font-bold text-yuri-900 mb-2">다이어리 질문 관리</h3>
+                  <p className="text-sm text-yuri-500 mb-6 leading-relaxed">
+                    매일 작성할 다이어리 질문을 관리합니다. 여기서 질문을 삭제해도 과거의 일기에는 영향을 주지 않습니다.
+                  </p>
+
+                  <form onSubmit={e => { e.preventDefault(); if (newDiaryQuestion.trim()) { addDiaryQuestion(newDiaryQuestion.trim()); setNewDiaryQuestion('') } }} className="flex gap-2 mb-6">
+                    <input
+                      type="text"
+                      placeholder="새로운 질문을 입력하세요..."
+                      className="flex-1 bg-yuri-50 border border-yuri-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:bg-white focus:border-amber-400 transition-colors placeholder:text-yuri-400"
+                      value={newDiaryQuestion}
+                      onChange={e => setNewDiaryQuestion(e.target.value)}
+                      spellCheck={false}
+                    />
+                    <button type="submit" disabled={!newDiaryQuestion.trim()} className="px-5 bg-amber-400 hover:bg-amber-500 disabled:opacity-50 text-white font-bold rounded-xl text-sm transition-colors shadow-sm">
+                      추가
+                    </button>
+                  </form>
+
+                  <div className="flex flex-col gap-3">
+                    {diarySettings.questions.map(q => (
+                      <div key={q.id} className="flex justify-between items-center p-4 bg-yuri-50/50 rounded-xl border border-yuri-100 hover:border-yuri-200 transition-colors">
+                        <span className="text-sm text-yuri-900">{q.text}</span>
+                        <button onClick={() => deleteDiaryQuestion(q.id)} className="text-xs font-bold text-yuri-400 hover:text-rose-500 transition-colors px-2 py-1">
+                          삭제
+                        </button>
+                      </div>
+                    ))}
+                    {diarySettings.questions.length === 0 && (
+                      <div className="text-center py-8 text-yuri-400 text-sm">등록된 질문이 없습니다.</div>
+                    )}
+                  </div>
+                </section>
+              </div>
             )}
 
             {activeTab === 'security' && (

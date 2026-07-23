@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { useDiaryStore } from '../../store/DiaryStore'
+import { useDiaryStore, DiaryMemo } from '../../store/DiaryStore'
 
 interface DiaryPanelProps {
   mode: 'day' | 'month'
@@ -36,7 +36,7 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
   }, [monthlyDiary.text, monthKey])
 
   const handleEmojiSelect = (emoji: string) => {
-    let newEmojis = [...dayDiary.emojis]
+    let newEmojis = [...(dayDiary.emojis || [])]
     if (newEmojis.includes(emoji)) {
       newEmojis = newEmojis.filter(e => e !== emoji)
     } else {
@@ -63,7 +63,7 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
 
   if (mode === 'month') {
     return (
-      <aside className="relative w-[360px] flex flex-col h-full bg-[#F9FAFB] border-l border-[#E5E5EA] shrink-0 overflow-hidden px-6 py-8">
+      <aside className="relative flex-[6] flex flex-col h-full bg-[#F9FAFB] border-l border-[#E5E5EA] shrink-0 overflow-hidden px-6 py-8">
         <header className="mb-6 shrink-0">
           <h1 className="text-lg font-semibold text-[#1C1C1E] tracking-tight">
             {year}년 {month + 1}월 메모
@@ -88,7 +88,7 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
   const formattedDate = `${selDay.getMonth() + 1}월 ${selDay.getDate()}일 (${WEEKDAYS[selDay.getDay()]})`
 
   return (
-    <aside className="relative w-[360px] flex flex-col h-full bg-[#F9FAFB] border-l border-[#E5E5EA] shrink-0 overflow-hidden px-6 py-6">
+    <aside className="relative flex-[6] flex flex-col h-full bg-[#F9FAFB] border-l border-[#E5E5EA] shrink-0 overflow-hidden px-6 py-6">
       <header className="mb-6 shrink-0 text-center">
         <h1 className="text-lg font-semibold text-[#1C1C1E] tracking-tight">
           {formattedDate}
@@ -110,8 +110,8 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
           </div>
           
           <div className="flex gap-2 min-h-[40px] items-center justify-center">
-            {dayDiary.emojis.length > 0 ? (
-              dayDiary.emojis.map((emoji, idx) => (
+            {(dayDiary.emojis || []).length > 0 ? (
+              (dayDiary.emojis || []).map((emoji: string, idx: number) => (
                 <span key={idx} className="text-3xl animate-fade-in">{emoji}</span>
               ))
             ) : (
@@ -126,7 +126,7 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
                   <div className="text-[10px] text-[#717A8C] mb-1.5">{cat.name}</div>
                   <div className="flex flex-wrap gap-1.5">
                     {cat.emojis.map(emoji => {
-                      const isSelected = dayDiary.emojis.includes(emoji)
+                      const isSelected = (dayDiary.emojis || []).includes(emoji)
                       return (
                         <button
                           key={emoji}
@@ -149,7 +149,7 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
           <h2 className="text-[11px] font-bold text-[#717A8C] tracking-widest uppercase px-1">Q&A</h2>
           
           {settings.questions.map(q => {
-            const answerObj = dayDiary.answers.find(a => a.questionId === q.id)
+            const answerObj = (dayDiary.answers || []).find(a => a.questionId === q.id)
             const answerText = answerObj ? answerObj.answer : ''
             
             return (
@@ -168,7 +168,7 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
           })}
           
           {/* Display snapshot answers that are no longer in settings.questions */}
-          {dayDiary.answers.filter(a => !settings.questions.some(q => q.id === a.questionId)).map(a => (
+          {(dayDiary.answers || []).filter(a => !settings.questions.some(q => q.id === a.questionId)).map(a => (
             <div key={a.questionId} className="bg-white rounded-xl border border-[#E5E5EA] shadow-sm p-4 opacity-70">
               <div className="text-[10px] font-bold text-[#A0AABF] mb-1">과거 질문</div>
               <div className="text-xs font-semibold text-[#8B7CF8] mb-2">{a.question}</div>
@@ -176,7 +176,7 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
             </div>
           ))}
 
-          {settings.questions.length === 0 && dayDiary.answers.length === 0 && (
+          {settings.questions.length === 0 && (dayDiary.answers || []).length === 0 && (
             <div className="text-xs text-[#A0AABF] px-1">설정에서 다이어리 질문을 추가해보세요.</div>
           )}
         </section>
@@ -200,7 +200,7 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
           </form>
 
           <div className="flex flex-col gap-2">
-            {dayDiary.memos.map(memo => (
+            {(dayDiary.memos || []).map((memo: DiaryMemo) => (
               <div key={memo.id} className="group bg-white rounded-xl border border-[#E5E5EA] p-3 flex items-start gap-3 relative">
                 <div className="flex-1 text-xs text-[#1C1C1E] whitespace-pre-wrap leading-relaxed">{memo.text}</div>
                 <button 

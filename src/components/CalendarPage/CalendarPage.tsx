@@ -237,7 +237,7 @@ const CalendarPage: React.FC = () => {
   return (
     <div className="flex h-full w-full bg-[#F5F5F7] overflow-hidden">
       {/* ── Left: Main Calendar ────────────────────────────────────────────── */}
-      <main className="flex-1 flex flex-col p-6 m-4 mr-2 bg-white rounded-2xl border border-[#E5E5EA] shadow-sm relative overflow-hidden">
+      <main className={`flex flex-col p-6 m-4 mr-2 bg-white rounded-2xl border border-[#E5E5EA] shadow-sm relative overflow-hidden ${isDiaryMode ? 'flex-[4]' : 'flex-1'}`}>
         <header className="relative flex items-center justify-between mb-6 z-10 shrink-0">
           <div className="flex items-center gap-4">
             <button onClick={prevMonth} className="w-8 h-8 flex items-center justify-center hover:bg-[#F7F6FF] rounded text-[#717A8C] font-bold transition-colors">←</button>
