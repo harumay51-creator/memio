@@ -22,11 +22,13 @@ const NotesPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId })
     if (selNoteId === id) setSelNoteId(null)
   }
 
-  const handleAdd = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleAdd = async (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && inputText.trim()) {
-      const newId = addNote(inputText.trim())
-      setInputText('')
-      setSelNoteId(newId) // Auto-select the newly created note
+      const newId = await addNote(inputText.trim())
+      if (newId) {
+        setInputText('')
+        setSelNoteId(newId) // Auto-select the newly created note
+      }
     }
   }
 

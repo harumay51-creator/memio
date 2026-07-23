@@ -9,6 +9,7 @@ import MobileApp    from './components/Mobile/MobileApp'
 import { useIsMobile } from './hooks/useIsMobile'
 import { auth }     from './config/firebase'
 import { onAuthStateChanged, User, signOut } from 'firebase/auth'
+import { ToastProvider } from './components/common/Toast'
 
 // ── Inner app (needs to be inside AppStoreProvider to access useAppStore) ─────
 const AppInner: React.FC = () => {
@@ -179,8 +180,10 @@ export default function App() {
   }
 
   return (
-    <AppStoreProvider uid={user.uid}>
-      <AppInner />
-    </AppStoreProvider>
+    <ToastProvider>
+      <AppStoreProvider uid={user.uid}>
+        <AppInner />
+      </AppStoreProvider>
+    </ToastProvider>
   )
 }

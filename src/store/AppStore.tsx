@@ -4,6 +4,7 @@ import { DEFAULT_EXPENSE_CATS } from '../utils/parser'
 import { collection, getDocs, setDoc, updateDoc, deleteDoc, doc, writeBatch, getDoc, deleteField } from 'firebase/firestore'
 import { db } from '../config/firebase'
 import { extractFirebaseImageUrls, deleteFirestoreImages, cleanupRemovedImages } from '../utils/imageUtils'
+import { useToast } from '../components/common/Toast'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function genId(): string {
@@ -66,7 +67,7 @@ interface StoreValue {
   addEvent:       (text: string, scheduledDate?: string, color?: string) => Promise<void>
   updateEvent:    (id: string, updates: Partial<ScheduleEvent>) => void
   deleteEvent:    (id: string)  => void
-  addNote:        (text: string) => string
+  addNote:        (text: string) => Promise<string | null>
   updateNote:     (id: string, text: string) => void
   deleteNote:     (id: string) => void
   navDate:        Date | null
@@ -148,6 +149,8 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
   const hasPin = pinHash !== null
 
   const [navDate, setNavDate] = useState<Date | null>(null)
+
+  const { showToast } = useToast()
 
   useEffect(() => {
     async function loadData() {
@@ -367,22 +370,39 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
     }
   }, [fixedExpenses, ledger, isLoading, uid])
 
-  const addTask = useCallback((text: string) => {
+  const addTask = useCallback(async (text: string) => {
     const now = new Date().toISOString()
     const newItem: Task = { id: genId(), text, done: false, createdAt: now, updatedAt: now, order: tasks.length }
-    setTasks(prev => [newItem, ...prev])
-    setDoc(doc(db, 'users', uid, 'tasks', newItem.id), newItem).catch(console.error)
-  }, [tasks.length, uid])
+    try {
+      await setDoc(doc(db, 'users', uid, 'tasks', newItem.id), newItem)
+      setTasks(prev => [newItem, ...prev])
+      showToast('업무가 추가되었습니다.', 'success')
+    } catch (err) {
+      console.error(err)
+      showToast('저장에 실패했습니다.', 'error')
+    }
+  }, [tasks.length, uid, showToast])
 
-  const toggleTask = useCallback((id: string) => {
+  const toggleTask = useCallback(async (id: string) => {
     const updatedAt = new Date().toISOString()
+    let previousDone: boolean | null = null
+    
     setTasks(prev => {
-      const next = prev.map(t => t.id === id ? { ...t, done: !t.done, updatedAt } : t)
-      const updated = next.find(t => t.id === id)
-      if (updated) updateDoc(doc(db, 'users', uid, 'tasks', id), { done: updated.done, updatedAt }).catch(console.error)
-      return next
+      const task = prev.find(t => t.id === id)
+      if (task) previousDone = task.done
+      return prev.map(t => t.id === id ? { ...t, done: !t.done, updatedAt } : t)
     })
-  }, [uid])
+    
+    if (previousDone !== null) {
+      try {
+        await updateDoc(doc(db, 'users', uid, 'tasks', id), { done: !previousDone, updatedAt })
+      } catch (err) {
+        console.error(err)
+        showToast('네트워크 오류로 변경사항이 취소되었습니다.', 'error')
+        setTasks(prev => prev.map(t => t.id === id ? { ...t, done: previousDone!, updatedAt } : t))
+      }
+    }
+  }, [uid, showToast])
 
   const updateTaskNote = useCallback((id: string, note: string) => {
     const updatedAt = new Date().toISOString()
@@ -413,7 +433,7 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
     updateDoc(doc(db, 'users', uid, 'tasks', id), { isDeleted: true, deletedAt: Date.now() }).catch(console.error)
   }, [uid])
 
-  const addLedgerEntry = useCallback((text: string, amount: number, type: 'income' | 'expense', category: string, date?: string, paymentMethod?: '카드' | '계좌이체', memo?: string) => {
+  const addLedgerEntry = useCallback(async (text: string, amount: number, type: 'income' | 'expense', category: string, date?: string, paymentMethod?: '카드' | '계좌이체', memo?: string) => {
     if (!uid) return
     const id = genId()
     const scheduledDate = date || new Date().toISOString()
@@ -430,12 +450,15 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
     if (paymentMethod !== undefined) newEntry.paymentMethod = paymentMethod
     if (memo !== undefined) newEntry.memo = memo
 
-    console.log('[AppStore] addLedgerEntry executing. id:', id, 'newEntry:', newEntry)
-    setLedger(prev => [...prev, newEntry as LedgerEntry])
-    setDoc(doc(db, 'users', uid, 'ledger', id), newEntry)
-      .then(() => console.log('[AppStore] addLedgerEntry Firestore save success!'))
-      .catch(err => console.error('[AppStore] addLedgerEntry Firestore error:', err))
-  }, [uid])
+    try {
+      await setDoc(doc(db, 'users', uid, 'ledger', id), newEntry)
+      setLedger(prev => [...prev, newEntry as LedgerEntry])
+      showToast('가계부 내역이 추가되었습니다.', 'success')
+    } catch (err) {
+      console.error(err)
+      showToast('저장에 실패했습니다.', 'error')
+    }
+  }, [uid, showToast])
 
   const updateLedgerEntry = useCallback((id: string, updates: Partial<LedgerEntry>) => {
     setLedger(prev => prev.map(l => l.id === id ? { ...l, ...updates } : l))
@@ -486,19 +509,19 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
   }, [uid])
 
   const addEvent = useCallback(async (text: string, scheduledDate?: string, color?: string) => {
-    console.log('addEvent called with:', text, scheduledDate, color)
     const newItem: any = { id: genId(), text, createdAt: new Date().toISOString(), order: events.length }
     if (scheduledDate) newItem.scheduledDate = scheduledDate
     if (color) newItem.color = color
-    setEvents(prev => [newItem as ScheduleEvent, ...prev])
     try {
       await setDoc(doc(db, 'users', uid, 'events', newItem.id), newItem)
-      console.log('addEvent success!')
+      setEvents(prev => [newItem as ScheduleEvent, ...prev])
+      showToast('일정이 추가되었습니다.', 'success')
     } catch (err) {
-      console.error('addEvent error:', err)
+      console.error(err)
+      showToast('저장에 실패했습니다.', 'error')
       throw err
     }
-  }, [events.length, uid])
+  }, [events.length, uid, showToast])
 
   const updateEvent = useCallback((id: string, updates: Partial<ScheduleEvent>) => {
     setEvents(prev => prev.map(e => e.id === id ? { ...e, ...updates } : e))
@@ -510,13 +533,20 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
     deleteDoc(doc(db, 'users', uid, 'events', id)).catch(console.error)
   }, [uid])
 
-  const addNote = useCallback((text: string) => {
+  const addNote = useCallback(async (text: string) => {
     const now = new Date().toISOString()
     const newItem: Note = { id: genId(), text, createdAt: now, updatedAt: now }
-    setNotes(prev => [newItem, ...prev])
-    setDoc(doc(db, 'users', uid, 'notes', newItem.id), newItem).catch(console.error)
-    return newItem.id
-  }, [uid])
+    try {
+      await setDoc(doc(db, 'users', uid, 'notes', newItem.id), newItem)
+      setNotes(prev => [newItem, ...prev])
+      showToast('메모가 추가되었습니다.', 'success')
+      return newItem.id
+    } catch (err) {
+      console.error(err)
+      showToast('저장에 실패했습니다.', 'error')
+      return null
+    }
+  }, [uid, showToast])
 
   const deleteNote = useCallback((id: string) => {
     setNotes(prev => {
@@ -543,11 +573,17 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
     updateDoc(doc(db, 'users', uid, 'notes', id), { text, updatedAt }).catch(console.error)
   }, [uid])
 
-  const addFixedExpense = useCallback((label: string, amount: number, day: number, category: string, paymentMethod: '카드' | '계좌이체' = '카드') => {
+  const addFixedExpense = useCallback(async (label: string, amount: number, day: number, category: string, paymentMethod?: '카드' | '계좌이체') => {
     const newItem: FixedExpense = { id: genId(), label, amount, day, category, paymentMethod, createdAt: new Date().toISOString() }
-    setFixedExpenses(prev => [newItem, ...prev])
-    setDoc(doc(db, 'users', uid, 'fixedExpenses', newItem.id), newItem).catch(console.error)
-  }, [uid])
+    try {
+      await setDoc(doc(db, 'users', uid, 'fixedExpenses', newItem.id), newItem)
+      setFixedExpenses(prev => [...prev, newItem])
+      showToast('고정지출이 추가되었습니다.', 'success')
+    } catch (err) {
+      console.error(err)
+      showToast('저장에 실패했습니다.', 'error')
+    }
+  }, [uid, showToast])
 
   const updateFixedExpense = useCallback((id: string, updates: Partial<FixedExpense>) => {
     const finalUpdates = { ...updates, updatedAt: new Date().toISOString() }
@@ -619,14 +655,25 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
     setDoc(doc(db, 'users', uid, 'agendas', newItem.id), newItem).catch(console.error)
   }, [uid])
 
-  const toggleAgenda = useCallback((id: string) => {
+  const toggleAgenda = useCallback(async (id: string) => {
+    let previousDone: boolean | null = null
+    
     setAgendas(prev => {
-      const next = prev.map(a => a.id === id ? { ...a, done: !a.done } : a)
-      const updated = next.find(a => a.id === id)
-      if (updated) updateDoc(doc(db, 'users', uid, 'agendas', id), { done: updated.done }).catch(console.error)
-      return next
+      const agenda = prev.find(a => a.id === id)
+      if (agenda) previousDone = agenda.done
+      return prev.map(a => a.id === id ? { ...a, done: !a.done } : a)
     })
-  }, [uid])
+    
+    if (previousDone !== null) {
+      try {
+        await updateDoc(doc(db, 'users', uid, 'agendas', id), { done: !previousDone })
+      } catch (err) {
+        console.error(err)
+        showToast('네트워크 오류로 변경사항이 취소되었습니다.', 'error')
+        setAgendas(prev => prev.map(a => a.id === id ? { ...a, done: previousDone! } : a))
+      }
+    }
+  }, [uid, showToast])
 
   const deleteAgenda = useCallback((id: string) => {
     setAgendas(prev => prev.filter(a => a.id !== id))
@@ -714,14 +761,17 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
     await setDoc(doc(db, `users/${uid}/journal_settings/config`), { pinHash: null }, { merge: true })
   }, [uid])
 
-  const updateHolidayConfig = useCallback((updater: (prev: HolidayConfig) => HolidayConfig) => {
-    setHolidayConfig(prev => {
-      const next = updater(prev)
-      if (!uid) return next
-      setDoc(doc(db, `users/${uid}/settings/config`), { holidayConfig: next }, { merge: true }).catch(console.error)
-      return next
-    })
-  }, [uid])
+  const updateHolidayConfig = useCallback(async (updater: (prev: HolidayConfig) => HolidayConfig) => {
+    try {
+      const nextConfig = updater(holidayConfig)
+      await setDoc(doc(db, `users/${uid}/settings/config`), { holidayConfig: nextConfig }, { merge: true })
+      setHolidayConfig(nextConfig)
+      showToast('공휴일 설정이 저장되었습니다.', 'success')
+    } catch (err) {
+      console.error(err)
+      showToast('저장에 실패했습니다.', 'error')
+    }
+  }, [uid, holidayConfig, showToast])
 
   const restoreItem = useCallback(async (type: 'note'|'task'|'ledger'|'fixedExpense', id: string) => {
     let collectionName = ''
