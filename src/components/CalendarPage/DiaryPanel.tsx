@@ -9,10 +9,35 @@ interface DiaryPanelProps {
 }
 
 const EMOJI_CATEGORIES = [
-  { name: '감정', emojis: ['😀', '🥰', '😂', '🥲', '🥺', '😡', '😴', '😎'] },
-  { name: '날씨', emojis: ['☀️', '🌤️', '☁️', '🌧️', '⛈️', '❄️', '💨', '🌈'] },
-  { name: '일상', emojis: ['💻', '📚', '☕', '🍺', '🎮', '🏋️', '🚗', '🏠'] },
+  { name: '감정', emojis: ['😀', '🥰', '😂', '🥲', '🥺', '😡', '😴', '😎', '🤔', '😭', '🤯', '🥳', '😱', '🤤', '😷', '🤒', '🤕', '🤢', '🤮', '🤧', '😵', '🤐'] },
+  { name: '날씨', emojis: ['☀️', '🌤️', '☁️', '🌧️', '⛈️', '❄️', '💨', '🌈', '🌪️', '🌫️', '☔', '⚡', '⛄', '🔥', '💧', '🌊'] },
+  { name: '음식', emojis: ['🍎', '🍔', '🍕', '🍣', '🍜', '☕', '🍺', '🍰', '🍿', '🍩', '🥑', '🥩', '🍗', '🌮', '🥗', '🍙', '🍨', '🍉', '🍇', '🍓'] },
+  { name: '활동', emojis: ['💻', '📚', '🎮', '🏋️', '🚗', '🏠', '✈️', '🎵', '🎬', '🎨', '🎤', '⚽', '🏀', '🏊', '🚴', '🛒', '🛍️', '⛺'] },
+  { name: '상태', emojis: ['👍', '👎', '👏', '🙌', '💪', '🙏', '🤝', '✌️', '👌', '❤️', '💔', '💤', '💢', '💡', '✅', '❌'] }
 ]
+
+const QuestionItem = ({ q, initialAnswer, saveAnswer }: { q: any, initialAnswer: string, saveAnswer: (val: string) => void }) => {
+  const [localVal, setLocalVal] = useState(initialAnswer)
+
+  useEffect(() => {
+    setLocalVal(initialAnswer)
+  }, [initialAnswer])
+
+  return (
+    <div className="bg-white rounded-xl border border-[#E5E5EA] shadow-sm p-4">
+      <div className="text-xs font-semibold text-[#8B7CF8] mb-2">{q.text}</div>
+      <textarea
+        className="w-full bg-transparent resize-none outline-none text-xs text-[#1C1C1E] placeholder:text-[#A0AABF] leading-relaxed"
+        placeholder="답변을 입력하세요..."
+        rows={2}
+        value={localVal}
+        onChange={(e) => setLocalVal(e.target.value)}
+        onBlur={() => saveAnswer(localVal)}
+        spellCheck={false}
+      />
+    </div>
+  )
+}
 
 const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) => {
   const { 
@@ -151,19 +176,13 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
           {settings.questions.map(q => {
             const answerObj = (dayDiary.answers || []).find(a => a.questionId === q.id)
             const answerText = answerObj ? answerObj.answer : ''
-            
             return (
-              <div key={q.id} className="bg-white rounded-xl border border-[#E5E5EA] shadow-sm p-4">
-                <div className="text-xs font-semibold text-[#8B7CF8] mb-2">{q.text}</div>
-                <textarea
-                  className="w-full bg-transparent resize-none outline-none text-xs text-[#1C1C1E] placeholder:text-[#A0AABF] leading-relaxed"
-                  placeholder="답변을 입력하세요..."
-                  rows={2}
-                  value={answerText}
-                  onChange={(e) => saveDayDiaryAnswer(dateKey, q.id, q.text, e.target.value)}
-                  spellCheck={false}
-                />
-              </div>
+              <QuestionItem 
+                key={q.id} 
+                q={q} 
+                initialAnswer={answerText} 
+                saveAnswer={(val) => saveDayDiaryAnswer(dateKey, q.id, q.text, val)} 
+              />
             )
           })}
           
