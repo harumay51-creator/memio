@@ -55,14 +55,15 @@ export const useDiaryStore = () => {
   return ctx
 }
 
-export const DiaryStoreProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const DiaryStoreProvider: React.FC<{ children: React.ReactNode, uid: string }> = ({ children, uid }) => {
   const [diaries, setDiaries] = useState<Record<string, DayDiary>>({})
   const [monthlyDiaries, setMonthlyDiaries] = useState<Record<string, MonthlyDiary>>({})
   const [settings, setSettings] = useState<DiarySettings>({ questions: [] })
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    const unsubSettings = onSnapshot(doc(db, 'settings', 'diary'), (docSnap) => {
+    if (!uid) return
+    const unsubSettings = onSnapshot(doc(db, `users/${uid}/settings`, 'diary'), (docSnap) => {
       if (docSnap.exists()) {
         setSettings(docSnap.data() as DiarySettings)
       } else {
@@ -70,7 +71,7 @@ export const DiaryStoreProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       }
     })
 
-    const unsubDiaries = onSnapshot(collection(db, 'diaries'), (snapshot) => {
+    const unsubDiaries = onSnapshot(collection(db, `users/${uid}/diaries`), (snapshot) => {
       const newDiaries: Record<string, DayDiary> = {}
       snapshot.forEach(d => {
         newDiaries[d.id] = d.data() as DayDiary
@@ -79,7 +80,7 @@ export const DiaryStoreProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       setIsLoading(false)
     })
 
-    const unsubMonthly = onSnapshot(collection(db, 'monthlyDiaries'), (snapshot) => {
+    const unsubMonthly = onSnapshot(collection(db, `users/${uid}/monthlyDiaries`), (snapshot) => {
       const newMonthly: Record<string, MonthlyDiary> = {}
       snapshot.forEach(d => {
         newMonthly[d.id] = d.data() as MonthlyDiary
@@ -92,25 +93,29 @@ export const DiaryStoreProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       unsubDiaries()
       unsubMonthly()
     }
-  }, [])
+  }, [uid])
 
   const addQuestion = async (text: string) => {
+    if (!uid) return
     const newQuestions = [...settings.questions, { id: Date.now().toString(), text }]
-    await setDoc(doc(db, 'settings', 'diary'), { questions: newQuestions }, { merge: true })
+    await setDoc(doc(db, `users/${uid}/settings`, 'diary'), { questions: newQuestions }, { merge: true })
   }
 
   const deleteQuestion = async (id: string) => {
+    if (!uid) return
     const newQuestions = settings.questions.filter(q => q.id !== id)
-    await setDoc(doc(db, 'settings', 'diary'), { questions: newQuestions }, { merge: true })
+    await setDoc(doc(db, `users/${uid}/settings`, 'diary'), { questions: newQuestions }, { merge: true })
   }
 
   const updateQuestion = async (id: string, text: string) => {
+    if (!uid) return
     const newQuestions = settings.questions.map(q => q.id === id ? { ...q, text } : q)
-    await setDoc(doc(db, 'settings', 'diary'), { questions: newQuestions }, { merge: true })
+    await setDoc(doc(db, `users/${uid}/settings`, 'diary'), { questions: newQuestions }, { merge: true })
   }
 
   const saveDayDiaryEmojis = async (dateKey: string, emojis: string[]) => {
-    const ref = doc(db, 'diaries', dateKey)
+    if (!uid) return
+    const ref = doc(db, `users/${uid}/diaries`, dateKey)
     const snap = await getDoc(ref)
     if (snap.exists()) {
       await updateDoc(ref, { emojis })
@@ -120,7 +125,8 @@ export const DiaryStoreProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   }
 
   const saveDayDiaryAnswer = async (dateKey: string, questionId: string, question: string, answer: string) => {
-    const ref = doc(db, 'diaries', dateKey)
+    if (!uid) return
+    const ref = doc(db, `users/${uid}/diaries`, dateKey)
     const snap = await getDoc(ref)
     
     if (snap.exists()) {
@@ -139,7 +145,8 @@ export const DiaryStoreProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   }
 
   const addDayDiaryMemo = async (dateKey: string, text: string) => {
-    const ref = doc(db, 'diaries', dateKey)
+    if (!uid) return
+    const ref = doc(db, `users/${uid}/diaries`, dateKey)
     const snap = await getDoc(ref)
     const newMemo: DiaryMemo = { id: Date.now().toString(), text, createdAt: Date.now() }
     
@@ -153,7 +160,8 @@ export const DiaryStoreProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   }
 
   const deleteDayDiaryMemo = async (dateKey: string, memoId: string) => {
-    const ref = doc(db, 'diaries', dateKey)
+    if (!uid) return
+    const ref = doc(db, `users/${uid}/diaries`, dateKey)
     const snap = await getDoc(ref)
     if (snap.exists()) {
       const data = snap.data() as DayDiary
@@ -163,7 +171,8 @@ export const DiaryStoreProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   }
 
   const saveMonthlyDiary = async (monthKey: string, text: string) => {
-    const ref = doc(db, 'monthlyDiaries', monthKey)
+    if (!uid) return
+    const ref = doc(db, `users/${uid}/monthlyDiaries`, monthKey)
     const snap = await getDoc(ref)
     if (snap.exists()) {
       await updateDoc(ref, { text })

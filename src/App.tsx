@@ -183,7 +183,7 @@ export default function App() {
   return (
     <ToastProvider>
       <AppStoreProvider uid={user.uid}>
-        <DiaryStoreProvider>
+        <DiaryStoreProvider uid={user.uid}>
           <AppInner />
         </DiaryStoreProvider>
       </AppStoreProvider>
