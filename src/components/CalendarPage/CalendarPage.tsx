@@ -11,10 +11,10 @@ const MONTH_KO = [
 
 const EVENT_COLORS = ['#8B7CF8', '#EF6A7B', '#63D2B0', '#F4B73F']
 const EVENT_STYLE_MAP: Record<string, { bg: string, text: string, bar: string }> = {
-  '#8B7CF8': { bg: '#F3F0FF', text: '#7564D8', bar: '#8B7CF8' }, // Purple
-  '#EF6A7B': { bg: '#FFF1F3', text: '#D96272', bar: '#EF6A7B' }, // Red
-  '#63D2B0': { bg: '#EFFAF6', text: '#438F78', bar: '#63D2B0' }, // Green
-  '#F4B73F': { bg: '#FFF8E9', text: '#B68A28', bar: '#F4B73F' }, // Yellow
+  '#8B7CF8': { bg: 'transparent', text: '#1C1C1E', bar: '#8B7CF8' }, // Purple
+  '#EF6A7B': { bg: 'transparent', text: '#1C1C1E', bar: '#EF6A7B' }, // Red
+  '#63D2B0': { bg: 'transparent', text: '#1C1C1E', bar: '#63D2B0' }, // Green
+  '#F4B73F': { bg: 'transparent', text: '#1C1C1E', bar: '#F4B73F' }, // Yellow
 }
 
 function sameDay(a: Date, b: Date): boolean {
@@ -167,8 +167,8 @@ const CalendarPage: React.FC = () => {
     const holidayInfo = mergedHolidays[dStr]
     if (holidayInfo) {
       items.push(
-        <div key="holiday" className="text-[10px] shrink-0 h-5 px-1.5 bg-[#FDEEEE] text-[#D45D6E] rounded-md flex gap-[6px] items-center w-full overflow-hidden">
-          <span className="w-[2px] h-[10px] rounded-full bg-[#D45D6E] shrink-0"></span>
+        <div key="holiday" className="text-[10.5px] shrink-0 h-[18px] px-1 bg-transparent text-[#1C1C1E] rounded-md flex gap-[6px] items-center w-full overflow-hidden">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#D45D6E] shrink-0"></span>
           <span className="font-medium truncate leading-none">{holidayInfo.name}</span>
         </div>
       )
@@ -182,8 +182,8 @@ const CalendarPage: React.FC = () => {
     })
     dayAnnivs.forEach(a => {
       items.push(
-        <div key={`a-${a.id}`} className="text-[10px] shrink-0 h-5 px-1.5 bg-[#FCEFF6] text-[#C96A95] rounded-md flex gap-[6px] items-center w-full overflow-hidden">
-          <span className="w-[2px] h-[10px] rounded-full bg-[#C96A95] shrink-0"></span>
+        <div key={`a-${a.id}`} className="text-[10.5px] shrink-0 h-[18px] px-1 bg-transparent text-[#1C1C1E] rounded-md flex gap-[6px] items-center w-full overflow-hidden">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#C96A95] shrink-0"></span>
           <span className="font-medium truncate leading-none">{a.name}</span>
         </div>
       )
@@ -197,8 +197,8 @@ const CalendarPage: React.FC = () => {
     })
     dayMonthly.forEach(m => {
       items.push(
-        <div key={`m-${m.id}`} className="text-[10px] shrink-0 h-5 px-1.5 bg-[#EDF9F4] text-[#3F9E7A] rounded-md flex gap-[6px] items-center w-full overflow-hidden">
-          <span className="w-[2px] h-[10px] rounded-full bg-[#3F9E7A] shrink-0"></span>
+        <div key={`m-${m.id}`} className="text-[10.5px] shrink-0 h-[18px] px-1 bg-transparent text-[#1C1C1E] rounded-md flex gap-[6px] items-center w-full overflow-hidden">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#3F9E7A] shrink-0"></span>
           <span className="font-medium truncate leading-none">{m.name}</span>
         </div>
       )
@@ -213,8 +213,8 @@ const CalendarPage: React.FC = () => {
       const eColor = e.color || '#8B7CF8'
       const styleObj = EVENT_STYLE_MAP[eColor] || EVENT_STYLE_MAP['#8B7CF8']
       items.push(
-        <div key={`e-${e.id}`} className="text-[10px] shrink-0 h-5 px-1.5 rounded-[6px] flex gap-[6px] items-center w-full overflow-hidden box-border" style={{ backgroundColor: styleObj.bg, color: styleObj.text }}>
-          <span className="w-[2px] h-[10px] rounded-full shrink-0" style={{ backgroundColor: styleObj.bar }}></span>
+        <div key={`e-${e.id}`} className="text-[10.5px] shrink-0 h-[18px] px-1 rounded-md flex gap-[6px] items-center w-full overflow-hidden box-border" style={{ backgroundColor: styleObj.bg, color: styleObj.text }}>
+          <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: styleObj.bar }}></span>
           <span className="font-medium truncate leading-none block w-full text-left">{e.text}</span>
         </div>
       )
@@ -229,15 +229,15 @@ const CalendarPage: React.FC = () => {
   const selDayFormatted = `${selDay.getMonth() + 1}월 ${selDay.getDate()}일 (${WEEKDAYS[selDay.getDay()]})`
 
   return (
-    <div className="flex h-full w-full bg-cotton-candy overflow-hidden">
+    <div className="flex h-full w-full bg-[#F5F5F7] overflow-hidden">
       {/* ── Left: Main Calendar ────────────────────────────────────────────── */}
-      <main className="flex-1 flex flex-col p-6 relative overflow-hidden">
+      <main className="flex-1 flex flex-col p-6 m-4 mr-2 bg-white rounded-2xl border border-[#E5E5EA] shadow-sm relative overflow-hidden">
         <header className="relative flex items-center justify-between mb-6 z-10 shrink-0">
           <div className="flex items-center gap-4">
             <button onClick={prevMonth} className="w-8 h-8 flex items-center justify-center hover:bg-[#F7F6FF] rounded text-[#717A8C] font-bold transition-colors">←</button>
             <button 
               onClick={() => { setPickerYear(year); setShowPicker(!showPicker); }}
-              className="text-2xl font-semibold text-[#2D334A] tracking-tight hover:text-[#8B7CF8] transition-colors flex items-center gap-2"
+              className="text-2xl font-semibold text-[#1C1C1E] tracking-tight hover:text-[#8B7CF8] transition-colors flex items-center gap-2"
             >
               {year}년 {MONTH_KO[month]}
               <span className="text-[12px] text-[#717A8C] mt-1">{showPicker ? '▲' : '▼'}</span>
@@ -245,7 +245,7 @@ const CalendarPage: React.FC = () => {
             <button onClick={nextMonth} className="w-8 h-8 flex items-center justify-center hover:bg-[#F7F6FF] rounded text-[#717A8C] font-bold transition-colors">→</button>
           </div>
           
-          <button onClick={goToToday} className="px-5 py-2 bg-white/60 backdrop-blur-md border border-white/80 hover:bg-white/90 rounded-xl text-sm font-bold text-[#8B7CF8] shadow-sm hover:shadow-soft-glow transition-all">
+          <button onClick={goToToday} className="px-4 py-1.5 bg-white border border-[#E5E5EA] hover:bg-[#F9FAFB] rounded-lg text-sm font-semibold text-[#1C1C1E] shadow-sm transition-all">
             오늘
           </button>
 
@@ -379,12 +379,12 @@ const CalendarPage: React.FC = () => {
       </main>
 
       {/* ── Right: Unified Panel ────────────────────────────────────────────── */}
-      <aside className="relative w-[360px] flex flex-col h-full glass-panel-right shrink-0 overflow-hidden px-6 py-8">
+      <aside className="relative w-[360px] flex flex-col h-full bg-[#F9FAFB] border-l border-[#E5E5EA] shrink-0 overflow-hidden px-6 py-8">
         
         {/* 1. Selected Day Events (Timeline) */}
         <section className="flex flex-col flex-1 min-h-0 mb-6">
           <header className="mb-4 shrink-0">
-            <h1 className="text-lg font-semibold text-[#2D334A] tracking-tight">
+            <h1 className="text-lg font-semibold text-[#1C1C1E] tracking-tight">
               {isSelDayToday ? `오늘, ${selDayFormatted}` : selDayFormatted}
             </h1>
           </header>
@@ -570,7 +570,7 @@ const CalendarPage: React.FC = () => {
                     </button>
                     
                     <div className="flex-1 mt-0.5">
-                      <span className={`text-xs font-medium whitespace-pre-wrap leading-relaxed transition-all ${t.done ? 'text-[#D0D4DF] line-through' : 'text-[#2D334A]'}`}>
+                      <span className={`text-xs font-medium whitespace-pre-wrap leading-relaxed transition-all ${t.done ? 'text-[#D0D4DF] line-through' : 'text-[#1C1C1E]'}`}>
                         {t.text}
                       </span>
                     </div>
@@ -597,7 +597,7 @@ const CalendarPage: React.FC = () => {
              <h2 className="text-[11px] font-bold text-[#717A8C] tracking-widest uppercase">MONTHLY MEMO</h2>
           </header>
           
-          <div className="flex-1 flex flex-col min-h-0 bg-white/70 backdrop-blur-xl rounded-2xl border-2 border-white shadow-soft-glow relative overflow-hidden">
+          <div className="flex-1 flex flex-col min-h-0 bg-white rounded-xl border border-[#E5E5EA] shadow-sm relative overflow-hidden">
             {/* Solid left border */}
             <div className="absolute top-0 bottom-0 left-0 w-1.5 bg-[#8B7CF8]" />
             
@@ -610,7 +610,7 @@ const CalendarPage: React.FC = () => {
                 {monthAgendas.map(ag => (
                   <li key={ag.id} className="group flex items-start gap-2.5 bg-transparent -mx-1.5 p-1 rounded-lg hover:bg-white/60 transition-colors">
                     <button onClick={() => toggleAgenda(ag.id)} className={`mt-1.5 w-1.5 h-1.5 rounded-full shrink-0 transition-colors ${ag.done ? 'bg-[#D0D4DF]' : 'bg-[#8B7CF8]'}`} />
-                    <span className={`flex-1 text-xs leading-relaxed transition-colors ${ag.done ? 'text-[#D0D4DF] line-through' : 'text-[#2D334A] font-medium'}`}>{ag.text}</span>
+                    <span className={`flex-1 text-xs leading-relaxed transition-colors ${ag.done ? 'text-[#D0D4DF] line-through' : 'text-[#1C1C1E] font-medium'}`}>{ag.text}</span>
                     <button onClick={() => deleteAgenda(ag.id)} className="w-5 h-5 flex items-center justify-center rounded text-[#A0AABF] hover:text-[#EF6A7B] opacity-0 group-hover:opacity-100 transition-opacity text-[10px] -mt-0.5">
                       ✕
                     </button>
@@ -625,7 +625,7 @@ const CalendarPage: React.FC = () => {
                 <input spellCheck={false}
                   type="text" placeholder="새 목표 입력..."
                   value={newAgenda} onChange={e => setNewAgenda(e.target.value)}
-                  className="flex-1 px-3 py-1.5 text-xs bg-white border border-[#EEF1F6] rounded-lg outline-none focus:border-[#8B7CF8] text-[#2D334A] placeholder:text-[#A0AABF] transition-colors"
+                  className="flex-1 px-3 py-1.5 text-xs bg-white border border-[#EEF1F6] rounded-lg outline-none focus:border-[#8B7CF8] text-[#1C1C1E] placeholder:text-[#A0AABF] transition-colors"
                 />
               </form>
             </div>
