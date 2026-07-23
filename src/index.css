@@ -111,3 +111,27 @@
   background: #d9dbe0;
   border-radius: 99px;
 }
+
+@layer utilities {
+  .bg-cotton-candy {
+    background: linear-gradient(135deg, #fdfcfb 0%, #e2d1f9 40%, #c9e4ff 70%, #ffedf1 100%);
+  }
+  .glass-panel-right {
+    background: rgba(255, 255, 255, 0.45);
+    backdrop-filter: blur(40px);
+    -webkit-backdrop-filter: blur(40px);
+    border-left: 1px solid rgba(255, 255, 255, 0.5);
+  }
+  .calendar-card {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(12px);
+    border: 2px solid rgba(255, 255, 255, 0.9);
+  }
+  .sticker-badge {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    border: 1px solid rgba(255,255,255,0.4);
+  }
+  .shadow-soft-glow {
+    box-shadow: 0 8px 32px -8px rgba(104, 84, 141, 0.15);
+  }
+}

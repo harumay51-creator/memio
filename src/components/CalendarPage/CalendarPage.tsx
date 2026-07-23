@@ -229,7 +229,7 @@ const CalendarPage: React.FC = () => {
   const selDayFormatted = `${selDay.getMonth() + 1}월 ${selDay.getDate()}일 (${WEEKDAYS[selDay.getDay()]})`
 
   return (
-    <div className="flex h-full w-full bg-[#FAFBFF] overflow-hidden">
+    <div className="flex h-full w-full bg-cotton-candy overflow-hidden">
       {/* ── Left: Main Calendar ────────────────────────────────────────────── */}
       <main className="flex-1 flex flex-col p-6 relative overflow-hidden">
         <header className="relative flex items-center justify-between mb-6 z-10 shrink-0">
@@ -245,7 +245,7 @@ const CalendarPage: React.FC = () => {
             <button onClick={nextMonth} className="w-8 h-8 flex items-center justify-center hover:bg-[#F7F6FF] rounded text-[#717A8C] font-bold transition-colors">→</button>
           </div>
           
-          <button onClick={goToToday} className="px-4 py-2 bg-white border border-[#EEF1F6] hover:bg-[#F7F6FF] rounded-lg text-sm font-medium text-[#2D334A] transition-all">
+          <button onClick={goToToday} className="px-5 py-2 bg-white/60 backdrop-blur-md border border-white/80 hover:bg-white/90 rounded-xl text-sm font-bold text-[#8B7CF8] shadow-sm hover:shadow-soft-glow transition-all">
             오늘
           </button>
 
@@ -379,7 +379,7 @@ const CalendarPage: React.FC = () => {
       </main>
 
       {/* ── Right: Unified Panel ────────────────────────────────────────────── */}
-      <aside className="relative w-[360px] flex flex-col h-full bg-[#FCFCFF] shrink-0 border-l border-[#EEF1F6] overflow-hidden px-6 py-8">
+      <aside className="relative w-[360px] flex flex-col h-full glass-panel-right shrink-0 overflow-hidden px-6 py-8">
         
         {/* 1. Selected Day Events (Timeline) */}
         <section className="flex flex-col flex-1 min-h-0 mb-6">
@@ -597,7 +597,7 @@ const CalendarPage: React.FC = () => {
              <h2 className="text-[11px] font-bold text-[#717A8C] tracking-widest uppercase">MONTHLY MEMO</h2>
           </header>
           
-          <div className="flex-1 flex flex-col min-h-0 bg-[#F5F6F8] rounded-2xl border border-[#EEF1F6] shadow-sm relative overflow-hidden">
+          <div className="flex-1 flex flex-col min-h-0 bg-white/70 backdrop-blur-xl rounded-2xl border-2 border-white shadow-soft-glow relative overflow-hidden">
             {/* Solid left border */}
             <div className="absolute top-0 bottom-0 left-0 w-1.5 bg-[#1C7667]" />
             
