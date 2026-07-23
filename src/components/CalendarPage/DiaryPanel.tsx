@@ -38,7 +38,7 @@ const QuestionItem = ({ q, initialAnswer, saveAnswer, deleteAnswer }: { q: any, 
       <textarea
         className="w-full bg-transparent resize-none outline-none text-xs text-[#1C1C1E] placeholder:text-[#A0AABF] leading-relaxed"
         placeholder="답변을 입력하세요..."
-        rows={2}
+        rows={1}
         value={localVal}
         onChange={(e) => setLocalVal(e.target.value)}
         onBlur={() => saveAnswer(localVal)}
