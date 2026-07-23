@@ -10,6 +10,12 @@ const MONTH_KO = [
 ] as const
 
 const EVENT_COLORS = ['#8B7CF8', '#EF6A7B', '#63D2B0', '#F4B73F']
+const EVENT_STYLE_MAP: Record<string, { bg: string, text: string, bar: string }> = {
+  '#8B7CF8': { bg: '#F3F0FF', text: '#7564D8', bar: '#8B7CF8' }, // Purple
+  '#EF6A7B': { bg: '#FFF1F3', text: '#D96272', bar: '#EF6A7B' }, // Red
+  '#63D2B0': { bg: '#EFFAF6', text: '#438F78', bar: '#63D2B0' }, // Green
+  '#F4B73F': { bg: '#FFF8E9', text: '#B68A28', bar: '#F4B73F' }, // Yellow
+}
 
 function sameDay(a: Date, b: Date): boolean {
   return a.getFullYear() === b.getFullYear()
@@ -205,9 +211,10 @@ const CalendarPage: React.FC = () => {
     })
     dayEvents.forEach(e => {
       const eColor = e.color || '#8B7CF8'
+      const styleObj = EVENT_STYLE_MAP[eColor] || EVENT_STYLE_MAP['#8B7CF8']
       items.push(
-        <div key={`e-${e.id}`} className="text-[10px] shrink-0 h-5 px-1.5 bg-[#FBFAFF] rounded-[6px] flex gap-[6px] items-center w-full overflow-hidden box-border" style={{ color: eColor }}>
-          <span className="w-[2px] h-[10px] rounded-full shrink-0" style={{ backgroundColor: eColor }}></span>
+        <div key={`e-${e.id}`} className="text-[10px] shrink-0 h-5 px-1.5 rounded-[6px] flex gap-[6px] items-center w-full overflow-hidden box-border" style={{ backgroundColor: styleObj.bg, color: styleObj.text }}>
+          <span className="w-[2px] h-[10px] rounded-full shrink-0" style={{ backgroundColor: styleObj.bar }}></span>
           <span className="font-medium truncate leading-none block w-full text-left">{e.text}</span>
         </div>
       )
@@ -440,6 +447,7 @@ const CalendarPage: React.FC = () => {
                 {selectedDayEvents.map((e, index) => {
                   const isEditing = editingEventId === e.id;
                   const eColor = e.color || '#8B7CF8';
+                  const styleObj = EVENT_STYLE_MAP[eColor] || EVENT_STYLE_MAP['#8B7CF8'];
                   const dt = new Date(eventDisplayDate(e.scheduledDate, e.createdAt));
                   const isPastDay = new Date(selDay.getFullYear(), selDay.getMonth(), selDay.getDate()).getTime() < new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
 
@@ -461,7 +469,7 @@ const CalendarPage: React.FC = () => {
                   return (
                     <li key={e.id} className={`flex items-start gap-3 relative group transition-opacity ${isPastDay && !isEditing ? 'opacity-40' : 'opacity-100'}`}>
                       <div className="relative w-4 flex justify-center shrink-0 mt-1.5 z-10">
-                        <div className="w-2.5 h-2.5 rounded-full border-2 bg-white" style={{ borderColor: eColor }} />
+                        <div className="w-2.5 h-2.5 rounded-full border-2 bg-white" style={{ borderColor: styleObj.bar }} />
                       </div>
                       
                       <div className="flex-1 bg-transparent flex gap-2 items-start py-0.5">
@@ -515,8 +523,8 @@ const CalendarPage: React.FC = () => {
                             }}
                           >
                             <div className="flex flex-col">
-                              {timeStr && <span className="text-[10.5px] font-bold mb-0.5" style={{ color: eColor }}>{timeStr}</span>}
-                              <span className="text-[13px] font-semibold whitespace-pre-wrap leading-relaxed" style={{ color: isPastDay ? '#717A8C' : '#2D334A' }}>
+                              {timeStr && <span className="text-[10.5px] font-bold mb-0.5" style={{ color: styleObj.bar }}>{timeStr}</span>}
+                              <span className="text-[13px] font-semibold whitespace-pre-wrap leading-relaxed" style={{ color: isPastDay ? '#717A8C' : styleObj.text }}>
                                 {restStr}
                               </span>
                             </div>
