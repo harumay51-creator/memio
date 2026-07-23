@@ -14,6 +14,7 @@ const TasksPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId })
   
   const [inputText, setInputText] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
+  const [activeTab, setActiveTab] = useState<'pending' | 'completed'>('pending')
 
   const stripHtml = (html: string) => html ? html.replace(/<[^>]*>?/gm, '') : ''
 
@@ -75,56 +76,69 @@ const TasksPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId })
           />
         </div>
 
-        <div className="flex-1 flex flex-col gap-4 p-4 pt-2 min-h-0">
-          {/* Pending Tasks */}
-          <section className="flex-[7] min-h-0 flex flex-col overflow-hidden">
-            <h2 className="shrink-0 text-xs font-bold text-yuri-500 mb-3 px-1 uppercase tracking-wider">진행 중</h2>
-            <div className="flex-1 overflow-y-auto flex flex-col gap-1 pr-1">
-              {pendingTasks.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-full text-yuri-400 p-6 text-center">
-                  <p className="text-sm">
-                    {searchQuery.trim() ? '검색 결과가 없습니다.' : '진행 중인 업무가 없습니다.\n위 입력창에서 바로 추가해보세요!'}
-                  </p>
-                </div>
-              ) : (
-                pendingTasks.map(t => (
-                  <TaskListItem 
-                    key={t.id} 
-                    task={t} 
-                    isSelected={selTaskId === t.id}
-                    onSelect={() => setSelTaskId(t.id)}
-                    onToggle={(e) => { e.stopPropagation(); toggleTask(t.id) }}
-                    onDelete={(e) => handleDelete(t.id, e)}
-                  />
-                ))
-              )}
-            </div>
-          </section>
+        <div className="flex-1 flex flex-col min-h-0">
+          <div className="flex shrink-0 px-4 pt-2 border-b border-yuri-100 gap-4">
+            <button 
+              onClick={() => setActiveTab('pending')}
+              className={`pb-2 text-sm font-bold border-b-2 transition-colors ${activeTab === 'pending' ? 'border-accent text-accent' : 'border-transparent text-yuri-400 hover:text-yuri-600'}`}
+            >
+              진행 중
+            </button>
+            <button 
+              onClick={() => setActiveTab('completed')}
+              className={`pb-2 text-sm font-bold border-b-2 transition-colors ${activeTab === 'completed' ? 'border-accent text-accent' : 'border-transparent text-yuri-400 hover:text-yuri-600'}`}
+            >
+              완료됨 ({completedTasks.length}개)
+            </button>
+          </div>
 
-          {/* Completed Tasks */}
-          <section className="flex-[3] flex flex-col min-h-0 overflow-hidden pt-4 border-t border-yuri-100">
-            <h2 className="shrink-0 text-xs font-bold text-yuri-500 mb-3 px-1 uppercase tracking-wider flex justify-between items-center">
-              <span>완료됨 ({completedTasks.length}개)</span>
-            </h2>
-            <div className="flex-1 overflow-y-auto flex flex-col gap-1 pr-1">
-              {completedTasks.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-full text-yuri-400 p-2 text-center">
-                  <p className="text-xs">{searchQuery.trim() ? '검색 결과가 없습니다.' : '완료된 업무가 없습니다.'}</p>
+          <div className="flex-1 flex flex-col overflow-hidden p-4">
+            {activeTab === 'pending' ? (
+              <section className="flex-1 min-h-0 flex flex-col overflow-hidden">
+                <div className="flex-1 overflow-y-auto flex flex-col gap-1 pr-1">
+                  {pendingTasks.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center h-full text-yuri-400 p-6 text-center">
+                      <p className="text-sm whitespace-pre-wrap">
+                        {searchQuery.trim() ? '검색 결과가 없습니다.' : '진행 중인 업무가 없습니다.\n위 입력창에서 바로 추가해보세요!'}
+                      </p>
+                    </div>
+                  ) : (
+                    pendingTasks.map(t => (
+                      <TaskListItem 
+                        key={t.id} 
+                        task={t} 
+                        isSelected={selTaskId === t.id}
+                        onSelect={() => setSelTaskId(t.id)}
+                        onToggle={(e) => { e.stopPropagation(); toggleTask(t.id) }}
+                        onDelete={(e) => handleDelete(t.id, e)}
+                      />
+                    ))
+                  )}
                 </div>
-              ) : (
-                completedTasks.map(t => (
-                  <TaskListItem 
-                    key={t.id} 
-                    task={t} 
-                    isSelected={selTaskId === t.id}
-                    onSelect={() => setSelTaskId(t.id)}
-                    onToggle={(e) => { e.stopPropagation(); toggleTask(t.id) }}
-                    onDelete={(e) => handleDelete(t.id, e)}
-                  />
-                ))
-              )}
-            </div>
-          </section>
+              </section>
+            ) : (
+              <section className="flex-1 flex flex-col min-h-0 overflow-hidden">
+                <div className="flex-1 overflow-y-auto flex flex-col gap-1 pr-1">
+                  {completedTasks.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center h-full text-yuri-400 p-2 text-center">
+                      <p className="text-xs">{searchQuery.trim() ? '검색 결과가 없습니다.' : '완료된 업무가 없습니다.'}</p>
+                    </div>
+                  ) : (
+                    completedTasks.map(t => (
+                      <TaskListItem 
+                        key={t.id} 
+                        task={t} 
+                        isSelected={selTaskId === t.id}
+                        onSelect={() => setSelTaskId(t.id)}
+                        onToggle={(e) => { e.stopPropagation(); toggleTask(t.id) }}
+                        onDelete={(e) => handleDelete(t.id, e)}
+                      />
+                    ))
+                  )}
+                </div>
+              </section>
+            )}
+          </div>
         </div>
       </aside>
 
