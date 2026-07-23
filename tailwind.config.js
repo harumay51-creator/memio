@@ -7,7 +7,7 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Pretendard', 'Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        sans: ['"Plus Jakarta Sans"', 'Pretendard', 'Inter', 'system-ui', '-apple-system', 'sans-serif'],
       },
       colors: {
         'yuri': {
@@ -30,9 +30,9 @@ export default {
         },
       },
       boxShadow: {
-        'card':       '0 1px 3px 0 rgba(0,0,0,0.04), 0 1px 2px -1px rgba(0,0,0,0.04)',
-        'card-hover': '0 4px 12px 0 rgba(0,0,0,0.08)',
-        'float':      '0 8px 32px 0 rgba(0,0,0,0.10), 0 2px 8px 0 rgba(0,0,0,0.06)',
+        'card':       '0 2px 8px 0 rgba(0,0,0,0.03), 0 1px 2px -1px rgba(0,0,0,0.02)',
+        'card-hover': '0 8px 24px 0 rgba(0,0,0,0.06)',
+        'float':      '0 12px 48px 0 rgba(0,0,0,0.08), 0 4px 16px 0 rgba(0,0,0,0.04)',
       },
       keyframes: {
         captureToast: {

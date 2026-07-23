@@ -513,7 +513,7 @@ const CalendarPage: React.FC = () => {
                           </div>
                         ) : (
                           <div 
-                            className="flex-1 cursor-pointer group-hover:bg-[#FFFFFF] group-hover:shadow-[0_2px_8px_rgba(0,0,0,0.04)] px-2 -ml-2 rounded-lg transition-all"
+                            className="flex-1 cursor-pointer group-hover:bg-[#FFFFFF] group-hover:shadow-card px-2 -ml-2 rounded-xl transition-all"
                             onClick={() => {
                               setEditingEventId(e.id);
                               setEditTitle(e.text);
@@ -561,7 +561,7 @@ const CalendarPage: React.FC = () => {
             {activeTasks.length > 0 ? (
               <ul className="flex flex-col gap-1">
                 {activeTasks.map((t, index) => (
-                  <li key={t.id} className="flex items-start gap-3 group bg-transparent px-1 py-2 rounded-xl hover:bg-white hover:shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all">
+                  <li key={t.id} className="flex items-start gap-3 group bg-transparent px-1 py-2 rounded-xl hover:bg-white hover:shadow-card transition-all">
                     <button 
                       onClick={() => toggleTask(t.id)} 
                       className={`w-4 h-4 mt-0.5 rounded-full border-[1.5px] flex items-center justify-center shrink-0 transition-colors ${t.done ? 'bg-[#EEF1F6] border-[#EEF1F6] text-white' : 'border-[#A0AABF] text-transparent hover:border-[#8B7CF8]'}`}
@@ -597,7 +597,7 @@ const CalendarPage: React.FC = () => {
              <h2 className="text-[11px] font-bold text-[#717A8C] tracking-widest uppercase">MONTHLY MEMO</h2>
           </header>
           
-          <div className="flex-1 flex flex-col min-h-0 bg-[#F5F6F8] rounded-xl border border-[#EEF1F6] relative overflow-hidden">
+          <div className="flex-1 flex flex-col min-h-0 bg-[#F5F6F8] rounded-2xl border border-[#EEF1F6] shadow-sm relative overflow-hidden">
             {/* Solid left border */}
             <div className="absolute top-0 bottom-0 left-0 w-1.5 bg-[#1C7667]" />
             
