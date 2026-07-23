@@ -599,17 +599,17 @@ const CalendarPage: React.FC = () => {
           
           <div className="flex-1 flex flex-col min-h-0 bg-white/70 backdrop-blur-xl rounded-2xl border-2 border-white shadow-soft-glow relative overflow-hidden">
             {/* Solid left border */}
-            <div className="absolute top-0 bottom-0 left-0 w-1.5 bg-[#1C7667]" />
+            <div className="absolute top-0 bottom-0 left-0 w-1.5 bg-[#8B7CF8]" />
             
             <div className="flex-1 overflow-y-auto px-5 py-4">
               <div className="mb-3 flex justify-between items-center">
-                <h3 className="text-xs font-bold text-[#1C7667] uppercase tracking-wide">MONTHLY MEMO</h3>
+                <h3 className="text-xs font-bold text-[#8B7CF8] uppercase tracking-wide">MONTHLY MEMO</h3>
               </div>
               
               <ul className="flex flex-col gap-2 pb-1 pl-1">
                 {monthAgendas.map(ag => (
                   <li key={ag.id} className="group flex items-start gap-2.5 bg-transparent -mx-1.5 p-1 rounded-lg hover:bg-white/60 transition-colors">
-                    <button onClick={() => toggleAgenda(ag.id)} className={`mt-1.5 w-1.5 h-1.5 rounded-full shrink-0 transition-colors ${ag.done ? 'bg-[#D0D4DF]' : 'bg-[#1C7667]'}`} />
+                    <button onClick={() => toggleAgenda(ag.id)} className={`mt-1.5 w-1.5 h-1.5 rounded-full shrink-0 transition-colors ${ag.done ? 'bg-[#D0D4DF]' : 'bg-[#8B7CF8]'}`} />
                     <span className={`flex-1 text-xs leading-relaxed transition-colors ${ag.done ? 'text-[#D0D4DF] line-through' : 'text-[#2D334A] font-medium'}`}>{ag.text}</span>
                     <button onClick={() => deleteAgenda(ag.id)} className="w-5 h-5 flex items-center justify-center rounded text-[#A0AABF] hover:text-[#EF6A7B] opacity-0 group-hover:opacity-100 transition-opacity text-[10px] -mt-0.5">
                       ✕
@@ -625,7 +625,7 @@ const CalendarPage: React.FC = () => {
                 <input spellCheck={false}
                   type="text" placeholder="새 목표 입력..."
                   value={newAgenda} onChange={e => setNewAgenda(e.target.value)}
-                  className="flex-1 px-3 py-1.5 text-xs bg-white border border-[#EEF1F6] rounded-lg outline-none focus:border-[#1C7667] text-[#2D334A] placeholder:text-[#A0AABF] transition-colors"
+                  className="flex-1 px-3 py-1.5 text-xs bg-white border border-[#EEF1F6] rounded-lg outline-none focus:border-[#8B7CF8] text-[#2D334A] placeholder:text-[#A0AABF] transition-colors"
                 />
               </form>
             </div>
