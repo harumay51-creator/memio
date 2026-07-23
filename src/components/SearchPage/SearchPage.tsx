@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react'
 import { useAppStore } from '../../store/AppStore'
+import RichTextEditor from '../common/RichTextEditor'
 
 type SearchResultItem = {
   id: string
@@ -13,7 +14,7 @@ type SearchResultItem = {
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토']
 
 const SearchPage: React.FC = () => {
-  const { tasks, events, notes } = useAppStore()
+  const { tasks, events, notes, updateNote, updateTaskText, updateTaskNote, toggleTask, updateEvent, deleteNote, deleteTask, deleteEvent } = useAppStore()
   const [query, setQuery] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
   
@@ -24,6 +25,14 @@ const SearchPage: React.FC = () => {
   useEffect(() => {
     inputRef.current?.focus()
   }, [])
+
+  const getTitle = (text: string) => {
+    const stripped = text.replace(/<[^>]*>?/gm, '')
+    const trimmed = stripped.trim()
+    if (!trimmed) return '새로운 기록'
+    const firstLine = trimmed.split('\n')[0]
+    return firstLine.length > 30 ? firstLine.slice(0, 30) + '...' : firstLine
+  }
 
   const results = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -171,10 +180,10 @@ const SearchPage: React.FC = () => {
                           {/* Content Preview */}
                           <div className="flex-1 min-w-0">
                             <p className={`text-sm font-semibold truncate ${item.done ? 'text-yuri-400 line-through' : isSelected ? 'text-yuri-900' : 'text-yuri-800'}`}>
-                              {item.text}
+                              {item.type === 'memo' ? getTitle(item.text) : item.text}
                             </p>
                             {item.type === 'memo' && (
-                              <p className="text-xs text-yuri-400 mt-1 line-clamp-1">{item.text.replace(/<[^>]*>?/gm, '').replace(/\n/g, ' ')}</p>
+                              <p className="text-xs text-yuri-400 mt-1 line-clamp-1">{item.text.replace(/<[^>]*>?/gm, '').replace(/\n/g, ' ').replace(getTitle(item.text), '').trim() || '내용 없음'}</p>
                             )}
                             {item.type === 'task' && item.note && (
                               <p className="text-xs text-yuri-400 mt-1 line-clamp-1">{item.note.replace(/<[^>]*>?/gm, '').replace(/\n/g, ' ')}</p>
@@ -191,63 +200,118 @@ const SearchPage: React.FC = () => {
         </div>
       </aside>
 
-      {/* ── Right: Detail Preview (Read Only) ───────────────────────────────────────── */}
+        {/* ── Right: Detail Editor ───────────────────────────────────────── */}
       <main className="flex-1 flex flex-col h-full bg-white relative min-w-0">
         {selectedItem ? (
           <>
-            <header className="shrink-0 min-h-16 flex items-center px-8 py-4 border-b border-yuri-100">
-              <div className="flex flex-col gap-2 w-full">
-                <div className="flex items-center gap-3">
-                  <span className={`text-xs font-bold px-2 py-0.5 rounded tracking-wider ${
-                    selectedItem.type === 'task' ? 'bg-yuri-100 text-yuri-700' :
-                    selectedItem.type === 'event' ? 'bg-amber-100 text-amber-700' :
-                    'bg-gray-100 text-gray-700'
-                  }`}>
-                    {selectedItem.type === 'task' ? '업무' : selectedItem.type === 'event' ? '일정' : '메모'}
-                  </span>
-                  <span className="text-xs font-medium text-yuri-400">
-                    {selectedItem.date.toLocaleString('ko-KR', {
-                      year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
-                    })}
-                  </span>
+            {selectedItem.type === 'memo' && (
+              <>
+                <header className="shrink-0 h-16 flex items-center justify-between px-8 border-b border-transparent">
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs font-bold px-2 py-0.5 rounded tracking-wider bg-gray-100 text-gray-700">메모</span>
+                    <div className="text-xs font-semibold text-yuri-400">
+                      {selectedItem.date.toLocaleString('ko-KR', {
+                        year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                      })}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => { deleteNote(selectedItem.id); setSelItemId(null); }}
+                    className="shrink-0 p-2 text-yuri-400 hover:bg-red-50 hover:text-red-500 rounded-lg transition-colors text-sm font-medium"
+                  >
+                    삭제
+                  </button>
+                </header>
+                <div className="flex-1 w-full flex flex-col min-h-0 relative p-6 pb-0">
+                  <RichTextEditor 
+                    key={selectedItem.id}
+                    initialContent={selectedItem.text}
+                    onChange={(html) => updateNote(selectedItem.id, html)}
+                  />
                 </div>
-                <h2 className={`text-xl font-bold leading-snug ${selectedItem.done ? 'text-yuri-400 line-through' : 'text-yuri-900'}`}>
-                  {selectedItem.text}
-                </h2>
-              </div>
-            </header>
+              </>
+            )}
 
-            <div className="flex-1 w-full p-8 overflow-y-auto">
-              {selectedItem.type === 'memo' && (
-                <div className="ProseMirror">
-                  <div dangerouslySetInnerHTML={{ 
-                    __html: selectedItem.text.split('\n').length > 1 
-                      ? selectedItem.text.split('\n').slice(1).join('\n') 
-                      : selectedItem.text 
-                  }} />
+            {selectedItem.type === 'task' && (
+              <>
+                <header className="shrink-0 min-h-16 flex items-center justify-between px-8 py-4 border-b border-yuri-100">
+                  <div className="flex items-center gap-4 flex-1 min-w-0">
+                    <button 
+                      onClick={() => toggleTask(selectedItem.id)}
+                      className={`w-6 h-6 flex items-center justify-center rounded-md border shrink-0 transition-colors ${selectedItem.done ? 'bg-accent border-accent text-white' : 'border-yuri-300 text-transparent hover:border-accent/50 hover:bg-accent/5'}`}
+                    >
+                      ✓
+                    </button>
+                    <div className="flex flex-col flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded tracking-wider bg-yuri-100 text-yuri-700 shrink-0">업무</span>
+                        <input spellCheck={false}
+                          type="text"
+                          value={selectedItem.text}
+                          onChange={(e) => updateTaskText(selectedItem.id, e.target.value)}
+                          className={`text-base font-bold truncate w-full bg-transparent outline-none focus:border-b focus:border-yuri-300 pb-0.5 placeholder:text-yuri-300 ${selectedItem.done ? 'text-yuri-400 line-through' : 'text-yuri-900'}`}
+                          placeholder="업무 제목 입력"
+                        />
+                      </div>
+                      <span className="text-xs text-yuri-400">
+                        {selectedItem.date.toLocaleString('ko-KR', {
+                          year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                        })}
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => { deleteTask(selectedItem.id); setSelItemId(null); }}
+                    className="shrink-0 ml-4 p-2 text-yuri-400 hover:bg-red-50 hover:text-red-500 rounded-lg transition-colors text-sm font-medium"
+                  >
+                    삭제
+                  </button>
+                </header>
+                <div className="flex-1 overflow-hidden p-6 pb-2">
+                  <RichTextEditor
+                    key={selectedItem.id}
+                    initialContent={selectedItem.note || ''}
+                    onChange={(html) => updateTaskNote(selectedItem.id, html)}
+                    placeholder="여기에 진행 상황이나 메모를 자유롭게 작성하세요..."
+                  />
                 </div>
-              )}
-              {selectedItem.type === 'task' && (
-                <div className="ProseMirror">
-                  {selectedItem.note ? (
-                    <div dangerouslySetInnerHTML={{ __html: selectedItem.note }} />
-                  ) : (
-                    <span className="text-yuri-300 italic">진행 메모가 없습니다.</span>
-                  )}
+              </>
+            )}
+
+            {selectedItem.type === 'event' && (
+              <>
+                <header className="shrink-0 min-h-16 flex items-center px-8 py-4 border-b border-yuri-100 justify-between">
+                  <div className="flex flex-col gap-2 flex-1 min-w-0">
+                    <div className="flex items-center gap-3">
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded tracking-wider bg-amber-100 text-amber-700">일정</span>
+                      <span className="text-xs font-medium text-yuri-400">
+                        {selectedItem.date.toLocaleString('ko-KR', {
+                          year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                        })}
+                      </span>
+                    </div>
+                    <input spellCheck={false}
+                      type="text"
+                      value={selectedItem.text}
+                      onChange={(e) => updateEvent(selectedItem.id, { text: e.target.value })}
+                      className="text-xl font-bold leading-snug text-yuri-900 bg-transparent outline-none focus:border-b focus:border-yuri-300 w-full"
+                      placeholder="일정 제목 입력"
+                    />
+                  </div>
+                  <button
+                    onClick={() => { deleteEvent(selectedItem.id); setSelItemId(null); }}
+                    className="shrink-0 ml-4 p-2 text-yuri-400 hover:bg-red-50 hover:text-red-500 rounded-lg transition-colors text-sm font-medium"
+                  >
+                    삭제
+                  </button>
+                </header>
+                <div className="flex-1 w-full p-8 overflow-y-auto">
+                  <div className="text-yuri-500 italic text-sm">
+                    일정은 별도의 상세 메모를 지원하지 않습니다.
+                  </div>
                 </div>
-              )}
-              {selectedItem.type === 'event' && (
-                <div className="text-yuri-500 italic text-sm">
-                  일정은 별도의 상세 메모를 지원하지 않습니다.
-                </div>
-              )}
-            </div>
-            
-            <div className="shrink-0 p-4 border-t border-yuri-50 bg-yuri-50/20 text-center">
-               <p className="text-xs text-yuri-400">
-                  이 화면은 읽기 전용입니다. 수정하려면 원본 페이지를 이용해 주세요.
-               </p>
-            </div>
+              </>
+            )}
           </>
         ) : (
           <div className="flex-1 flex items-center justify-center bg-yuri-50/20">
