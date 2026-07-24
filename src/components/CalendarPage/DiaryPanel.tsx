@@ -198,8 +198,8 @@ const QuestionItem = ({ q, initialAnswer, saveAnswer, deleteAnswer, index, dateS
       </div>
       <textarea
         ref={textareaRef}
-        className="w-full flex-1 bg-transparent resize-none outline-none text-[15px] leading-relaxed transition-all font-diary overflow-hidden"
-        style={{ color: isY2K ? 'inherit' : 'inherit', caretColor: '#1C1C1E' }}
+        className="w-full bg-transparent resize-none outline-none text-[15px] leading-relaxed transition-all font-diary overflow-hidden caret-black"
+        style={{ color: isY2K ? 'inherit' : 'inherit' }}
         placeholder="답변을 입력하세요..."
         rows={1}
         value={localVal}
