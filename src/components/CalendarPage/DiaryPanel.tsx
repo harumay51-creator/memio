@@ -556,14 +556,14 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
                     {EMOJI_CATEGORIES.map(cat => (
                       <div key={cat.name}>
                         <div className="text-[10px] text-[#717A8C] mb-1.5">{cat.name}</div>
-                        <div className="flex flex-nowrap gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
+                        <div className="grid grid-cols-6 sm:grid-cols-8 gap-2 max-h-48 overflow-y-auto pb-1 scrollbar-hide">
                           {cat.emojis.map(emoji => {
                             const isSelected = (dayDiary.emojis || []).includes(emoji)
                             return (
                               <button
                                 key={emoji}
                                 onClick={() => handleEmojiSelect(emoji)}
-                                className={`w-9 h-9 p-2 flex items-center justify-center rounded-full shrink-0 transition-all ${
+                                className={`w-9 h-9 p-1 flex items-center justify-center rounded-full shrink-0 transition-all ${
                                   isSelected 
                                     ? 'bg-[#8B7CF8] shadow-[0_2px_8px_rgba(139,124,248,0.4)] scale-110' 
                                     : 'hover:bg-[#F0F0F5] grayscale-[0.2]'

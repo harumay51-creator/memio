@@ -17,7 +17,7 @@ const Emoji: React.FC<EmojiProps> = ({ emoji, className = '' }) => {
     
     return (
       <span 
-        className={`inline-block shrink-0 ${className}`}
+        className={`inline-block shrink-0 mix-blend-multiply ${className}`}
         style={{
           backgroundImage: `url(${stickysweetSprite})`,
           backgroundPosition: `${x}% ${y}%`,
