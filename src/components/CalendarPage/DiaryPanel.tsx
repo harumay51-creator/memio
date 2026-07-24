@@ -27,7 +27,7 @@ const QuestionItem = ({ q, initialAnswer, saveAnswer, deleteAnswer }: { q: any, 
   return (
     <div className="group relative">
       <div className="flex justify-between items-start mb-1.5 gap-2">
-        <div className="text-xs font-semibold text-[#8B7CF8]">{q.text}</div>
+        <div className="text-[13px] font-semibold text-[#8B7CF8] font-diary">{q.text}</div>
         <button 
           onClick={deleteAnswer}
           className="w-5 h-5 flex items-center justify-center rounded text-[#A0AABF] hover:text-[#EF6A7B] opacity-0 group-hover:opacity-100 transition-opacity text-[10px] shrink-0"
@@ -36,7 +36,7 @@ const QuestionItem = ({ q, initialAnswer, saveAnswer, deleteAnswer }: { q: any, 
         </button>
       </div>
       <textarea
-        className="w-full bg-white/30 border border-white/20 rounded-xl px-3 py-2.5 resize-none outline-none text-xs text-[#1C1C1E] focus:border-white/50 focus:bg-white/40 placeholder:text-[#A0AABF] leading-relaxed transition-all"
+        className="w-full bg-white/30 border border-white/20 rounded-xl px-3 py-2.5 resize-none outline-none text-[13px] text-[#1C1C1E] focus:border-white/50 focus:bg-white/40 placeholder:text-[#A0AABF] leading-relaxed transition-all font-diary"
         placeholder="답변을 입력하세요..."
         rows={1}
         value={localVal}
@@ -104,13 +104,13 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
     return (
       <aside className="relative flex-[6] flex flex-col h-full bg-[#F9FAFB] border-l border-[#E5E5EA] shrink-0 overflow-hidden px-6 py-8">
         <header className="mb-6 shrink-0">
-          <h1 className="text-lg font-semibold text-[#1C1C1E] tracking-tight">
+          <h1 className="text-xl font-semibold text-[#1C1C1E] tracking-tight font-diary">
             {year}년 {month + 1}월 메모
           </h1>
         </header>
         <div className="flex-1 flex flex-col min-h-0 bg-white rounded-xl border border-[#E5E5EA] shadow-sm p-4 relative">
           <textarea
-            className="flex-1 w-full bg-transparent resize-none outline-none text-sm text-[#1C1C1E] placeholder:text-[#A0AABF] leading-relaxed"
+            className="flex-1 w-full bg-transparent resize-none outline-none text-base text-[#1C1C1E] placeholder:text-[#A0AABF] leading-relaxed font-diary"
             placeholder="이달의 기억하고 싶은 일들을 자유롭게 기록해보세요."
             value={monthlyText}
             onChange={(e) => setMonthlyText(e.target.value)}
@@ -129,7 +129,7 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
   return (
     <aside className={`relative flex-[6] flex flex-col h-full border-l border-[#E5E5EA] shrink-0 overflow-hidden px-6 py-6 ${isAurora ? 'bg-transparent' : 'bg-[#F9FAFB]'}`}>
       <header className="mb-6 shrink-0 text-center relative z-10 flex items-center justify-center">
-        <h1 className="text-lg font-semibold text-[#1C1C1E] tracking-tight">
+        <h1 className="text-xl font-semibold text-[#1C1C1E] tracking-tight font-diary">
           {formattedDate}
         </h1>
         <button
@@ -229,7 +229,7 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
                 <div className="flex justify-between items-start mb-2 gap-2">
                   <div>
                     <div className="text-[10px] font-bold text-[#A0AABF] mb-1">과거 질문</div>
-                    <div className="text-xs font-semibold text-[#8B7CF8]">{a.question}</div>
+                    <div className="text-[13px] font-semibold text-[#8B7CF8] font-diary">{a.question}</div>
                   </div>
                   <button 
                     onClick={() => deleteDayDiaryAnswer(dateKey, a.questionId)}
@@ -238,7 +238,7 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
                     ✕
                   </button>
                 </div>
-                <div className="text-xs text-[#1C1C1E] whitespace-pre-wrap">{a.answer}</div>
+                <div className="text-[13px] text-[#1C1C1E] whitespace-pre-wrap font-diary">{a.answer}</div>
               </div>
             ))}
           </div>
@@ -258,7 +258,7 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
               value={newMemo}
               onChange={(e) => setNewMemo(e.target.value)}
               placeholder="자유롭게 기록을 남겨보세요..."
-              className="flex-1 bg-white/30 border border-white/20 rounded-xl px-3 py-2.5 text-xs outline-none text-[#1C1C1E] placeholder:text-[#A0AABF] focus:border-white/50 focus:bg-white/40 transition-all"
+              className="flex-1 bg-white/30 border border-white/20 rounded-xl px-3 py-2.5 text-[13px] outline-none text-[#1C1C1E] placeholder:text-[#A0AABF] focus:border-white/50 focus:bg-white/40 transition-all font-diary"
               spellCheck={false}
             />
             <button type="submit" disabled={!newMemo.trim()} className="px-3 bg-white/40 border border-white/20 text-[#8B7CF8] rounded-xl font-bold text-xs hover:bg-white/60 disabled:opacity-30 transition-all">
@@ -269,7 +269,7 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
           <div className="flex flex-col gap-2">
             {(dayDiary.memos || []).map((memo: DiaryMemo) => (
               <div key={memo.id} className="group bg-white/30 border border-white/20 rounded-xl p-3 flex items-start gap-3 relative hover:bg-white/40 transition-colors">
-                <div className="flex-1 text-xs text-[#1C1C1E] whitespace-pre-wrap leading-relaxed">{memo.text}</div>
+                <div className="flex-1 text-[13px] text-[#1C1C1E] whitespace-pre-wrap leading-relaxed font-diary">{memo.text}</div>
                 <button 
                   onClick={() => deleteDayDiaryMemo(dateKey, memo.id)}
                   className="w-5 h-5 flex items-center justify-center rounded text-[#A0AABF] hover:text-[#EF6A7B] opacity-0 group-hover:opacity-100 transition-opacity text-[10px] shrink-0 -mr-1 -mt-1"
