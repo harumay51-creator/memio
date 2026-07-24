@@ -486,6 +486,23 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
                 </div>
               </section>
             </div>
+            
+            {/* Retro UI Widgets (Always visible footer) */}
+            <div className="shrink-0 flex justify-between items-end border-t border-white/40 bg-white/30 p-3 px-4 shadow-inner mt-2">
+              <div className="flex flex-col gap-1">
+                <span className="font-pixel text-[10px] text-white tracking-widest animate-blink-fast drop-shadow-md font-bold">NOW LOADING...</span>
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="text-white text-[12px] animate-spin-pixel drop-shadow-md">♥</span>
+                  <span className="text-[#ffade4] text-[12px] animate-spin-pixel drop-shadow-md" style={{ animationDelay: '0.75s' }}>♥</span>
+                </div>
+              </div>
+              <div className="flex flex-col items-end gap-1">
+                <span className="font-pixel text-[9px] text-white tracking-widest drop-shadow-md font-bold">TOTAL VISITOR</span>
+                <div className="bg-black/60 border-2 border-[#b588ff] rounded px-3 py-1 shadow-inner backdrop-blur-sm">
+                  <span className="font-pixel text-[#ffade4] text-[14px] tracking-widest drop-shadow-[0_0_8px_#ffade4]">00001234</span>
+                </div>
+              </div>
+            </div>
           </RetroWindow>
         ) : (
           <div className="flex-1 min-h-0 overflow-y-auto pr-2 -mr-2 flex flex-col gap-6">
@@ -645,25 +662,6 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
                   </div>
                 ))}
               </div>
-              
-              {/* Retro UI Widgets (Only in Y2K mode) */}
-              {isY2K && (
-                <div className="mt-8 flex justify-between items-end border-t-2 border-white/20 pt-4 px-2">
-                  <div className="flex flex-col gap-1">
-                    <span className="font-pixel text-[10px] text-white/90 tracking-widest animate-blink-fast drop-shadow-sm">NOW LOADING...</span>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="text-white text-[12px] animate-spin-pixel drop-shadow-sm">♥</span>
-                      <span className="text-[#ffade4] text-[12px] animate-spin-pixel drop-shadow-sm" style={{ animationDelay: '0.75s' }}>♥</span>
-                    </div>
-                  </div>
-                  <div className="flex flex-col items-end gap-1">
-                    <span className="font-pixel text-[9px] text-white/80 tracking-widest drop-shadow-sm">TOTAL VISITOR</span>
-                    <div className="bg-black/40 border-2 border-white/30 rounded px-2 py-1 shadow-inner backdrop-blur-sm">
-                      <span className="font-pixel text-[#ffade4] text-[14px] tracking-widest drop-shadow-[0_0_8px_#ffade4]">00001234</span>
-                    </div>
-                  </div>
-                </div>
-              )}
             </section>
           </div>
         )}
