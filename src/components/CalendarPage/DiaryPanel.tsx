@@ -3,26 +3,26 @@ import { useDiaryStore, DiaryMemo } from '../../store/DiaryStore'
 import { RetroWindow } from '../common/Y2KTheme'
 import Emoji from '../common/Emoji'
 
-const StarDoodle = () => (
-  <svg className="absolute -top-3 -right-8 w-8 h-8 text-[#FFD54F] opacity-80 rotate-12 pointer-events-none" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+const StarDoodle = ({ isY2K }: { isY2K?: boolean }) => (
+  <svg style={{ filter: isY2K ? 'drop-shadow(2px 2px 0px #1C1C1E)' : undefined }} className={`absolute -top-3 -right-8 w-8 h-8 ${isY2K ? 'text-white' : 'text-[#FFD54F]'} opacity-80 rotate-12 pointer-events-none`} viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
     <path d="M 50 10 Q 55 35 70 45 Q 90 50 70 60 Q 55 70 50 90 Q 45 70 25 60 Q 10 50 30 45 Q 45 35 50 10" fill="currentColor" />
   </svg>
 )
 
-const UnderlineDoodle = () => (
-  <svg className="absolute -bottom-2 left-0 w-12 h-2 text-[#81C784] opacity-80 pointer-events-none" viewBox="0 0 100 20" preserveAspectRatio="none" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round">
+const UnderlineDoodle = ({ isY2K }: { isY2K?: boolean }) => (
+  <svg style={{ filter: isY2K ? 'drop-shadow(2px 2px 0px #1C1C1E)' : undefined }} className={`absolute -bottom-2 left-0 w-12 h-2 ${isY2K ? 'text-white' : 'text-[#81C784]'} opacity-80 pointer-events-none`} viewBox="0 0 100 20" preserveAspectRatio="none" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round">
     <path d="M 5,10 Q 30,15 50,8 T 95,12" />
   </svg>
 )
 
-const CloudDoodle = () => (
-  <svg className="absolute -top-4 right-10 w-12 h-12 text-[#4FC3F7] opacity-60 pointer-events-none" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+const CloudDoodle = ({ isY2K }: { isY2K?: boolean }) => (
+  <svg style={{ filter: isY2K ? 'drop-shadow(2px 2px 0px #1C1C1E)' : undefined }} className={`absolute -top-4 right-10 w-12 h-12 ${isY2K ? 'text-white' : 'text-[#4FC3F7]'} opacity-60 pointer-events-none`} viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
     <path d="M 30,60 Q 20,60 20,50 Q 20,40 30,40 Q 35,25 50,25 Q 65,25 70,40 Q 85,40 85,55 Q 85,70 70,70 L 35,70" />
   </svg>
 )
 
-const ArrowDoodle = () => (
-  <svg className="absolute top-1 -left-6 w-5 h-5 text-[#F06292] opacity-70 -rotate-12 pointer-events-none" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round">
+const ArrowDoodle = ({ isY2K }: { isY2K?: boolean }) => (
+  <svg style={{ filter: isY2K ? 'drop-shadow(2px 2px 0px #1C1C1E)' : undefined }} className={`absolute top-1 -left-6 w-5 h-5 ${isY2K ? 'text-white' : 'text-[#F06292]'} opacity-70 -rotate-12 pointer-events-none`} viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round">
     <path d="M 20,80 Q 50,50 80,20 M 50,20 L 80,20 L 80,50" />
   </svg>
 )
@@ -307,7 +307,7 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
       <header className="mb-6 shrink-0 text-center relative z-10 flex items-center justify-center">
         <h1 className="text-xl font-semibold text-[#1C1C1E] tracking-tight font-diary relative inline-block">
           <span className={isY2K ? 'text-white drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)]' : ''}>{formattedDate}</span>
-          <StarDoodle />
+          <StarDoodle isY2K={isY2K} />
         </h1>
         <button
           onClick={handleToggleTheme}
