@@ -4,6 +4,7 @@ import { useDiaryStore } from '../../store/DiaryStore'
 import { useMergedHolidays } from '../../hooks/useMergedHolidays'
 import Emoji from '../common/Emoji'
 import DiaryPanel from './DiaryPanel'
+import auroraBg from '../../assets/aurora.jpg'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'] as const
@@ -234,12 +235,22 @@ const CalendarPage: React.FC = () => {
 
   const isSelDayToday = sameDay(selDay, today)
   const selDayFormatted = `${selDay.getMonth() + 1}월 ${selDay.getDate()}일 (${WEEKDAYS[selDay.getDay()]})`
+  const { settings } = useDiaryStore()
+  const isAurora = settings.theme === 'aurora'
 
   return (
-    <div className="flex h-full w-full bg-[#F5F5F7] overflow-hidden">
-      {/* ── Left: Main Calendar ────────────────────────────────────────────── */}
-      <main className={`flex flex-col p-6 m-4 mr-2 bg-white rounded-2xl border border-[#E5E5EA] shadow-sm relative overflow-hidden ${isDiaryMode ? 'flex-[4]' : 'flex-1'}`}>
-        <header className="relative flex items-center justify-between mb-6 z-10 shrink-0">
+    <div className={`flex h-full w-full relative overflow-hidden ${isAurora && isDiaryMode ? '' : 'bg-[#F5F5F7]'}`}>
+      {isAurora && isDiaryMode && (
+        <>
+          <div className="absolute inset-0 z-0 bg-cover bg-center" style={{ backgroundImage: `url(${auroraBg})` }} />
+          <div className="absolute inset-0 z-0 bg-white/20" />
+        </>
+      )}
+      
+      <div className="relative z-10 flex h-full w-full">
+        {/* ── Left: Main Calendar ────────────────────────────────────────────── */}
+        <main className={`flex flex-col p-6 m-4 mr-2 relative overflow-hidden ${isAurora && isDiaryMode ? 'bg-transparent' : 'bg-white rounded-2xl border border-[#E5E5EA] shadow-sm'} ${isDiaryMode ? 'flex-[4]' : 'flex-1'}`}>
+          <header className="relative flex items-center justify-between mb-6 z-10 shrink-0">
           <div className="flex items-center gap-4">
             <button onClick={prevMonth} className="w-8 h-8 flex items-center justify-center hover:bg-[#F7F6FF] rounded text-[#717A8C] font-bold transition-colors">←</button>
             <button 
@@ -677,6 +688,7 @@ const CalendarPage: React.FC = () => {
 
         </aside>
       )}
+      </div>
     </div>
   )
 }

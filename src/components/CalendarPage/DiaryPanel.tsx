@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useDiaryStore, DiaryMemo } from '../../store/DiaryStore'
 import Emoji from '../common/Emoji'
-import auroraBg from '../../assets/aurora.jpg'
 
 interface DiaryPanelProps {
   mode: 'day' | 'month'
@@ -26,7 +25,7 @@ const QuestionItem = ({ q, initialAnswer, saveAnswer, deleteAnswer }: { q: any, 
   }, [initialAnswer])
 
   return (
-    <div className="group glass-card p-4 relative">
+    <div className="group bg-white rounded-xl border border-[#E5E5EA] shadow-sm p-4 relative">
       <div className="flex justify-between items-start mb-2 gap-2">
         <div className="text-xs font-semibold text-[#8B7CF8]">{q.text}</div>
         <button 
@@ -128,16 +127,7 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
   const formattedDate = `${selDay.getMonth() + 1}월 ${selDay.getDate()}일 (${WEEKDAYS[selDay.getDay()]})`
 
   return (
-    <aside className="relative flex-[6] flex flex-col h-full border-l border-[#E5E5EA] shrink-0 overflow-hidden px-6 py-6">
-      {isAurora ? (
-        <>
-          <div className="absolute inset-0 z-0 bg-cover bg-center" style={{ backgroundImage: `url(${auroraBg})` }} />
-          <div className="absolute inset-0 z-0 bg-white/60 backdrop-blur-[2px]" />
-        </>
-      ) : (
-        <div className="absolute inset-0 z-0 bg-[#F9FAFB]/50" />
-      )}
-      
+    <aside className={`relative flex-[6] flex flex-col h-full border-l border-[#E5E5EA] shrink-0 overflow-hidden px-6 py-6 ${isAurora ? 'bg-transparent' : 'bg-[#F9FAFB]'}`}>
       <header className="mb-6 shrink-0 text-center relative z-10 flex items-center justify-center">
         <h1 className="text-lg font-semibold text-[#1C1C1E] tracking-tight">
           {formattedDate}
@@ -156,7 +146,7 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
       <div className="relative z-10 flex-1 min-h-0 overflow-y-auto pr-2 -mr-2 flex flex-col gap-6">
         
         {/* 1. Emoji Selector */}
-        <section className="glass-card p-4">
+        <section className="bg-white rounded-2xl border border-[#E5E5EA] shadow-sm p-4">
           <div className="flex justify-between items-center mb-3">
             <h2 className="text-[11px] font-bold text-[#717A8C] tracking-widest uppercase">오늘의 기분/날씨</h2>
             <button 
@@ -232,7 +222,7 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
           
           {/* Display snapshot answers that are no longer in settings.questions */}
           {(dayDiary.answers || []).filter(a => !settings.questions.some(q => q.id === a.questionId)).map(a => (
-            <div key={a.questionId} className="group glass-card p-4 opacity-70 relative">
+            <div key={a.questionId} className="group bg-white rounded-xl border border-[#E5E5EA] shadow-sm p-4 opacity-70 relative">
               <div className="flex justify-between items-start mb-2 gap-2">
                 <div>
                   <div className="text-[10px] font-bold text-[#A0AABF] mb-1">과거 질문</div>
@@ -258,7 +248,7 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
         <section className="flex flex-col gap-3 pb-8">
           <h2 className="text-[11px] font-bold text-[#717A8C] tracking-widest uppercase px-1">MEMO</h2>
           
-          <form onSubmit={handleAddMemo} className="glass-card flex overflow-hidden">
+          <form onSubmit={handleAddMemo} className="bg-white rounded-xl border border-[#E5E5EA] shadow-sm flex overflow-hidden">
             <input
               type="text"
               value={newMemo}
@@ -274,7 +264,7 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
 
           <div className="flex flex-col gap-2">
             {(dayDiary.memos || []).map((memo: DiaryMemo) => (
-              <div key={memo.id} className="group glass-card p-3 flex items-start gap-3 relative">
+              <div key={memo.id} className="group bg-white rounded-xl border border-[#E5E5EA] p-3 flex items-start gap-3 relative">
                 <div className="flex-1 text-xs text-[#1C1C1E] whitespace-pre-wrap leading-relaxed">{memo.text}</div>
                 <button 
                   onClick={() => deleteDayDiaryMemo(dateKey, memo.id)}
