@@ -26,6 +26,72 @@ const ArrowDoodle = () => (
   </svg>
 )
 
+const SparkleDoodle = ({ className = "" }) => (
+  <svg className={`absolute pointer-events-none text-[#FFB74D] opacity-80 ${className}`} viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M 50 10 L 50 90 M 10 50 L 90 50" />
+    <circle cx="50" cy="50" r="10" fill="currentColor" />
+  </svg>
+)
+
+const WavyLineDoodle = ({ className = "" }) => (
+  <svg className={`absolute pointer-events-none text-[#64B5F6] opacity-70 ${className}`} viewBox="0 0 100 20" preserveAspectRatio="none" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round">
+    <path d="M 0 10 Q 12 0 25 10 T 50 10 T 75 10 T 100 10" />
+  </svg>
+)
+
+const LeafDoodle = ({ className = "" }) => (
+  <svg className={`absolute pointer-events-none text-[#81C784] opacity-80 ${className}`} viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M 20 80 Q 20 20 50 20 Q 80 20 80 50 Q 80 80 20 80" fill="rgba(129, 199, 132, 0.3)" />
+    <path d="M 20 80 L 80 20" />
+  </svg>
+)
+
+const CrownDoodle = ({ className = "" }) => (
+  <svg className={`absolute pointer-events-none text-[#FFD54F] opacity-90 ${className}`} viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M 10 80 L 90 80 L 90 30 L 70 50 L 50 20 L 30 50 L 10 30 Z" fill="rgba(255, 213, 79, 0.3)" />
+  </svg>
+)
+
+const ZigzagDoodle = ({ className = "" }) => (
+  <svg className={`absolute pointer-events-none text-[#FF8A65] opacity-70 ${className}`} viewBox="0 0 100 20" preserveAspectRatio="none" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M 0 15 L 10 5 L 20 15 L 30 5 L 40 15 L 50 5 L 60 15 L 70 5 L 80 15 L 90 5 L 100 15" />
+  </svg>
+)
+
+const RibbonDoodle = ({ className = "" }) => (
+  <svg className={`absolute pointer-events-none text-[#BA68C8] opacity-80 ${className}`} viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M 30 50 Q 10 20 30 20 Q 50 20 50 50 Z M 70 50 Q 90 20 70 20 Q 50 20 50 50 Z M 50 50 L 40 90 M 50 50 L 60 90" fill="rgba(186, 104, 200, 0.3)" />
+  </svg>
+)
+
+const getHash = (idString: string) => {
+  let hash = 0;
+  for (let i = 0; i < idString.length; i++) {
+    hash = idString.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return Math.abs(hash);
+}
+
+const CornerDoodle = ({ idString }: { idString: string }) => {
+  const hash = getHash(idString);
+  if (hash % 3 !== 0) return null; // ~1/3 chance
+  
+  const doodleType = hash % 6;
+  const positionClass = hash % 2 === 0 ? "-top-3 -right-3 rotate-12" : "-bottom-3 -left-3 -rotate-12";
+  const sizeClass = "w-8 h-8";
+  const cls = `${positionClass} ${sizeClass} z-20`;
+  
+  switch(doodleType) {
+    case 0: return <SparkleDoodle className={cls} />
+    case 1: return <WavyLineDoodle className={`${positionClass} w-10 h-4 z-20`} />
+    case 2: return <LeafDoodle className={cls} />
+    case 3: return <CrownDoodle className={cls} />
+    case 4: return <ZigzagDoodle className={`${positionClass} w-10 h-4 z-20`} />
+    case 5: return <RibbonDoodle className={cls} />
+    default: return null;
+  }
+}
+
 interface DiaryPanelProps {
   mode: 'day' | 'month'
   selDay: Date
@@ -51,11 +117,8 @@ const POST_IT_THEMES = [
 ]
 
 const getPostItStyle = (idString: string, index?: number) => {
-  let hash = 0;
-  for (let i = 0; i < idString.length; i++) {
-    hash = idString.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  const themeIndex = index !== undefined ? index : Math.abs(hash);
+  const hash = getHash(idString);
+  const themeIndex = index !== undefined ? index : hash;
   const theme = POST_IT_THEMES[themeIndex % POST_IT_THEMES.length];
   const rotation = (Math.abs(hash) % 7) - 3; // -3 to +3 degrees
   return {
@@ -85,6 +148,7 @@ const QuestionItem = ({ q, initialAnswer, saveAnswer, deleteAnswer, index }: { q
 
   return (
     <div className="group relative transition-all duration-300 hover:scale-105 z-0 hover:z-10 p-4 w-36 min-h-[9rem] h-fit flex flex-col shrink-0" style={getPostItStyle(q.id, index)}>
+      <CornerDoodle idString={q.id} />
       <div className="flex justify-between items-start mb-1 gap-2">
         <div className="text-[11px] font-bold font-diary opacity-70" style={{ color: 'inherit' }}>{q.text}</div>
         <button 
@@ -279,7 +343,7 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
             <UnderlineDoodle />
           </div>
           
-          <div className="flex flex-row flex-wrap gap-4 items-start">
+          <div className="flex flex-row flex-wrap gap-2.5 items-start">
             {settings.questions.map((q, idx) => {
               const answerObj = (dayDiary.answers || []).find(a => a.questionId === q.id)
               const answerText = answerObj ? answerObj.answer : ''
@@ -298,6 +362,7 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
             {/* Display snapshot answers that are no longer in settings.questions */}
             {(dayDiary.answers || []).filter(a => !settings.questions.some(q => q.id === a.questionId)).map((a, idx) => (
               <div key={a.questionId} className="group relative transition-all duration-300 hover:scale-105 z-0 hover:z-10 p-4 w-36 min-h-[9rem] h-fit flex flex-col shrink-0" style={getPostItStyle(a.questionId, idx + settings.questions.length)}>
+                <CornerDoodle idString={a.questionId} />
                 <div className="flex justify-between items-start mb-1 gap-2">
                   <div>
                     <div className="text-[11px] font-bold font-diary opacity-70" style={{ color: 'inherit' }}>{a.question} (과거 질문)</div>
@@ -341,9 +406,10 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
             </button>
           </form>
 
-          <div className="flex flex-row flex-wrap gap-4 items-start mt-2">
+          <div className="flex flex-row flex-wrap gap-2.5 items-start mt-2">
             {[...(dayDiary.memos || [])].reverse().map((memo: DiaryMemo, idx: number) => (
               <div key={memo.id} className="group relative transition-all duration-300 hover:scale-105 z-0 hover:z-10 p-5 w-36 min-h-[9rem] h-fit flex flex-col justify-between shrink-0" style={getPostItStyle(memo.id, idx + (dayDiary.answers || []).length)}>
+                <CornerDoodle idString={memo.id} />
                 <div className="flex justify-between items-start mb-2 gap-2">
                   <div className="flex-1 text-[14px] whitespace-pre-wrap leading-relaxed font-diary" style={{ color: 'inherit' }}>{memo.text}</div>
                   <button 
