@@ -50,12 +50,13 @@ const POST_IT_THEMES = [
   { bg: '#DCE8A0', text: '#3F4A1E' }, // Lime
 ]
 
-const getPostItStyle = (idString: string) => {
+const getPostItStyle = (idString: string, index?: number) => {
   let hash = 0;
   for (let i = 0; i < idString.length; i++) {
     hash = idString.charCodeAt(i) + ((hash << 5) - hash);
   }
-  const theme = POST_IT_THEMES[Math.abs(hash) % POST_IT_THEMES.length];
+  const themeIndex = index !== undefined ? index : Math.abs(hash);
+  const theme = POST_IT_THEMES[themeIndex % POST_IT_THEMES.length];
   const rotation = (Math.abs(hash) % 7) - 3; // -3 to +3 degrees
   return {
     backgroundColor: theme.bg,
@@ -66,7 +67,7 @@ const getPostItStyle = (idString: string) => {
   };
 }
 
-const QuestionItem = ({ q, initialAnswer, saveAnswer, deleteAnswer }: { q: any, initialAnswer: string, saveAnswer: (val: string) => void, deleteAnswer: () => void }) => {
+const QuestionItem = ({ q, initialAnswer, saveAnswer, deleteAnswer, index }: { q: any, initialAnswer: string, saveAnswer: (val: string) => void, deleteAnswer: () => void, index?: number }) => {
   const [localVal, setLocalVal] = useState(initialAnswer)
 
   useEffect(() => {
@@ -74,7 +75,7 @@ const QuestionItem = ({ q, initialAnswer, saveAnswer, deleteAnswer }: { q: any, 
   }, [initialAnswer])
 
   return (
-    <div className="group relative transition-all duration-300 hover:scale-105 z-0 hover:z-10 p-4 w-36 min-h-[9rem] flex flex-col shrink-0" style={getPostItStyle(q.id)}>
+    <div className="group relative transition-all duration-300 hover:scale-105 z-0 hover:z-10 p-4 w-36 min-h-[9rem] flex flex-col shrink-0" style={getPostItStyle(q.id, index)}>
       <div className="flex justify-between items-start mb-2 gap-2">
         <div className="text-[13px] font-bold font-diary" style={{ color: 'inherit' }}>{q.text}</div>
         <button 
@@ -266,7 +267,7 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
           </div>
           
           <div className="flex flex-row flex-wrap gap-4 items-start">
-            {settings.questions.map(q => {
+            {settings.questions.map((q, idx) => {
               const answerObj = (dayDiary.answers || []).find(a => a.questionId === q.id)
               const answerText = answerObj ? answerObj.answer : ''
               return (
@@ -276,13 +277,14 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
                   initialAnswer={answerText} 
                   saveAnswer={(val) => saveDayDiaryAnswer(dateKey, q.id, q.text, val)} 
                   deleteAnswer={() => deleteDayDiaryAnswer(dateKey, q.id)}
+                  index={idx}
                 />
               )
             })}
             
             {/* Display snapshot answers that are no longer in settings.questions */}
-            {(dayDiary.answers || []).filter(a => !settings.questions.some(q => q.id === a.questionId)).map(a => (
-              <div key={a.questionId} className="group relative transition-all duration-300 hover:scale-105 z-0 hover:z-10 p-4 w-36 min-h-[9rem] flex flex-col shrink-0" style={getPostItStyle(a.questionId)}>
+            {(dayDiary.answers || []).filter(a => !settings.questions.some(q => q.id === a.questionId)).map((a, idx) => (
+              <div key={a.questionId} className="group relative transition-all duration-300 hover:scale-105 z-0 hover:z-10 p-4 w-36 min-h-[9rem] flex flex-col shrink-0" style={getPostItStyle(a.questionId, idx + settings.questions.length)}>
                 <div className="flex justify-between items-start mb-2 gap-2">
                   <div>
                     <div className="text-[10px] font-bold mb-1 opacity-70">과거 질문</div>
@@ -328,8 +330,8 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
           </form>
 
           <div className="flex flex-row flex-wrap gap-4 items-start mt-2">
-            {(dayDiary.memos || []).map((memo: DiaryMemo) => (
-              <div key={memo.id} className="group relative transition-all duration-300 hover:scale-105 z-0 hover:z-10 p-4 w-36 min-h-[9rem] flex flex-col shrink-0" style={getPostItStyle(memo.id)}>
+            {(dayDiary.memos || []).map((memo: DiaryMemo, idx: number) => (
+              <div key={memo.id} className="group relative transition-all duration-300 hover:scale-105 z-0 hover:z-10 p-4 w-36 min-h-[9rem] flex flex-col shrink-0" style={getPostItStyle(memo.id, idx + (dayDiary.answers || []).length)}>
                 <div className="flex justify-between items-start mb-2 gap-2">
                   <div className="flex-1 text-[14px] whitespace-pre-wrap leading-relaxed font-diary" style={{ color: 'inherit' }}>{memo.text}</div>
                   <button 
