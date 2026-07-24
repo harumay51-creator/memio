@@ -85,8 +85,8 @@ const QuestionItem = ({ q, initialAnswer, saveAnswer, deleteAnswer, index }: { q
 
   return (
     <div className="group relative transition-all duration-300 hover:scale-105 z-0 hover:z-10 p-4 w-36 min-h-[9rem] h-fit flex flex-col shrink-0" style={getPostItStyle(q.id, index)}>
-      <div className="flex justify-between items-start mb-2 gap-2">
-        <div className="text-[13px] font-bold font-diary" style={{ color: 'inherit' }}>{q.text}</div>
+      <div className="flex justify-between items-start mb-1 gap-2">
+        <div className="text-[11px] font-bold font-diary opacity-70" style={{ color: 'inherit' }}>{q.text}</div>
         <button 
           onClick={deleteAnswer}
           className="w-5 h-5 flex items-center justify-center rounded text-[#717A8C] hover:text-[#EF6A7B] opacity-0 group-hover:opacity-100 transition-opacity text-[10px] shrink-0"
@@ -96,7 +96,7 @@ const QuestionItem = ({ q, initialAnswer, saveAnswer, deleteAnswer, index }: { q
       </div>
       <textarea
         ref={textareaRef}
-        className="flex-1 w-full bg-transparent resize-none outline-none text-[14px] leading-relaxed transition-all font-diary overflow-hidden"
+        className="flex-1 w-full bg-transparent resize-none outline-none text-[15px] leading-relaxed transition-all font-diary overflow-hidden"
         style={{ color: 'inherit' }}
         placeholder="답변을 입력하세요..."
         rows={1}
@@ -298,10 +298,9 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
             {/* Display snapshot answers that are no longer in settings.questions */}
             {(dayDiary.answers || []).filter(a => !settings.questions.some(q => q.id === a.questionId)).map((a, idx) => (
               <div key={a.questionId} className="group relative transition-all duration-300 hover:scale-105 z-0 hover:z-10 p-4 w-36 min-h-[9rem] h-fit flex flex-col shrink-0" style={getPostItStyle(a.questionId, idx + settings.questions.length)}>
-                <div className="flex justify-between items-start mb-2 gap-2">
+                <div className="flex justify-between items-start mb-1 gap-2">
                   <div>
-                    <div className="text-[10px] font-bold mb-1 opacity-70">과거 질문</div>
-                    <div className="text-[13px] font-bold font-diary" style={{ color: 'inherit' }}>{a.question}</div>
+                    <div className="text-[11px] font-bold font-diary opacity-70" style={{ color: 'inherit' }}>{a.question} (과거 질문)</div>
                   </div>
                   <button 
                     onClick={() => deleteDayDiaryAnswer(dateKey, a.questionId)}
@@ -311,7 +310,7 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
                     ✕
                   </button>
                 </div>
-                <div className="flex-1 text-[14px] whitespace-pre-wrap font-diary leading-relaxed" style={{ color: 'inherit' }}>{a.answer}</div>
+                <div className="flex-1 text-[15px] whitespace-pre-wrap font-diary leading-relaxed" style={{ color: 'inherit' }}>{a.answer}</div>
               </div>
             ))}
           </div>
@@ -344,7 +343,7 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
 
           <div className="flex flex-row flex-wrap gap-4 items-start mt-2">
             {[...(dayDiary.memos || [])].reverse().map((memo: DiaryMemo, idx: number) => (
-              <div key={memo.id} className="group relative transition-all duration-300 hover:scale-105 z-0 hover:z-10 p-4 w-36 min-h-[9rem] h-fit flex flex-col shrink-0" style={getPostItStyle(memo.id, idx + (dayDiary.answers || []).length)}>
+              <div key={memo.id} className="group relative transition-all duration-300 hover:scale-105 z-0 hover:z-10 p-5 w-36 min-h-[9rem] h-fit flex flex-col justify-between shrink-0" style={getPostItStyle(memo.id, idx + (dayDiary.answers || []).length)}>
                 <div className="flex justify-between items-start mb-2 gap-2">
                   <div className="flex-1 text-[14px] whitespace-pre-wrap leading-relaxed font-diary" style={{ color: 'inherit' }}>{memo.text}</div>
                   <button 
@@ -355,6 +354,11 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
                     ✕
                   </button>
                 </div>
+                {memo.createdAt && (
+                  <div className="text-[9px] opacity-40 font-diary mt-2 text-right" style={{ color: 'inherit' }}>
+                    {new Intl.DateTimeFormat('ko-KR', { hour: 'numeric', minute: 'numeric', hour12: true }).format(new Date(memo.createdAt))}
+                  </div>
+                )}
               </div>
             ))}
           </div>
