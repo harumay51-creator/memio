@@ -5,7 +5,7 @@ import { useMergedHolidays } from '../../hooks/useMergedHolidays'
 import Emoji from '../common/Emoji'
 import DiaryPanel from './DiaryPanel'
 import DiarySearchPanel from './DiarySearchPanel'
-import { Y2KBackground, RetroWindow } from '../common/Y2KTheme'
+import { Y2KBackground } from '../common/Y2KTheme'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'] as const
