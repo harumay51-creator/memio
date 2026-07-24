@@ -53,8 +53,10 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
     diaries, monthlyDiaries, settings,
     saveDayDiaryEmojis, saveDayDiaryAnswer, deleteDayDiaryAnswer,
     addDayDiaryMemo, deleteDayDiaryMemo,
-    saveMonthlyDiary
+    saveMonthlyDiary, updateTheme
   } = useDiaryStore()
+
+  const isAurora = settings.theme === 'aurora'
 
   const dateKey = `${selDay.getFullYear()}-${String(selDay.getMonth() + 1).padStart(2, '0')}-${String(selDay.getDate()).padStart(2, '0')}`
   const monthKey = `${year}-${String(month + 1).padStart(2, '0')}`
@@ -123,14 +125,29 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
   const formattedDate = `${selDay.getMonth() + 1}월 ${selDay.getDate()}일 (${WEEKDAYS[selDay.getDay()]})`
 
   return (
-    <aside className="relative flex-[6] flex flex-col h-full bg-[#F9FAFB]/50 border-l border-[#E5E5EA] shrink-0 overflow-hidden px-6 py-6">
-      <header className="mb-6 shrink-0 text-center">
+    <aside className="relative flex-[6] flex flex-col h-full border-l border-[#E5E5EA] shrink-0 overflow-hidden px-6 py-6">
+      {isAurora ? (
+        <>
+          <div className="absolute inset-0 z-0 bg-cover bg-center" style={{ backgroundImage: "url('/aurora.jpg')" }} />
+          <div className="absolute inset-0 z-0 bg-white/60 backdrop-blur-[2px]" />
+        </>
+      ) : (
+        <div className="absolute inset-0 z-0 bg-[#F9FAFB]/50" />
+      )}
+      
+      <header className="mb-6 shrink-0 text-center relative z-10 flex items-center justify-center">
         <h1 className="text-lg font-semibold text-[#1C1C1E] tracking-tight">
           {formattedDate}
         </h1>
+        <button
+          onClick={() => updateTheme(isAurora ? 'default' : 'aurora')}
+          className="absolute right-0 text-xs font-semibold px-2.5 py-1.5 rounded-lg bg-white/50 hover:bg-white border border-white/60 shadow-sm transition-colors text-[#717A8C]"
+        >
+          {isAurora ? '기본 테마' : '✨ 오로라'}
+        </button>
       </header>
 
-      <div className="flex-1 min-h-0 overflow-y-auto pr-2 -mr-2 flex flex-col gap-6">
+      <div className="relative z-10 flex-1 min-h-0 overflow-y-auto pr-2 -mr-2 flex flex-col gap-6">
         
         {/* 1. Emoji Selector */}
         <section className="glass-card p-4">

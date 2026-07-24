@@ -28,6 +28,7 @@ export interface MonthlyDiary {
 
 export interface DiarySettings {
   questions: { id: string, text: string }[]
+  theme?: 'default' | 'aurora'
 }
 
 interface DiaryStoreValue {
@@ -40,6 +41,7 @@ interface DiaryStoreValue {
   addQuestion: (text: string) => Promise<void>
   deleteQuestion: (id: string) => Promise<void>
   updateQuestion: (id: string, text: string) => Promise<void>
+  updateTheme: (theme: 'default' | 'aurora') => Promise<void>
   saveDayDiaryEmojis: (dateKey: string, emojis: string[]) => Promise<void>
   saveDayDiaryAnswer: (dateKey: string, questionId: string, question: string, answer: string) => Promise<void>
   deleteDayDiaryAnswer: (dateKey: string, questionId: string) => Promise<void>
@@ -64,11 +66,12 @@ export const DiaryStoreProvider: React.FC<{ children: React.ReactNode, uid: stri
 
   useEffect(() => {
     if (!uid) return
-    const unsubSettings = onSnapshot(doc(db, `users/${uid}/settings`, 'diary'), (docSnap) => {
-      if (docSnap.exists()) {
-        setSettings(docSnap.data() as DiarySettings)
+    const unsubSettings = onSnapshot(doc(db, `users/${uid}/settings`, 'diary'), (doc) => {
+      if (doc.exists()) {
+        const data = doc.data() as Partial<DiarySettings>
+        setSettings({ questions: data.questions || [], theme: data.theme || 'default' })
       } else {
-        setSettings({ questions: [] })
+        setSettings({ questions: [], theme: 'default' })
       }
     })
 
@@ -112,6 +115,11 @@ export const DiaryStoreProvider: React.FC<{ children: React.ReactNode, uid: stri
     if (!uid) return
     const newQuestions = settings.questions.map(q => q.id === id ? { ...q, text } : q)
     await setDoc(doc(db, `users/${uid}/settings`, 'diary'), { questions: newQuestions }, { merge: true })
+  }
+
+  const updateTheme = async (theme: 'default' | 'aurora') => {
+    if (!uid) return
+    await setDoc(doc(db, `users/${uid}/settings`, 'diary'), { theme }, { merge: true })
   }
 
   const saveDayDiaryEmojis = async (dateKey: string, emojis: string[]) => {
@@ -196,8 +204,8 @@ export const DiaryStoreProvider: React.FC<{ children: React.ReactNode, uid: stri
   return (
     <DiaryContext.Provider value={{
       diaries, monthlyDiaries, settings, isLoading,
-      initialize: () => {}, addQuestion, deleteQuestion, updateQuestion,
-      saveDayDiaryEmojis, saveDayDiaryAnswer, deleteDayDiaryAnswer, addDayDiaryMemo, deleteDayDiaryMemo, saveMonthlyDiary
+        initialize: () => {}, addQuestion, deleteQuestion, updateQuestion, updateTheme,
+        saveDayDiaryEmojis, saveDayDiaryAnswer, deleteDayDiaryAnswer, addDayDiaryMemo, deleteDayDiaryMemo, saveMonthlyDiary
     }}>
       {children}
     </DiaryContext.Provider>
