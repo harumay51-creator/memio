@@ -58,6 +58,8 @@
   .font-diary::placeholder {
     font-family: 'Pretendard', sans-serif;
     font-size: 0.8em;
+    color: inherit;
+    opacity: 0.6;
   }
 
   /* Dashboard card */

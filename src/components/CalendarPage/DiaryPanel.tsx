@@ -41,18 +41,29 @@ const EMOJI_CATEGORIES = [
   { name: '상태', emojis: ['👍', '👎', '👏', '🙌', '💪', '🙏', '🤝', '✌️', '👌', '❤️', '💔', '💤', '💢', '💡', '✅', '❌'] }
 ]
 
+const POST_IT_THEMES = [
+  { bg: '#F5D949', text: '#5C4E0B' },
+  { bg: '#F5876B', text: '#5C2012' },
+  { bg: '#5FD68F', text: '#0F4726' },
+  { bg: '#5FC9D8', text: '#0E434A' },
+  { bg: '#F5A8C4', text: '#5E1730' },
+  { bg: '#B8AEE8', text: '#31236E' },
+  { bg: '#F5A25C', text: '#663309' },
+]
+
 const getPostItStyle = (idString: string) => {
   let hash = 0;
   for (let i = 0; i < idString.length; i++) {
     hash = idString.charCodeAt(i) + ((hash << 5) - hash);
   }
-  const colors = ['#FFF9C4', '#FCE4EC', '#E3F2FD', '#E8F5E9', '#F3E5F5'];
+  const theme = POST_IT_THEMES[Math.abs(hash) % POST_IT_THEMES.length];
   const rotation = (Math.abs(hash) % 7) - 3; // -3 to +3 degrees
   return {
-    backgroundColor: colors[Math.abs(hash) % colors.length],
+    backgroundColor: theme.bg,
+    color: theme.text,
     transform: `rotate(${rotation}deg)`,
-    boxShadow: '2px 4px 10px rgba(0,0,0,0.1)',
-    borderRadius: '2px 12px 12px 2px' // slight fold feeling
+    boxShadow: '2px 4px 10px rgba(0,0,0,0.15)',
+    borderRadius: '2px 12px 12px 2px'
   };
 }
 
@@ -64,9 +75,9 @@ const QuestionItem = ({ q, initialAnswer, saveAnswer, deleteAnswer }: { q: any, 
   }, [initialAnswer])
 
   return (
-    <div className="group relative transition-all duration-300 hover:scale-105 z-0 hover:z-10 p-4" style={getPostItStyle(q.id)}>
+    <div className="group relative transition-all duration-300 hover:scale-105 z-0 hover:z-10 p-4 w-36 min-h-[9rem] flex flex-col shrink-0" style={getPostItStyle(q.id)}>
       <div className="flex justify-between items-start mb-2 gap-2">
-        <div className="text-[13px] font-bold text-[#1C1C1E] font-diary">{q.text}</div>
+        <div className="text-[13px] font-bold font-diary" style={{ color: 'inherit' }}>{q.text}</div>
         <button 
           onClick={deleteAnswer}
           className="w-5 h-5 flex items-center justify-center rounded text-[#717A8C] hover:text-[#EF6A7B] opacity-0 group-hover:opacity-100 transition-opacity text-[10px] shrink-0"
@@ -75,7 +86,8 @@ const QuestionItem = ({ q, initialAnswer, saveAnswer, deleteAnswer }: { q: any, 
         </button>
       </div>
       <textarea
-        className="w-full bg-transparent resize-none outline-none text-[14px] text-[#2D334A] placeholder:text-[#A0AABF] leading-relaxed transition-all font-diary"
+        className="flex-1 w-full bg-transparent resize-none outline-none text-[14px] leading-relaxed transition-all font-diary"
+        style={{ color: 'inherit' }}
         placeholder="답변을 입력하세요..."
         rows={1}
         value={localVal}
@@ -254,7 +266,7 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
             <UnderlineDoodle />
           </div>
           
-          <div className="flex flex-col gap-5">
+          <div className="flex flex-row flex-wrap gap-4 items-start">
             {settings.questions.map(q => {
               const answerObj = (dayDiary.answers || []).find(a => a.questionId === q.id)
               const answerText = answerObj ? answerObj.answer : ''
@@ -271,20 +283,21 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
             
             {/* Display snapshot answers that are no longer in settings.questions */}
             {(dayDiary.answers || []).filter(a => !settings.questions.some(q => q.id === a.questionId)).map(a => (
-              <div key={a.questionId} className="group relative transition-all duration-300 hover:scale-105 z-0 hover:z-10 p-4" style={getPostItStyle(a.questionId)}>
+              <div key={a.questionId} className="group relative transition-all duration-300 hover:scale-105 z-0 hover:z-10 p-4 w-36 min-h-[9rem] flex flex-col shrink-0" style={getPostItStyle(a.questionId)}>
                 <div className="flex justify-between items-start mb-2 gap-2">
                   <div>
-                    <div className="text-[10px] font-bold text-[#717A8C] mb-1">과거 질문</div>
-                    <div className="text-[13px] font-bold text-[#1C1C1E] font-diary">{a.question}</div>
+                    <div className="text-[10px] font-bold mb-1 opacity-70">과거 질문</div>
+                    <div className="text-[13px] font-bold font-diary" style={{ color: 'inherit' }}>{a.question}</div>
                   </div>
                   <button 
                     onClick={() => deleteDayDiaryAnswer(dateKey, a.questionId)}
-                    className="w-5 h-5 flex items-center justify-center rounded text-[#717A8C] hover:text-[#EF6A7B] opacity-0 group-hover:opacity-100 transition-opacity text-[10px] shrink-0"
+                    className="w-5 h-5 flex items-center justify-center rounded hover:opacity-50 opacity-0 group-hover:opacity-100 transition-opacity text-[10px] shrink-0"
+                    style={{ color: 'inherit' }}
                   >
                     ✕
                   </button>
                 </div>
-                <div className="text-[14px] text-[#2D334A] whitespace-pre-wrap font-diary leading-relaxed">{a.answer}</div>
+                <div className="flex-1 text-[14px] whitespace-pre-wrap font-diary leading-relaxed" style={{ color: 'inherit' }}>{a.answer}</div>
               </div>
             ))}
           </div>
@@ -315,16 +328,19 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
             </button>
           </form>
 
-          <div className="flex flex-col gap-5 mt-2">
+          <div className="flex flex-row flex-wrap gap-4 items-start mt-2">
             {(dayDiary.memos || []).map((memo: DiaryMemo) => (
-              <div key={memo.id} className="group relative transition-all duration-300 hover:scale-105 z-0 hover:z-10 p-4 flex items-start gap-3" style={getPostItStyle(memo.id)}>
-                <div className="flex-1 text-[14px] text-[#2D334A] whitespace-pre-wrap leading-relaxed font-diary">{memo.text}</div>
-                <button 
-                  onClick={() => deleteDayDiaryMemo(dateKey, memo.id)}
-                  className="w-5 h-5 flex items-center justify-center rounded text-[#717A8C] hover:text-[#EF6A7B] opacity-0 group-hover:opacity-100 transition-opacity text-[10px] shrink-0 -mr-1 -mt-1"
-                >
-                  ✕
-                </button>
+              <div key={memo.id} className="group relative transition-all duration-300 hover:scale-105 z-0 hover:z-10 p-4 w-36 min-h-[9rem] flex flex-col shrink-0" style={getPostItStyle(memo.id)}>
+                <div className="flex justify-between items-start mb-2 gap-2">
+                  <div className="flex-1 text-[14px] whitespace-pre-wrap leading-relaxed font-diary" style={{ color: 'inherit' }}>{memo.text}</div>
+                  <button 
+                    onClick={() => deleteDayDiaryMemo(dateKey, memo.id)}
+                    className="w-5 h-5 flex items-center justify-center rounded hover:opacity-50 opacity-0 group-hover:opacity-100 transition-opacity text-[10px] shrink-0"
+                    style={{ color: 'inherit' }}
+                  >
+                    ✕
+                  </button>
+                </div>
               </div>
             ))}
           </div>
