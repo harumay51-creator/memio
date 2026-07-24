@@ -8,9 +8,10 @@ interface SidebarProps {
   onNavigate: (page: PageId, itemId?: string) => void
   onLogout: () => void
   isAuroraBg?: boolean
+  isY2KBg?: boolean
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ activePage, onNavigate, onLogout, isAuroraBg = false }) => {
+const Sidebar: React.FC<SidebarProps> = ({ activePage, onNavigate, onLogout, isAuroraBg = false, isY2KBg = false }) => {
   const inputItems   = NAV_ITEMS.filter(i => i.group === 'input')
   const exploreItems = NAV_ITEMS.filter(i => i.group === 'explore')
   const utilityItems = NAV_ITEMS.filter(i => i.group === 'utility')
@@ -22,18 +23,19 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage, onNavigate, onLogout, isA
       select-none relative z-50
       ${isAuroraBg 
         ? 'bg-[#1C1C1E]/10 backdrop-blur-[20px] border-r border-white/20' 
-        : 'bg-[#FCFCFF] border-r border-[#EEF1F6]'}
+        : isY2KBg 
+          ? 'bg-white/30 backdrop-blur-[12px] border-r border-white/40' 
+          : 'bg-[#FCFCFF] border-r border-[#EEF1F6]'}
     `}>
       {/* Logo */}
       <div className="flex items-center gap-2.5 px-3 mb-4 mt-1">
-        <div className="
-          w-7 h-7 rounded-xl bg-[#8B7CF8]
-          flex items-center justify-center
-          text-white font-bold text-sm shadow-[0_2px_8px_rgba(139,124,248,0.4)]
-        ">
+        <div className={`
+          w-7 h-7 rounded-xl flex items-center justify-center text-white font-bold text-sm
+          ${isY2KBg ? 'bg-[#ffade4] shadow-[0_2px_8px_rgba(255,173,228,0.6)]' : 'bg-[#8B7CF8] shadow-[0_2px_8px_rgba(139,124,248,0.4)]'}
+        `}>
           M
         </div>
-        <span className={`font-semibold tracking-tight text-[15px] ${isAuroraBg ? 'text-white/90' : 'text-[#2D334A]'}`}>
+        <span className={`font-semibold tracking-tight text-[15px] ${isAuroraBg ? 'text-white/90' : isY2KBg ? 'text-[#8a63d2]' : 'text-[#2D334A]'}`}>
           Memio
         </span>
       </div>
@@ -42,7 +44,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage, onNavigate, onLogout, isA
         {/* Input nav */}
         <nav className="flex flex-col gap-0.5">
           {inputItems.map(item => (
-            <NavItemButton key={item.id} item={item} active={activePage === item.id} onClick={() => onNavigate(item.id)} isAuroraBg={isAuroraBg} />
+            <NavItemButton key={item.id} item={item} active={activePage === item.id} onClick={() => onNavigate(item.id)} isAuroraBg={isAuroraBg} isY2KBg={isY2KBg} />
           ))}
         </nav>
 
@@ -51,7 +53,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage, onNavigate, onLogout, isA
         {/* Explore nav */}
         <nav className="flex flex-col gap-0.5">
           {exploreItems.map(item => (
-            <NavItemButton key={item.id} item={item} active={activePage === item.id} onClick={() => onNavigate(item.id)} isAuroraBg={isAuroraBg} />
+            <NavItemButton key={item.id} item={item} active={activePage === item.id} onClick={() => onNavigate(item.id)} isAuroraBg={isAuroraBg} isY2KBg={isY2KBg} />
           ))}
         </nav>
 
@@ -60,14 +62,16 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage, onNavigate, onLogout, isA
         {/* Utility nav */}
         <nav className="flex flex-col gap-0.5 mb-2">
           {utilityItems.map(item => (
-            <NavItemButton key={item.id} item={item} active={activePage === item.id} onClick={() => onNavigate(item.id)} isAuroraBg={isAuroraBg} />
+            <NavItemButton key={item.id} item={item} active={activePage === item.id} onClick={() => onNavigate(item.id)} isAuroraBg={isAuroraBg} isY2KBg={isY2KBg} />
           ))}
           <button 
             onClick={onLogout}
             className={`flex items-center gap-2.5 px-3 py-2 mt-1 rounded-xl text-sm font-medium transition-colors ${
               isAuroraBg 
                 ? 'text-red-300/80 hover:bg-white/10 hover:text-red-300' 
-                : 'text-red-400 hover:bg-red-50 hover:text-red-500'
+                : isY2KBg
+                  ? 'text-[#d32f2f]/80 hover:bg-white/40 hover:text-[#d32f2f]'
+                  : 'text-red-400 hover:bg-red-50 hover:text-red-500'
             }`}
           >
             <span className="w-5 flex justify-center text-base leading-none">
@@ -82,19 +86,18 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage, onNavigate, onLogout, isA
       <button 
         onClick={() => onNavigate('journal')}
         className={`flex items-center gap-2.5 px-3 py-2 mt-1 rounded-xl transition-colors text-left cursor-pointer ${
-          isAuroraBg ? 'hover:bg-white/10' : 'hover:bg-yuri-100'
+          isAuroraBg ? 'hover:bg-white/10' : isY2KBg ? 'hover:bg-white/40' : 'hover:bg-yuri-100'
         }`}
       >
-        <div className="
-          w-8 h-8 rounded-full bg-[#8B7CF8] shadow-[0_2px_8px_rgba(139,124,248,0.4)]
-          flex items-center justify-center text-white text-xs font-semibold
-          shrink-0
-        ">
+        <div className={`
+          w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-semibold shrink-0
+          ${isY2KBg ? 'bg-[#ffade4] shadow-[0_2px_8px_rgba(255,173,228,0.6)]' : 'bg-[#8B7CF8] shadow-[0_2px_8px_rgba(139,124,248,0.4)]'}
+        `}>
           유
         </div>
         <div className="min-w-0">
-          <p className={`text-xs font-semibold truncate ${isAuroraBg ? 'text-white/90' : 'text-[#2D334A]'}`}>Yuri</p>
-          <p className={`text-[10px] truncate ${isAuroraBg ? 'text-white/50' : 'text-[#717A8C]'}`}>개인 기록 (PIN)</p>
+          <p className={`text-xs font-semibold truncate ${isAuroraBg ? 'text-white/90' : isY2KBg ? 'text-[#8a63d2]' : 'text-[#2D334A]'}`}>Yuri</p>
+          <p className={`text-[10px] truncate ${isAuroraBg ? 'text-white/50' : isY2KBg ? 'text-[#8a63d2]/70' : 'text-[#717A8C]'}`}>개인 기록 (PIN)</p>
         </div>
       </button>
     </aside>
@@ -107,9 +110,10 @@ interface NavItemButtonProps {
   active: boolean
   onClick: () => void
   isAuroraBg?: boolean
+  isY2KBg?: boolean
 }
 
-const NavItemButton: React.FC<NavItemButtonProps> = ({ item, active, onClick, isAuroraBg }) => {
+const NavItemButton: React.FC<NavItemButtonProps> = ({ item, active, onClick, isAuroraBg, isY2KBg }) => {
   const Icon = (({
     'calendar': Calendar,
     'tasks': CheckSquare,
@@ -128,6 +132,9 @@ const NavItemButton: React.FC<NavItemButtonProps> = ({ item, active, onClick, is
   if (isAuroraBg) {
     activeClasses = "bg-white/20 text-white font-bold shadow-[0_4px_16px_rgba(0,0,0,0.1)]"
     inactiveClasses = "text-white/60 hover:bg-white/10 hover:text-white/90 font-medium"
+  } else if (isY2KBg) {
+    activeClasses = "bg-white/50 text-[#8a63d2] font-bold shadow-[0_4px_12px_rgba(213,186,255,0.4)]"
+    inactiveClasses = "text-[#8a63d2]/70 hover:bg-white/30 hover:text-[#8a63d2] font-medium"
   } else {
     activeClasses = "bg-[#8B7CF8] text-white font-bold shadow-[0_4px_12px_rgba(139,124,248,0.25)]"
     inactiveClasses = "text-[#717A8C] hover:bg-[#F7F6FF] hover:text-[#2D334A] font-medium"

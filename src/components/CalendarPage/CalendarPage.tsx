@@ -5,7 +5,7 @@ import { useMergedHolidays } from '../../hooks/useMergedHolidays'
 import Emoji from '../common/Emoji'
 import DiaryPanel from './DiaryPanel'
 import DiarySearchPanel from './DiarySearchPanel'
-import { Y2KBackground, RetroWindow } from '../common/Y2KTheme'
+import { RetroWindow } from '../common/Y2KTheme'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'] as const
@@ -241,7 +241,6 @@ const CalendarPage: React.FC = () => {
 
   return (
     <div className={`flex h-full w-full relative overflow-hidden ${isDiaryMode && isY2K ? 'bg-transparent' : 'bg-transparent'}`}>
-      {isDiaryMode && isY2K && <Y2KBackground />}
       
       <div className="relative z-10 flex h-full w-full">
         {/* ── Left: Main Calendar ────────────────────────────────────────────── */}
@@ -256,7 +255,10 @@ const CalendarPage: React.FC = () => {
               <main className={isDiaryMode && isY2K ? 'flex flex-col p-6 h-full relative overflow-hidden bg-transparent' : 'flex flex-col h-full p-6 relative overflow-hidden'}>
                 <header className="relative flex items-center justify-between mb-6 z-10 shrink-0">
           <div className="flex items-center gap-4">
-            <button onClick={prevMonth} className={`w-8 h-8 flex items-center justify-center rounded font-bold transition-all ${isAurora && isDiaryMode ? 'bg-white/30 hover:bg-white/50 text-[#1C1C1E] border border-white/20' : 'hover:bg-[#F7F6FF] text-[#717A8C]'}`}>←</button>
+            <button onClick={prevMonth} className={`w-8 h-8 flex items-center justify-center rounded font-bold transition-all ${
+              isY2K && isDiaryMode ? 'bg-white/40 hover:bg-white/60 text-[#8a63d2] border border-white/60 shadow-sm backdrop-blur-sm' :
+              isAurora && isDiaryMode ? 'bg-white/30 hover:bg-white/50 text-[#1C1C1E] border border-white/20' : 'hover:bg-[#F7F6FF] text-[#717A8C]'
+            }`}>←</button>
             <button 
               onClick={() => { 
                 if (isDiaryMode) {
@@ -265,21 +267,32 @@ const CalendarPage: React.FC = () => {
                   setPickerYear(year); setShowPicker(!showPicker); 
                 }
               }}
-              className="text-2xl font-semibold text-[#1C1C1E] tracking-tight hover:text-[#8B7CF8] transition-colors flex items-center gap-2"
+              className={`text-2xl font-semibold tracking-tight transition-colors flex items-center gap-2 ${
+                isY2K && isDiaryMode ? 'text-[#8a63d2] drop-shadow-sm hover:text-[#b588ff]' : 'text-[#1C1C1E] hover:text-[#8B7CF8]'
+              }`}
             >
               {year}년 {MONTH_KO[month]}
-              <span className="text-[12px] text-[#717A8C] mt-1">{showPicker ? '▲' : '▼'}</span>
+              <span className={`text-[12px] mt-1 ${isY2K && isDiaryMode ? 'text-[#b588ff]' : 'text-[#717A8C]'}`}>{showPicker ? '▲' : '▼'}</span>
             </button>
-            <button onClick={nextMonth} className={`w-8 h-8 flex items-center justify-center rounded font-bold transition-all ${isAurora && isDiaryMode ? 'bg-white/30 hover:bg-white/50 text-[#1C1C1E] border border-white/20' : 'hover:bg-[#F7F6FF] text-[#717A8C]'}`}>→</button>
+            <button onClick={nextMonth} className={`w-8 h-8 flex items-center justify-center rounded font-bold transition-all ${
+              isY2K && isDiaryMode ? 'bg-white/40 hover:bg-white/60 text-[#8a63d2] border border-white/60 shadow-sm backdrop-blur-sm' :
+              isAurora && isDiaryMode ? 'bg-white/30 hover:bg-white/50 text-[#1C1C1E] border border-white/20' : 'hover:bg-[#F7F6FF] text-[#717A8C]'
+            }`}>→</button>
           </div>
           
           <div className="flex items-center gap-2">
-            <button onClick={goToToday} className={`px-4 py-1.5 rounded-lg text-sm font-semibold shadow-sm transition-all ${isAurora && isDiaryMode ? 'bg-white/40 hover:bg-white/60 border border-white/30 text-[#1C1C1E]' : 'bg-white border border-[#E5E5EA] hover:bg-[#F9FAFB] text-[#1C1C1E]'}`}>
+            <button onClick={goToToday} className={`px-4 py-1.5 rounded-lg text-sm font-semibold shadow-sm transition-all ${
+              isY2K && isDiaryMode ? 'bg-white/40 hover:bg-white/60 border border-white/60 text-[#8a63d2] backdrop-blur-sm' :
+              isAurora && isDiaryMode ? 'bg-white/40 hover:bg-white/60 border border-white/30 text-[#1C1C1E]' : 'bg-white border border-[#E5E5EA] hover:bg-[#F9FAFB] text-[#1C1C1E]'
+            }`}>
               오늘
             </button>
             <button 
               onClick={() => setIsDiaryMode(!isDiaryMode)} 
-              className={`w-8 h-8 flex items-center justify-center rounded-lg shadow-sm transition-all text-lg ${isAurora && isDiaryMode ? 'bg-white/40 hover:bg-white/60 border border-white/30 text-[#F4B73F]' : 'bg-white border border-[#E5E5EA] hover:bg-[#F9FAFB] text-[#F4B73F]'}`}
+              className={`w-8 h-8 flex items-center justify-center rounded-lg shadow-sm transition-all text-lg ${
+                isY2K && isDiaryMode ? 'bg-white/40 hover:bg-white/60 border border-white/60 text-[#ffade4] drop-shadow-sm backdrop-blur-sm' :
+                isAurora && isDiaryMode ? 'bg-white/40 hover:bg-white/60 border border-white/30 text-[#F4B73F]' : 'bg-white border border-[#E5E5EA] hover:bg-[#F9FAFB] text-[#F4B73F]'
+              }`}
               title={isDiaryMode ? "스케줄 모드로 전환" : "다이어리 모드로 전환"}
             >
               {isDiaryMode ? '★' : '☆'}
@@ -288,7 +301,9 @@ const CalendarPage: React.FC = () => {
               <button 
                 onClick={() => setIsDiarySearchOpen(!isDiarySearchOpen)} 
                 className={`w-8 h-8 flex items-center justify-center rounded-lg border shadow-sm transition-all text-sm ${
-                  isAurora && isDiaryMode
+                  isY2K && isDiaryMode
+                    ? isDiarySearchOpen ? 'bg-white/70 border-white/80 text-[#8a63d2] backdrop-blur-sm shadow-md' : 'bg-white/40 border-white/60 hover:bg-white/60 text-[#8a63d2] backdrop-blur-sm'
+                    : isAurora && isDiaryMode
                     ? isDiarySearchOpen ? 'bg-white/60 border-[#8B7CF8] text-[#8B7CF8]' : 'bg-white/40 border-white/30 hover:bg-white/60 text-[#494552]'
                     : isDiarySearchOpen ? 'bg-[#F7F6FF] border-[#8B7CF8] text-[#8B7CF8]' : 'bg-white border-[#E5E5EA] hover:bg-[#F9FAFB] text-[#717A8C]'
                 }`}
@@ -372,10 +387,10 @@ const CalendarPage: React.FC = () => {
                 className={`p-3 flex flex-col cursor-pointer transition-all duration-200 min-h-0 overflow-hidden ${isDiaryMode ? 'rounded-[20px]' : 'rounded-[14px]'} ${
                   isDiaryMode && isY2K
                     ? isSelected
-                      ? 'bg-black/60 border border-[#00F0FF]/50 shadow-[0_0_10px_rgba(0,240,255,0.4)] text-[#00F0FF]'
+                      ? 'bg-white/60 border border-white/80 shadow-[0_4px_16px_rgba(213,186,255,0.6)]'
                       : hasDiaryRecord
-                        ? 'bg-black/20 hover:bg-black/40 border border-[#FF5EED]/30 text-white'
-                        : 'bg-white/10 hover:bg-white/30 border-white/20'
+                        ? 'bg-white/30 hover:bg-white/50 border border-white/60 shadow-sm'
+                        : 'bg-white/10 hover:bg-white/30 border border-white/30'
                     : isAurora && isDiaryMode
                       ? isSelected
                         ? 'bg-white/40 border border-white/40 shadow-[0_4px_16px_rgba(31,38,135,0.07)]'
@@ -400,7 +415,12 @@ const CalendarPage: React.FC = () => {
                   }}
                   className={`
                   w-7 h-7 rounded-full flex items-center justify-center text-[12px] font-medium self-start mb-1 shrink-0
-                  ${isToday ? 'bg-[#8B7CF8] text-[#FFFFFF] shadow-[0_2px_6px_rgba(139,124,248,0.4)]' : isRedDay ? 'text-[#EF6A7B]' : 'text-[#717A8C]'}
+                  ${
+                    isToday ? 'bg-[#8B7CF8] text-[#FFFFFF] shadow-[0_2px_6px_rgba(139,124,248,0.4)]' : 
+                    isY2K && isDiaryMode 
+                      ? isRedDay ? 'text-[#ff8ca1] drop-shadow-[0_1px_1px_rgba(138,99,210,0.4)]' : 'text-white drop-shadow-[0_1px_2px_rgba(138,99,210,0.8)]'
+                      : isRedDay ? 'text-[#EF6A7B]' : 'text-[#717A8C]'
+                  }
                 `}>
                   {date.getDate()}
                 </div>

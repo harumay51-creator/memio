@@ -8,6 +8,7 @@ import Router       from './router/Router'
 import auroraBg from './assets/aurora.jpg'
 import AuthScreen   from './components/AuthScreen'
 import MobileApp    from './components/Mobile/MobileApp'
+import { Y2KBackground } from './components/common/Y2KTheme'
 import { useIsMobile } from './hooks/useIsMobile'
 import { auth }     from './config/firebase'
 import { onAuthStateChanged, User, signOut } from 'firebase/auth'
@@ -95,21 +96,25 @@ service cloud.firestore {
   }
 
   const isAurora = settings.theme === 'aurora'
+  const isY2K = settings.theme === 'y2k'
   const showAuroraBg = isAurora && isDiaryMode && activePage === 'calendar'
+  const showY2KBg = isY2K && isDiaryMode && activePage === 'calendar'
 
   return (
-    <div className={`flex h-screen w-screen relative overflow-hidden ${showAuroraBg ? 'text-[#1C1C1E]' : 'bg-yuri-50 text-yuri-900'}`}>
+    <div className={`flex h-screen w-screen relative overflow-hidden ${showAuroraBg || showY2KBg ? 'text-[#1C1C1E]' : 'bg-yuri-50 text-yuri-900'}`}>
       {showAuroraBg && (
         <>
           <div className="absolute inset-0 z-0 bg-cover bg-center" style={{ backgroundImage: `url(${auroraBg})` }} />
           <div className="absolute inset-0 z-0 bg-white/20" />
         </>
       )}
+      {showY2KBg && <Y2KBackground />}
       <Sidebar
         activePage={activePage}
         onNavigate={navigate}
         onLogout={handleLogout}
         isAuroraBg={showAuroraBg}
+        isY2KBg={showY2KBg}
       />
       
       <main className="flex-1 flex flex-col relative h-full min-w-0 z-10 bg-transparent">
