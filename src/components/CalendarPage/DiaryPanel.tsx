@@ -184,7 +184,14 @@ const QuestionItem = ({ q, initialAnswer, saveAnswer, deleteAnswer, index, dateS
     <div 
       className="group relative transition-all duration-300 hover:scale-105 z-0 hover:z-10 p-4 w-36 min-h-[9rem] h-auto flex flex-col shrink-0 cursor-text" 
       style={getPostItStyle(q.id, index, dateSeed, isY2K)}
-      onClick={() => textareaRef.current?.focus()}
+      onClick={(e) => {
+        if (e.target !== textareaRef.current && textareaRef.current) {
+          e.preventDefault()
+          textareaRef.current.focus()
+          const len = textareaRef.current.value.length
+          textareaRef.current.setSelectionRange(len, len)
+        }
+      }}
     >
       <CornerDoodle idString={q.id} isY2K={isY2K} />
       <div className="flex justify-between items-start mb-1 gap-2">
@@ -198,7 +205,7 @@ const QuestionItem = ({ q, initialAnswer, saveAnswer, deleteAnswer, index, dateS
       </div>
       <textarea
         ref={textareaRef}
-        className="w-full bg-transparent resize-none outline-none text-[15px] leading-relaxed transition-all font-diary overflow-hidden caret-black"
+        className="w-full bg-transparent resize-none outline-none text-[15px] leading-relaxed transition-all font-diary overflow-hidden force-caret-black"
         style={{ color: isY2K ? 'inherit' : 'inherit' }}
         placeholder="답변을 입력하세요..."
         rows={1}

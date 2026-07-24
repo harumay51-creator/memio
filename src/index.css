@@ -169,6 +169,10 @@
   -webkit-font-smoothing: none;
 }
 
+.force-caret-black {
+  caret-color: #000000 !important;
+}
+
 @keyframes blink-fast {
   0%, 100% { opacity: 1; }
   50% { opacity: 0; }
