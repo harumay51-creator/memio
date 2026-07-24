@@ -195,7 +195,7 @@ const QuestionItem = ({ q, initialAnswer, saveAnswer, deleteAnswer, index, dateS
       <textarea
         ref={textareaRef}
         className="w-full bg-transparent resize-none outline-none text-[15px] leading-relaxed transition-all font-diary overflow-hidden"
-        style={{ color: isY2K ? 'inherit' : 'inherit' }}
+        style={{ color: isY2K ? 'inherit' : 'inherit', caretColor: 'currentColor' }}
         placeholder="답변을 입력하세요..."
         rows={1}
         value={localVal}

@@ -30,16 +30,29 @@ export const Y2KBackground = () => {
       
       {/* Sparkling Stars */}
       <div className="absolute inset-0 z-0">
-        <span className="sparkle-star text-[24px]" style={{ top: '15%', left: '10%', animationDelay: '0s' }}>✦</span>
-        <span className="sparkle-star text-[12px]" style={{ top: '30%', left: '25%', animationDelay: '1.2s' }}>✦</span>
-        <span className="sparkle-star text-[32px]" style={{ top: '20%', left: '75%', animationDelay: '0.5s' }}>✦</span>
-        <span className="sparkle-star text-[16px]" style={{ top: '65%', left: '15%', animationDelay: '2.1s' }}>✦</span>
-        <span className="sparkle-star text-[40px]" style={{ top: '70%', left: '80%', animationDelay: '0.8s' }}>✦</span>
-        <span className="sparkle-star text-[14px]" style={{ top: '85%', left: '40%', animationDelay: '1.5s' }}>✦</span>
-        <span className="sparkle-star text-[20px]" style={{ top: '45%', left: '55%', animationDelay: '0.3s' }}>✦</span>
-        <span className="sparkle-star text-[28px]" style={{ top: '10%', left: '45%', animationDelay: '1.8s' }}>✦</span>
-        <span className="sparkle-star text-[10px]" style={{ top: '50%', left: '85%', animationDelay: '2.5s' }}>✦</span>
-        <span className="sparkle-star text-[18px]" style={{ top: '80%', left: '60%', animationDelay: '0.9s' }}>✦</span>
+        {Array.from({ length: 30 }).map((_, i) => {
+          const top = Math.random() * 90 + 5;
+          const left = Math.random() * 90 + 5;
+          const delay = Math.random() * 3;
+          // Most stars are small (10-16px), some are medium (20-28px), a few are large (32-48px)
+          const isLarge = Math.random() > 0.85;
+          const isMedium = !isLarge && Math.random() > 0.6;
+          const size = isLarge ? 32 + Math.random() * 16 : isMedium ? 20 + Math.random() * 8 : 10 + Math.random() * 6;
+          return (
+            <span 
+              key={i} 
+              className="sparkle-star" 
+              style={{ 
+                top: `${top}%`, 
+                left: `${left}%`, 
+                animationDelay: `${delay}s`,
+                fontSize: `${size}px`
+              }}
+            >
+              ✦
+            </span>
+          )
+        })}
       </div>
     </div>
   )
