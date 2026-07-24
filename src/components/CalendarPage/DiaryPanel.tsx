@@ -70,7 +70,9 @@ const getHash = (idString: string) => {
   for (let i = 0; i < idString.length; i++) {
     hash = idString.charCodeAt(i) + ((hash << 5) - hash);
   }
-  return Math.abs(hash);
+  hash = Math.imul(hash ^ (hash >>> 16), 2246822507);
+  hash = Math.imul(hash ^ (hash >>> 13), 3266489909);
+  return Math.abs(hash ^ (hash >>> 16));
 }
 
 const CornerDoodle = ({ idString, isY2K }: { idString: string, isY2K?: boolean }) => {
