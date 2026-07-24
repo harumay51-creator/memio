@@ -236,6 +236,7 @@ const CalendarPage: React.FC = () => {
   const isSelDayToday = sameDay(selDay, today)
   const selDayFormatted = `${selDay.getMonth() + 1}월 ${selDay.getDate()}일 (${WEEKDAYS[selDay.getDay()]})`
   const isAurora = settings.theme === 'aurora'
+  const isY2K = settings.theme === 'y2k'
 
   return (
     <div className="flex h-full w-full relative overflow-hidden bg-transparent">

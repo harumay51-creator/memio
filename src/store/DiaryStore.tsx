@@ -122,7 +122,7 @@ export const DiaryStoreProvider: React.FC<{ children: React.ReactNode, uid: stri
     await setDoc(doc(db, `users/${uid}/settings`, 'diary'), { questions: newQuestions }, { merge: true })
   }
 
-  const updateTheme = async (theme: 'default' | 'aurora') => {
+  const updateTheme = async (theme: 'default' | 'aurora' | 'y2k') => {
     if (!uid) return
     console.log('[DEBUG DiaryStore] updateTheme called with:', theme)
     try {
