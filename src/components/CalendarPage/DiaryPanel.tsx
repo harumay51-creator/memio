@@ -25,8 +25,8 @@ const QuestionItem = ({ q, initialAnswer, saveAnswer, deleteAnswer }: { q: any, 
   }, [initialAnswer])
 
   return (
-    <div className="group glass-card-refined p-4 relative">
-      <div className="flex justify-between items-start mb-2 gap-2">
+    <div className="group relative">
+      <div className="flex justify-between items-start mb-1.5 gap-2">
         <div className="text-xs font-semibold text-[#8B7CF8]">{q.text}</div>
         <button 
           onClick={deleteAnswer}
@@ -36,7 +36,7 @@ const QuestionItem = ({ q, initialAnswer, saveAnswer, deleteAnswer }: { q: any, 
         </button>
       </div>
       <textarea
-        className="w-full bg-transparent resize-none outline-none text-xs text-[#1C1C1E] placeholder:text-[#A0AABF] leading-relaxed"
+        className="w-full bg-white/30 border border-white/20 rounded-xl px-3 py-2.5 resize-none outline-none text-xs text-[#1C1C1E] focus:border-white/50 focus:bg-white/40 placeholder:text-[#A0AABF] leading-relaxed transition-all"
         placeholder="답변을 입력하세요..."
         rows={1}
         value={localVal}
@@ -203,72 +203,74 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
         </section>
 
         {/* 2. Questions Snapshot */}
-        <section className="flex flex-col gap-3">
-          <h2 className="text-[11px] font-bold text-[#717A8C] tracking-widest uppercase px-1">Q&A</h2>
+        <section className="glass-card-refined p-4 flex flex-col gap-4">
+          <h2 className="text-[11px] font-bold text-[#717A8C] tracking-widest uppercase">Q&A</h2>
           
-          {settings.questions.map(q => {
-            const answerObj = (dayDiary.answers || []).find(a => a.questionId === q.id)
-            const answerText = answerObj ? answerObj.answer : ''
-            return (
-              <QuestionItem 
-                key={q.id} 
-                q={q} 
-                initialAnswer={answerText} 
-                saveAnswer={(val) => saveDayDiaryAnswer(dateKey, q.id, q.text, val)} 
-                deleteAnswer={() => deleteDayDiaryAnswer(dateKey, q.id)}
-              />
-            )
-          })}
-          
-          {/* Display snapshot answers that are no longer in settings.questions */}
-          {(dayDiary.answers || []).filter(a => !settings.questions.some(q => q.id === a.questionId)).map(a => (
-            <div key={a.questionId} className="group glass-card-refined p-4 opacity-70 relative">
-              <div className="flex justify-between items-start mb-2 gap-2">
-                <div>
-                  <div className="text-[10px] font-bold text-[#A0AABF] mb-1">과거 질문</div>
-                  <div className="text-xs font-semibold text-[#8B7CF8]">{a.question}</div>
+          <div className="flex flex-col gap-5">
+            {settings.questions.map(q => {
+              const answerObj = (dayDiary.answers || []).find(a => a.questionId === q.id)
+              const answerText = answerObj ? answerObj.answer : ''
+              return (
+                <QuestionItem 
+                  key={q.id} 
+                  q={q} 
+                  initialAnswer={answerText} 
+                  saveAnswer={(val) => saveDayDiaryAnswer(dateKey, q.id, q.text, val)} 
+                  deleteAnswer={() => deleteDayDiaryAnswer(dateKey, q.id)}
+                />
+              )
+            })}
+            
+            {/* Display snapshot answers that are no longer in settings.questions */}
+            {(dayDiary.answers || []).filter(a => !settings.questions.some(q => q.id === a.questionId)).map(a => (
+              <div key={a.questionId} className="group bg-white/30 border border-white/20 rounded-xl p-3 opacity-70 relative">
+                <div className="flex justify-between items-start mb-2 gap-2">
+                  <div>
+                    <div className="text-[10px] font-bold text-[#A0AABF] mb-1">과거 질문</div>
+                    <div className="text-xs font-semibold text-[#8B7CF8]">{a.question}</div>
+                  </div>
+                  <button 
+                    onClick={() => deleteDayDiaryAnswer(dateKey, a.questionId)}
+                    className="w-5 h-5 flex items-center justify-center rounded text-[#A0AABF] hover:text-[#EF6A7B] opacity-0 group-hover:opacity-100 transition-opacity text-[10px] shrink-0"
+                  >
+                    ✕
+                  </button>
                 </div>
-                <button 
-                  onClick={() => deleteDayDiaryAnswer(dateKey, a.questionId)}
-                  className="w-5 h-5 flex items-center justify-center rounded text-[#A0AABF] hover:text-[#EF6A7B] opacity-0 group-hover:opacity-100 transition-opacity text-[10px] shrink-0"
-                >
-                  ✕
-                </button>
+                <div className="text-xs text-[#1C1C1E] whitespace-pre-wrap">{a.answer}</div>
               </div>
-              <div className="text-xs text-[#1C1C1E] whitespace-pre-wrap">{a.answer}</div>
-            </div>
-          ))}
+            ))}
+          </div>
 
           {settings.questions.length === 0 && (dayDiary.answers || []).length === 0 && (
-            <div className="text-xs text-[#A0AABF] px-1">설정에서 다이어리 질문을 추가해보세요.</div>
+            <div className="text-xs text-[#A0AABF]">설정에서 다이어리 질문을 추가해보세요.</div>
           )}
         </section>
 
         {/* 3. Free Memos */}
-        <section className="flex flex-col gap-3 pb-8">
-          <h2 className="text-[11px] font-bold text-[#717A8C] tracking-widest uppercase px-1">MEMO</h2>
+        <section className="glass-card-refined p-4 flex flex-col gap-4 mb-8">
+          <h2 className="text-[11px] font-bold text-[#717A8C] tracking-widest uppercase">MEMO</h2>
           
-          <form onSubmit={handleAddMemo} className="glass-card-refined flex overflow-hidden">
+          <form onSubmit={handleAddMemo} className="flex gap-2">
             <input
               type="text"
               value={newMemo}
               onChange={(e) => setNewMemo(e.target.value)}
               placeholder="자유롭게 기록을 남겨보세요..."
-              className="flex-1 px-4 py-3 text-xs outline-none text-[#1C1C1E] placeholder:text-[#A0AABF]"
+              className="flex-1 bg-white/30 border border-white/20 rounded-xl px-3 py-2.5 text-xs outline-none text-[#1C1C1E] placeholder:text-[#A0AABF] focus:border-white/50 focus:bg-white/40 transition-all"
               spellCheck={false}
             />
-            <button type="submit" disabled={!newMemo.trim()} className="px-4 text-[#8B7CF8] font-bold text-xs disabled:opacity-30">
+            <button type="submit" disabled={!newMemo.trim()} className="px-3 bg-white/40 border border-white/20 text-[#8B7CF8] rounded-xl font-bold text-xs hover:bg-white/60 disabled:opacity-30 transition-all">
               추가
             </button>
           </form>
 
           <div className="flex flex-col gap-2">
             {(dayDiary.memos || []).map((memo: DiaryMemo) => (
-              <div key={memo.id} className="group glass-card-refined p-3 flex items-start gap-3 relative">
+              <div key={memo.id} className="group bg-white/30 border border-white/20 rounded-xl p-3 flex items-start gap-3 relative hover:bg-white/40 transition-colors">
                 <div className="flex-1 text-xs text-[#1C1C1E] whitespace-pre-wrap leading-relaxed">{memo.text}</div>
                 <button 
                   onClick={() => deleteDayDiaryMemo(dateKey, memo.id)}
-                  className="w-5 h-5 flex items-center justify-center rounded text-[#A0AABF] hover:text-[#EF6A7B] opacity-0 group-hover:opacity-100 transition-opacity text-[10px] shrink-0"
+                  className="w-5 h-5 flex items-center justify-center rounded text-[#A0AABF] hover:text-[#EF6A7B] opacity-0 group-hover:opacity-100 transition-opacity text-[10px] shrink-0 -mr-1 -mt-1"
                 >
                   ✕
                 </button>

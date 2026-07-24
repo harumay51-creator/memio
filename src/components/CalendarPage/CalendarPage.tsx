@@ -254,7 +254,7 @@ const CalendarPage: React.FC = () => {
         <main className={`flex flex-col p-6 m-4 mr-2 relative overflow-hidden ${isAurora && isDiaryMode ? 'glass-card-refined' : 'bg-white rounded-2xl border border-[#E5E5EA] shadow-sm'} ${isDiaryMode ? 'flex-[4]' : 'flex-1'}`}>
           <header className="relative flex items-center justify-between mb-6 z-10 shrink-0">
           <div className="flex items-center gap-4">
-            <button onClick={prevMonth} className="w-8 h-8 flex items-center justify-center hover:bg-[#F7F6FF] rounded text-[#717A8C] font-bold transition-colors">←</button>
+            <button onClick={prevMonth} className={`w-8 h-8 flex items-center justify-center rounded font-bold transition-all ${isAurora && isDiaryMode ? 'bg-white/30 hover:bg-white/50 text-[#1C1C1E] border border-white/20' : 'hover:bg-[#F7F6FF] text-[#717A8C]'}`}>←</button>
             <button 
               onClick={() => { 
                 if (isDiaryMode) {
@@ -268,16 +268,16 @@ const CalendarPage: React.FC = () => {
               {year}년 {MONTH_KO[month]}
               <span className="text-[12px] text-[#717A8C] mt-1">{showPicker ? '▲' : '▼'}</span>
             </button>
-            <button onClick={nextMonth} className="w-8 h-8 flex items-center justify-center hover:bg-[#F7F6FF] rounded text-[#717A8C] font-bold transition-colors">→</button>
+            <button onClick={nextMonth} className={`w-8 h-8 flex items-center justify-center rounded font-bold transition-all ${isAurora && isDiaryMode ? 'bg-white/30 hover:bg-white/50 text-[#1C1C1E] border border-white/20' : 'hover:bg-[#F7F6FF] text-[#717A8C]'}`}>→</button>
           </div>
           
           <div className="flex items-center gap-2">
-            <button onClick={goToToday} className="px-4 py-1.5 bg-white border border-[#E5E5EA] hover:bg-[#F9FAFB] rounded-lg text-sm font-semibold text-[#1C1C1E] shadow-sm transition-all">
+            <button onClick={goToToday} className={`px-4 py-1.5 rounded-lg text-sm font-semibold shadow-sm transition-all ${isAurora && isDiaryMode ? 'bg-white/40 hover:bg-white/60 border border-white/30 text-[#1C1C1E]' : 'bg-white border border-[#E5E5EA] hover:bg-[#F9FAFB] text-[#1C1C1E]'}`}>
               오늘
             </button>
             <button 
               onClick={() => setIsDiaryMode(!isDiaryMode)} 
-              className="w-8 h-8 flex items-center justify-center bg-white border border-[#E5E5EA] hover:bg-[#F9FAFB] rounded-lg text-[#F4B73F] shadow-sm transition-all text-lg"
+              className={`w-8 h-8 flex items-center justify-center rounded-lg shadow-sm transition-all text-lg ${isAurora && isDiaryMode ? 'bg-white/40 hover:bg-white/60 border border-white/30 text-[#F4B73F]' : 'bg-white border border-[#E5E5EA] hover:bg-[#F9FAFB] text-[#F4B73F]'}`}
               title={isDiaryMode ? "스케줄 모드로 전환" : "다이어리 모드로 전환"}
             >
               {isDiaryMode ? '★' : '☆'}
@@ -285,7 +285,11 @@ const CalendarPage: React.FC = () => {
             {isDiaryMode && (
               <button 
                 onClick={() => setIsDiarySearchOpen(!isDiarySearchOpen)} 
-                className={`w-8 h-8 flex items-center justify-center rounded-lg border shadow-sm transition-all text-sm ${isDiarySearchOpen ? 'bg-[#F7F6FF] border-[#8B7CF8] text-[#8B7CF8]' : 'bg-white border-[#E5E5EA] hover:bg-[#F9FAFB] text-[#717A8C]'}`}
+                className={`w-8 h-8 flex items-center justify-center rounded-lg border shadow-sm transition-all text-sm ${
+                  isAurora && isDiaryMode
+                    ? isDiarySearchOpen ? 'bg-white/60 border-[#8B7CF8] text-[#8B7CF8]' : 'bg-white/40 border-white/30 hover:bg-white/60 text-[#494552]'
+                    : isDiarySearchOpen ? 'bg-[#F7F6FF] border-[#8B7CF8] text-[#8B7CF8]' : 'bg-white border-[#E5E5EA] hover:bg-[#F9FAFB] text-[#717A8C]'
+                }`}
                 title="다이어리 검색"
               >
                 🔍
@@ -359,7 +363,15 @@ const CalendarPage: React.FC = () => {
                     setInlineText('')
                   }
                 }}
-                className={`p-3 rounded-[14px] shadow-[0_1px_4px_rgba(0,0,0,0.08)] flex flex-col cursor-pointer transition-all duration-200 min-h-0 overflow-hidden ${isSelected ? 'bg-[#F7F6FF]' : 'bg-[#FFFFFF] hover:bg-[#FCFCFF]'}`}
+                className={`p-3 rounded-[14px] flex flex-col cursor-pointer transition-all duration-200 min-h-0 overflow-hidden ${
+                  isAurora && isDiaryMode
+                    ? isSelected
+                      ? 'bg-white/40 border border-white/40 shadow-[0_4px_16px_rgba(31,38,135,0.07)]'
+                      : 'bg-white/10 hover:bg-white/30 border border-white/20'
+                    : isSelected 
+                      ? 'bg-[#F7F6FF] shadow-[0_1px_4px_rgba(0,0,0,0.08)]' 
+                      : 'bg-[#FFFFFF] hover:bg-[#FCFCFF] shadow-[0_1px_4px_rgba(0,0,0,0.08)]'
+                }`}
               >
                 <div 
                   onClick={(e) => {

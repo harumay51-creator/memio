@@ -106,11 +106,9 @@
   }
   
   .glass-card-refined {
-    @apply bg-white/95 backdrop-blur-2xl rounded-2xl;
-    border: 1px solid rgba(255, 255, 255, 0.4);
-    border-top-color: rgba(255, 255, 255, 1);
-    border-left-color: rgba(255, 255, 255, 1);
-    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.08);
+    @apply bg-white/40 backdrop-blur-[20px] rounded-2xl;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
   }
   
   .scrollbar-hide {
