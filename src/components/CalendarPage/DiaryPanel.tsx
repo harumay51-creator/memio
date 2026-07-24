@@ -17,6 +17,21 @@ const EMOJI_CATEGORIES = [
   { name: '상태', emojis: ['👍', '👎', '👏', '🙌', '💪', '🙏', '🤝', '✌️', '👌', '❤️', '💔', '💤', '💢', '💡', '✅', '❌'] }
 ]
 
+const getPostItStyle = (idString: string) => {
+  let hash = 0;
+  for (let i = 0; i < idString.length; i++) {
+    hash = idString.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const colors = ['#FFF9C4', '#FCE4EC', '#E3F2FD', '#E8F5E9', '#F3E5F5'];
+  const rotation = (Math.abs(hash) % 7) - 3; // -3 to +3 degrees
+  return {
+    backgroundColor: colors[Math.abs(hash) % colors.length],
+    transform: `rotate(${rotation}deg)`,
+    boxShadow: '2px 4px 10px rgba(0,0,0,0.1)',
+    borderRadius: '2px 12px 12px 2px' // slight fold feeling
+  };
+}
+
 const QuestionItem = ({ q, initialAnswer, saveAnswer, deleteAnswer }: { q: any, initialAnswer: string, saveAnswer: (val: string) => void, deleteAnswer: () => void }) => {
   const [localVal, setLocalVal] = useState(initialAnswer)
 
@@ -25,18 +40,18 @@ const QuestionItem = ({ q, initialAnswer, saveAnswer, deleteAnswer }: { q: any, 
   }, [initialAnswer])
 
   return (
-    <div className="group relative">
-      <div className="flex justify-between items-start mb-1.5 gap-2">
-        <div className="text-[13px] font-semibold text-[#8B7CF8] font-diary">{q.text}</div>
+    <div className="group relative transition-all duration-300 hover:scale-105 z-0 hover:z-10 p-4" style={getPostItStyle(q.id)}>
+      <div className="flex justify-between items-start mb-2 gap-2">
+        <div className="text-[13px] font-bold text-[#1C1C1E] font-diary">{q.text}</div>
         <button 
           onClick={deleteAnswer}
-          className="w-5 h-5 flex items-center justify-center rounded text-[#A0AABF] hover:text-[#EF6A7B] opacity-0 group-hover:opacity-100 transition-opacity text-[10px] shrink-0"
+          className="w-5 h-5 flex items-center justify-center rounded text-[#717A8C] hover:text-[#EF6A7B] opacity-0 group-hover:opacity-100 transition-opacity text-[10px] shrink-0"
         >
           ✕
         </button>
       </div>
       <textarea
-        className="w-full bg-white/30 border border-white/20 rounded-xl px-3 py-2.5 resize-none outline-none text-[13px] text-[#1C1C1E] focus:border-white/50 focus:bg-white/40 placeholder:text-[#A0AABF] leading-relaxed transition-all font-diary"
+        className="w-full bg-transparent resize-none outline-none text-[14px] text-[#2D334A] placeholder:text-[#A0AABF] leading-relaxed transition-all font-diary"
         placeholder="답변을 입력하세요..."
         rows={1}
         value={localVal}
@@ -146,7 +161,7 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
       <div className="relative z-10 flex-1 min-h-0 overflow-y-auto pr-2 -mr-2 flex flex-col gap-6">
         
         {/* 1. Emoji Selector */}
-        <section className="glass-card-refined p-4">
+        <section className="p-2">
           <div className="flex justify-between items-center mb-3">
             <h2 className="text-[11px] font-bold text-[#717A8C] tracking-widest uppercase">오늘의 기분/날씨</h2>
             <button 
@@ -205,7 +220,7 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
         </section>
 
         {/* 2. Questions Snapshot */}
-        <section className="glass-card-refined p-4 flex flex-col gap-4">
+        <section className="p-2 flex flex-col gap-4">
           <h2 className="text-[11px] font-bold text-[#717A8C] tracking-widest uppercase">Q&A</h2>
           
           <div className="flex flex-col gap-5">
@@ -225,20 +240,20 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
             
             {/* Display snapshot answers that are no longer in settings.questions */}
             {(dayDiary.answers || []).filter(a => !settings.questions.some(q => q.id === a.questionId)).map(a => (
-              <div key={a.questionId} className="group bg-white/30 border border-white/20 rounded-xl p-3 opacity-70 relative">
+              <div key={a.questionId} className="group relative transition-all duration-300 hover:scale-105 z-0 hover:z-10 p-4" style={getPostItStyle(a.questionId)}>
                 <div className="flex justify-between items-start mb-2 gap-2">
                   <div>
-                    <div className="text-[10px] font-bold text-[#A0AABF] mb-1">과거 질문</div>
-                    <div className="text-[13px] font-semibold text-[#8B7CF8] font-diary">{a.question}</div>
+                    <div className="text-[10px] font-bold text-[#717A8C] mb-1">과거 질문</div>
+                    <div className="text-[13px] font-bold text-[#1C1C1E] font-diary">{a.question}</div>
                   </div>
                   <button 
                     onClick={() => deleteDayDiaryAnswer(dateKey, a.questionId)}
-                    className="w-5 h-5 flex items-center justify-center rounded text-[#A0AABF] hover:text-[#EF6A7B] opacity-0 group-hover:opacity-100 transition-opacity text-[10px] shrink-0"
+                    className="w-5 h-5 flex items-center justify-center rounded text-[#717A8C] hover:text-[#EF6A7B] opacity-0 group-hover:opacity-100 transition-opacity text-[10px] shrink-0"
                   >
                     ✕
                   </button>
                 </div>
-                <div className="text-[13px] text-[#1C1C1E] whitespace-pre-wrap font-diary">{a.answer}</div>
+                <div className="text-[14px] text-[#2D334A] whitespace-pre-wrap font-diary leading-relaxed">{a.answer}</div>
               </div>
             ))}
           </div>
@@ -249,7 +264,7 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
         </section>
 
         {/* 3. Free Memos */}
-        <section className="glass-card-refined p-4 flex flex-col gap-4 mb-8">
+        <section className="p-2 flex flex-col gap-4 mb-8">
           <h2 className="text-[11px] font-bold text-[#717A8C] tracking-widest uppercase">MEMO</h2>
           
           <form onSubmit={handleAddMemo} className="flex gap-2">
@@ -266,13 +281,13 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
             </button>
           </form>
 
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-5 mt-2">
             {(dayDiary.memos || []).map((memo: DiaryMemo) => (
-              <div key={memo.id} className="group bg-white/30 border border-white/20 rounded-xl p-3 flex items-start gap-3 relative hover:bg-white/40 transition-colors">
-                <div className="flex-1 text-[13px] text-[#1C1C1E] whitespace-pre-wrap leading-relaxed font-diary">{memo.text}</div>
+              <div key={memo.id} className="group relative transition-all duration-300 hover:scale-105 z-0 hover:z-10 p-4 flex items-start gap-3" style={getPostItStyle(memo.id)}>
+                <div className="flex-1 text-[14px] text-[#2D334A] whitespace-pre-wrap leading-relaxed font-diary">{memo.text}</div>
                 <button 
                   onClick={() => deleteDayDiaryMemo(dateKey, memo.id)}
-                  className="w-5 h-5 flex items-center justify-center rounded text-[#A0AABF] hover:text-[#EF6A7B] opacity-0 group-hover:opacity-100 transition-opacity text-[10px] shrink-0 -mr-1 -mt-1"
+                  className="w-5 h-5 flex items-center justify-center rounded text-[#717A8C] hover:text-[#EF6A7B] opacity-0 group-hover:opacity-100 transition-opacity text-[10px] shrink-0 -mr-1 -mt-1"
                 >
                   ✕
                 </button>
