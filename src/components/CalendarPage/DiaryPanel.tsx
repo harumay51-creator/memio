@@ -181,7 +181,11 @@ const QuestionItem = ({ q, initialAnswer, saveAnswer, deleteAnswer, index, dateS
   }, [initialAnswer])
 
   return (
-    <div className="group relative transition-all duration-300 hover:scale-105 z-0 hover:z-10 p-4 w-36 min-h-[9rem] h-auto flex flex-col shrink-0" style={getPostItStyle(q.id, index, dateSeed, isY2K)}>
+    <div 
+      className="group relative transition-all duration-300 hover:scale-105 z-0 hover:z-10 p-4 w-36 min-h-[9rem] h-auto flex flex-col shrink-0 cursor-text" 
+      style={getPostItStyle(q.id, index, dateSeed, isY2K)}
+      onClick={() => textareaRef.current?.focus()}
+    >
       <CornerDoodle idString={q.id} isY2K={isY2K} />
       <div className="flex justify-between items-start mb-1 gap-2">
         <div className="text-[11px] font-bold font-diary opacity-70" style={{ color: isY2K ? 'inherit' : 'inherit' }}>{q.text}</div>
@@ -194,8 +198,8 @@ const QuestionItem = ({ q, initialAnswer, saveAnswer, deleteAnswer, index, dateS
       </div>
       <textarea
         ref={textareaRef}
-        className="w-full bg-transparent resize-none outline-none text-[15px] leading-relaxed transition-all font-diary overflow-hidden"
-        style={{ color: isY2K ? 'inherit' : 'inherit', caretColor: 'currentColor' }}
+        className="w-full flex-1 bg-transparent resize-none outline-none text-[15px] leading-relaxed transition-all font-diary overflow-hidden"
+        style={{ color: isY2K ? 'inherit' : 'inherit', caretColor: '#1C1C1E' }}
         placeholder="답변을 입력하세요..."
         rows={1}
         value={localVal}
