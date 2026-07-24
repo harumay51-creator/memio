@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react'
 import twemoji from 'twemoji'
+import stickysweetSprite from '../../assets/stickysweet.png'
 
 interface EmojiProps {
   emoji: string
@@ -7,6 +8,26 @@ interface EmojiProps {
 }
 
 const Emoji: React.FC<EmojiProps> = ({ emoji, className = '' }) => {
+  if (emoji.startsWith('stickysweet-')) {
+    const id = parseInt(emoji.replace('stickysweet-', ''))
+    const columns = 9;
+    const rows = 6;
+    const x = (id % columns) * (100 / (columns - 1));
+    const y = Math.floor(id / columns) * (100 / (rows - 1));
+    
+    return (
+      <span 
+        className={`inline-block shrink-0 ${className}`}
+        style={{
+          backgroundImage: `url(${stickysweetSprite})`,
+          backgroundPosition: `${x}% ${y}%`,
+          backgroundSize: '900% 600%',
+          backgroundRepeat: 'no-repeat',
+        }}
+      />
+    )
+  }
+
   const html = useMemo(() => {
     return twemoji.parse(emoji, {
       folder: 'svg',
