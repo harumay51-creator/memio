@@ -72,24 +72,28 @@ const getHash = (idString: string) => {
   return Math.abs(hash);
 }
 
-const CornerDoodle = ({ idString }: { idString: string }) => {
+const CornerDoodle = ({ idString, isY2K }: { idString: string, isY2K?: boolean }) => {
   const hash = getHash(idString);
   if (hash % 3 !== 0) return null; // ~1/3 chance
   
   const doodleType = hash % 6;
   const positionClass = hash % 2 === 0 ? "-top-3 -right-3 rotate-12" : "-bottom-3 -left-3 -rotate-12";
   const sizeClass = "w-8 h-8";
-  const cls = `${positionClass} ${sizeClass} z-20`;
   
+  const style = isY2K ? { filter: 'drop-shadow(2px 2px 0px #1C1C1E)' } : undefined;
+  const cls = `${positionClass} ${sizeClass} z-20 ${isY2K ? 'text-white scale-110' : ''}`;
+  
+  let Doodle;
   switch(doodleType) {
-    case 0: return <SparkleDoodle className={cls} />
-    case 1: return <WavyLineDoodle className={`${positionClass} w-10 h-4 z-20`} />
-    case 2: return <LeafDoodle className={cls} />
-    case 3: return <CrownDoodle className={cls} />
-    case 4: return <ZigzagDoodle className={`${positionClass} w-10 h-4 z-20`} />
-    case 5: return <RibbonDoodle className={cls} />
+    case 0: Doodle = <SparkleDoodle className={cls} />; break;
+    case 1: Doodle = <WavyLineDoodle className={`${positionClass} w-10 h-4 z-20 ${isY2K ? 'text-white scale-110' : ''}`} />; break;
+    case 2: Doodle = <LeafDoodle className={cls} />; break;
+    case 3: Doodle = <CrownDoodle className={cls} />; break;
+    case 4: Doodle = <ZigzagDoodle className={`${positionClass} w-10 h-4 z-20 ${isY2K ? 'text-white scale-110' : ''}`} />; break;
+    case 5: Doodle = <RibbonDoodle className={cls} />; break;
     default: return null;
   }
+  return <div style={style} className="absolute inset-0 pointer-events-none z-20">{Doodle}</div>;
 }
 
 interface DiaryPanelProps {
@@ -116,23 +120,78 @@ const POST_IT_THEMES = [
   { bg: '#E8EDC0', text: '#48521A' }, // Cool Lemon
 ]
 
-const getPostItStyle = (idString: string, index?: number, dateSeed?: string) => {
+const Y2K_POST_IT_THEMES = [
+  { bg: '#FF5EED', text: '#1C1C1E' }, // Bright Pink
+  { bg: '#00F0FF', text: '#1C1C1E' }, // Bright Cyan
+  { bg: '#ADFF2F', text: '#1C1C1E' }, // Green Yellow
+  { bg: '#FF9500', text: '#1C1C1E' }, // Neon Orange
+  { bg: '#B05AFF', text: '#FFFFFF' }, // Bright Purple
+  { bg: '#FFFC00', text: '#1C1C1E' }, // Cyber Yellow
+]
+
+const Y2KStars = () => {
+  const stars = Array.from({ length: 20 }).map((_, i) => ({
+    id: i,
+    top: `${Math.floor(Math.random() * 100)}%`,
+    left: `${Math.floor(Math.random() * 100)}%`,
+    delay: `${(Math.random() * 3).toFixed(2)}s`,
+    size: `${Math.floor(Math.random() * 2) + 2}px`,
+  }))
+  return (
+    <>
+      <style>{`
+        @keyframes twinkle {
+          0% { opacity: 0.1; transform: scale(0.8); }
+          100% { opacity: 1; transform: scale(1.2); }
+        }
+      `}</style>
+      <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
+        {stars.map(star => (
+          <div 
+            key={star.id} 
+            className="absolute bg-white rounded-full"
+            style={{
+              top: star.top, left: star.left, width: star.size, height: star.size,
+              animation: `twinkle 2s infinite alternate ${star.delay}`,
+              boxShadow: '0 0 4px 2px rgba(255,255,255,0.8)'
+            }}
+          />
+        ))}
+      </div>
+    </>
+  )
+}
+
+const getPostItStyle = (idString: string, index?: number, dateSeed?: string, isY2K?: boolean) => {
   const hash = getHash(idString);
   let themeIndex = hash;
+  const palette = isY2K ? Y2K_POST_IT_THEMES : POST_IT_THEMES;
   
   if (index !== undefined && dateSeed) {
-    let current = getHash(dateSeed) % POST_IT_THEMES.length;
+    let current = getHash(dateSeed) % palette.length;
     for (let i = 1; i <= index; i++) {
-      const step = (getHash(`${dateSeed}-${i}`) % (POST_IT_THEMES.length - 1)) + 1;
-      current = (current + step) % POST_IT_THEMES.length;
+      const step = (getHash(`${dateSeed}-${i}`) % (palette.length - 1)) + 1;
+      current = (current + step) % palette.length;
     }
     themeIndex = current;
   } else if (index !== undefined) {
     themeIndex = index;
   }
   
-  const theme = POST_IT_THEMES[themeIndex % POST_IT_THEMES.length];
+  const theme = palette[themeIndex % palette.length];
   const rotation = (Math.abs(hash) % 7) - 3; // -3 to +3 degrees
+  
+  if (isY2K) {
+    return {
+      backgroundColor: theme.bg,
+      color: theme.text,
+      transform: `rotate(${rotation}deg)`,
+      border: '2px solid #1C1C1E',
+      boxShadow: '3px 3px 0px 0px rgba(28,28,30,1)',
+      borderRadius: '4px'
+    };
+  }
+  
   return {
     backgroundColor: theme.bg,
     color: theme.text,
@@ -142,7 +201,7 @@ const getPostItStyle = (idString: string, index?: number, dateSeed?: string) => 
   };
 }
 
-const QuestionItem = ({ q, initialAnswer, saveAnswer, deleteAnswer, index, dateSeed }: { q: any, initialAnswer: string, saveAnswer: (val: string) => void, deleteAnswer: () => void, index?: number, dateSeed?: string }) => {
+const QuestionItem = ({ q, initialAnswer, saveAnswer, deleteAnswer, index, dateSeed, isY2K }: { q: any, initialAnswer: string, saveAnswer: (val: string) => void, deleteAnswer: () => void, index?: number, dateSeed?: string, isY2K?: boolean }) => {
   const [localVal, setLocalVal] = useState(initialAnswer)
   const textareaRef = React.useRef<HTMLTextAreaElement>(null)
 
@@ -159,10 +218,10 @@ const QuestionItem = ({ q, initialAnswer, saveAnswer, deleteAnswer, index, dateS
   }, [initialAnswer])
 
   return (
-    <div className="group relative transition-all duration-300 hover:scale-105 z-0 hover:z-10 p-4 w-36 min-h-[9rem] h-fit flex flex-col shrink-0" style={getPostItStyle(q.id, index, dateSeed)}>
-      <CornerDoodle idString={q.id} />
+    <div className="group relative transition-all duration-300 hover:scale-105 z-0 hover:z-10 p-4 w-36 min-h-[9rem] h-fit flex flex-col shrink-0" style={getPostItStyle(q.id, index, dateSeed, isY2K)}>
+      <CornerDoodle idString={q.id} isY2K={isY2K} />
       <div className="flex justify-between items-start mb-1 gap-2">
-        <div className="text-[11px] font-bold font-diary opacity-70" style={{ color: 'inherit' }}>{q.text}</div>
+        <div className="text-[11px] font-bold font-diary opacity-70" style={{ color: isY2K ? 'inherit' : 'inherit' }}>{q.text}</div>
         <button 
           onClick={deleteAnswer}
           className="w-5 h-5 flex items-center justify-center rounded text-[#717A8C] hover:text-[#EF6A7B] opacity-0 group-hover:opacity-100 transition-opacity text-[10px] shrink-0"
@@ -173,7 +232,7 @@ const QuestionItem = ({ q, initialAnswer, saveAnswer, deleteAnswer, index, dateS
       <textarea
         ref={textareaRef}
         className="flex-1 w-full bg-transparent resize-none outline-none text-[15px] leading-relaxed transition-all font-diary overflow-hidden"
-        style={{ color: 'inherit' }}
+        style={{ color: isY2K ? 'inherit' : 'inherit' }}
         placeholder="답변을 입력하세요..."
         rows={1}
         value={localVal}
@@ -197,11 +256,18 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
   } = useDiaryStore()
 
   const isAurora = settings.theme === 'aurora'
+  const isY2K = settings.theme === 'y2k'
 
   const dateKey = `${selDay.getFullYear()}-${String(selDay.getMonth() + 1).padStart(2, '0')}-${String(selDay.getDate()).padStart(2, '0')}`
   const monthKey = `${year}-${String(month + 1).padStart(2, '0')}`
   
-  console.log('[DEBUG DiaryPanel] settings.theme:', settings.theme, 'isAurora:', isAurora)
+  const handleToggleTheme = () => {
+    let nextTheme: 'default' | 'aurora' | 'y2k' = 'default'
+    if (settings.theme === 'default' || !settings.theme) nextTheme = 'aurora'
+    else if (settings.theme === 'aurora') nextTheme = 'y2k'
+    else nextTheme = 'default'
+    updateTheme(nextTheme)
+  }
 
   const dayDiary = diaries[dateKey] || { dateKey, emojis: [], answers: [], memos: [] }
   const monthlyDiary = monthlyDiaries[monthKey] || { monthKey, text: '' }
@@ -267,20 +333,33 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
   const formattedDate = `${selDay.getMonth() + 1}월 ${selDay.getDate()}일 (${WEEKDAYS[selDay.getDay()]})`
 
   return (
-    <aside className={`relative flex-[6] flex flex-col h-full border-l border-[#E5E5EA] shrink-0 overflow-hidden px-6 py-6 ${isAurora ? 'bg-transparent' : 'bg-[#F9FAFB]'}`}>
+    <aside className={`relative flex-[6] flex flex-col h-full border-l border-[#E5E5EA] shrink-0 overflow-hidden px-6 py-6 ${
+      isAurora ? 'bg-transparent' : 
+      isY2K ? 'bg-[linear-gradient(135deg,#9D72FF,#FF7EB3,#54E6ED)] bg-[length:200%_200%] animate-gradient-xy text-white' : 
+      'bg-[#F9FAFB]'
+    }`}>
+      {isY2K && (
+        <>
+          <div className="absolute inset-0 pointer-events-none opacity-20" style={{
+            backgroundImage: 'linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)',
+            backgroundSize: '20px 20px'
+          }} />
+          <Y2KStars />
+        </>
+      )}
       <header className="mb-6 shrink-0 text-center relative z-10 flex items-center justify-center">
         <h1 className="text-xl font-semibold text-[#1C1C1E] tracking-tight font-diary relative inline-block">
-          {formattedDate}
+          <span className={isY2K ? 'text-white drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)]' : ''}>{formattedDate}</span>
           <StarDoodle />
         </h1>
         <button
-          onClick={() => {
-            console.log('[DEBUG DiaryPanel] Toggle button clicked. Current isAurora:', isAurora);
-            updateTheme(isAurora ? 'default' : 'aurora');
-          }}
-          className="absolute right-0 text-xs font-semibold px-2.5 py-1.5 rounded-lg bg-white/50 hover:bg-white border border-white/60 shadow-sm transition-colors text-[#717A8C]"
+          onClick={handleToggleTheme}
+          className={`absolute right-0 text-xs font-semibold px-2.5 py-1.5 rounded-lg border shadow-sm transition-colors ${
+            isY2K ? 'bg-black/40 border-white/30 text-white hover:bg-black/60 backdrop-blur-sm' :
+            'bg-white/50 hover:bg-white border-white/60 text-[#717A8C]'
+          }`}
         >
-          {isAurora ? '기본 테마' : '✨ 오로라'}
+          {isY2K ? '👾 Y2K' : isAurora ? '✨ 오로라' : '기본 테마'}
         </button>
       </header>
 

@@ -28,7 +28,7 @@ export interface MonthlyDiary {
 
 export interface DiarySettings {
   questions: { id: string, text: string }[]
-  theme?: 'default' | 'aurora'
+  theme?: 'default' | 'aurora' | 'y2k'
 }
 
 interface DiaryStoreValue {
@@ -43,7 +43,7 @@ interface DiaryStoreValue {
   addQuestion: (text: string) => Promise<void>
   deleteQuestion: (id: string) => Promise<void>
   updateQuestion: (id: string, text: string) => Promise<void>
-  updateTheme: (theme: 'default' | 'aurora') => Promise<void>
+  updateTheme: (theme: 'default' | 'aurora' | 'y2k') => Promise<void>
   saveDayDiaryEmojis: (dateKey: string, emojis: string[]) => Promise<void>
   saveDayDiaryAnswer: (dateKey: string, questionId: string, question: string, answer: string) => Promise<void>
   deleteDayDiaryAnswer: (dateKey: string, questionId: string) => Promise<void>
