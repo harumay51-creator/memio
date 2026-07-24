@@ -160,7 +160,9 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
           <div className="flex gap-2 min-h-[40px] items-center justify-center">
             {(dayDiary.emojis || []).length > 0 ? (
               (dayDiary.emojis || []).map((emoji: string, idx: number) => (
-                <Emoji key={idx} emoji={emoji} className="w-8 h-8 animate-fade-in" />
+                <div key={idx} className={`w-10 h-10 rounded-full flex items-center justify-center ${isAurora ? 'bg-white/40 shadow-sm' : 'bg-white border border-[#E5E5EA] shadow-sm'}`}>
+                  <Emoji emoji={emoji} className="w-6 h-6 animate-fade-in" />
+                </div>
               ))
             ) : (
               <span className="text-sm text-[#A0AABF]">이모지를 선택해주세요</span>
@@ -184,13 +186,13 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
                           <button
                             key={emoji}
                             onClick={() => handleEmojiSelect(emoji)}
-                            className={`w-8 h-8 flex items-center justify-center rounded-full shrink-0 transition-all ${
+                            className={`w-9 h-9 flex items-center justify-center rounded-full shrink-0 transition-all ${
                               isSelected 
                                 ? 'bg-[#8B7CF8] shadow-[0_2px_8px_rgba(139,124,248,0.4)] scale-110' 
                                 : 'hover:bg-[#F0F0F5] grayscale-[0.2]'
                             }`}
                           >
-                            <Emoji emoji={emoji} className="w-5 h-5" />
+                            <Emoji emoji={emoji} className="w-5 h-5 flex-shrink-0" />
                           </button>
                         )
                       })}
