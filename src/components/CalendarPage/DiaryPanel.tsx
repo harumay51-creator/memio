@@ -304,18 +304,23 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
       isAurora || isY2K ? 'bg-transparent' : 'bg-[#F9FAFB]'
     }`}>
       <header className="mb-6 shrink-0 text-center relative z-10 flex items-center justify-center">
-        <h1 className="text-xl font-semibold text-[#1C1C1E] tracking-tight font-diary relative inline-block">
-          <span className={isY2K ? 'text-white drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)]' : ''}>{formattedDate}</span>
+        <h1 className={`text-xl font-semibold text-[#1C1C1E] tracking-tight relative inline-block ${isY2K ? 'font-pixel text-[22px]' : 'font-diary'}`}>
+          <span className={isY2K ? 'text-white drop-shadow-[2px_2px_0_#b588ff]' : ''}>{formattedDate}</span>
           <StarDoodle isY2K={isY2K} />
         </h1>
         <button
           onClick={handleToggleTheme}
           className={`absolute right-0 text-xs font-semibold px-2.5 py-1.5 rounded-lg border shadow-sm transition-colors ${
-            isY2K ? 'bg-black/40 border-white/30 text-white hover:bg-black/60 backdrop-blur-sm' :
+            isY2K ? 'bg-black/40 border-white/30 text-white hover:bg-black/60 backdrop-blur-sm font-pixel text-[10px] tracking-widest flex items-center gap-1.5' :
             'bg-white/50 hover:bg-white border-white/60 text-[#717A8C]'
           }`}
         >
-          {isY2K ? '👾 Y2K' : isAurora ? '✨ 오로라' : '기본 테마'}
+          {isY2K ? (
+            <>
+              <span className="animate-spin-pixel text-[#ffade4]">★</span>
+              <span>Y2K</span>
+            </>
+          ) : isAurora ? '✨ 오로라' : '기본 테마'}
         </button>
       </header>
 
@@ -640,6 +645,25 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
                   </div>
                 ))}
               </div>
+              
+              {/* Retro UI Widgets (Only in Y2K mode) */}
+              {isY2K && (
+                <div className="mt-8 flex justify-between items-end border-t-2 border-white/20 pt-4 px-2">
+                  <div className="flex flex-col gap-1">
+                    <span className="font-pixel text-[10px] text-white/90 tracking-widest animate-blink-fast drop-shadow-sm">NOW LOADING...</span>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="text-white text-[12px] animate-spin-pixel drop-shadow-sm">♥</span>
+                      <span className="text-[#ffade4] text-[12px] animate-spin-pixel drop-shadow-sm" style={{ animationDelay: '0.75s' }}>♥</span>
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-end gap-1">
+                    <span className="font-pixel text-[9px] text-white/80 tracking-widest drop-shadow-sm">TOTAL VISITOR</span>
+                    <div className="bg-black/40 border-2 border-white/30 rounded px-2 py-1 shadow-inner backdrop-blur-sm">
+                      <span className="font-pixel text-[#ffade4] text-[14px] tracking-widest drop-shadow-[0_0_8px_#ffade4]">00001234</span>
+                    </div>
+                  </div>
+                </div>
+              )}
             </section>
           </div>
         )}
