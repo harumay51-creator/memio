@@ -66,11 +66,13 @@ export const DiaryStoreProvider: React.FC<{ children: React.ReactNode, uid: stri
 
   useEffect(() => {
     if (!uid) return
-    const unsubSettings = onSnapshot(doc(db, `users/${uid}/settings`, 'diary'), (doc) => {
-      if (doc.exists()) {
-        const data = doc.data() as Partial<DiarySettings>
+    const unsubSettings = onSnapshot(doc(db, `users/${uid}/settings`, 'diary'), (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data() as Partial<DiarySettings>
+        console.log('[DEBUG DiaryStore] settings onSnapshot exists. data:', data)
         setSettings({ questions: data.questions || [], theme: data.theme || 'default' })
       } else {
+        console.log('[DEBUG DiaryStore] settings onSnapshot does NOT exist.')
         setSettings({ questions: [], theme: 'default' })
       }
     })
@@ -119,7 +121,13 @@ export const DiaryStoreProvider: React.FC<{ children: React.ReactNode, uid: stri
 
   const updateTheme = async (theme: 'default' | 'aurora') => {
     if (!uid) return
-    await setDoc(doc(db, `users/${uid}/settings`, 'diary'), { theme }, { merge: true })
+    console.log('[DEBUG DiaryStore] updateTheme called with:', theme)
+    try {
+      await setDoc(doc(db, `users/${uid}/settings`, 'diary'), { theme }, { merge: true })
+      console.log('[DEBUG DiaryStore] updateTheme setDoc successful')
+    } catch (err) {
+      console.error('[DEBUG DiaryStore] updateTheme Error:', err)
+    }
   }
 
   const saveDayDiaryEmojis = async (dateKey: string, emojis: string[]) => {

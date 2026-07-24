@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useDiaryStore, DiaryMemo } from '../../store/DiaryStore'
 import Emoji from '../common/Emoji'
+import auroraBg from '../../assets/aurora.jpg'
 
 interface DiaryPanelProps {
   mode: 'day' | 'month'
@@ -60,6 +61,8 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
 
   const dateKey = `${selDay.getFullYear()}-${String(selDay.getMonth() + 1).padStart(2, '0')}-${String(selDay.getDate()).padStart(2, '0')}`
   const monthKey = `${year}-${String(month + 1).padStart(2, '0')}`
+  
+  console.log('[DEBUG DiaryPanel] settings.theme:', settings.theme, 'isAurora:', isAurora)
 
   const dayDiary = diaries[dateKey] || { dateKey, emojis: [], answers: [], memos: [] }
   const monthlyDiary = monthlyDiaries[monthKey] || { monthKey, text: '' }
@@ -128,7 +131,7 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
     <aside className="relative flex-[6] flex flex-col h-full border-l border-[#E5E5EA] shrink-0 overflow-hidden px-6 py-6">
       {isAurora ? (
         <>
-          <div className="absolute inset-0 z-0 bg-cover bg-center" style={{ backgroundImage: "url('/aurora.jpg')" }} />
+          <div className="absolute inset-0 z-0 bg-cover bg-center" style={{ backgroundImage: `url(${auroraBg})` }} />
           <div className="absolute inset-0 z-0 bg-white/60 backdrop-blur-[2px]" />
         </>
       ) : (
@@ -140,7 +143,10 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
           {formattedDate}
         </h1>
         <button
-          onClick={() => updateTheme(isAurora ? 'default' : 'aurora')}
+          onClick={() => {
+            console.log('[DEBUG DiaryPanel] Toggle button clicked. Current isAurora:', isAurora);
+            updateTheme(isAurora ? 'default' : 'aurora');
+          }}
           className="absolute right-0 text-xs font-semibold px-2.5 py-1.5 rounded-lg bg-white/50 hover:bg-white border border-white/60 shadow-sm transition-colors text-[#717A8C]"
         >
           {isAurora ? '기본 테마' : '✨ 오로라'}
