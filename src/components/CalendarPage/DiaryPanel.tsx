@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useDiaryStore, DiaryMemo } from '../../store/DiaryStore'
 import { RetroWindow } from '../common/Y2KTheme'
 import Emoji from '../common/Emoji'
@@ -164,9 +164,10 @@ const getPostItStyle = (idString: string, index?: number, dateSeed?: string, isY
   };
 }
 
-const QuestionItem = ({ q, initialAnswer, saveAnswer, deleteAnswer, index, dateSeed, isY2K }: { q: any, initialAnswer: string, saveAnswer: (val: string) => void, deleteAnswer: () => void, index?: number, dateSeed?: string, isY2K?: boolean }) => {
+const QuestionItem = ({ q, initialAnswer, saveAnswer, deleteAnswer, index, dateSeed, isY2K }: { q: any, initialAnswer: string, saveAnswer: (v: string) => void, deleteAnswer: () => void, index: number, dateSeed: string, isY2K: boolean }) => {
   const [localVal, setLocalVal] = useState(initialAnswer)
-  const textareaRef = React.useRef<HTMLTextAreaElement>(null)
+  const [isFocused, setIsFocused] = useState(false)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   const handleResize = () => {
     if (textareaRef.current) {
@@ -182,8 +183,11 @@ const QuestionItem = ({ q, initialAnswer, saveAnswer, deleteAnswer, index, dateS
 
   return (
     <div 
-      className="group relative transition-all duration-300 hover:scale-105 z-0 hover:z-10 p-4 w-36 min-h-[9rem] h-auto flex flex-col shrink-0 cursor-text" 
-      style={getPostItStyle(q.id, index, dateSeed, isY2K)}
+      className={`group relative transition-all duration-300 p-4 w-36 min-h-[9rem] h-auto flex flex-col shrink-0 cursor-text ${isFocused ? 'z-20' : 'z-0 hover:z-10 hover:scale-[1.02]'}`} 
+      style={{
+        ...getPostItStyle(q.id, index, dateSeed, isY2K),
+        transform: isFocused ? 'scale(1.05) rotate(0deg)' : getPostItStyle(q.id, index, dateSeed, isY2K).transform
+      }}
       onClick={(e) => {
         if (e.target !== textareaRef.current && textareaRef.current) {
           e.preventDefault()
@@ -214,7 +218,11 @@ const QuestionItem = ({ q, initialAnswer, saveAnswer, deleteAnswer, index, dateS
           setLocalVal(e.target.value)
           handleResize()
         }}
-        onBlur={() => saveAnswer(localVal)}
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => {
+          setIsFocused(false)
+          saveAnswer(localVal)
+        }}
         spellCheck={false}
       />
     </div>
