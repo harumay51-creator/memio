@@ -46,7 +46,7 @@ const POST_IT_THEMES = [
   { bg: '#B8D9F0', text: '#0A3B5E' }, // Sky Blue
   { bg: '#F5D0A8', text: '#5C3A1A' }, // Apricot
   { bg: '#F0B5B0', text: '#5C201C' }, // Coral Pink
-  { bg: '#D4C4A0', text: '#4A422F' }, // Khaki/Beige
+  { bg: '#F0E6A0', text: '#5C541A' }, // Light Lemon
   { bg: '#DCE8A0', text: '#3F4A1E' }, // Lime
 ]
 
