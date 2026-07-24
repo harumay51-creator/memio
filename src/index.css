@@ -2,6 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+    font-family: 'OngleipParkDahyeon';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2411-3@1.0/Ownglyph_ParkDaHyun.woff2') format('woff2');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
 @layer base {
   * {
     box-sizing: border-box;
@@ -43,13 +51,13 @@
 
   /* Diary Handwriting Font */
   .font-diary {
-    font-family: 'Gamja Flower', cursive;
-    font-size: 1.15em;
+    font-family: 'OngleipParkDahyeon', cursive;
+    font-size: 1.25em; /* Park Da-hyun font might need a bit more size, adjusting from 1.15em */
   }
 
   .font-diary::placeholder {
     font-family: 'Pretendard', sans-serif;
-    font-size: 0.85em;
+    font-size: 0.8em;
   }
 
   /* Dashboard card */
