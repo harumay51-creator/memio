@@ -17,7 +17,7 @@ const Emoji: React.FC<EmojiProps> = ({ emoji, className = '' }) => {
 
   return (
     <span 
-      className={`inline-block [&>img]:w-full [&>img]:h-full [&>img]:m-0 [&>img]:align-top ${className}`}
+      className={`inline-flex items-center justify-center [&>img]:max-w-full [&>img]:max-h-full [&>img]:object-contain [&>img]:m-0 ${className}`}
       dangerouslySetInnerHTML={{ __html: html }}
     />
   )

@@ -2,6 +2,30 @@ import React, { useState, useEffect } from 'react'
 import { useDiaryStore, DiaryMemo } from '../../store/DiaryStore'
 import Emoji from '../common/Emoji'
 
+const StarDoodle = () => (
+  <svg className="absolute -top-3 -right-8 w-8 h-8 text-[#FFD54F] opacity-80 rotate-12 pointer-events-none" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M 50 10 Q 55 35 70 45 Q 90 50 70 60 Q 55 70 50 90 Q 45 70 25 60 Q 10 50 30 45 Q 45 35 50 10" fill="currentColor" />
+  </svg>
+)
+
+const UnderlineDoodle = () => (
+  <svg className="absolute -bottom-2 left-0 w-12 h-2 text-[#81C784] opacity-80 pointer-events-none" viewBox="0 0 100 20" preserveAspectRatio="none" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round">
+    <path d="M 5,10 Q 30,15 50,8 T 95,12" />
+  </svg>
+)
+
+const CloudDoodle = () => (
+  <svg className="absolute -top-4 right-10 w-12 h-12 text-[#4FC3F7] opacity-60 pointer-events-none" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M 30,60 Q 20,60 20,50 Q 20,40 30,40 Q 35,25 50,25 Q 65,25 70,40 Q 85,40 85,55 Q 85,70 70,70 L 35,70" />
+  </svg>
+)
+
+const ArrowDoodle = () => (
+  <svg className="absolute top-1 -left-6 w-5 h-5 text-[#F06292] opacity-70 -rotate-12 pointer-events-none" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M 20,80 Q 50,50 80,20 M 50,20 L 80,20 L 80,50" />
+  </svg>
+)
+
 interface DiaryPanelProps {
   mode: 'day' | 'month'
   selDay: Date
@@ -144,8 +168,9 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
   return (
     <aside className={`relative flex-[6] flex flex-col h-full border-l border-[#E5E5EA] shrink-0 overflow-hidden px-6 py-6 ${isAurora ? 'bg-transparent' : 'bg-[#F9FAFB]'}`}>
       <header className="mb-6 shrink-0 text-center relative z-10 flex items-center justify-center">
-        <h1 className="text-xl font-semibold text-[#1C1C1E] tracking-tight font-diary">
+        <h1 className="text-xl font-semibold text-[#1C1C1E] tracking-tight font-diary relative inline-block">
           {formattedDate}
+          <StarDoodle />
         </h1>
         <button
           onClick={() => {
@@ -162,8 +187,11 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
         
         {/* 1. Emoji Selector */}
         <section className="p-2">
-          <div className="flex justify-between items-center mb-3">
-            <h2 className="text-[11px] font-bold text-[#717A8C] tracking-widest uppercase">오늘의 기분/날씨</h2>
+          <div className="flex justify-between items-center mb-3 relative">
+            <h2 className="text-[11px] font-bold text-[#717A8C] tracking-widest uppercase inline-block relative">
+              오늘의 기분/날씨
+            </h2>
+            <CloudDoodle />
             <button 
               onClick={() => setIsEmojiPickerOpen(!isEmojiPickerOpen)}
               className="text-[#8B7CF8] text-[11px] font-bold hover:underline"
@@ -175,8 +203,8 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
           <div className="flex gap-2 min-h-[40px] items-center justify-center">
             {(dayDiary.emojis || []).length > 0 ? (
               (dayDiary.emojis || []).map((emoji: string, idx: number) => (
-                <div key={idx} className={`w-10 h-10 rounded-full flex items-center justify-center ${isAurora ? 'bg-white/40 shadow-sm' : 'bg-white border border-[#E5E5EA] shadow-sm'}`}>
-                  <Emoji emoji={emoji} className="w-6 h-6 animate-fade-in" />
+                <div key={idx} className={`w-10 h-10 rounded-full flex items-center justify-center p-2.5 ${isAurora ? 'bg-white/40 shadow-sm' : 'bg-white border border-[#E5E5EA] shadow-sm'}`}>
+                  <Emoji emoji={emoji} className="w-full h-full animate-fade-in" />
                 </div>
               ))
             ) : (
@@ -201,13 +229,13 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
                           <button
                             key={emoji}
                             onClick={() => handleEmojiSelect(emoji)}
-                            className={`w-9 h-9 flex items-center justify-center rounded-full shrink-0 transition-all ${
+                            className={`w-9 h-9 p-2 flex items-center justify-center rounded-full shrink-0 transition-all ${
                               isSelected 
                                 ? 'bg-[#8B7CF8] shadow-[0_2px_8px_rgba(139,124,248,0.4)] scale-110' 
                                 : 'hover:bg-[#F0F0F5] grayscale-[0.2]'
                             }`}
                           >
-                            <Emoji emoji={emoji} className="w-5 h-5 flex-shrink-0" />
+                            <Emoji emoji={emoji} className="w-full h-full flex-shrink-0" />
                           </button>
                         )
                       })}
@@ -221,7 +249,10 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
 
         {/* 2. Questions Snapshot */}
         <section className="p-2 flex flex-col gap-4">
-          <h2 className="text-[11px] font-bold text-[#717A8C] tracking-widest uppercase">Q&A</h2>
+          <div className="relative inline-block w-max">
+            <h2 className="text-[11px] font-bold text-[#717A8C] tracking-widest uppercase">Q&A</h2>
+            <UnderlineDoodle />
+          </div>
           
           <div className="flex flex-col gap-5">
             {settings.questions.map(q => {
@@ -265,7 +296,10 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
 
         {/* 3. Free Memos */}
         <section className="p-2 flex flex-col gap-4 mb-8">
-          <h2 className="text-[11px] font-bold text-[#717A8C] tracking-widest uppercase">MEMO</h2>
+          <div className="relative inline-block w-max ml-6">
+            <ArrowDoodle />
+            <h2 className="text-[11px] font-bold text-[#717A8C] tracking-widest uppercase">MEMO</h2>
+          </div>
           
           <form onSubmit={handleAddMemo} className="flex gap-2">
             <input
