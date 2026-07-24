@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useDiaryStore, DiaryMemo } from '../../store/DiaryStore'
+import { RetroWindow } from '../common/Y2KTheme'
 import Emoji from '../common/Emoji'
 
 const StarDoodle = () => (
@@ -128,39 +129,6 @@ const Y2K_POST_IT_THEMES = [
   { bg: '#B05AFF', text: '#FFFFFF' }, // Bright Purple
   { bg: '#FFFC00', text: '#1C1C1E' }, // Cyber Yellow
 ]
-
-const Y2KStars = () => {
-  const stars = Array.from({ length: 20 }).map((_, i) => ({
-    id: i,
-    top: `${Math.floor(Math.random() * 100)}%`,
-    left: `${Math.floor(Math.random() * 100)}%`,
-    delay: `${(Math.random() * 3).toFixed(2)}s`,
-    size: `${Math.floor(Math.random() * 2) + 2}px`,
-  }))
-  return (
-    <>
-      <style>{`
-        @keyframes twinkle {
-          0% { opacity: 0.1; transform: scale(0.8); }
-          100% { opacity: 1; transform: scale(1.2); }
-        }
-      `}</style>
-      <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
-        {stars.map(star => (
-          <div 
-            key={star.id} 
-            className="absolute bg-white rounded-full"
-            style={{
-              top: star.top, left: star.left, width: star.size, height: star.size,
-              animation: `twinkle 2s infinite alternate ${star.delay}`,
-              boxShadow: '0 0 4px 2px rgba(255,255,255,0.8)'
-            }}
-          />
-        ))}
-      </div>
-    </>
-  )
-}
 
 const getPostItStyle = (idString: string, index?: number, dateSeed?: string, isY2K?: boolean) => {
   const hash = getHash(idString);
@@ -334,19 +302,8 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
 
   return (
     <aside className={`relative flex-[6] flex flex-col h-full border-l border-[#E5E5EA] shrink-0 overflow-hidden px-6 py-6 ${
-      isAurora ? 'bg-transparent' : 
-      isY2K ? 'bg-[linear-gradient(135deg,#9D72FF,#FF7EB3,#54E6ED)] bg-[length:200%_200%] animate-gradient-xy text-white' : 
-      'bg-[#F9FAFB]'
+      isAurora || isY2K ? 'bg-transparent' : 'bg-[#F9FAFB]'
     }`}>
-      {isY2K && (
-        <>
-          <div className="absolute inset-0 pointer-events-none opacity-20" style={{
-            backgroundImage: 'linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)',
-            backgroundSize: '20px 20px'
-          }} />
-          <Y2KStars />
-        </>
-      )}
       <header className="mb-6 shrink-0 text-center relative z-10 flex items-center justify-center">
         <h1 className="text-xl font-semibold text-[#1C1C1E] tracking-tight font-diary relative inline-block">
           <span className={isY2K ? 'text-white drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)]' : ''}>{formattedDate}</span>
@@ -363,165 +320,332 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
         </button>
       </header>
 
-      <div className="relative z-10 flex-1 min-h-0 overflow-y-auto pr-2 -mr-2 flex flex-col gap-6">
-        
-        {/* 1. Emoji Selector */}
-        <section className="p-2">
-          <div className="flex justify-between items-center mb-3 relative">
-            <h2 className="text-[11px] font-bold text-[#717A8C] tracking-widest uppercase inline-block relative">
-              오늘의 기분/날씨
-            </h2>
-            <CloudDoodle />
-            <button 
-              onClick={() => setIsEmojiPickerOpen(!isEmojiPickerOpen)}
-              className="text-[#8B7CF8] text-[11px] font-bold hover:underline"
-            >
-              {isEmojiPickerOpen ? '닫기' : '선택하기'}
-            </button>
-          </div>
-          
-          <div className="flex gap-2 min-h-[40px] items-center justify-center">
-            {(dayDiary.emojis || []).length > 0 ? (
-              (dayDiary.emojis || []).map((emoji: string, idx: number) => (
-                <div key={idx} className={`w-10 h-10 rounded-full flex items-center justify-center p-2.5 ${isAurora ? 'bg-white/40 shadow-sm' : 'bg-white border border-[#E5E5EA] shadow-sm'}`}>
-                  <Emoji emoji={emoji} className="w-full h-full animate-fade-in" />
+      <div className="relative z-10 flex-1 min-h-0 flex flex-col">
+        {isY2K ? (
+          <RetroWindow title="Diary.exe" className="h-full">
+            <div className="flex-1 min-h-0 overflow-y-auto pr-2 -mr-2 flex flex-col gap-6 p-4">
+              {/* 1. Emoji Selector */}
+              <section className="p-2">
+                <div className="flex justify-between items-center mb-3 relative">
+                  <h2 className="text-[11px] font-bold text-[#717A8C] tracking-widest uppercase inline-block relative">
+                    오늘의 기분/날씨
+                  </h2>
+                  <CloudDoodle isY2K={isY2K} />
+                  <button 
+                    onClick={() => setIsEmojiPickerOpen(!isEmojiPickerOpen)}
+                    className="text-[#8B7CF8] text-[11px] font-bold hover:underline"
+                  >
+                    {isEmojiPickerOpen ? '닫기' : '선택하기'}
+                  </button>
                 </div>
-              ))
-            ) : (
-              <span className="text-sm text-[#A0AABF]">이모지를 선택해주세요</span>
-            )}
-          </div>
-          
-          {isEmojiPickerOpen && (
-            <>
-              <div 
-                className="fixed inset-0 z-40" 
-                onClick={() => setIsEmojiPickerOpen(false)}
-              />
-              <div className="mt-4 pt-4 border-t border-[#E5E5EA] flex flex-col gap-3 relative z-50 animate-slide-down">
-                {EMOJI_CATEGORIES.map(cat => (
-                  <div key={cat.name}>
-                    <div className="text-[10px] text-[#717A8C] mb-1.5">{cat.name}</div>
-                    <div className="flex flex-nowrap gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
-                      {cat.emojis.map(emoji => {
-                        const isSelected = (dayDiary.emojis || []).includes(emoji)
-                        return (
-                          <button
-                            key={emoji}
-                            onClick={() => handleEmojiSelect(emoji)}
-                            className={`w-9 h-9 p-2 flex items-center justify-center rounded-full shrink-0 transition-all ${
-                              isSelected 
-                                ? 'bg-[#8B7CF8] shadow-[0_2px_8px_rgba(139,124,248,0.4)] scale-110' 
-                                : 'hover:bg-[#F0F0F5] grayscale-[0.2]'
-                            }`}
-                          >
-                            <Emoji emoji={emoji} className="w-full h-full flex-shrink-0" />
-                          </button>
-                        )
-                      })}
+                
+                <div className="flex gap-2 min-h-[40px] items-center justify-center">
+                  {(dayDiary.emojis || []).length > 0 ? (
+                    (dayDiary.emojis || []).map((emoji: string, idx: number) => (
+                      <div key={idx} className={`w-10 h-10 rounded-full flex items-center justify-center p-2.5 ${isAurora || isY2K ? 'bg-white/40 shadow-sm' : 'bg-white border border-[#E5E5EA] shadow-sm'}`}>
+                        <Emoji emoji={emoji} className="w-full h-full animate-fade-in" />
+                      </div>
+                    ))
+                  ) : (
+                    <span className="text-sm text-[#A0AABF]">이모지를 선택해주세요</span>
+                  )}
+                </div>
+                
+                {isEmojiPickerOpen && (
+                  <>
+                    <div 
+                      className="fixed inset-0 z-40" 
+                      onClick={() => setIsEmojiPickerOpen(false)}
+                    />
+                    <div className="mt-4 pt-4 border-t border-[#E5E5EA] flex flex-col gap-3 relative z-50 animate-slide-down">
+                      {EMOJI_CATEGORIES.map(cat => (
+                        <div key={cat.name}>
+                          <div className="text-[10px] text-[#717A8C] mb-1.5">{cat.name}</div>
+                          <div className="flex flex-nowrap gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
+                            {cat.emojis.map(emoji => {
+                              const isSelected = (dayDiary.emojis || []).includes(emoji)
+                              return (
+                                <button
+                                  key={emoji}
+                                  onClick={() => handleEmojiSelect(emoji)}
+                                  className={`w-9 h-9 p-2 flex items-center justify-center rounded-full shrink-0 transition-all ${
+                                    isSelected 
+                                      ? 'bg-[#8B7CF8] shadow-[0_2px_8px_rgba(139,124,248,0.4)] scale-110' 
+                                      : 'hover:bg-[#F0F0F5] grayscale-[0.2]'
+                                  }`}
+                                >
+                                  <Emoji emoji={emoji} className="w-full h-full flex-shrink-0" />
+                                </button>
+                              )
+                            })}
+                          </div>
+                        </div>
+                      ))}
                     </div>
+                  </>
+                )}
+              </section>
+
+              {/* 2. Questions Snapshot */}
+              <section className="p-2 flex flex-col gap-4">
+                <div className="relative inline-block w-max">
+                  <h2 className="text-[11px] font-bold text-[#717A8C] tracking-widest uppercase">Q&A</h2>
+                  <UnderlineDoodle isY2K={isY2K} />
+                </div>
+                
+                <div className="flex flex-row flex-wrap gap-2.5 items-start">
+                  {settings.questions.map((q, idx) => {
+                    const answerObj = (dayDiary.answers || []).find(a => a.questionId === q.id)
+                    const answerText = answerObj ? answerObj.answer : ''
+                    return (
+                      <QuestionItem 
+                        key={q.id} 
+                        q={q} 
+                        initialAnswer={answerText} 
+                        saveAnswer={(val) => saveDayDiaryAnswer(dateKey, q.id, q.text, val)} 
+                        deleteAnswer={() => deleteDayDiaryAnswer(dateKey, q.id)}
+                        index={idx}
+                        dateSeed={dateKey}
+                        isY2K={isY2K}
+                      />
+                    )
+                  })}
+                  
+                  {/* Display snapshot answers that are no longer in settings.questions */}
+                  {(dayDiary.answers || []).filter(a => !settings.questions.some(q => q.id === a.questionId)).map((a, idx) => (
+                    <div key={a.questionId} className="group relative transition-all duration-300 hover:scale-105 z-0 hover:z-10 p-4 w-36 min-h-[9rem] h-fit flex flex-col shrink-0" style={getPostItStyle(a.questionId, idx + settings.questions.length, dateKey, isY2K)}>
+                      <CornerDoodle idString={a.questionId} isY2K={isY2K} />
+                      <div className="flex justify-between items-start mb-1 gap-2">
+                        <div>
+                          <div className="text-[11px] font-bold font-diary opacity-70" style={{ color: 'inherit' }}>{a.question} (과거 질문)</div>
+                        </div>
+                        <button 
+                          onClick={() => deleteDayDiaryAnswer(dateKey, a.questionId)}
+                          className="w-5 h-5 flex items-center justify-center rounded hover:opacity-50 opacity-0 group-hover:opacity-100 transition-opacity text-[10px] shrink-0"
+                          style={{ color: 'inherit' }}
+                        >
+                          ✕
+                        </button>
+                      </div>
+                      <div className="flex-1 text-[15px] whitespace-pre-wrap font-diary leading-relaxed" style={{ color: 'inherit' }}>{a.answer}</div>
+                    </div>
+                  ))}
+                </div>
+
+                {settings.questions.length === 0 && (dayDiary.answers || []).length === 0 && (
+                  <div className="text-xs text-[#A0AABF]">설정에서 다이어리 질문을 추가해보세요.</div>
+                )}
+              </section>
+
+              {/* 3. Free Memos */}
+              <section className="p-2 flex flex-col gap-4 mb-8">
+                <div className="relative inline-block w-max ml-6">
+                  <ArrowDoodle isY2K={isY2K} />
+                  <h2 className="text-[11px] font-bold text-[#717A8C] tracking-widest uppercase">MEMO</h2>
+                </div>
+                
+                <form onSubmit={handleAddMemo} className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newMemo}
+                    onChange={(e) => setNewMemo(e.target.value)}
+                    placeholder="자유롭게 기록을 남겨보세요..."
+                    className="flex-1 bg-white/30 border border-white/20 rounded-xl px-3 py-2.5 text-[13px] outline-none text-[#1C1C1E] placeholder:text-[#A0AABF] focus:border-white/50 focus:bg-white/40 transition-all font-diary"
+                    spellCheck={false}
+                  />
+                  <button type="submit" disabled={!newMemo.trim()} className="px-3 bg-white/40 border border-[#C0C0C0] text-[#1C1C1E] rounded-xl font-bold text-xs hover:bg-[#E5E5EA] disabled:opacity-30 transition-all">
+                    추가
+                  </button>
+                </form>
+
+                <div className="flex flex-row flex-wrap gap-2.5 items-start mt-2">
+                  {[...(dayDiary.memos || [])].reverse().map((memo: DiaryMemo, idx: number) => (
+                    <div key={memo.id} className="group relative transition-all duration-300 hover:scale-105 z-0 hover:z-10 p-5 w-36 min-h-[9rem] h-fit flex flex-col justify-between shrink-0" style={getPostItStyle(memo.id, idx + (dayDiary.answers || []).length, dateKey, isY2K)}>
+                      <CornerDoodle idString={memo.id} isY2K={isY2K} />
+                      <div className="flex justify-between items-start mb-2 gap-2">
+                        <div className="flex-1 text-[14px] whitespace-pre-wrap leading-relaxed font-diary" style={{ color: 'inherit' }}>{memo.text}</div>
+                        <button 
+                          onClick={() => deleteDayDiaryMemo(dateKey, memo.id)}
+                          className="w-5 h-5 flex items-center justify-center rounded hover:opacity-50 opacity-0 group-hover:opacity-100 transition-opacity text-[10px] shrink-0"
+                          style={{ color: 'inherit' }}
+                        >
+                          ✕
+                        </button>
+                      </div>
+                      {memo.createdAt && (
+                        <div className="text-[9px] opacity-40 font-diary mt-2 text-right" style={{ color: 'inherit' }}>
+                          {new Intl.DateTimeFormat('ko-KR', { hour: 'numeric', minute: 'numeric', hour12: true }).format(new Date(memo.createdAt))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </section>
+            </div>
+          </RetroWindow>
+        ) : (
+          <div className="flex-1 min-h-0 overflow-y-auto pr-2 -mr-2 flex flex-col gap-6">
+            {/* 1. Emoji Selector */}
+            <section className="p-2">
+              <div className="flex justify-between items-center mb-3 relative">
+                <h2 className="text-[11px] font-bold text-[#717A8C] tracking-widest uppercase inline-block relative">
+                  오늘의 기분/날씨
+                </h2>
+                <CloudDoodle isY2K={isY2K} />
+                <button 
+                  onClick={() => setIsEmojiPickerOpen(!isEmojiPickerOpen)}
+                  className="text-[#8B7CF8] text-[11px] font-bold hover:underline"
+                >
+                  {isEmojiPickerOpen ? '닫기' : '선택하기'}
+                </button>
+              </div>
+              
+              <div className="flex gap-2 min-h-[40px] items-center justify-center">
+                {(dayDiary.emojis || []).length > 0 ? (
+                  (dayDiary.emojis || []).map((emoji: string, idx: number) => (
+                    <div key={idx} className={`w-10 h-10 rounded-full flex items-center justify-center p-2.5 ${isAurora || isY2K ? 'bg-white/40 shadow-sm' : 'bg-white border border-[#E5E5EA] shadow-sm'}`}>
+                      <Emoji emoji={emoji} className="w-full h-full animate-fade-in" />
+                    </div>
+                  ))
+                ) : (
+                  <span className="text-sm text-[#A0AABF]">이모지를 선택해주세요</span>
+                )}
+              </div>
+              
+              {isEmojiPickerOpen && (
+                <>
+                  <div 
+                    className="fixed inset-0 z-40" 
+                    onClick={() => setIsEmojiPickerOpen(false)}
+                  />
+                  <div className="mt-4 pt-4 border-t border-[#E5E5EA] flex flex-col gap-3 relative z-50 animate-slide-down">
+                    {EMOJI_CATEGORIES.map(cat => (
+                      <div key={cat.name}>
+                        <div className="text-[10px] text-[#717A8C] mb-1.5">{cat.name}</div>
+                        <div className="flex flex-nowrap gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
+                          {cat.emojis.map(emoji => {
+                            const isSelected = (dayDiary.emojis || []).includes(emoji)
+                            return (
+                              <button
+                                key={emoji}
+                                onClick={() => handleEmojiSelect(emoji)}
+                                className={`w-9 h-9 p-2 flex items-center justify-center rounded-full shrink-0 transition-all ${
+                                  isSelected 
+                                    ? 'bg-[#8B7CF8] shadow-[0_2px_8px_rgba(139,124,248,0.4)] scale-110' 
+                                    : 'hover:bg-[#F0F0F5] grayscale-[0.2]'
+                                }`}
+                              >
+                                <Emoji emoji={emoji} className="w-full h-full flex-shrink-0" />
+                              </button>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+            </section>
+
+            {/* 2. Questions Snapshot */}
+            <section className="p-2 flex flex-col gap-4">
+              <div className="relative inline-block w-max">
+                <h2 className="text-[11px] font-bold text-[#717A8C] tracking-widest uppercase">Q&A</h2>
+                <UnderlineDoodle isY2K={isY2K} />
+              </div>
+              
+              <div className="flex flex-row flex-wrap gap-2.5 items-start">
+                {settings.questions.map((q, idx) => {
+                  const answerObj = (dayDiary.answers || []).find(a => a.questionId === q.id)
+                  const answerText = answerObj ? answerObj.answer : ''
+                  return (
+                    <QuestionItem 
+                      key={q.id} 
+                      q={q} 
+                      initialAnswer={answerText} 
+                      saveAnswer={(val) => saveDayDiaryAnswer(dateKey, q.id, q.text, val)} 
+                      deleteAnswer={() => deleteDayDiaryAnswer(dateKey, q.id)}
+                      index={idx}
+                      dateSeed={dateKey}
+                      isY2K={isY2K}
+                    />
+                  )
+                })}
+                
+                {/* Display snapshot answers that are no longer in settings.questions */}
+                {(dayDiary.answers || []).filter(a => !settings.questions.some(q => q.id === a.questionId)).map((a, idx) => (
+                  <div key={a.questionId} className="group relative transition-all duration-300 hover:scale-105 z-0 hover:z-10 p-4 w-36 min-h-[9rem] h-fit flex flex-col shrink-0" style={getPostItStyle(a.questionId, idx + settings.questions.length, dateKey, isY2K)}>
+                    <CornerDoodle idString={a.questionId} isY2K={isY2K} />
+                    <div className="flex justify-between items-start mb-1 gap-2">
+                      <div>
+                        <div className="text-[11px] font-bold font-diary opacity-70" style={{ color: 'inherit' }}>{a.question} (과거 질문)</div>
+                      </div>
+                      <button 
+                        onClick={() => deleteDayDiaryAnswer(dateKey, a.questionId)}
+                        className="w-5 h-5 flex items-center justify-center rounded hover:opacity-50 opacity-0 group-hover:opacity-100 transition-opacity text-[10px] shrink-0"
+                        style={{ color: 'inherit' }}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                    <div className="flex-1 text-[15px] whitespace-pre-wrap font-diary leading-relaxed" style={{ color: 'inherit' }}>{a.answer}</div>
                   </div>
                 ))}
               </div>
-            </>
-          )}
-        </section>
 
-        {/* 2. Questions Snapshot */}
-        <section className="p-2 flex flex-col gap-4">
-          <div className="relative inline-block w-max">
-            <h2 className="text-[11px] font-bold text-[#717A8C] tracking-widest uppercase">Q&A</h2>
-            <UnderlineDoodle />
-          </div>
-          
-          <div className="flex flex-row flex-wrap gap-2.5 items-start">
-            {settings.questions.map((q, idx) => {
-              const answerObj = (dayDiary.answers || []).find(a => a.questionId === q.id)
-              const answerText = answerObj ? answerObj.answer : ''
-              return (
-                <QuestionItem 
-                  key={q.id} 
-                  q={q} 
-                  initialAnswer={answerText} 
-                  saveAnswer={(val) => saveDayDiaryAnswer(dateKey, q.id, q.text, val)} 
-                  deleteAnswer={() => deleteDayDiaryAnswer(dateKey, q.id)}
-                  index={idx}
-                  dateSeed={dateKey}
+              {settings.questions.length === 0 && (dayDiary.answers || []).length === 0 && (
+                <div className="text-xs text-[#A0AABF]">설정에서 다이어리 질문을 추가해보세요.</div>
+              )}
+            </section>
+
+            {/* 3. Free Memos */}
+            <section className="p-2 flex flex-col gap-4 mb-8">
+              <div className="relative inline-block w-max ml-6">
+                <ArrowDoodle isY2K={isY2K} />
+                <h2 className="text-[11px] font-bold text-[#717A8C] tracking-widest uppercase">MEMO</h2>
+              </div>
+              
+              <form onSubmit={handleAddMemo} className="flex gap-2">
+                <input
+                  type="text"
+                  value={newMemo}
+                  onChange={(e) => setNewMemo(e.target.value)}
+                  placeholder="자유롭게 기록을 남겨보세요..."
+                  className="flex-1 bg-white/30 border border-white/20 rounded-xl px-3 py-2.5 text-[13px] outline-none text-[#1C1C1E] placeholder:text-[#A0AABF] focus:border-white/50 focus:bg-white/40 transition-all font-diary"
+                  spellCheck={false}
                 />
-              )
-            })}
-            
-            {/* Display snapshot answers that are no longer in settings.questions */}
-            {(dayDiary.answers || []).filter(a => !settings.questions.some(q => q.id === a.questionId)).map((a, idx) => (
-              <div key={a.questionId} className="group relative transition-all duration-300 hover:scale-105 z-0 hover:z-10 p-4 w-36 min-h-[9rem] h-fit flex flex-col shrink-0" style={getPostItStyle(a.questionId, idx + settings.questions.length, dateKey)}>
-                <CornerDoodle idString={a.questionId} />
-                <div className="flex justify-between items-start mb-1 gap-2">
-                  <div>
-                    <div className="text-[11px] font-bold font-diary opacity-70" style={{ color: 'inherit' }}>{a.question} (과거 질문)</div>
+                <button type="submit" disabled={!newMemo.trim()} className="px-3 bg-white/40 border border-white/20 text-[#8B7CF8] rounded-xl font-bold text-xs hover:bg-white/60 disabled:opacity-30 transition-all">
+                  추가
+                </button>
+              </form>
+
+              <div className="flex flex-row flex-wrap gap-2.5 items-start mt-2">
+                {[...(dayDiary.memos || [])].reverse().map((memo: DiaryMemo, idx: number) => (
+                  <div key={memo.id} className="group relative transition-all duration-300 hover:scale-105 z-0 hover:z-10 p-5 w-36 min-h-[9rem] h-fit flex flex-col justify-between shrink-0" style={getPostItStyle(memo.id, idx + (dayDiary.answers || []).length, dateKey, isY2K)}>
+                    <CornerDoodle idString={memo.id} isY2K={isY2K} />
+                    <div className="flex justify-between items-start mb-2 gap-2">
+                      <div className="flex-1 text-[14px] whitespace-pre-wrap leading-relaxed font-diary" style={{ color: 'inherit' }}>{memo.text}</div>
+                      <button 
+                        onClick={() => deleteDayDiaryMemo(dateKey, memo.id)}
+                        className="w-5 h-5 flex items-center justify-center rounded hover:opacity-50 opacity-0 group-hover:opacity-100 transition-opacity text-[10px] shrink-0"
+                        style={{ color: 'inherit' }}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                    {memo.createdAt && (
+                      <div className="text-[9px] opacity-40 font-diary mt-2 text-right" style={{ color: 'inherit' }}>
+                        {new Intl.DateTimeFormat('ko-KR', { hour: 'numeric', minute: 'numeric', hour12: true }).format(new Date(memo.createdAt))}
+                      </div>
+                    )}
                   </div>
-                  <button 
-                    onClick={() => deleteDayDiaryAnswer(dateKey, a.questionId)}
-                    className="w-5 h-5 flex items-center justify-center rounded hover:opacity-50 opacity-0 group-hover:opacity-100 transition-opacity text-[10px] shrink-0"
-                    style={{ color: 'inherit' }}
-                  >
-                    ✕
-                  </button>
-                </div>
-                <div className="flex-1 text-[15px] whitespace-pre-wrap font-diary leading-relaxed" style={{ color: 'inherit' }}>{a.answer}</div>
+                ))}
               </div>
-            ))}
+            </section>
           </div>
-
-          {settings.questions.length === 0 && (dayDiary.answers || []).length === 0 && (
-            <div className="text-xs text-[#A0AABF]">설정에서 다이어리 질문을 추가해보세요.</div>
-          )}
-        </section>
-
-        {/* 3. Free Memos */}
-        <section className="p-2 flex flex-col gap-4 mb-8">
-          <div className="relative inline-block w-max ml-6">
-            <ArrowDoodle />
-            <h2 className="text-[11px] font-bold text-[#717A8C] tracking-widest uppercase">MEMO</h2>
-          </div>
-          
-          <form onSubmit={handleAddMemo} className="flex gap-2">
-            <input
-              type="text"
-              value={newMemo}
-              onChange={(e) => setNewMemo(e.target.value)}
-              placeholder="자유롭게 기록을 남겨보세요..."
-              className="flex-1 bg-white/30 border border-white/20 rounded-xl px-3 py-2.5 text-[13px] outline-none text-[#1C1C1E] placeholder:text-[#A0AABF] focus:border-white/50 focus:bg-white/40 transition-all font-diary"
-              spellCheck={false}
-            />
-            <button type="submit" disabled={!newMemo.trim()} className="px-3 bg-white/40 border border-white/20 text-[#8B7CF8] rounded-xl font-bold text-xs hover:bg-white/60 disabled:opacity-30 transition-all">
-              추가
-            </button>
-          </form>
-
-          <div className="flex flex-row flex-wrap gap-2.5 items-start mt-2">
-            {[...(dayDiary.memos || [])].reverse().map((memo: DiaryMemo, idx: number) => (
-              <div key={memo.id} className="group relative transition-all duration-300 hover:scale-105 z-0 hover:z-10 p-5 w-36 min-h-[9rem] h-fit flex flex-col justify-between shrink-0" style={getPostItStyle(memo.id, idx + (dayDiary.answers || []).length, dateKey)}>
-                <CornerDoodle idString={memo.id} />
-                <div className="flex justify-between items-start mb-2 gap-2">
-                  <div className="flex-1 text-[14px] whitespace-pre-wrap leading-relaxed font-diary" style={{ color: 'inherit' }}>{memo.text}</div>
-                  <button 
-                    onClick={() => deleteDayDiaryMemo(dateKey, memo.id)}
-                    className="w-5 h-5 flex items-center justify-center rounded hover:opacity-50 opacity-0 group-hover:opacity-100 transition-opacity text-[10px] shrink-0"
-                    style={{ color: 'inherit' }}
-                  >
-                    ✕
-                  </button>
-                </div>
-                {memo.createdAt && (
-                  <div className="text-[9px] opacity-40 font-diary mt-2 text-right" style={{ color: 'inherit' }}>
-                    {new Intl.DateTimeFormat('ko-KR', { hour: 'numeric', minute: 'numeric', hour12: true }).format(new Date(memo.createdAt))}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </section>
+        )}
       </div>
+
     </aside>
   )
 }
