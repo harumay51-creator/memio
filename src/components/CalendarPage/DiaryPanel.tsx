@@ -42,13 +42,12 @@ const EMOJI_CATEGORIES = [
 ]
 
 const POST_IT_THEMES = [
-  { bg: '#F5D949', text: '#5C4E0B' },
-  { bg: '#F5876B', text: '#5C2012' },
-  { bg: '#5FD68F', text: '#0F4726' },
-  { bg: '#5FC9D8', text: '#0E434A' },
-  { bg: '#F5A8C4', text: '#5E1730' },
-  { bg: '#B8AEE8', text: '#31236E' },
-  { bg: '#F5A25C', text: '#663309' },
+  { bg: '#D4C5F0', text: '#31236E' }, // Lavender
+  { bg: '#B8D9F0', text: '#0A3B5E' }, // Sky Blue
+  { bg: '#F5D0A8', text: '#5C3A1A' }, // Apricot
+  { bg: '#F0B5B0', text: '#5C201C' }, // Coral Pink
+  { bg: '#D4C4A0', text: '#4A422F' }, // Khaki/Beige
+  { bg: '#DCE8A0', text: '#3F4A1E' }, // Lime
 ]
 
 const getPostItStyle = (idString: string) => {
