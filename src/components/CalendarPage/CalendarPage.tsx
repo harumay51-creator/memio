@@ -4,6 +4,7 @@ import { useDiaryStore } from '../../store/DiaryStore'
 import { useMergedHolidays } from '../../hooks/useMergedHolidays'
 import Emoji from '../common/Emoji'
 import DiaryPanel from './DiaryPanel'
+import DiarySearchPanel from './DiarySearchPanel'
 import auroraBg from '../../assets/aurora.jpg'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -63,6 +64,7 @@ const CalendarPage: React.FC = () => {
   const [selDay, setSelDay] = useState<Date>(today)
   const [isDiaryMode, setIsDiaryMode] = useState(false)
   const [diaryPanelMode, setDiaryPanelMode] = useState<'day' | 'month'>('day')
+  const [isDiarySearchOpen, setIsDiarySearchOpen] = useState(false)
   
   const [inlineDate, setInlineDate] = useState<Date | null>(null)
   const [inlineText, setInlineText] = useState('')
@@ -280,6 +282,15 @@ const CalendarPage: React.FC = () => {
             >
               {isDiaryMode ? '★' : '☆'}
             </button>
+            {isDiaryMode && (
+              <button 
+                onClick={() => setIsDiarySearchOpen(!isDiarySearchOpen)} 
+                className={`w-8 h-8 flex items-center justify-center rounded-lg border shadow-sm transition-all text-sm ${isDiarySearchOpen ? 'bg-[#F7F6FF] border-[#8B7CF8] text-[#8B7CF8]' : 'bg-white border-[#E5E5EA] hover:bg-[#F9FAFB] text-[#717A8C]'}`}
+                title="다이어리 검색"
+              >
+                🔍
+              </button>
+            )}
           </div>
 
           {showPicker && (
@@ -426,12 +437,25 @@ const CalendarPage: React.FC = () => {
 
       {/* ── Right: Unified Panel ────────────────────────────────────────────── */}
       {isDiaryMode ? (
-        <DiaryPanel 
-          mode={diaryPanelMode} 
-          selDay={selDay} 
-          year={diaryPanelMode === 'month' ? pickerYear : year} 
-          month={diaryPanelMode === 'month' ? month : selDay.getMonth()} 
-        />
+        isDiarySearchOpen ? (
+          <DiarySearchPanel 
+            onResultClick={(dateKey) => {
+              const d = new Date(dateKey)
+              setView(new Date(d.getFullYear(), d.getMonth(), 1))
+              setSelDay(d)
+              setDiaryPanelMode('day')
+              setIsDiarySearchOpen(false)
+            }}
+            onClose={() => setIsDiarySearchOpen(false)}
+          />
+        ) : (
+          <DiaryPanel 
+            mode={diaryPanelMode} 
+            selDay={selDay} 
+            year={diaryPanelMode === 'month' ? pickerYear : year} 
+            month={diaryPanelMode === 'month' ? month : selDay.getMonth()} 
+          />
+        )
       ) : (
         <aside className="relative w-[360px] flex flex-col h-full bg-[#F9FAFB] border-l border-[#E5E5EA] shrink-0 overflow-hidden px-6 py-8">
           
