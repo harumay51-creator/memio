@@ -36,6 +36,8 @@ interface DiaryStoreValue {
   monthlyDiaries: Record<string, MonthlyDiary>
   settings: DiarySettings
   isLoading: boolean
+  isDiaryMode: boolean
+  setIsDiaryMode: (val: boolean) => void
   
   initialize: () => void
   addQuestion: (text: string) => Promise<void>
@@ -61,8 +63,9 @@ export const useDiaryStore = () => {
 export const DiaryStoreProvider: React.FC<{ children: React.ReactNode, uid: string }> = ({ children, uid }) => {
   const [diaries, setDiaries] = useState<Record<string, DayDiary>>({})
   const [monthlyDiaries, setMonthlyDiaries] = useState<Record<string, MonthlyDiary>>({})
-  const [settings, setSettings] = useState<DiarySettings>({ questions: [] })
+  const [settings, setSettings] = useState<DiarySettings>({ questions: [], theme: 'default' })
   const [isLoading, setIsLoading] = useState(true)
+  const [isDiaryMode, setIsDiaryMode] = useState(false)
 
   useEffect(() => {
     if (!uid) return
@@ -211,7 +214,7 @@ export const DiaryStoreProvider: React.FC<{ children: React.ReactNode, uid: stri
 
   return (
     <DiaryContext.Provider value={{
-      diaries, monthlyDiaries, settings, isLoading,
+      diaries, monthlyDiaries, settings, isLoading, isDiaryMode, setIsDiaryMode,
         initialize: () => {}, addQuestion, deleteQuestion, updateQuestion, updateTheme,
         saveDayDiaryEmojis, saveDayDiaryAnswer, deleteDayDiaryAnswer, addDayDiaryMemo, deleteDayDiaryMemo, saveMonthlyDiary
     }}>

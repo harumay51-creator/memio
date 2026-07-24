@@ -7,30 +7,33 @@ interface SidebarProps {
   activePage: PageId
   onNavigate: (page: PageId, itemId?: string) => void
   onLogout: () => void
+  isAuroraBg?: boolean
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ activePage, onNavigate, onLogout }) => {
+const Sidebar: React.FC<SidebarProps> = ({ activePage, onNavigate, onLogout, isAuroraBg = false }) => {
   const inputItems   = NAV_ITEMS.filter(i => i.group === 'input')
   const exploreItems = NAV_ITEMS.filter(i => i.group === 'explore')
   const utilityItems = NAV_ITEMS.filter(i => i.group === 'utility')
 
   return (
-    <aside className="
+    <aside className={`
       w-56 shrink-0 h-full
-      bg-[#FCFCFF] border-r border-[#EEF1F6]
       flex flex-col py-5 px-3 gap-1
-      select-none
-    ">
+      select-none relative z-50
+      ${isAuroraBg 
+        ? 'bg-[#1C1C1E]/10 backdrop-blur-[20px] border-r border-white/20' 
+        : 'bg-[#FCFCFF] border-r border-[#EEF1F6]'}
+    `}>
       {/* Logo */}
       <div className="flex items-center gap-2.5 px-3 mb-4 mt-1">
         <div className="
           w-7 h-7 rounded-xl bg-[#8B7CF8]
           flex items-center justify-center
-          text-white font-bold text-sm
+          text-white font-bold text-sm shadow-[0_2px_8px_rgba(139,124,248,0.4)]
         ">
           M
         </div>
-        <span className="font-semibold text-[#2D334A] tracking-tight text-[15px]">
+        <span className={`font-semibold tracking-tight text-[15px] ${isAuroraBg ? 'text-white/90' : 'text-[#2D334A]'}`}>
           Memio
         </span>
       </div>
@@ -39,7 +42,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage, onNavigate, onLogout }) =
         {/* Input nav */}
         <nav className="flex flex-col gap-0.5">
           {inputItems.map(item => (
-            <NavItemButton key={item.id} item={item} active={activePage === item.id} onClick={() => onNavigate(item.id)} />
+            <NavItemButton key={item.id} item={item} active={activePage === item.id} onClick={() => onNavigate(item.id)} isAuroraBg={isAuroraBg} />
           ))}
         </nav>
 
@@ -48,7 +51,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage, onNavigate, onLogout }) =
         {/* Explore nav */}
         <nav className="flex flex-col gap-0.5">
           {exploreItems.map(item => (
-            <NavItemButton key={item.id} item={item} active={activePage === item.id} onClick={() => onNavigate(item.id)} />
+            <NavItemButton key={item.id} item={item} active={activePage === item.id} onClick={() => onNavigate(item.id)} isAuroraBg={isAuroraBg} />
           ))}
         </nav>
 
@@ -57,11 +60,15 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage, onNavigate, onLogout }) =
         {/* Utility nav */}
         <nav className="flex flex-col gap-0.5 mb-2">
           {utilityItems.map(item => (
-            <NavItemButton key={item.id} item={item} active={activePage === item.id} onClick={() => onNavigate(item.id)} />
+            <NavItemButton key={item.id} item={item} active={activePage === item.id} onClick={() => onNavigate(item.id)} isAuroraBg={isAuroraBg} />
           ))}
           <button 
             onClick={onLogout}
-            className="flex items-center gap-2.5 px-3 py-2 mt-1 rounded-xl text-sm font-medium text-red-400 hover:bg-red-50 hover:text-red-500 transition-colors"
+            className={`flex items-center gap-2.5 px-3 py-2 mt-1 rounded-xl text-sm font-medium transition-colors ${
+              isAuroraBg 
+                ? 'text-red-300/80 hover:bg-white/10 hover:text-red-300' 
+                : 'text-red-400 hover:bg-red-50 hover:text-red-500'
+            }`}
           >
             <span className="w-5 flex justify-center text-base leading-none">
               <LogOut size={16} strokeWidth={1.5} />
@@ -74,18 +81,20 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage, onNavigate, onLogout }) =
       {/* User avatar placeholder */}
       <button 
         onClick={() => onNavigate('journal')}
-        className="flex items-center gap-2.5 px-3 py-2 mt-1 rounded-xl hover:bg-yuri-100 transition-colors text-left cursor-pointer"
+        className={`flex items-center gap-2.5 px-3 py-2 mt-1 rounded-xl transition-colors text-left cursor-pointer ${
+          isAuroraBg ? 'hover:bg-white/10' : 'hover:bg-yuri-100'
+        }`}
       >
         <div className="
-          w-8 h-8 rounded-full bg-[#8B7CF8]
+          w-8 h-8 rounded-full bg-[#8B7CF8] shadow-[0_2px_8px_rgba(139,124,248,0.4)]
           flex items-center justify-center text-white text-xs font-semibold
           shrink-0
         ">
           유
         </div>
         <div className="min-w-0">
-          <p className="text-xs font-semibold text-[#2D334A] truncate">Yuri</p>
-          <p className="text-[10px] text-[#717A8C] truncate">개인 기록 (PIN)</p>
+          <p className={`text-xs font-semibold truncate ${isAuroraBg ? 'text-white/90' : 'text-[#2D334A]'}`}>Yuri</p>
+          <p className={`text-[10px] truncate ${isAuroraBg ? 'text-white/50' : 'text-[#717A8C]'}`}>개인 기록 (PIN)</p>
         </div>
       </button>
     </aside>
@@ -97,10 +106,11 @@ interface NavItemButtonProps {
   item: NavItem
   active: boolean
   onClick: () => void
+  isAuroraBg?: boolean
 }
 
-const NavItemButton: React.FC<NavItemButtonProps> = ({ item, active, onClick }) => {
-  const IconComponent = (({
+const NavItemButton: React.FC<NavItemButtonProps> = ({ item, active, onClick, isAuroraBg }) => {
+  const Icon = (({
     'calendar': Calendar,
     'tasks': CheckSquare,
     'notes': FileText,
@@ -109,18 +119,31 @@ const NavItemButton: React.FC<NavItemButtonProps> = ({ item, active, onClick }) 
     'search': Search,
     'settings': Settings
   } as Record<string, any>)[item.id]) || Home
+  
+  const baseClasses = "flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-all duration-200 group"
+  
+  let activeClasses = ""
+  let inactiveClasses = ""
+  
+  if (isAuroraBg) {
+    activeClasses = "bg-white/20 text-white font-bold shadow-[0_4px_16px_rgba(0,0,0,0.1)]"
+    inactiveClasses = "text-white/60 hover:bg-white/10 hover:text-white/90 font-medium"
+  } else {
+    activeClasses = "bg-[#8B7CF8] text-white font-bold shadow-[0_4px_12px_rgba(139,124,248,0.25)]"
+    inactiveClasses = "text-[#717A8C] hover:bg-[#F7F6FF] hover:text-[#2D334A] font-medium"
+  }
 
   return (
     <button
-      id={`nav-${item.id}`}
       onClick={onClick}
-      className={`nav-item w-full text-left ${active ? 'active' : ''}`}
-      aria-current={active ? 'page' : undefined}
+      className={`${baseClasses} ${active ? activeClasses : inactiveClasses}`}
     >
-      <span className="w-5 flex justify-center text-base leading-none">
-        <IconComponent size={18} strokeWidth={1.5} />
+      <span className={`w-5 flex justify-center text-base leading-none transition-transform ${active ? 'scale-110' : 'group-hover:scale-110'}`}>
+        <Icon size={18} strokeWidth={active ? 2.5 : 2} />
       </span>
-      <span>{item.label}</span>
+      <span className="text-sm tracking-wide">
+        {item.label}
+      </span>
     </button>
   )
 }

@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import type { PageId } from './types'
 import { useAppStore, AppStoreProvider } from './store/AppStore'
-import { DiaryStoreProvider } from './store/DiaryStore'
-import Sidebar      from './components/Sidebar'
+import { useDiaryStore, DiaryStoreProvider } from './store/DiaryStore'
+import Sidebar      from './components/Sidebar/Sidebar'
 import QuickCapture from './components/QuickCapture'
 import Router       from './router/Router'
+import auroraBg from './assets/aurora.jpg'
 import AuthScreen   from './components/AuthScreen'
 import MobileApp    from './components/Mobile/MobileApp'
 import { useIsMobile } from './hooks/useIsMobile'
@@ -15,6 +16,7 @@ import { ToastProvider } from './components/common/Toast'
 // ── Inner app (needs to be inside AppStoreProvider to access useAppStore) ─────
 const AppInner: React.FC = () => {
   const { isLoading, loadError } = useAppStore()
+  const { isDiaryMode, settings } = useDiaryStore()
   const [activePage,    setActivePage]    = useState<PageId>('calendar')
   const [activeItemId,  setActiveItemId]  = useState<string | null>(null)
   
@@ -92,15 +94,25 @@ service cloud.firestore {
     )
   }
 
+  const isAurora = settings.theme === 'aurora'
+  const showAuroraBg = isAurora && isDiaryMode && activePage === 'calendar'
+
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-yuri-50 font-sans text-yuri-900 selection:bg-accent/20">
+    <div className={`flex h-screen w-screen relative overflow-hidden ${showAuroraBg ? 'text-[#1C1C1E]' : 'bg-yuri-50 text-yuri-900'}`}>
+      {showAuroraBg && (
+        <>
+          <div className="absolute inset-0 z-0 bg-cover bg-center" style={{ backgroundImage: `url(${auroraBg})` }} />
+          <div className="absolute inset-0 z-0 bg-white/20" />
+        </>
+      )}
       <Sidebar
         activePage={activePage}
         onNavigate={navigate}
         onLogout={handleLogout}
+        isAuroraBg={showAuroraBg}
       />
       
-      <main className="flex-1 flex flex-col relative h-full min-w-0">
+      <main className="flex-1 flex flex-col relative h-full min-w-0 z-10 bg-transparent">
         <div className="flex-1 overflow-y-auto w-full relative">
           <Router page={activePage} activeItemId={activeItemId} />
         </div>

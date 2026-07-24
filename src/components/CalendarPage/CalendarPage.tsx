@@ -5,7 +5,6 @@ import { useMergedHolidays } from '../../hooks/useMergedHolidays'
 import Emoji from '../common/Emoji'
 import DiaryPanel from './DiaryPanel'
 import DiarySearchPanel from './DiarySearchPanel'
-import auroraBg from '../../assets/aurora.jpg'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'] as const
@@ -57,12 +56,11 @@ const CalendarPage: React.FC = () => {
     navDate, setNavDate
   } = useAppStore()
   
-  const { diaries } = useDiaryStore()
+  const { diaries, settings, isDiaryMode, setIsDiaryMode } = useDiaryStore()
 
   const today = useMemo(() => new Date(), [])
   const [view, setView] = useState(() => new Date(today.getFullYear(), today.getMonth(), 1))
   const [selDay, setSelDay] = useState<Date>(today)
-  const [isDiaryMode, setIsDiaryMode] = useState(false)
   const [diaryPanelMode, setDiaryPanelMode] = useState<'day' | 'month'>('day')
   const [isDiarySearchOpen, setIsDiarySearchOpen] = useState(false)
   
@@ -237,17 +235,10 @@ const CalendarPage: React.FC = () => {
 
   const isSelDayToday = sameDay(selDay, today)
   const selDayFormatted = `${selDay.getMonth() + 1}월 ${selDay.getDate()}일 (${WEEKDAYS[selDay.getDay()]})`
-  const { settings } = useDiaryStore()
   const isAurora = settings.theme === 'aurora'
 
   return (
-    <div className={`flex h-full w-full relative overflow-hidden ${isAurora && isDiaryMode ? '' : 'bg-[#F5F5F7]'}`}>
-      {isAurora && isDiaryMode && (
-        <>
-          <div className="absolute inset-0 z-0 bg-cover bg-center" style={{ backgroundImage: `url(${auroraBg})` }} />
-          <div className="absolute inset-0 z-0 bg-white/20" />
-        </>
-      )}
+    <div className="flex h-full w-full relative overflow-hidden bg-transparent">
       
       <div className="relative z-10 flex h-full w-full">
         {/* ── Left: Main Calendar ────────────────────────────────────────────── */}
