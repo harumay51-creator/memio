@@ -358,18 +358,18 @@ const CalendarPage: React.FC = () => {
                     setInlineText('')
                   }
                 }}
-                className={`p-3 flex flex-col cursor-pointer transition-all duration-200 min-h-0 overflow-hidden ${isDiaryMode ? 'rounded-[20px] border border-[#D4C5F0]/50' : 'rounded-[14px]'} ${
+                className={`p-3 flex flex-col cursor-pointer transition-all duration-200 min-h-0 overflow-hidden ${isDiaryMode ? 'rounded-[20px] border border-[#D8D4F0]/50' : 'rounded-[14px]'} ${
                   isAurora && isDiaryMode
                     ? isSelected
                       ? 'bg-white/40 border-white/40 shadow-[0_4px_16px_rgba(31,38,135,0.07)]'
                       : hasDiaryRecord
-                        ? 'bg-[#D4C5F0]/30 hover:bg-[#D4C5F0]/40'
+                        ? 'bg-[#D8D4F0]/30 hover:bg-[#D8D4F0]/40'
                         : 'bg-white/10 hover:bg-white/30 border-white/20'
                     : isDiaryMode
                       ? isSelected
-                        ? 'bg-[#D4C5F0]/40 shadow-[0_1px_4px_rgba(0,0,0,0.08)]'
+                        ? 'bg-[#D8D4F0]/40 shadow-[0_1px_4px_rgba(0,0,0,0.08)]'
                         : hasDiaryRecord
-                          ? 'bg-[#D4C5F0]/20 hover:bg-[#D4C5F0]/30 shadow-sm'
+                          ? 'bg-[#D8D4F0]/20 hover:bg-[#D8D4F0]/30 shadow-sm'
                           : 'bg-[#FFFFFF] hover:bg-[#FCFCFF] shadow-[0_1px_4px_rgba(0,0,0,0.05)]'
                       : isSelected 
                         ? 'bg-[#F7F6FF] shadow-[0_1px_4px_rgba(0,0,0,0.08)]' 
