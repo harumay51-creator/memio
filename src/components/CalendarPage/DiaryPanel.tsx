@@ -4,25 +4,25 @@ import { RetroWindow } from '../common/Y2KTheme'
 import Emoji from '../common/Emoji'
 
 const StarDoodle = ({ isY2K }: { isY2K?: boolean }) => (
-  <svg style={{ filter: isY2K ? 'drop-shadow(2px 2px 0px #1C1C1E)' : undefined }} className={`absolute -top-3 -right-8 w-8 h-8 ${isY2K ? 'text-white' : 'text-[#FFD54F]'} opacity-80 rotate-12 pointer-events-none`} viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+  <svg style={{ filter: isY2K ? 'drop-shadow(0 0 6px currentColor)' : undefined }} className={`absolute -top-3 -right-8 w-8 h-8 ${isY2K ? 'text-[#ffade4]' : 'text-[#FFD54F]'} opacity-80 rotate-12 pointer-events-none`} viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
     <path d="M 50 10 Q 55 35 70 45 Q 90 50 70 60 Q 55 70 50 90 Q 45 70 25 60 Q 10 50 30 45 Q 45 35 50 10" fill="currentColor" />
   </svg>
 )
 
 const UnderlineDoodle = ({ isY2K }: { isY2K?: boolean }) => (
-  <svg style={{ filter: isY2K ? 'drop-shadow(2px 2px 0px #1C1C1E)' : undefined }} className={`absolute -bottom-2 left-0 w-12 h-2 ${isY2K ? 'text-white' : 'text-[#81C784]'} opacity-80 pointer-events-none`} viewBox="0 0 100 20" preserveAspectRatio="none" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round">
+  <svg style={{ filter: isY2K ? 'drop-shadow(0 0 6px currentColor)' : undefined }} className={`absolute -bottom-2 left-0 w-12 h-2 ${isY2K ? 'text-[#63dbb6]' : 'text-[#81C784]'} opacity-80 pointer-events-none`} viewBox="0 0 100 20" preserveAspectRatio="none" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round">
     <path d="M 5,10 Q 30,15 50,8 T 95,12" />
   </svg>
 )
 
 const CloudDoodle = ({ isY2K }: { isY2K?: boolean }) => (
-  <svg style={{ filter: isY2K ? 'drop-shadow(2px 2px 0px #1C1C1E)' : undefined }} className={`absolute -top-4 right-10 w-12 h-12 ${isY2K ? 'text-white' : 'text-[#4FC3F7]'} opacity-60 pointer-events-none`} viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+  <svg style={{ filter: isY2K ? 'drop-shadow(0 0 6px currentColor)' : undefined }} className={`absolute -top-4 right-10 w-12 h-12 ${isY2K ? 'text-[#d5baff]' : 'text-[#4FC3F7]'} opacity-60 pointer-events-none`} viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
     <path d="M 30,60 Q 20,60 20,50 Q 20,40 30,40 Q 35,25 50,25 Q 65,25 70,40 Q 85,40 85,55 Q 85,70 70,70 L 35,70" />
   </svg>
 )
 
 const ArrowDoodle = ({ isY2K }: { isY2K?: boolean }) => (
-  <svg style={{ filter: isY2K ? 'drop-shadow(2px 2px 0px #1C1C1E)' : undefined }} className={`absolute top-1 -left-6 w-5 h-5 ${isY2K ? 'text-white' : 'text-[#F06292]'} opacity-70 -rotate-12 pointer-events-none`} viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round">
+  <svg style={{ filter: isY2K ? 'drop-shadow(0 0 6px currentColor)' : undefined }} className={`absolute top-1 -left-6 w-5 h-5 ${isY2K ? 'text-[#ffade4]' : 'text-[#F06292]'} opacity-70 -rotate-12 pointer-events-none`} viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round">
     <path d="M 20,80 Q 50,50 80,20 M 50,20 L 80,20 L 80,50" />
   </svg>
 )
@@ -83,8 +83,8 @@ const CornerDoodle = ({ idString, isY2K }: { idString: string, isY2K?: boolean }
   const positionClass = hash % 2 === 0 ? "-top-3 -right-3 rotate-12" : "-bottom-3 -left-3 -rotate-12";
   const sizeClass = "w-8 h-8";
   
-  const style = isY2K ? { filter: 'drop-shadow(2px 2px 0px #1C1C1E)' } : undefined;
-  const cls = `${positionClass} ${sizeClass} z-20 ${isY2K ? 'text-white scale-110' : ''}`;
+  const style = isY2K ? { filter: 'drop-shadow(0 0 6px currentColor)' } : undefined;
+  const cls = `${positionClass} ${sizeClass} z-20 ${isY2K ? 'text-white scale-110 opacity-70' : ''}`;
   
   let Doodle;
   switch(doodleType) {
@@ -124,12 +124,12 @@ const POST_IT_THEMES = [
 ]
 
 const Y2K_POST_IT_THEMES = [
-  { bg: '#FF5EED', text: '#1C1C1E' }, // Bright Pink
-  { bg: '#00F0FF', text: '#1C1C1E' }, // Bright Cyan
-  { bg: '#ADFF2F', text: '#1C1C1E' }, // Green Yellow
-  { bg: '#FF9500', text: '#1C1C1E' }, // Neon Orange
-  { bg: '#B05AFF', text: '#FFFFFF' }, // Bright Purple
-  { bg: '#FFFC00', text: '#1C1C1E' }, // Cyber Yellow
+  { bg: '#b588ff', text: '#270057', border: '#d5baff' }, // Primary Container (Purple)
+  { bg: '#d486bc', text: '#3a0031', border: '#ffade4' }, // Tertiary Container (Pink)
+  { bg: '#19a382', text: '#003024', border: '#63dbb6' }, // Secondary Container (Mint)
+  { bg: '#7245b8', text: '#ffffff', border: '#b588ff' }, // Inverse Primary (Deep Purple)
+  { bg: '#63dbb6', text: '#00382a', border: '#81f8d1' }, // Secondary (Bright Mint)
+  { bg: '#ffade4', text: '#541847', border: '#ffd7ef' }, // Tertiary (Soft Pink)
 ]
 
 const getPostItStyle = (idString: string, index?: number, dateSeed?: string, isY2K?: boolean) => {
@@ -156,11 +156,13 @@ const getPostItStyle = (idString: string, index?: number, dateSeed?: string, isY
       backgroundColor: theme.bg,
       color: theme.text,
       transform: `rotate(${rotation}deg)`,
-      border: '2px solid #1C1C1E',
-      boxShadow: '3px 3px 0px 0px rgba(28,28,30,1)',
-      borderRadius: '4px'
+      borderTop: `4px solid ${'border' in theme ? theme.border : theme.bg}`,
+      boxShadow: '4px 4px 0 rgba(0,0,0,0.4), inset 0 0 10px rgba(255,255,255,0.1)',
+      borderRadius: '2px',
+      transition: 'transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
     };
   }
+
   
   return {
     backgroundColor: theme.bg,

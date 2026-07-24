@@ -5,7 +5,7 @@ import { useMergedHolidays } from '../../hooks/useMergedHolidays'
 import Emoji from '../common/Emoji'
 import DiaryPanel from './DiaryPanel'
 import DiarySearchPanel from './DiarySearchPanel'
-import { Y2KBackground } from '../common/Y2KTheme'
+import { Y2KBackground, RetroWindow } from '../common/Y2KTheme'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'] as const
@@ -245,16 +245,16 @@ const CalendarPage: React.FC = () => {
       
       <div className="relative z-10 flex h-full w-full">
         {/* ── Left: Main Calendar ────────────────────────────────────────────── */}
-        <main className={`flex flex-col p-6 m-4 mr-2 relative overflow-hidden ${
-          isDiaryMode && isY2K ? 'bg-[#F9FAFB] border-t-2 border-l-2 border-t-white border-l-white border-b-2 border-r-2 border-b-[#404040] border-r-[#404040] shadow-[4px_4px_0_0_rgba(0,0,0,0.5)]' :
-          isAurora && isDiaryMode ? 'glass-card-refined' : 'bg-white rounded-2xl border border-[#E5E5EA] shadow-sm'
-        } ${isDiaryMode ? 'flex-[4]' : 'flex-1'}`}>
-          {isDiaryMode && isY2K && (
-             <div className="absolute top-0 left-0 right-0 h-5 bg-[#000080] text-white px-2 flex items-center font-bold text-[11px] select-none" style={{ fontFamily: '"MS Sans Serif", "Tahoma", sans-serif' }}>
-               Calendar.exe
-             </div>
-          )}
-          <header className={`relative flex items-center justify-between mb-6 z-10 shrink-0 ${isDiaryMode && isY2K ? 'mt-5' : ''}`}>
+        {(() => {
+          const Wrapper = isDiaryMode && isY2K ? RetroWindow : 'div';
+          const wrapperProps = isDiaryMode && isY2K 
+            ? { title: 'Calendar.exe', className: 'flex-[4] m-4 mr-2' } 
+            : { className: `flex flex-col m-4 mr-2 relative overflow-hidden ${isAurora && isDiaryMode ? 'glass-card-refined' : 'bg-white rounded-2xl border border-[#E5E5EA] shadow-sm'} ${isDiaryMode ? 'flex-[4]' : 'flex-1'}` };
+          
+          return (
+            <Wrapper {...wrapperProps}>
+              <main className={isDiaryMode && isY2K ? 'flex flex-col p-6 h-full relative overflow-hidden bg-transparent' : 'flex flex-col h-full p-6 relative overflow-hidden'}>
+                <header className="relative flex items-center justify-between mb-6 z-10 shrink-0">
           <div className="flex items-center gap-4">
             <button onClick={prevMonth} className={`w-8 h-8 flex items-center justify-center rounded font-bold transition-all ${isAurora && isDiaryMode ? 'bg-white/30 hover:bg-white/50 text-[#1C1C1E] border border-white/20' : 'hover:bg-[#F7F6FF] text-[#717A8C]'}`}>←</button>
             <button 
@@ -462,10 +462,13 @@ const CalendarPage: React.FC = () => {
                   </div>
                 )}
               </div>
-            )
+              )
           })}
-        </div>
-      </main>
+          </div>
+          </main>
+            </Wrapper>
+          )
+        })()}
 
       {/* ── Right: Unified Panel ────────────────────────────────────────────── */}
       {isDiaryMode ? (
