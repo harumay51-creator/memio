@@ -105,6 +105,14 @@
     @apply bg-white/40 backdrop-blur-xl border border-white/60 shadow-[0_4px_30px_rgba(0,0,0,0.04)] rounded-2xl;
   }
   
+  .glass-card-refined {
+    @apply bg-white/95 backdrop-blur-2xl rounded-2xl;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-top-color: rgba(255, 255, 255, 1);
+    border-left-color: rgba(255, 255, 255, 1);
+    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.08);
+  }
+  
   .scrollbar-hide {
     -ms-overflow-style: none;  /* IE and Edge */
     scrollbar-width: none;  /* Firefox */
