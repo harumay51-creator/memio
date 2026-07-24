@@ -3,35 +3,43 @@ import React from 'react'
 export const Y2KBackground = () => {
   return (
     <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden" style={{
-      background: 'linear-gradient(135deg, #E8D4F0, #D4E4F5, #F5D4E8)',
+      background: 'linear-gradient(135deg, #E8A0D0 0%, #B090D8 50%, #6870C8 100%)',
     }}>
+      {/* Grid */}
+      <div className="absolute inset-0" style={{
+        backgroundImage: `
+          linear-gradient(rgba(255, 255, 255, 0.25) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.25) 1px, transparent 1px)
+        `,
+        backgroundSize: '80px 80px'
+      }} />
+
       <style>{`
-        @keyframes float-emoji {
-            0% { transform: translateY(110vh) rotate(0deg); }
-            100% { transform: translateY(-100px) rotate(360deg); }
+        @keyframes sparkle {
+          0%, 100% { opacity: 0.2; transform: scale(0.8) rotate(0deg); }
+          50% { opacity: 1; transform: scale(1.2) rotate(15deg); text-shadow: 0 0 10px rgba(255,255,255,0.8); }
         }
-        .floating-emoji {
-            position: absolute;
-            pointer-events: none;
-            animation: float-emoji 15s infinite linear;
-            opacity: 0.2;
+        .sparkle-star {
+          position: absolute;
+          color: white;
+          animation: sparkle 3s infinite ease-in-out;
+          pointer-events: none;
+          line-height: 1;
         }
       `}</style>
       
-      {/* Soft Scanlines */}
-      <div className="absolute inset-0 z-10" style={{
-        background: `linear-gradient(to bottom, rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.15) 50%),
-                     linear-gradient(90deg, rgba(255, 0, 0, 0.02), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.02))`,
-        backgroundSize: '100% 4px, 3px 100%'
-      }} />
-
-      {/* Floating Elements */}
+      {/* Sparkling Stars */}
       <div className="absolute inset-0 z-0">
-        <span className="floating-emoji text-4xl" style={{ left: '10%', animationDelay: '0s' }}>✨</span>
-        <span className="floating-emoji text-2xl" style={{ left: '30%', animationDelay: '-5s' }}>⭐</span>
-        <span className="floating-emoji text-5xl" style={{ left: '60%', animationDelay: '-2s' }}>💿</span>
-        <span className="floating-emoji text-3xl" style={{ left: '85%', animationDelay: '-8s' }}>🦋</span>
-        <span className="floating-emoji text-4xl" style={{ left: '45%', animationDelay: '-3s' }}>🎀</span>
+        <span className="sparkle-star text-[24px]" style={{ top: '15%', left: '10%', animationDelay: '0s' }}>✦</span>
+        <span className="sparkle-star text-[12px]" style={{ top: '30%', left: '25%', animationDelay: '1.2s' }}>✦</span>
+        <span className="sparkle-star text-[32px]" style={{ top: '20%', left: '75%', animationDelay: '0.5s' }}>✦</span>
+        <span className="sparkle-star text-[16px]" style={{ top: '65%', left: '15%', animationDelay: '2.1s' }}>✦</span>
+        <span className="sparkle-star text-[40px]" style={{ top: '70%', left: '80%', animationDelay: '0.8s' }}>✦</span>
+        <span className="sparkle-star text-[14px]" style={{ top: '85%', left: '40%', animationDelay: '1.5s' }}>✦</span>
+        <span className="sparkle-star text-[20px]" style={{ top: '45%', left: '55%', animationDelay: '0.3s' }}>✦</span>
+        <span className="sparkle-star text-[28px]" style={{ top: '10%', left: '45%', animationDelay: '1.8s' }}>✦</span>
+        <span className="sparkle-star text-[10px]" style={{ top: '50%', left: '85%', animationDelay: '2.5s' }}>✦</span>
+        <span className="sparkle-star text-[18px]" style={{ top: '80%', left: '60%', animationDelay: '0.9s' }}>✦</span>
       </div>
     </div>
   )

@@ -123,19 +123,10 @@ const POST_IT_THEMES = [
   { bg: '#E8EDC0', text: '#48521A' }, // Cool Lemon
 ]
 
-const Y2K_POST_IT_THEMES = [
-  { bg: '#b588ff', text: '#270057', border: '#d5baff' }, // Primary Container (Purple)
-  { bg: '#d486bc', text: '#3a0031', border: '#ffade4' }, // Tertiary Container (Pink)
-  { bg: '#19a382', text: '#003024', border: '#63dbb6' }, // Secondary Container (Mint)
-  { bg: '#7245b8', text: '#ffffff', border: '#b588ff' }, // Inverse Primary (Deep Purple)
-  { bg: '#63dbb6', text: '#00382a', border: '#81f8d1' }, // Secondary (Bright Mint)
-  { bg: '#ffade4', text: '#541847', border: '#ffd7ef' }, // Tertiary (Soft Pink)
-]
-
 const getPostItStyle = (idString: string, index?: number, dateSeed?: string, isY2K?: boolean) => {
   const hash = getHash(idString);
   let themeIndex = hash;
-  const palette = isY2K ? Y2K_POST_IT_THEMES : POST_IT_THEMES;
+  const palette = POST_IT_THEMES;
   
   if (index !== undefined && dateSeed) {
     let current = getHash(dateSeed) % palette.length;
