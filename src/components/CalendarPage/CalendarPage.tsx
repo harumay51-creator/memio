@@ -530,9 +530,6 @@ const CalendarPage: React.FC = () => {
                   {!isDiaryMode ? (
                     <>
                       {items.slice(0, 2)}
-                      {items.length > 2 && (
-                        <div className="text-[10px] shrink-0 text-gray-600 bg-gray-100 font-bold px-1.5 py-0.5 rounded-full inline-flex items-center justify-center cursor-pointer hover:bg-gray-200 transition-colors mt-0.5 w-fit whitespace-nowrap self-start">+ {items.length - 2}개 더보기</div>
-                      )}
                     </>
                   ) : (
                     <div className="flex flex-nowrap items-center justify-center gap-0.5 h-full pb-2 overflow-hidden">
@@ -542,6 +539,9 @@ const CalendarPage: React.FC = () => {
                     </div>
                   )}
                 </div>
+                {!isDiaryMode && items.length > 2 && (
+                  <div className="text-[10px] shrink-0 text-gray-600 bg-gray-100 font-bold px-1.5 py-0.5 rounded-full inline-flex items-center justify-center cursor-pointer hover:bg-gray-200 transition-colors mt-0.5 w-fit whitespace-nowrap self-start relative z-10">+ {items.length - 2}개 더보기</div>
+                )}
                 {!isDiaryMode && inlineDate && sameDay(inlineDate, date) && (
                   <div className="mt-0.5 shrink-0" onClick={e => e.stopPropagation()}>
                     <input spellCheck={false}
