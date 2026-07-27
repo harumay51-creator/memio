@@ -507,7 +507,7 @@ const CalendarPage: React.FC = () => {
                     <>
                       {items.slice(0, 2)}
                       {items.length > 2 && (
-                        <div className="text-[10px] shrink-0 text-gray-600 bg-gray-100 font-bold px-1.5 py-0.5 rounded-full inline-flex items-center justify-center cursor-pointer hover:bg-gray-200 transition-colors mt-0.5 w-fit">+ {items.length - 2}개 더보기</div>
+                        <div className="text-[10px] shrink-0 text-gray-600 bg-gray-100 font-bold px-1.5 py-0.5 rounded-full inline-flex items-center justify-center cursor-pointer hover:bg-gray-200 transition-colors mt-0.5 w-fit whitespace-nowrap self-start">+ {items.length - 2}개 더보기</div>
                       )}
                     </>
                   ) : (
@@ -687,7 +687,11 @@ const CalendarPage: React.FC = () => {
                     <li 
                       key={e.id} 
                       draggable
-                      onDragStart={(ev) => { ev.dataTransfer.effectAllowed = 'move'; setDraggedEventIndex(index); }}
+                      onDragStart={(ev) => { 
+                        ev.dataTransfer.effectAllowed = 'move'; 
+                        ev.dataTransfer.setData('text/plain', e.id);
+                        setDraggedEventIndex(index); 
+                      }}
                       onDragEnter={(ev) => { ev.preventDefault(); setDragOverEventIndex(index); }}
                       onDragOver={(ev) => { ev.preventDefault(); ev.dataTransfer.dropEffect = 'move'; }}
                       onDragLeave={() => setDragOverEventIndex(null)}
@@ -795,7 +799,11 @@ const CalendarPage: React.FC = () => {
                   <li 
                     key={t.id} 
                     draggable
-                    onDragStart={(ev) => { ev.dataTransfer.effectAllowed = 'move'; setDraggedTaskIndex(index); }}
+                    onDragStart={(ev) => { 
+                      ev.dataTransfer.effectAllowed = 'move'; 
+                      ev.dataTransfer.setData('text/plain', t.id);
+                      setDraggedTaskIndex(index); 
+                    }}
                     onDragEnter={(ev) => { ev.preventDefault(); setDragOverTaskIndex(index); }}
                     onDragOver={(ev) => { ev.preventDefault(); ev.dataTransfer.dropEffect = 'move'; }}
                     onDragLeave={() => setDragOverTaskIndex(null)}
