@@ -104,7 +104,7 @@ const NotesPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId })
                   onClick={() => setSelNoteId(note.id)}
                   className={`
                     group p-3 rounded-xl cursor-pointer border transition-all duration-150 relative flex items-start gap-2
-                    ${isSelected ? 'bg-white border-yuri-300 shadow-sm' : 'bg-transparent border-transparent hover:bg-yuri-100/50 hover:border-yuri-200'}
+                    ${isSelected ? 'bg-white border-yuri-300 shadow-sm border-l-4 border-l-accent' : 'bg-transparent border-transparent hover:bg-yuri-100/50 hover:border-yuri-200 border-l-4'}
                   `}
                 >
                   <div className="flex-1 min-w-0">
@@ -123,7 +123,7 @@ const NotesPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId })
                     aria-label="메모 삭제"
                     className={`
                       absolute top-3 right-3 w-6 h-6 flex items-center justify-center rounded text-yuri-300
-                      opacity-0 group-hover:opacity-100 hover:text-red-400 hover:bg-red-50 transition-all
+                      opacity-30 group-hover:opacity-100 hover:text-red-400 hover:bg-red-50 transition-all
                       ${isSelected ? 'opacity-100' : ''}
                     `}
                   >

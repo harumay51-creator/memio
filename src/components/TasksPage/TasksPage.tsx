@@ -1,7 +1,8 @@
-import React, { useState, useMemo, useEffect, KeyboardEvent } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import { useAppStore } from '../../store/AppStore'
 import RichTextEditor from '../common/RichTextEditor'
 import type { Task } from '../../types'
+import { Trash2 } from 'lucide-react'
 import { SortableItem } from '../common/SortableItem'
 import {
   DndContext,
@@ -23,6 +24,7 @@ import {
 const TasksPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId }) => {
   const { tasks, addTask, toggleTask, updateTaskNote, updateTaskText, deleteTask, updateItemOrders } = useAppStore()
   const [selTaskId, setSelTaskId] = useState<string | null>(activeItemId || null)
+  const [toastMsg, setToastMsg] = useState('')
 
   // Auto-select when activeItemId changes
   useEffect(() => {
@@ -65,17 +67,27 @@ const TasksPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId })
 
   const selectedTask = useMemo(() => tasks.find(t => t.id === selTaskId) || null, [tasks, selTaskId])
 
-  const handleAdd = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && inputText.trim()) {
+  const showToast = (msg: string) => {
+    setToastMsg(msg)
+    setTimeout(() => setToastMsg(''), 2000)
+  }
+
+  const submitNewTask = () => {
+    if (inputText.trim()) {
       addTask(inputText.trim())
       setInputText('')
     }
+  }
+
+  const handleAdd = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') submitNewTask()
   }
 
   const handleDelete = (id: string, e?: React.MouseEvent) => {
     if (e) e.stopPropagation()
     deleteTask(id)
     if (selTaskId === id) setSelTaskId(null)
+    showToast('삭제되었습니다')
   }
 
   const sensors = useSensors(
@@ -119,14 +131,23 @@ const TasksPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId })
             className="w-full bg-yuri-50 border border-yuri-200 rounded-lg px-3 py-1.5 text-sm outline-none focus:border-accent transition-colors"
           />
           <div className="border-t border-yuri-100 my-0.5" />
-          <input spellCheck={false}
-            type="text"
-            placeholder="새 업무 추가 (Enter)"
-            value={inputText}
-            onChange={(e) => setInputText(e.target.value)}
-            onKeyDown={handleAdd}
-            className="w-full bg-transparent border-none rounded-none px-1 py-1 text-sm outline-none placeholder:text-accent/60 text-accent font-medium focus:border-b focus:border-accent/30 transition-all"
-          />
+          <div className="relative flex items-center">
+            <input spellCheck={false}
+              type="text"
+              placeholder="새 업무 추가 (Enter)"
+              value={inputText}
+              onChange={(e) => setInputText(e.target.value)}
+              onKeyDown={handleAdd}
+              className="w-full bg-transparent border-none rounded-none px-1 py-1 pr-8 text-sm outline-none placeholder:text-accent/60 text-accent font-medium focus:border-b focus:border-accent/30 transition-all"
+            />
+            <button
+              onClick={submitNewTask}
+              className="absolute right-1 w-6 h-6 flex items-center justify-center text-accent/60 hover:text-accent transition-colors"
+              title="업무 추가"
+            >
+              +
+            </button>
+          </div>
         </div>
 
         <div className="flex-1 flex flex-col min-h-0">
@@ -252,9 +273,10 @@ const TasksPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId })
               </div>
               <button
                 onClick={() => handleDelete(selectedTask.id)}
-                className="shrink-0 ml-4 p-2 text-yuri-400 hover:bg-red-50 hover:text-red-500 rounded-lg transition-colors text-sm font-medium"
+                className="shrink-0 ml-4 p-2 text-yuri-400 hover:bg-red-50 hover:text-red-500 rounded-lg transition-colors flex items-center justify-center"
+                title="업무 삭제"
               >
-                삭제
+                <Trash2 size={16} />
               </button>
             </header>
             <div className="flex-1 overflow-hidden p-6 pb-2">
@@ -275,6 +297,13 @@ const TasksPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId })
           </div>
         )}
       </main>
+
+      {/* Toast Notification */}
+      {toastMsg && (
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-gray-800 text-white px-4 py-2 rounded-lg text-sm shadow-lg z-50 animate-in fade-in slide-in-from-bottom-2">
+          {toastMsg}
+        </div>
+      )}
     </div>
   )
 }

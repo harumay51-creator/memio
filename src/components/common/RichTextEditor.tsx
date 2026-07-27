@@ -12,7 +12,7 @@ import { doc, setDoc } from 'firebase/firestore';
 import { AsyncImage } from './AsyncImageNode';
 import { 
   Bold, Italic, Strikethrough, Heading2, Heading3, 
-  List, Minus, Smile, Link as LinkIcon 
+  List, Minus, Smile, Link as LinkIcon, Image as ImageIcon
 } from 'lucide-react';
 
 const COLORS = ['#5B4FCF', '#D45D6E', '#C96A95', '#3F9E7A'];
@@ -27,6 +27,9 @@ interface RichTextEditorProps {
 const RichTextEditor: React.FC<RichTextEditorProps> = ({ initialContent, onChange, placeholder, className = '' }) => {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const emojiRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [saveToast, setSaveToast] = useState(false);
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Parse plain text compatibility
   const getSafeContent = (text: string) => {
@@ -66,6 +69,55 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ initialContent, onChang
     });
   };
 
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const uid = auth.currentUser?.uid;
+    if (!uid) return;
+    
+    // Check image limit (max 5)
+    const htmlContent = editor?.getHTML() || '';
+    const imgCount = (htmlContent.match(/<img/g) || []).length;
+    if (imgCount >= 5) {
+      alert('이미지는 메모당 최대 5장까지 첨부할 수 있어요');
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
+
+    const tempUrl = URL.createObjectURL(file);
+    editor?.chain().focus().setImage({ src: tempUrl, alt: 'uploading...' }).run();
+
+    resizeImage(file).then(blob => {
+      const reader = new FileReader();
+      reader.readAsDataURL(blob);
+      reader.onloadend = async () => {
+        const base64data = reader.result as string;
+        const timestamp = Date.now();
+        const randomStr = Math.random().toString(36).substring(2, 8);
+        const imageId = `${timestamp}_${randomStr}`;
+        
+        try {
+          await setDoc(doc(db, `users/${uid}/images/${imageId}`), {
+            base64: base64data,
+            createdAt: new Date().toISOString()
+          });
+
+          const finalUrl = `memio-img://${imageId}`;
+          const html = editor?.getHTML() || '';
+          const updatedHtml = html.replace(tempUrl, finalUrl);
+          editor?.commands.setContent(updatedHtml);
+          onChange(updatedHtml);
+          URL.revokeObjectURL(tempUrl);
+        } catch (err) {
+          console.error('Failed to save image to firestore', err);
+        }
+      };
+    }).catch(console.error);
+
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -99,6 +151,12 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ initialContent, onChang
     content: getSafeContent(initialContent),
     onUpdate: ({ editor }) => {
       onChange(editor.getHTML());
+      
+      setSaveToast(true);
+      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+      saveTimeoutRef.current = setTimeout(() => {
+        setSaveToast(false);
+      }, 2000);
     },
     editorProps: {
       attributes: {
@@ -198,7 +256,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ initialContent, onChang
   return (
     <div className={`flex flex-col h-full bg-transparent ${className}`}>
       {/* Toolbar */}
-      <div className="flex flex-wrap items-center gap-1 p-2 mb-2 bg-yuri-50/50 rounded-lg shrink-0 border border-yuri-100">
+      <div className="flex flex-wrap items-center gap-1 p-2 mb-2 bg-white/90 backdrop-blur rounded-lg shrink-0 border border-yuri-100 sticky top-0 z-10">
         <ToolbarButton
           active={editor.isActive('bold')}
           onClick={() => editor.chain().focus().toggleBold().run()}
@@ -306,6 +364,27 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ initialContent, onChang
             </div>
           )}
         </div>
+
+        <div className="w-px h-4 bg-yuri-200 mx-1" />
+
+        <input
+          type="file"
+          accept="image/*"
+          className="hidden"
+          ref={fileInputRef}
+          onChange={handleImageUpload}
+        />
+        <ToolbarButton
+          onClick={() => fileInputRef.current?.click()}
+          icon={<ImageIcon size={15} />}
+          title="이미지 업로드"
+        />
+
+        {saveToast && (
+          <div className="ml-auto flex items-center text-[10px] text-yuri-400 font-medium animate-in fade-in mr-2">
+            ✓ 자동 저장됨
+          </div>
+        )}
       </div>
 
       {/* Editor Content */}
