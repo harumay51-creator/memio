@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react'
 import { useAppStore } from '../../store/AppStore'
 import { useDiaryStore } from '../../store/DiaryStore'
 import { useMergedHolidays } from '../../hooks/useMergedHolidays'
+import { calculateHolidays } from '../../utils/holidays'
 import Emoji from '../common/Emoji'
 import DiaryPanel from './DiaryPanel'
 import DiarySearchPanel from './DiarySearchPanel'
@@ -77,6 +78,65 @@ const CalendarPage: React.FC = () => {
   const month = view.getMonth()
   const grid  = useMemo(() => buildGrid(year, month), [year, month])
   const mergedHolidays = useMergedHolidays(year)
+
+  const allHolidays = useMemo(() => {
+    return {
+      ...calculateHolidays(year - 1),
+      ...calculateHolidays(year),
+      ...calculateHolidays(year + 1),
+      ...mergedHolidays
+    }
+  }, [year, mergedHolidays])
+
+  const adjustedMonthlyEvents = useMemo(() => {
+    const adjusted = new Map<string, typeof monthlyEvents>()
+    
+    const isWorkingDay = (dt: Date) => {
+      const w = dt.getDay()
+      if (w === 0 || w === 6) return false
+      const ds = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`
+      if (allHolidays[ds]?.isRedDay) return false
+      return true
+    }
+
+    const calcAdjusted = (y: number, m: number, ev: typeof monthlyEvents[0]) => {
+      const lastDate = new Date(y, m + 1, 0).getDate()
+      let target = Math.min(ev.day, lastDate)
+      let dt = new Date(y, m, target)
+      
+      let safety = 0
+      while (!isWorkingDay(dt) && safety < 30) {
+        if (ev.day === 1) {
+          dt.setDate(dt.getDate() + 1)
+        } else {
+          dt.setDate(dt.getDate() - 1)
+        }
+        safety++
+      }
+      return dt
+    }
+
+    const addForMonth = (y: number, m: number) => {
+      monthlyEvents.forEach(ev => {
+        const dt = calcAdjusted(y, m, ev)
+        const dtStr = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`
+        if (!adjusted.has(dtStr)) adjusted.set(dtStr, [])
+        adjusted.get(dtStr)!.push(ev)
+      })
+    }
+
+    let prevY = year, prevM = month - 1
+    if (prevM < 0) { prevM = 11; prevY-- }
+    addForMonth(prevY, prevM)
+
+    addForMonth(year, month)
+
+    let nextY = year, nextM = month + 1
+    if (nextM > 11) { nextM = 0; nextY++ }
+    addForMonth(nextY, nextM)
+
+    return adjusted
+  }, [monthlyEvents, year, month, allHolidays])
 
   const goToToday = () => {
     setView(new Date(today.getFullYear(), today.getMonth(), 1))
@@ -198,8 +258,8 @@ const CalendarPage: React.FC = () => {
       )
     })
 
-    const dayMonthly = monthlyEvents.filter(m => {
-      if (m.day !== d.getDate()) return false
+    const rawMonthly = adjustedMonthlyEvents.get(dStr) || []
+    const dayMonthly = rawMonthly.filter(m => {
       const createdTime = m.createdAt ? new Date(m.createdAt).getTime() : 0
       const dEnd = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59).getTime()
       return dEnd >= createdTime
