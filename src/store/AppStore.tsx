@@ -843,6 +843,21 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
     const newItem: Anniversary = { id: genId(), name, month, day, createdAt: new Date().toISOString() }
     setAnniversaries(prev => [...prev, newItem])
     setDoc(doc(db, 'users', uid, 'anniversaries', newItem.id), newItem).catch(console.error)
+
+    const now = new Date()
+    if (now.getMonth() + 1 === month && now.getDate() === day) {
+      const dtStr = `${now.getFullYear()}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+      const newInst: RecurringInstance = {
+        id: genId(),
+        sourceRuleId: newItem.id,
+        sourceType: 'yearly',
+        name,
+        date: dtStr,
+        status: 'materialized'
+      }
+      setRecurringInstances(prev => [...prev, newInst])
+      setDoc(doc(db, 'users', uid, 'recurringInstances', newInst.id), newInst).catch(console.error)
+    }
   }, [uid])
 
   const deleteAnniversary = useCallback((id: string) => {
@@ -854,7 +869,55 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
     const newItem: MonthlyEvent = { id: genId(), name, day, createdAt: new Date().toISOString() }
     setMonthlyEvents(prev => [...prev, newItem])
     setDoc(doc(db, 'users', uid, 'monthlyEvents', newItem.id), newItem).catch(console.error)
-  }, [uid])
+
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = now.getMonth();
+    
+    const autoH = calculateHolidays(y);
+    const merged: Record<string, any> = {};
+    for (const [date, info] of Object.entries(autoH)) {
+      if (holidayConfig.hiddenRules.includes(info.name)) continue;
+      if (holidayConfig.hiddenDates.includes(date)) continue;
+      merged[date] = { ...info, isRedDay: true };
+    }
+    const yPrefix = `${y}-`;
+    for (const custom of holidayConfig.customHolidays) {
+      if (custom.date.startsWith(yPrefix)) merged[custom.date] = custom;
+    }
+    
+    const isW = (dt: Date) => {
+      const w = dt.getDay();
+      if (w === 0 || w === 6) return false;
+      const ds = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
+      if (merged[ds]?.isRedDay) return false;
+      return true;
+    };
+    
+    const lastDate = new Date(y, m + 1, 0).getDate();
+    let target = Math.min(day, lastDate);
+    let dt = new Date(y, m, target);
+    let safety = 0;
+    while (!isW(dt) && safety < 30) {
+      if (day === 1) dt.setDate(dt.getDate() + 1);
+      else dt.setDate(dt.getDate() - 1);
+      safety++;
+    }
+    
+    if (dt.getFullYear() === y && dt.getMonth() === m && dt.getDate() === now.getDate()) {
+      const dtStr = `${y}-${String(m + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+      const newInst: RecurringInstance = {
+        id: genId(),
+        sourceRuleId: newItem.id,
+        sourceType: 'monthly',
+        name,
+        date: dtStr,
+        status: 'materialized'
+      }
+      setRecurringInstances(prev => [...prev, newInst])
+      setDoc(doc(db, 'users', uid, 'recurringInstances', newInst.id), newInst).catch(console.error)
+    }
+  }, [uid, holidayConfig])
 
   const deleteMonthlyEvent = useCallback((id: string) => {
     setMonthlyEvents(prev => prev.filter(m => m.id !== id))

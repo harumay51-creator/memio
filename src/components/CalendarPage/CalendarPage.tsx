@@ -244,7 +244,7 @@ const CalendarPage: React.FC = () => {
     }
 
     const isPastCell = d.getTime() < new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()).getTime()
-    const cellTextColor = isPastCell ? 'text-[#6B6B6B]' : 'text-[#1C1C1E]'
+    const cellTextColor = isPastCell ? 'text-[#A3A3A3]' : 'text-[#1C1C1E]'
 
     const dayAnnivs: { id: string, name: string, isVirtual?: boolean, instanceId?: string }[] = []
     recurringInstances.filter(inst => inst.date === dStr && inst.sourceType === 'yearly' && inst.status === 'materialized').forEach(inst => {
@@ -305,7 +305,7 @@ const CalendarPage: React.FC = () => {
       const eColor = e.color || '#8B7CF8'
       const styleObj = EVENT_STYLE_MAP[eColor] || EVENT_STYLE_MAP['#8B7CF8']
       items.push(
-        <div key={`e-${e.id}`} className={`text-[10.5px] shrink-0 h-[18px] px-1 rounded-md flex gap-[6px] items-center w-full overflow-hidden box-border ${isPastCell ? 'text-[#6B6B6B]' : ''}`} style={{ backgroundColor: styleObj.bg, color: isPastCell ? undefined : styleObj.text }}>
+        <div key={`e-${e.id}`} className={`text-[10.5px] shrink-0 h-[18px] px-1 rounded-md flex gap-[6px] items-center w-full overflow-hidden box-border ${isPastCell ? 'text-[#A3A3A3]' : ''}`} style={{ backgroundColor: styleObj.bg, color: isPastCell ? undefined : styleObj.text }}>
           <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: styleObj.bar }}></span>
           <span className="font-medium truncate leading-none block w-full text-left">{e.text}</span>
         </div>
@@ -627,7 +627,7 @@ const CalendarPage: React.FC = () => {
                       <div className="flex-1 bg-transparent py-0.5 flex gap-2 items-start rounded-lg">
                         <div className="flex-1 flex flex-col">
                           <span className={`text-[10px] font-bold mb-0.5 ${isPastDay ? 'text-[#B4629C]' : 'text-[#B4629C]'}`}>매년 반복 (기념일)</span>
-                          <span className={`text-xs font-medium whitespace-pre-wrap leading-relaxed ${isPastDay ? 'text-[#6B6B6B]' : 'text-[#2D334A]'}`}>
+                          <span className={`text-xs font-medium whitespace-pre-wrap leading-relaxed ${isPastDay ? 'text-[#A3A3A3]' : 'text-[#2D334A]'}`}>
                             {a.name}
                           </span>
                         </div>
@@ -653,7 +653,7 @@ const CalendarPage: React.FC = () => {
                       <div className="flex-1 bg-transparent py-0.5 flex gap-2 items-start rounded-lg">
                         <div className="flex-1 flex flex-col">
                           <span className={`text-[10px] font-bold mb-0.5 ${isPastDay ? 'text-[#3A4B8C]' : 'text-[#3A4B8C]'}`}>매월 반복</span>
-                          <span className={`text-xs font-medium whitespace-pre-wrap leading-relaxed ${isPastDay ? 'text-[#6B6B6B]' : 'text-[#2D334A]'}`}>
+                          <span className={`text-xs font-medium whitespace-pre-wrap leading-relaxed ${isPastDay ? 'text-[#A3A3A3]' : 'text-[#2D334A]'}`}>
                             {m.name}
                           </span>
                         </div>
@@ -748,7 +748,7 @@ const CalendarPage: React.FC = () => {
                           >
                             <div className="flex flex-col">
                               {timeStr && <span className="text-[10.5px] font-bold mb-0.5" style={{ color: styleObj.bar }}>{timeStr}</span>}
-                              <span className="text-[13px] font-semibold whitespace-pre-wrap leading-relaxed" style={{ color: isPastDay ? '#6B6B6B' : styleObj.text }}>
+                              <span className="text-[13px] font-semibold whitespace-pre-wrap leading-relaxed" style={{ color: isPastDay ? '#A3A3A3' : styleObj.text }}>
                                 {restStr}
                               </span>
                             </div>
