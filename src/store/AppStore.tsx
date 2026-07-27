@@ -41,6 +41,7 @@ export interface TrashedItem {
   type: 'note' | 'task' | 'ledger' | 'fixedExpense'
   label: string
   deletedAt: number
+  metadata?: any
 }
 interface StoreValue {
   isLoading: boolean
@@ -249,7 +250,7 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
                 batch.delete(doc(db, 'users', uid, colName, item.id));
                 hasHardDeletes = true;
               } else {
-                trashed.push({ id: item.id, type, label: labelExtractor(item), deletedAt: item.deletedAt || 0 });
+                trashed.push({ id: item.id, type, label: labelExtractor(item), deletedAt: item.deletedAt || 0, metadata: item });
               }
             } else {
               active.push(item);
@@ -349,6 +350,11 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
           if (l.fixedExpenseId !== fe.id) return false
           const lDate = new Date(l.scheduledDate || l.createdAt)
           return lDate.getFullYear() === currentYear && (lDate.getMonth() + 1) === currentMonth
+        }) || trashedItems.some(t => {
+          if (t.type !== 'ledger' || !t.metadata) return false
+          if (t.metadata.fixedExpenseId !== fe.id) return false
+          const lDate = new Date(t.metadata.scheduledDate || t.metadata.createdAt)
+          return lDate.getFullYear() === currentYear && (lDate.getMonth() + 1) === currentMonth
         })
 
         if (!hasInjectedThisMonth) {
@@ -375,7 +381,7 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
       injections.forEach(inj => batch.set(doc(db, 'users', uid, 'ledger', inj.id), inj))
       batch.commit().catch(console.error)
     }
-  }, [fixedExpenses, ledger, isLoading, uid])
+  }, [fixedExpenses, ledger, trashedItems, isLoading, uid])
 
   // Backfill recurring instances (async)
   useEffect(() => {

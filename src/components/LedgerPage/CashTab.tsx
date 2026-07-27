@@ -225,7 +225,7 @@ export default function CashTab({ year, month, onOpenFixedExpense }: { year: num
                   const isEditing = editingRowId === e.id
 
                   const isFixed = e.isFixed || !!e.fixedExpenseId
-                  if (isEditing && !isFixed) {
+                  if (isEditing) {
                     return (
                       <EditRow 
                         key={e.id}
@@ -244,11 +244,7 @@ export default function CashTab({ year, month, onOpenFixedExpense }: { year: num
                     <div 
                       key={e.id} 
                       onClick={() => {
-                        if (isFixed) {
-                          onOpenFixedExpense()
-                        } else {
-                          setEditingRowId(e.id)
-                        }
+                        setEditingRowId(e.id)
                       }}
                       className="group flex flex-col p-3 rounded-xl border border-transparent hover:border-yuri-200 transition-colors cursor-pointer bg-white"
                     >
