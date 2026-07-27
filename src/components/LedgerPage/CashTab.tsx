@@ -155,7 +155,7 @@ export default function CashTab({ year, month, onOpenFixedExpense }: { year: num
                     updateSalaryRecord(salaryMonthKey, 0)
                   }
                 }}
-                className="w-28 bg-transparent text-right text-lg font-bold text-yuri-900 outline-none border-b border-dashed border-yuri-300 focus:border-yuri-500 transition-colors placeholder:text-yuri-300 placeholder:text-base"
+                className="w-28 bg-transparent text-right text-[15px] font-bold text-[#1F1F1F] outline-none border-b border-dashed border-yuri-300 focus:border-yuri-500 transition-colors placeholder:text-yuri-300 placeholder:text-base"
               />
               <span className="text-sm font-bold text-yuri-900">원</span>
             </div>
@@ -165,14 +165,14 @@ export default function CashTab({ year, month, onOpenFixedExpense }: { year: num
             <span className="text-sm font-bold text-yuri-500">
               {hasActualBill ? '카드 결제액 (확정)' : '카드 결제 예정액 (예상)'}
             </span>
-            <span className="text-base font-bold text-rose-500">-{fmtAmt(cardBillAmount)}</span>
+            <span className="text-[15px] font-bold text-[#1F1F1F]">-{fmtAmt(cardBillAmount)}</span>
           </div>
 
           <div className="h-px w-full bg-yuri-100" />
 
           <div className="flex justify-between items-center">
             <span className="text-sm font-bold text-yuri-900">월급 잔액</span>
-            <span className="text-xl font-extrabold text-teal-600">{fmtAmt(salaryBalance)}</span>
+            <span className="text-[15px] font-bold text-[#1F1F1F]">{fmtAmt(salaryBalance)}</span>
           </div>
         </div>
 

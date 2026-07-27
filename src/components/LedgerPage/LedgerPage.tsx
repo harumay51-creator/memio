@@ -113,27 +113,54 @@ function fmtAmt(n: number): string {
   return n.toLocaleString('ko-KR') + '원'
 }
 
+import { calculatePaydayCycle } from '../../utils/ledgerCycle'
+
 // ── Component ─────────────────────────────────────────────────────────────────
 const LedgerPage: React.FC = () => {
   const { 
     fixedExpenses, addFixedExpense, updateFixedExpense, deleteFixedExpense,
-    expenseCategories, isPrivateUnlocked, lockPrivate
+    expenseCategories, isPrivateUnlocked, lockPrivate,
+    payday, cardPaymentDay, cardBillingStartDay, cardBillingEndDay
   } = useAppStore()
 
   const today = useMemo(() => new Date(), [])
-  const [view, setView] = useState(() => new Date(today.getFullYear(), today.getMonth(), 1))
+  
+  const initialCardView = useMemo(() => {
+    for (let offset = -2; offset <= 2; offset++) {
+      const testDate = new Date(today.getFullYear(), today.getMonth() + offset, 1);
+      const cycle = calculatePaydayCycle(
+        testDate.getFullYear(),
+        testDate.getMonth() + 1,
+        payday,
+        cardPaymentDay,
+        cardBillingStartDay,
+        cardBillingEndDay
+      );
+      if (today.getTime() >= cycle.cardBillingStart.getTime() && today.getTime() <= cycle.cardBillingEnd.getTime()) {
+        return testDate;
+      }
+    }
+    return new Date(today.getFullYear(), today.getMonth(), 1);
+  }, [today, payday, cardPaymentDay, cardBillingStartDay, cardBillingEndDay])
+
+  const [activeTab, setActiveTab] = useState<'cash' | 'card'>('cash')
+
+  const [cashView, setCashView] = useState(() => new Date(today.getFullYear(), today.getMonth(), 1))
+  const [cardView, setCardView] = useState(initialCardView)
+
+  const view = activeTab === 'cash' ? cashView : cardView
+  const setView = activeTab === 'cash' ? setCashView : setCardView
 
   const year  = view.getFullYear()
   const month = view.getMonth()
 
   const prevMonth = () => setView(new Date(year, month - 1, 1))
   const nextMonth = () => setView(new Date(year, month + 1, 1))
-  const goToday   = () => setView(new Date(today.getFullYear(), today.getMonth(), 1))
+  const goToday   = () => setView(activeTab === 'cash' ? new Date(today.getFullYear(), today.getMonth(), 1) : initialCardView)
 
-  const isCurrentMonth = year === today.getFullYear() && month === today.getMonth()
-
-  // ── Tabs ──────────────────────────────────────────────────────────────────────
-  const [activeTab, setActiveTab] = useState<'cash' | 'card'>('cash')
+  const isCurrentMonth = activeTab === 'cash' 
+    ? year === today.getFullYear() && month === today.getMonth()
+    : year === initialCardView.getFullYear() && month === initialCardView.getMonth()
 
   // ── Month Picker ─────────────────────────────────────────────────────────────
   const [showPicker, setShowPicker] = useState(false)
