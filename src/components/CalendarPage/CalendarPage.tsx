@@ -18,7 +18,7 @@ const MONTH_KO = [
 const EVENT_COLORS = ['#8B7CF8', '#F4B73F', '#63D2B0', '#EF6A7B']
 const EVENT_STYLE_MAP: Record<string, { bg: string, text: string, bar: string, label: string }> = {
   '#8B7CF8': { bg: '#F3F1FF', text: '#5B4FCF', bar: '#8B7CF8', label: '회의' }, // Purple
-  '#F4B73F': { bg: '#FFF8E5', text: '#B38400', bar: '#F4B73F', label: '메모' }, // Yellow
+  '#F4B73F': { bg: '#FFF8E5', text: '#3D3833', bar: '#F4B73F', label: '메모' }, // Yellow
   '#63D2B0': { bg: '#EAF4F0', text: '#2E795B', bar: '#63D2B0', label: '개인' }, // Green
   '#EF6A7B': { bg: '#FFF0F0', text: '#D45D6E', bar: '#EF6A7B', label: '중요' }, // Red
 }
