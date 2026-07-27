@@ -586,7 +586,7 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
         ) : (
           <div className="flex-1 min-h-0 overflow-y-auto pr-2 -mr-2 flex flex-col gap-6">
             {/* 1. Emoji Selector */}
-            <section className="p-2">
+            <section className="p-2" ref={emojiPickerRef}>
               <div className="flex justify-between items-center mb-3 relative">
                 <h2 className="text-[11px] font-bold text-[#717A8C] tracking-widest uppercase inline-block relative">
                   오늘의 기분/날씨
@@ -613,12 +613,34 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
               </div>
               
               {isEmojiPickerOpen && (
-                <>
-                  <div 
-                    className="fixed inset-0 z-40" 
-                    onClick={() => setIsEmojiPickerOpen(false)}
-                  />
                   <div className="mt-4 pt-4 border-t border-[#E5E5EA] flex flex-col gap-3 relative z-50 animate-slide-down">
+                    <div className="flex gap-2 items-center">
+                      <input
+                        type="text"
+                        value={customEmoji}
+                        onChange={(e) => setCustomEmoji(e.target.value)}
+                        placeholder="이모지 직접 입력..."
+                        className="flex-1 bg-white border border-[#E5E5EA] rounded px-3 py-1.5 text-[13px] outline-none focus:border-[#8B7CF8] font-emoji"
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && customEmoji.trim()) {
+                            e.preventDefault();
+                            handleEmojiSelect(customEmoji.trim());
+                            setCustomEmoji('');
+                          }
+                        }}
+                      />
+                      <button
+                        onClick={() => {
+                          if (customEmoji.trim()) {
+                            handleEmojiSelect(customEmoji.trim());
+                            setCustomEmoji('');
+                          }
+                        }}
+                        className="bg-[#8B7CF8] text-white px-3 py-1.5 rounded text-xs font-bold whitespace-nowrap hover:bg-[#7a6aeb] transition-colors"
+                      >
+                        추가
+                      </button>
+                    </div>
                     {EMOJI_CATEGORIES.map(cat => (
                       <div key={cat.name}>
                         <div className="text-[10px] text-[#717A8C] mb-1.5">{cat.name}</div>
@@ -643,18 +665,19 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
                       </div>
                     ))}
                   </div>
-                </>
               )}
             </section>
 
             {/* 2. Questions Snapshot */}
             <section className="p-2 flex flex-col gap-4">
               <div className="relative inline-block w-max">
-                <h2 className="text-[11px] font-bold text-[#717A8C] tracking-widest uppercase">Q&A</h2>
-                <UnderlineDoodle isY2K={isY2K} />
+                <h2 className="text-[13px] font-bold text-[#717A8C] tracking-[0.2em] uppercase">Q&A</h2>
+                <div className="opacity-40">
+                  <UnderlineDoodle isY2K={isY2K} />
+                </div>
               </div>
               
-              <div className="flex flex-row flex-wrap gap-2.5 items-start">
+              <div className={`flex ${(!isY2K && !isAurora) ? 'flex-col gap-0' : 'flex-row flex-wrap gap-2.5 items-start'}`}>
                 {settings.questions.map((q, idx) => {
                   const answerObj = (dayDiary.answers || []).find(a => a.questionId === q.id)
                   const answerText = answerObj ? answerObj.answer : ''
@@ -675,15 +698,17 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
                 
                 {/* Display snapshot answers that are no longer in settings.questions */}
                 {(dayDiary.answers || []).filter(a => !settings.questions.some(q => q.id === a.questionId)).map((a, idx) => (
-                  <div key={a.questionId} className="group relative transition-all duration-300 hover:scale-105 z-0 hover:z-10 p-4 w-36 min-h-[9rem] h-auto flex flex-col shrink-0" style={getPostItStyle(a.questionId, idx + settings.questions.length, dateKey, isY2K, isAurora)}>
-                    <CornerDoodle idString={a.questionId} isY2K={isY2K} />
+                  <div key={a.questionId} className={`group relative transition-all duration-300 flex flex-col shrink-0 ${
+                    (!isY2K && !isAurora) ? 'w-full min-h-0 py-4 px-2' : 'hover:scale-[1.02] z-0 hover:z-10 p-4 w-36 min-h-[9rem] h-auto'
+                  }`} style={getPostItStyle(a.questionId, idx + settings.questions.length, dateKey, isY2K, isAurora)}>
+                    <CornerDoodle idString={a.questionId} isY2K={isY2K} isAurora={isAurora} />
                     <div className="flex justify-between items-start mb-1 gap-2">
                       <div>
                         <div className="text-[11px] font-bold font-diary opacity-70" style={{ color: 'inherit' }}>{a.question} (과거 질문)</div>
                       </div>
                       <button 
                         onClick={() => deleteDayDiaryAnswer(dateKey, a.questionId)}
-                        className="w-5 h-5 flex items-center justify-center rounded hover:opacity-50 opacity-0 group-hover:opacity-100 transition-opacity text-[10px] shrink-0"
+                        className="w-5 h-5 flex items-center justify-center rounded hover:opacity-50 opacity-30 group-hover:opacity-100 transition-opacity text-[10px] shrink-0"
                         style={{ color: 'inherit' }}
                       >
                         ✕
@@ -702,33 +727,46 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
             {/* 3. Free Memos */}
             <section className="p-2 flex flex-col gap-4 mb-8">
               <div className="relative inline-block w-max ml-6">
-                <ArrowDoodle isY2K={isY2K} />
-                <h2 className="text-[11px] font-bold text-[#717A8C] tracking-widest uppercase">MEMO</h2>
+                <div className="opacity-40">
+                  <ArrowDoodle isY2K={isY2K} />
+                </div>
+                <h2 className="text-[13px] font-bold text-[#717A8C] tracking-[0.2em] uppercase">MEMO</h2>
               </div>
               
-              <form onSubmit={handleAddMemo} className="flex gap-2">
-                <input
-                  type="text"
+              <form onSubmit={(e) => {
+                e.preventDefault()
+                if (!newMemo.trim()) return
+                handleAddMemo(e as any)
+              }} className="flex gap-2">
+                <textarea
                   value={newMemo}
                   onChange={(e) => setNewMemo(e.target.value)}
                   placeholder="자유롭게 기록을 남겨보세요..."
-                  className="flex-1 bg-white/30 border border-white/20 rounded-xl px-3 py-2.5 text-[13px] outline-none text-[#1C1C1E] placeholder:text-[#A0AABF] focus:border-white/50 focus:bg-white/40 transition-all font-diary"
+                  className="flex-1 bg-white/30 border border-white/20 rounded-xl px-4 py-3 text-[14px] outline-none text-[#1C1C1E] placeholder:text-[#A0AABF] focus:border-white/50 focus:bg-white/40 transition-all font-diary resize-none min-h-[80px]"
                   spellCheck={false}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      if (newMemo.trim()) handleAddMemo(e as any);
+                    }
+                  }}
                 />
-                <button type="submit" disabled={!newMemo.trim()} className="px-3 bg-white/40 border border-white/20 text-[#8B7CF8] rounded-xl font-bold text-xs hover:bg-white/60 disabled:opacity-30 transition-all">
+                <button type="submit" disabled={!newMemo.trim()} className="px-4 py-2 h-fit bg-white/40 border border-[#C0C0C0] text-[#1C1C1E] rounded-xl font-bold text-xs hover:bg-[#E5E5EA] disabled:opacity-30 transition-all self-end">
                   추가
                 </button>
               </form>
 
-              <div className="flex flex-row flex-wrap gap-2.5 items-start mt-2">
+              <div className={`flex mt-2 ${(!isY2K && !isAurora) ? 'flex-col gap-0' : 'flex-row flex-wrap gap-2.5 items-start'}`}>
                 {[...(dayDiary.memos || [])].reverse().map((memo: DiaryMemo, idx: number) => (
-                  <div key={memo.id} className="group relative transition-all duration-300 hover:scale-105 z-0 hover:z-10 p-5 w-36 min-h-[9rem] h-auto flex flex-col justify-between shrink-0" style={getPostItStyle(memo.id, idx + (dayDiary.answers || []).length, dateKey, isY2K, isAurora)}>
-                    <CornerDoodle idString={memo.id} isY2K={isY2K} />
+                  <div key={memo.id} className={`group relative transition-all duration-300 flex flex-col justify-between shrink-0 ${
+                    (!isY2K && !isAurora) ? 'w-full min-h-0 py-4 px-2' : 'hover:scale-[1.02] z-0 hover:z-10 p-5 w-36 min-h-[9rem] h-auto'
+                  }`} style={getPostItStyle(memo.id, idx + (dayDiary.answers || []).length, dateKey, isY2K, isAurora)}>
+                    <CornerDoodle idString={memo.id} isY2K={isY2K} isAurora={isAurora} />
                     <div className="flex justify-between items-start mb-2 gap-2">
                       <div className="text-[14px] whitespace-pre-wrap leading-relaxed font-diary" style={{ color: 'inherit' }}>{memo.text}</div>
                       <button 
                         onClick={() => deleteDayDiaryMemo(dateKey, memo.id)}
-                        className="w-5 h-5 flex items-center justify-center rounded hover:opacity-50 opacity-0 group-hover:opacity-100 transition-opacity text-[10px] shrink-0"
+                        className="w-5 h-5 flex items-center justify-center rounded hover:opacity-50 opacity-30 group-hover:opacity-100 transition-opacity text-[10px] shrink-0"
                         style={{ color: 'inherit' }}
                       >
                         ✕
