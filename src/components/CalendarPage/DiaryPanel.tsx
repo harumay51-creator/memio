@@ -199,7 +199,7 @@ const QuestionItem = ({ q, initialAnswer, saveAnswer, deleteAnswer, index, dateS
       className={`group relative transition-all duration-300 flex flex-col shrink-0 cursor-text ${isDefault ? 'w-full min-h-0 py-4 px-2' : 'p-4 w-36 min-h-[9rem] h-auto'} ${isFocused ? 'z-20' : 'z-0 hover:z-10'} ${!isDefault ? 'hover:scale-[1.02]' : ''}`} 
       style={{
         ...getPostItStyle(q.id, index, dateSeed, isY2K, isAurora),
-        transform: isFocused ? 'scale(1.05) rotate(0deg)' : getPostItStyle(q.id, index, dateSeed, isY2K, isAurora).transform
+        transform: (isFocused && !isDefault) ? 'scale(1.05) rotate(0deg)' : getPostItStyle(q.id, index, dateSeed, isY2K, isAurora).transform
       }}
       onClick={(e) => {
         if (e.target !== textareaRef.current && textareaRef.current) {
@@ -460,7 +460,7 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
                   </div>
                 </div>
                 
-                <div className={`flex flex-row flex-wrap items-start ${(!isY2K && !isAurora) ? 'gap-0' : 'gap-2.5'}`}>
+                <div className={`flex ${(!isY2K && !isAurora) ? 'flex-col gap-0' : 'flex-row flex-wrap gap-2.5 items-start'}`}>
                   {settings.questions.map((q, idx) => {
                     const answerObj = (dayDiary.answers || []).find(a => a.questionId === q.id)
                     const answerText = answerObj ? answerObj.answer : ''
@@ -539,7 +539,7 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
                   </button>
                 </form>
 
-                <div className={`flex flex-row flex-wrap items-start mt-2 ${(!isY2K && !isAurora) ? 'gap-0' : 'gap-2.5'}`}>
+                <div className={`flex mt-2 ${(!isY2K && !isAurora) ? 'flex-col gap-0' : 'flex-row flex-wrap gap-2.5 items-start'}`}>
                   {[...(dayDiary.memos || [])].reverse().map((memo: DiaryMemo, idx: number) => (
                     <div key={memo.id} className={`group relative transition-all duration-300 flex flex-col justify-between shrink-0 ${
                       (!isY2K && !isAurora) ? 'w-full min-h-0 py-4 px-2' : 'hover:scale-[1.02] z-0 hover:z-10 p-5 w-36 min-h-[9rem] h-auto'
