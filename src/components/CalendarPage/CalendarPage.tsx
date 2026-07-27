@@ -184,36 +184,30 @@ const CalendarPage: React.FC = () => {
       })
   }, [tasks])
 
-  const handleMoveEventUp = (index: number) => {
-    if (index === 0) return
+  const [draggedEventIndex, setDraggedEventIndex] = useState<number | null>(null)
+  const [dragOverEventIndex, setDragOverEventIndex] = useState<number | null>(null)
+
+  const handleEventDrop = (dropIndex: number) => {
+    if (draggedEventIndex === null || draggedEventIndex === dropIndex) return
     const reordered = [...selectedDayEvents]
-    const [item] = reordered.splice(index, 1)
-    reordered.splice(index - 1, 0, item)
+    const [item] = reordered.splice(draggedEventIndex, 1)
+    reordered.splice(dropIndex, 0, item)
     updateItemOrders(reordered.map((e, i) => ({ id: e.id, type: 'event', order: Date.now() + i })))
+    setDraggedEventIndex(null)
+    setDragOverEventIndex(null)
   }
 
-  const handleMoveEventDown = (index: number) => {
-    if (index === selectedDayEvents.length - 1) return
-    const reordered = [...selectedDayEvents]
-    const [item] = reordered.splice(index, 1)
-    reordered.splice(index + 1, 0, item)
-    updateItemOrders(reordered.map((e, i) => ({ id: e.id, type: 'event', order: Date.now() + i })))
-  }
+  const [draggedTaskIndex, setDraggedTaskIndex] = useState<number | null>(null)
+  const [dragOverTaskIndex, setDragOverTaskIndex] = useState<number | null>(null)
 
-  const handleMoveTaskUp = (index: number) => {
-    if (index === 0) return
+  const handleTaskDrop = (dropIndex: number) => {
+    if (draggedTaskIndex === null || draggedTaskIndex === dropIndex) return
     const reordered = [...activeTasks]
-    const [item] = reordered.splice(index, 1)
-    reordered.splice(index - 1, 0, item)
+    const [item] = reordered.splice(draggedTaskIndex, 1)
+    reordered.splice(dropIndex, 0, item)
     updateItemOrders(reordered.map((t, i) => ({ id: t.id, type: 'task', order: Date.now() + i })))
-  }
-
-  const handleMoveTaskDown = (index: number) => {
-    if (index === activeTasks.length - 1) return
-    const reordered = [...activeTasks]
-    const [item] = reordered.splice(index, 1)
-    reordered.splice(index + 1, 0, item)
-    updateItemOrders(reordered.map((t, i) => ({ id: t.id, type: 'task', order: Date.now() + i })))
+    setDraggedTaskIndex(null)
+    setDragOverTaskIndex(null)
   }
 
   // ── Monthly Agenda ────────
@@ -513,7 +507,7 @@ const CalendarPage: React.FC = () => {
                     <>
                       {items.slice(0, 2)}
                       {items.length > 2 && (
-                        <div className="text-[9px] shrink-0 text-[#A0AABF] font-medium px-1 bg-transparent">+ {items.length - 2}개</div>
+                        <div className="text-[10px] shrink-0 text-gray-600 bg-gray-100 font-bold px-1.5 py-0.5 rounded-full inline-flex items-center justify-center cursor-pointer hover:bg-gray-200 transition-colors mt-0.5 w-fit">+ {items.length - 2}개 더보기</div>
                       )}
                     </>
                   ) : (
@@ -690,7 +684,20 @@ const CalendarPage: React.FC = () => {
                   const restStr = match ? match[2] : e.text;
 
                   return (
-                    <li key={e.id} className={`flex items-start gap-3 relative group transition-opacity opacity-100`}>
+                    <li 
+                      key={e.id} 
+                      draggable
+                      onDragStart={(ev) => { ev.dataTransfer.effectAllowed = 'move'; setDraggedEventIndex(index); }}
+                      onDragEnter={(ev) => { ev.preventDefault(); setDragOverEventIndex(index); }}
+                      onDragOver={(ev) => { ev.preventDefault(); ev.dataTransfer.dropEffect = 'move'; }}
+                      onDragLeave={() => setDragOverEventIndex(null)}
+                      onDrop={(ev) => { ev.preventDefault(); handleEventDrop(index); }}
+                      onDragEnd={() => { setDraggedEventIndex(null); setDragOverEventIndex(null); }}
+                      className={`flex items-start gap-2 relative group transition-all duration-200 ${draggedEventIndex === index ? 'opacity-30' : 'opacity-100'} ${dragOverEventIndex === index ? 'shadow-[0_-2px_0_#8B7CF8]' : ''}`}
+                    >
+                      <div className="w-3 shrink-0 flex items-center justify-center opacity-0 group-hover:opacity-100 cursor-grab active:cursor-grabbing text-[#A0AABF] text-[10px] mt-1.5 transition-opacity">
+                        ⠿
+                      </div>
                       <div className="relative w-4 flex justify-center shrink-0 mt-1.5 z-10">
                         <div className="w-2.5 h-2.5 rounded-full border-2 bg-white" style={{ borderColor: styleObj.bar }} />
                       </div>
@@ -750,8 +757,8 @@ const CalendarPage: React.FC = () => {
                               setEditDate(localYMD);
                             }}
                           >
-                            <div className="flex flex-col">
-                              {timeStr && <span className="text-[10.5px] font-bold mb-0.5" style={{ color: styleObj.bar }}>{timeStr}</span>}
+                            <div className="flex items-start gap-2">
+                              {timeStr && <span className="text-[13px] font-extrabold shrink-0 mt-0.5" style={{ color: styleObj.bar }}>{timeStr}</span>}
                               <span className="text-[13px] font-semibold whitespace-pre-wrap leading-relaxed" style={{ color: isPastDay ? '#A3A3A3' : styleObj.text }}>
                                 {restStr}
                               </span>
@@ -761,10 +768,6 @@ const CalendarPage: React.FC = () => {
                         
                         {!isEditing && (
                           <div className="flex gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity mt-1">
-                            <div className="flex flex-col justify-center gap-0.5 mr-0.5">
-                              <button onClick={() => handleMoveEventUp(index)} disabled={index === 0} className="w-4 h-3 flex items-center justify-center text-[#A0AABF] hover:text-[#2D334A] disabled:opacity-30 text-[9px]">▲</button>
-                              <button onClick={() => handleMoveEventDown(index)} disabled={index === selectedDayEvents.length - 1} className="w-4 h-3 flex items-center justify-center text-[#A0AABF] hover:text-[#2D334A] disabled:opacity-30 text-[9px]">▼</button>
-                            </div>
                             <button onClick={() => deleteEvent(e.id)} className="w-5 h-5 flex items-center justify-center rounded text-[#A0AABF] hover:text-[#EF6A7B] text-[10px]">✕</button>
                           </div>
                         )}
@@ -789,7 +792,20 @@ const CalendarPage: React.FC = () => {
             {activeTasks.length > 0 ? (
               <ul className="flex flex-col gap-1">
                 {activeTasks.map((t, index) => (
-                  <li key={t.id} className="flex items-start gap-3 group bg-transparent px-1 py-2 rounded-xl hover:bg-white hover:shadow-card transition-all">
+                  <li 
+                    key={t.id} 
+                    draggable
+                    onDragStart={(ev) => { ev.dataTransfer.effectAllowed = 'move'; setDraggedTaskIndex(index); }}
+                    onDragEnter={(ev) => { ev.preventDefault(); setDragOverTaskIndex(index); }}
+                    onDragOver={(ev) => { ev.preventDefault(); ev.dataTransfer.dropEffect = 'move'; }}
+                    onDragLeave={() => setDragOverTaskIndex(null)}
+                    onDrop={(ev) => { ev.preventDefault(); handleTaskDrop(index); }}
+                    onDragEnd={() => { setDraggedTaskIndex(null); setDragOverTaskIndex(null); }}
+                    className={`flex items-start gap-2 group bg-transparent px-1 py-2 rounded-xl hover:bg-white hover:shadow-card transition-all duration-200 ${draggedTaskIndex === index ? 'opacity-30' : 'opacity-100'} ${dragOverTaskIndex === index ? 'shadow-[0_-2px_0_#A0AABF]' : ''}`}
+                  >
+                    <div className="w-3 shrink-0 flex items-center justify-center opacity-0 group-hover:opacity-100 cursor-grab active:cursor-grabbing text-[#A0AABF] text-[10px] mt-1 transition-opacity">
+                      ⠿
+                    </div>
                     <button 
                       onClick={() => toggleTask(t.id)} 
                       className={`w-4 h-4 mt-0.5 rounded-full border-[1.5px] flex items-center justify-center shrink-0 transition-colors ${t.done ? 'bg-[#EEF1F6] border-[#EEF1F6] text-white' : 'border-[#A0AABF] text-transparent hover:border-[#8B7CF8]'}`}
@@ -804,10 +820,6 @@ const CalendarPage: React.FC = () => {
                     </div>
                     
                     <div className="flex gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity mt-0.5">
-                      <div className="flex flex-col justify-center gap-0.5 mr-0.5">
-                        <button onClick={() => handleMoveTaskUp(index)} disabled={index === 0} className="w-4 h-3 flex items-center justify-center text-[#A0AABF] hover:text-[#2D334A] disabled:opacity-30 text-[9px]">▲</button>
-                        <button onClick={() => handleMoveTaskDown(index)} disabled={index === activeTasks.length - 1} className="w-4 h-3 flex items-center justify-center text-[#A0AABF] hover:text-[#2D334A] disabled:opacity-30 text-[9px]">▼</button>
-                      </div>
                       <button onClick={() => deleteTask(t.id)} className="w-5 h-5 flex items-center justify-center rounded text-[#A0AABF] hover:text-[#EF6A7B] text-[10px]">✕</button>
                     </div>
                   </li>
@@ -827,17 +839,17 @@ const CalendarPage: React.FC = () => {
           
           <div className="flex-1 flex flex-col min-h-0 bg-white rounded-xl border border-[#E5E5EA] shadow-sm relative overflow-hidden">
             {/* Solid left border */}
-            <div className="absolute top-0 bottom-0 left-0 w-1.5 bg-[#8B7CF8]" />
+            <div className="absolute top-0 bottom-0 left-0 w-1.5 bg-[#8A8A8A]" />
             
             <div className="flex-1 overflow-y-auto px-5 py-4">
               <div className="mb-3 flex justify-between items-center">
-                <h3 className="text-xs font-bold text-[#8B7CF8] uppercase tracking-wide">MONTHLY MEMO</h3>
+                <h3 className="text-xs font-bold text-[#8A8A8A] uppercase tracking-wide">MONTHLY MEMO</h3>
               </div>
               
               <ul className="flex flex-col gap-2 pb-1 pl-1">
                 {monthAgendas.map(ag => (
                   <li key={ag.id} className="group flex items-start gap-2.5 bg-transparent -mx-1.5 p-1 rounded-lg hover:bg-white/60 transition-colors">
-                    <button onClick={() => toggleAgenda(ag.id)} className={`mt-1.5 w-1.5 h-1.5 rounded-full shrink-0 transition-colors ${ag.done ? 'bg-[#D0D4DF]' : 'bg-[#8B7CF8]'}`} />
+                    <button onClick={() => toggleAgenda(ag.id)} className={`mt-1.5 w-1.5 h-1.5 rounded-full shrink-0 transition-colors ${ag.done ? 'bg-[#D0D4DF]' : 'bg-[#8A8A8A]'}`} />
                     <span className={`flex-1 text-xs leading-relaxed transition-colors ${ag.done ? 'text-[#D0D4DF] line-through' : 'text-[#1C1C1E] font-medium'}`}>{ag.text}</span>
                     <button onClick={() => deleteAgenda(ag.id)} className="w-5 h-5 flex items-center justify-center rounded text-[#A0AABF] hover:text-[#EF6A7B] opacity-0 group-hover:opacity-100 transition-opacity text-[10px] -mt-0.5">
                       ✕
@@ -853,7 +865,7 @@ const CalendarPage: React.FC = () => {
                 <input spellCheck={false}
                   type="text" placeholder="새 목표 입력..."
                   value={newAgenda} onChange={e => setNewAgenda(e.target.value)}
-                  className="flex-1 px-3 py-1.5 text-xs bg-white border border-[#EEF1F6] rounded-lg outline-none focus:border-[#8B7CF8] text-[#1C1C1E] placeholder:text-[#A0AABF] transition-colors"
+                  className="flex-1 px-3 py-1.5 text-xs bg-white border border-[#EEF1F6] rounded-lg outline-none focus:border-[#8A8A8A] text-[#1C1C1E] placeholder:text-[#A0AABF] transition-colors"
                 />
               </form>
             </div>
