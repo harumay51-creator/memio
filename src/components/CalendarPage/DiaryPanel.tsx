@@ -386,8 +386,17 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
                 <div className="flex gap-2 min-h-[40px] items-center justify-center">
                   {(dayDiary.emojis || []).length > 0 ? (
                     (dayDiary.emojis || []).map((emoji: string, idx: number) => (
-                      <div key={idx} className={`w-10 h-10 rounded-full flex items-center justify-center p-2.5 ${isAurora || isY2K ? 'bg-white/40 shadow-sm' : 'bg-white border border-[#E5E5EA] shadow-sm'}`}>
+                      <div key={idx} className={`group relative w-10 h-10 rounded-full flex items-center justify-center p-2.5 ${isAurora || isY2K ? 'bg-white/40 shadow-sm' : 'bg-white border border-[#E5E5EA] shadow-sm'}`}>
                         <Emoji emoji={emoji} className="w-full h-full animate-fade-in" />
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEmojiSelect(emoji);
+                          }}
+                          className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#EF6A7B] text-white flex items-center justify-center text-[8px] font-bold opacity-30 group-hover:opacity-100 hover:opacity-100 transition-opacity z-10"
+                        >
+                          ✕
+                        </button>
                       </div>
                     ))
                   ) : (
@@ -603,8 +612,17 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
               <div className="flex gap-2 min-h-[40px] items-center justify-center">
                 {(dayDiary.emojis || []).length > 0 ? (
                   (dayDiary.emojis || []).map((emoji: string, idx: number) => (
-                    <div key={idx} className={`w-10 h-10 rounded-full flex items-center justify-center p-2.5 ${isAurora || isY2K ? 'bg-white/40 shadow-sm' : 'bg-white border border-[#E5E5EA] shadow-sm'}`}>
+                    <div key={idx} className={`group relative w-10 h-10 rounded-full flex items-center justify-center p-2.5 ${isAurora || isY2K ? 'bg-white/40 shadow-sm' : 'bg-white border border-[#E5E5EA] shadow-sm'}`}>
                       <Emoji emoji={emoji} className="w-full h-full animate-fade-in" />
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEmojiSelect(emoji);
+                        }}
+                        className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#EF6A7B] text-white flex items-center justify-center text-[8px] font-bold opacity-30 group-hover:opacity-100 hover:opacity-100 transition-opacity z-10"
+                      >
+                        ✕
+                      </button>
                     </div>
                   ))
                 ) : (
