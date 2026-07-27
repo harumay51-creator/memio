@@ -465,7 +465,11 @@ const CalendarPage: React.FC = () => {
 
             const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
             const diaryEntry = diaries[dateStr];
-            const hasDiaryRecord = diaryEntry && ((diaryEntry.emojis?.length || 0) > 0 || (diaryEntry.answers?.length || 0) > 0 || (diaryEntry.memos?.length || 0) > 0);
+            const hasDiaryRecord = diaryEntry && (
+              (diaryEntry.emojis?.length || 0) > 0 || 
+              (diaryEntry.answers || []).some(a => a.answer.trim().length > 0) || 
+              (diaryEntry.memos?.length || 0) > 0
+            );
 
             return (
               <div 
