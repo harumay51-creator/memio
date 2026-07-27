@@ -109,3 +109,12 @@ export interface MonthlyEvent {
   day: number   // 1-31
   createdAt: string
 }
+
+export interface RecurringInstance {
+  id: string
+  sourceRuleId: string
+  sourceType: 'monthly' | 'yearly'
+  name: string
+  date: string // YYYY-MM-DD
+  status: 'materialized' | 'excluded'
+}

@@ -51,10 +51,10 @@ function buildGrid(year: number, month: number): (Date | null)[] {
 // ── Component ─────────────────────────────────────────────────────────────────
 const CalendarPage: React.FC = () => {
   const {
-    tasks, events, agendas, anniversaries, monthlyEvents,
+    tasks, events, agendas, anniversaries, monthlyEvents, recurringInstances,
     toggleTask, deleteTask, deleteEvent, updateEvent,
     addAgenda, toggleAgenda, deleteAgenda,
-    addEvent, updateItemOrders, deleteAnniversary, deleteMonthlyEvent,
+    addEvent, updateItemOrders, deleteRecurringOccurrence,
     navDate, setNavDate
   } = useAppStore()
   
@@ -243,30 +243,53 @@ const CalendarPage: React.FC = () => {
       )
     }
 
-    const dayAnnivs = anniversaries.filter(a => {
-      if (a.month !== d.getMonth() + 1 || a.day !== d.getDate()) return false
+    const isPastCell = d.getTime() < new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()).getTime()
+    const cellTextColor = isPastCell ? 'text-[#6B6B6B]' : 'text-[#1C1C1E]'
+
+    const dayAnnivs: { id: string, name: string, isVirtual?: boolean, instanceId?: string }[] = []
+    recurringInstances.filter(inst => inst.date === dStr && inst.sourceType === 'yearly' && inst.status === 'materialized').forEach(inst => {
+      dayAnnivs.push({ id: inst.sourceRuleId, name: inst.name, instanceId: inst.id })
+    })
+    anniversaries.forEach(a => {
+      if (a.month !== d.getMonth() + 1 || a.day !== d.getDate()) return
       const createdTime = a.createdAt ? new Date(a.createdAt).getTime() : 0
       const dEnd = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59).getTime()
-      return dEnd >= createdTime
+      if (dEnd >= createdTime) {
+        const existing = recurringInstances.find(inst => inst.sourceRuleId === a.id && inst.date === dStr)
+        if (!existing) {
+          dayAnnivs.push({ id: a.id, name: a.name, isVirtual: true })
+        }
+      }
     })
+
     dayAnnivs.forEach(a => {
       items.push(
-        <div key={`a-${a.id}`} className="text-[10.5px] shrink-0 h-[18px] px-1 bg-transparent text-[#1C1C1E] rounded-md flex gap-[6px] items-center w-full overflow-hidden">
+        <div key={`a-${a.id}`} className={`text-[10.5px] shrink-0 h-[18px] px-1 bg-transparent rounded-md flex gap-[6px] items-center w-full overflow-hidden ${cellTextColor}`}>
           <span className="text-[11px] font-bold shrink-0 text-[#B4629C]">↻</span>
           <span className="font-medium truncate leading-none">{a.name}</span>
         </div>
       )
     })
 
+    const dayMonthly: { id: string, name: string, isVirtual?: boolean, instanceId?: string }[] = []
+    recurringInstances.filter(inst => inst.date === dStr && inst.sourceType === 'monthly' && inst.status === 'materialized').forEach(inst => {
+      dayMonthly.push({ id: inst.sourceRuleId, name: inst.name, instanceId: inst.id })
+    })
     const rawMonthly = adjustedMonthlyEvents.get(dStr) || []
-    const dayMonthly = rawMonthly.filter(m => {
+    rawMonthly.forEach(m => {
       const createdTime = m.createdAt ? new Date(m.createdAt).getTime() : 0
       const dEnd = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59).getTime()
-      return dEnd >= createdTime
+      if (dEnd >= createdTime) {
+        const existing = recurringInstances.find(inst => inst.sourceRuleId === m.id && inst.date === dStr)
+        if (!existing) {
+          dayMonthly.push({ id: m.id, name: m.name, isVirtual: true })
+        }
+      }
     })
+
     dayMonthly.forEach(m => {
       items.push(
-        <div key={`m-${m.id}`} className="text-[10.5px] shrink-0 h-[18px] px-1 bg-transparent text-[#1C1C1E] rounded-md flex gap-[6px] items-center w-full overflow-hidden">
+        <div key={`m-${m.id}`} className={`text-[10.5px] shrink-0 h-[18px] px-1 bg-transparent rounded-md flex gap-[6px] items-center w-full overflow-hidden ${cellTextColor}`}>
           <span className="text-[11px] font-bold shrink-0 text-[#3A4B8C]">↻</span>
           <span className="font-medium truncate leading-none">{m.name}</span>
         </div>
@@ -282,7 +305,7 @@ const CalendarPage: React.FC = () => {
       const eColor = e.color || '#8B7CF8'
       const styleObj = EVENT_STYLE_MAP[eColor] || EVENT_STYLE_MAP['#8B7CF8']
       items.push(
-        <div key={`e-${e.id}`} className="text-[10.5px] shrink-0 h-[18px] px-1 rounded-md flex gap-[6px] items-center w-full overflow-hidden box-border" style={{ backgroundColor: styleObj.bg, color: styleObj.text }}>
+        <div key={`e-${e.id}`} className={`text-[10.5px] shrink-0 h-[18px] px-1 rounded-md flex gap-[6px] items-center w-full overflow-hidden box-border ${isPastCell ? 'text-[#6B6B6B]' : ''}`} style={{ backgroundColor: styleObj.bg, color: isPastCell ? undefined : styleObj.text }}>
           <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: styleObj.bar }}></span>
           <span className="font-medium truncate leading-none block w-full text-left">{e.text}</span>
         </div>
@@ -596,20 +619,23 @@ const CalendarPage: React.FC = () => {
                 {getDayItems(selDay).dayAnnivs.map(a => {
                   const isPastDay = new Date(selDay.getFullYear(), selDay.getMonth(), selDay.getDate()).getTime() < new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
                   return (
-                    <li key={`sa-${a.id}`} className={`flex items-start gap-3 relative group transition-opacity ${isPastDay ? 'opacity-40' : 'opacity-100'}`}>
+                    <li key={`sa-${a.id}`} className={`flex items-start gap-3 relative group transition-opacity opacity-100`}>
                       <div className="relative w-4 flex justify-center shrink-0 mt-1 z-10">
                         <span className="text-sm font-bold text-[#B4629C]">↻</span>
                       </div>
                       
                       <div className="flex-1 bg-transparent py-0.5 flex gap-2 items-start rounded-lg">
                         <div className="flex-1 flex flex-col">
-                          <span className="text-[10px] font-bold text-[#B4629C] mb-0.5">매년 반복 (기념일)</span>
-                          <span className="text-xs text-[#2D334A] font-medium whitespace-pre-wrap leading-relaxed">
+                          <span className={`text-[10px] font-bold mb-0.5 ${isPastDay ? 'text-[#B4629C]' : 'text-[#B4629C]'}`}>매년 반복 (기념일)</span>
+                          <span className={`text-xs font-medium whitespace-pre-wrap leading-relaxed ${isPastDay ? 'text-[#6B6B6B]' : 'text-[#2D334A]'}`}>
                             {a.name}
                           </span>
                         </div>
                         <div className="flex gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button onClick={() => deleteAnniversary(a.id)} className="w-5 h-5 flex items-center justify-center rounded text-[#717A8C] hover:text-[#EF6A7B] text-[10px]">✕</button>
+                          <button onClick={() => {
+                            const dStr = `${selDay.getFullYear()}-${String(selDay.getMonth() + 1).padStart(2, '0')}-${String(selDay.getDate()).padStart(2, '0')}`
+                            deleteRecurringOccurrence(a.id, 'yearly', a.name, dStr, a.instanceId)
+                          }} className="w-5 h-5 flex items-center justify-center rounded text-[#717A8C] hover:text-[#EF6A7B] text-[10px]">✕</button>
                         </div>
                       </div>
                     </li>
@@ -619,20 +645,23 @@ const CalendarPage: React.FC = () => {
                 {getDayItems(selDay).dayMonthly.map(m => {
                   const isPastDay = new Date(selDay.getFullYear(), selDay.getMonth(), selDay.getDate()).getTime() < new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
                   return (
-                    <li key={`sm-${m.id}`} className={`flex items-start gap-3 relative group transition-opacity ${isPastDay ? 'opacity-40' : 'opacity-100'}`}>
+                    <li key={`sm-${m.id}`} className={`flex items-start gap-3 relative group transition-opacity opacity-100`}>
                       <div className="relative w-4 flex justify-center shrink-0 mt-1 z-10">
                         <span className="text-sm font-bold text-[#3A4B8C]">↻</span>
                       </div>
                       
                       <div className="flex-1 bg-transparent py-0.5 flex gap-2 items-start rounded-lg">
                         <div className="flex-1 flex flex-col">
-                          <span className="text-[10px] font-bold text-[#3A4B8C] mb-0.5">매월 반복</span>
-                          <span className="text-xs text-[#2D334A] font-medium whitespace-pre-wrap leading-relaxed">
+                          <span className={`text-[10px] font-bold mb-0.5 ${isPastDay ? 'text-[#3A4B8C]' : 'text-[#3A4B8C]'}`}>매월 반복</span>
+                          <span className={`text-xs font-medium whitespace-pre-wrap leading-relaxed ${isPastDay ? 'text-[#6B6B6B]' : 'text-[#2D334A]'}`}>
                             {m.name}
                           </span>
                         </div>
                         <div className="flex gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button onClick={() => deleteMonthlyEvent(m.id)} className="w-5 h-5 flex items-center justify-center rounded text-[#717A8C] hover:text-[#EF6A7B] text-[10px]">✕</button>
+                          <button onClick={() => {
+                            const dStr = `${selDay.getFullYear()}-${String(selDay.getMonth() + 1).padStart(2, '0')}-${String(selDay.getDate()).padStart(2, '0')}`
+                            deleteRecurringOccurrence(m.id, 'monthly', m.name, dStr, m.instanceId)
+                          }} className="w-5 h-5 flex items-center justify-center rounded text-[#717A8C] hover:text-[#EF6A7B] text-[10px]">✕</button>
                         </div>
                       </div>
                     </li>
@@ -662,7 +691,7 @@ const CalendarPage: React.FC = () => {
                   const restStr = match ? match[2] : e.text;
 
                   return (
-                    <li key={e.id} className={`flex items-start gap-3 relative group transition-opacity ${isPastDay && !isEditing ? 'opacity-40' : 'opacity-100'}`}>
+                    <li key={e.id} className={`flex items-start gap-3 relative group transition-opacity opacity-100`}>
                       <div className="relative w-4 flex justify-center shrink-0 mt-1.5 z-10">
                         <div className="w-2.5 h-2.5 rounded-full border-2 bg-white" style={{ borderColor: styleObj.bar }} />
                       </div>
@@ -719,7 +748,7 @@ const CalendarPage: React.FC = () => {
                           >
                             <div className="flex flex-col">
                               {timeStr && <span className="text-[10.5px] font-bold mb-0.5" style={{ color: styleObj.bar }}>{timeStr}</span>}
-                              <span className="text-[13px] font-semibold whitespace-pre-wrap leading-relaxed" style={{ color: isPastDay ? '#717A8C' : styleObj.text }}>
+                              <span className="text-[13px] font-semibold whitespace-pre-wrap leading-relaxed" style={{ color: isPastDay ? '#6B6B6B' : styleObj.text }}>
                                 {restStr}
                               </span>
                             </div>

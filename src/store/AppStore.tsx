@@ -1,9 +1,10 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react'
-import type { Task, LedgerEntry, ScheduleEvent, Note, FixedExpense, CategoryConfig, AgendaItem, Anniversary, MonthlyEvent } from '../types'
+import type { Task, LedgerEntry, ScheduleEvent, Note, FixedExpense, CategoryConfig, AgendaItem, Anniversary, MonthlyEvent, RecurringInstance } from '../types'
 import { DEFAULT_EXPENSE_CATS } from '../utils/parser'
 import { collection, getDocs, setDoc, updateDoc, deleteDoc, doc, writeBatch, getDoc, deleteField } from 'firebase/firestore'
 import { db } from '../config/firebase'
 import { extractFirebaseImageUrls, deleteFirestoreImages, cleanupRemovedImages } from '../utils/imageUtils'
+import { calculateHolidays } from '../utils/holidays'
 import { useToast } from '../components/common/Toast'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -54,8 +55,10 @@ interface StoreValue {
   agendas: AgendaItem[]
   anniversaries: Anniversary[]
   monthlyEvents: MonthlyEvent[]
+  recurringInstances: RecurringInstance[]
   holidayConfig: HolidayConfig
   updateHolidayConfig: (updater: (prev: HolidayConfig) => HolidayConfig) => void
+  deleteRecurringOccurrence: (ruleId: string, type: 'monthly' | 'yearly', name: string, date: string, instanceId?: string) => void
   addTask:        (text: string) => void
   toggleTask:     (id: string)  => void
   updateTaskText: (id: string, text: string) => void
@@ -129,6 +132,7 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
   const [agendas, setAgendas] = useState<AgendaItem[]>([])
   const [anniversaries, setAnniversaries] = useState<Anniversary[]>([])
   const [monthlyEvents, setMonthlyEvents] = useState<MonthlyEvent[]>([])
+  const [recurringInstances, setRecurringInstances] = useState<RecurringInstance[]>([])
   
   const [holidayConfig, setHolidayConfig] = useState<HolidayConfig>({
     hiddenRules: [], hiddenDates: [], customHolidays: []
@@ -196,7 +200,8 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
           fetchedAnnivs,
           fetchedMonthly,
           fetchedCardBills,
-          fetchedSalaryRecords
+          fetchedSalaryRecords,
+          fetchedRecurringInstances
         ] = await Promise.all([
           fetchCol('tasks'),
           fetchCol('ledger'),
@@ -208,7 +213,8 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
           fetchCol('anniversaries'),
           fetchCol('monthlyEvents'),
           fetchCol('cardBills'),
-          fetchCol('salaryRecords')
+          fetchCol('salaryRecords'),
+          fetchCol('recurringInstances')
         ])
 
         const mergedCats = DEFAULT_EXPENSE_CATS.map(defCat => {
@@ -276,6 +282,7 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
         setAgendas(fetchedAgendas as AgendaItem[])
         setAnniversaries(fetchedAnnivs as Anniversary[])
         setMonthlyEvents(fetchedMonthly as MonthlyEvent[])
+        setRecurringInstances(fetchedRecurringInstances as RecurringInstance[])
         
         const billsMap: Record<string, { amount: number, memo?: string }> = {}
         console.log('[AppStore] fetchedCardBills raw:', fetchedCardBills)
@@ -369,6 +376,131 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
       batch.commit().catch(console.error)
     }
   }, [fixedExpenses, ledger, isLoading, uid])
+
+  // Backfill recurring instances (async)
+  useEffect(() => {
+    if (isLoading) return;
+    
+    // De-duplicate fast exit check
+    const existingKeys = new Set(recurringInstances.map(i => `${i.sourceRuleId}_${i.date}`));
+    
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    
+    // To handle holiday checks over many years, cache the loaded years
+    const holidayCache: Record<number, Record<string, any>> = {};
+    const getHolidayInfo = (y: number) => {
+      if (!holidayCache[y]) {
+        const autoH = calculateHolidays(y);
+        const merged: Record<string, any> = {};
+        for (const [date, info] of Object.entries(autoH)) {
+          if (holidayConfig.hiddenRules.includes(info.name)) continue;
+          if (holidayConfig.hiddenDates.includes(date)) continue;
+          merged[date] = { ...info, isRedDay: true };
+        }
+        const yPrefix = `${y}-`;
+        for (const custom of holidayConfig.customHolidays) {
+          if (custom.date.startsWith(yPrefix)) {
+            merged[custom.date] = custom;
+          }
+        }
+        holidayCache[y] = merged;
+      }
+      return holidayCache[y];
+    };
+    
+    const isWorkingDay = (dt: Date) => {
+      const w = dt.getDay();
+      if (w === 0 || w === 6) return false;
+      const y = dt.getFullYear();
+      const ds = `${y}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
+      const hInfo = getHolidayInfo(y);
+      if (hInfo[ds]?.isRedDay) return false;
+      return true;
+    };
+    
+    const calcAdjustedMonthly = (y: number, m: number, evDay: number) => {
+      const lastDate = new Date(y, m + 1, 0).getDate();
+      let target = Math.min(evDay, lastDate);
+      let dt = new Date(y, m, target);
+      let safety = 0;
+      while (!isWorkingDay(dt) && safety < 30) {
+        if (evDay === 1) dt.setDate(dt.getDate() + 1);
+        else dt.setDate(dt.getDate() - 1);
+        safety++;
+      }
+      return dt;
+    };
+
+    const missingInstances: RecurringInstance[] = [];
+
+    // Monthly
+    monthlyEvents.forEach(rule => {
+      const startDt = new Date(rule.createdAt);
+      let curY = startDt.getFullYear();
+      let curM = startDt.getMonth();
+      const endY = today.getFullYear();
+      const endM = today.getMonth();
+      
+      while (curY < endY || (curY === endY && curM <= endM)) {
+        const dt = calcAdjustedMonthly(curY, curM, rule.day);
+        if (dt <= today) {
+          const dtStr = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
+          const key = `${rule.id}_${dtStr}`;
+          if (!existingKeys.has(key)) {
+            missingInstances.push({
+              id: genId(),
+              sourceRuleId: rule.id,
+              sourceType: 'monthly',
+              name: rule.name,
+              date: dtStr,
+              status: 'materialized'
+            });
+            existingKeys.add(key);
+          }
+        }
+        curM++;
+        if (curM > 11) { curM = 0; curY++; }
+      }
+    });
+
+    // Yearly
+    anniversaries.forEach(rule => {
+      const startDt = new Date(rule.createdAt);
+      let curY = startDt.getFullYear();
+      const endY = today.getFullYear();
+      
+      while (curY <= endY) {
+        const dt = new Date(curY, rule.month - 1, rule.day);
+        if (dt <= today) {
+          const dtStr = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
+          const key = `${rule.id}_${dtStr}`;
+          if (!existingKeys.has(key)) {
+            missingInstances.push({
+              id: genId(),
+              sourceRuleId: rule.id,
+              sourceType: 'yearly',
+              name: rule.name,
+              date: dtStr,
+              status: 'materialized'
+            });
+            existingKeys.add(key);
+          }
+        }
+        curY++;
+      }
+    });
+
+    if (missingInstances.length > 0) {
+      console.log('[AppStore] Backfilling missing instances:', missingInstances.length);
+      const batch = writeBatch(db);
+      missingInstances.forEach(inst => {
+        batch.set(doc(db, 'users', uid, 'recurringInstances', inst.id), inst);
+      });
+      batch.commit().catch(console.error);
+      setRecurringInstances(prev => [...prev, ...missingInstances]);
+    }
+  }, [isLoading]); // Intentionally run only once after loading
 
   const addTask = useCallback(async (text: string) => {
     const now = new Date().toISOString()
@@ -729,6 +861,24 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
     deleteDoc(doc(db, 'users', uid, 'monthlyEvents', id)).catch(console.error)
   }, [uid])
 
+  const deleteRecurringOccurrence = useCallback((ruleId: string, type: 'monthly' | 'yearly', name: string, date: string, instanceId?: string) => {
+    if (instanceId) {
+      setRecurringInstances(prev => prev.filter(i => i.id !== instanceId))
+      deleteDoc(doc(db, 'users', uid, 'recurringInstances', instanceId)).catch(console.error)
+    } else {
+      const newInst: RecurringInstance = {
+        id: genId(),
+        sourceRuleId: ruleId,
+        sourceType: type,
+        name,
+        date,
+        status: 'excluded'
+      }
+      setRecurringInstances(prev => [...prev, newInst])
+      setDoc(doc(db, 'users', uid, 'recurringInstances', newInst.id), newInst).catch(console.error)
+    }
+  }, [uid])
+
   const unlockPrivate = async (pin: string) => {
     if (!pinHash) return false
     const inputHash = await hashPin(pin)
@@ -891,7 +1041,7 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
   return (
     <StoreCtx.Provider value={{
       isLoading, loadError,
-      tasks, ledger, events, notes, fixedExpenses, expenseCategories, agendas, anniversaries, monthlyEvents, trashedItems,
+      tasks, ledger, events, notes, fixedExpenses, expenseCategories, agendas, anniversaries, monthlyEvents, recurringInstances, trashedItems,
       holidayConfig, updateHolidayConfig,
       addTask, toggleTask, updateTaskText, updateTaskNote, deleteTask,
       addLedgerEntry,
@@ -910,6 +1060,7 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
       updateItemOrders,
       addAnniversary, deleteAnniversary,
       addMonthlyEvent, deleteMonthlyEvent,
+      deleteRecurringOccurrence,
       hasPin, isPrivateUnlocked, unlockPrivate, setPrivatePin, lockPrivate, resetPrivatePin,
       cardPaymentDay, setCardPaymentDay,
       cardBillingStartDay, cardBillingEndDay, setCardBillingDays,
