@@ -121,7 +121,7 @@ const POST_IT_THEMES = [
   { bg: '#E8EDC0', text: '#48521A' }, // Cool Lemon
 ]
 
-const getPostItStyle = (idString: string, index?: number, dateSeed?: string, isY2K?: boolean) => {
+const getPostItStyle = (idString: string, index?: number, dateSeed?: string, isY2K?: boolean, isAurora?: boolean) => {
   const hash = getHash(idString);
   let themeIndex = hash;
   const palette = POST_IT_THEMES;
@@ -137,32 +137,43 @@ const getPostItStyle = (idString: string, index?: number, dateSeed?: string, isY
     themeIndex = index;
   }
   
-  const theme = palette[themeIndex % palette.length];
-  const rotation = (Math.abs(hash) % 7) - 3; // -3 to +3 degrees
-  
-  if (isY2K) {
+  if (isY2K || isAurora) {
+    const theme = palette[themeIndex % palette.length];
+    const rotation = (Math.abs(hash) % 7) - 3; // -3 to +3 degrees
+    
+    if (isY2K) {
+      return {
+        backgroundColor: theme.bg,
+        color: theme.text,
+        transform: `rotate(${rotation}deg)`,
+        borderTop: `4px solid ${'border' in theme ? theme.border : theme.bg}`,
+        boxShadow: '4px 4px 0 rgba(0,0,0,0.4), inset 0 0 10px rgba(255,255,255,0.1)',
+        borderRadius: '2px',
+        transition: 'transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
+      };
+    }
+
     return {
       backgroundColor: theme.bg,
       color: theme.text,
       transform: `rotate(${rotation}deg)`,
-      borderTop: `4px solid ${'border' in theme ? theme.border : theme.bg}`,
-      boxShadow: '4px 4px 0 rgba(0,0,0,0.4), inset 0 0 10px rgba(255,255,255,0.1)',
-      borderRadius: '2px',
-      transition: 'transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
+      boxShadow: '2px 4px 10px rgba(0,0,0,0.15)',
+      borderRadius: '2px 12px 12px 2px'
     };
   }
 
-  
+  // Default Theme (Cream tone)
   return {
-    backgroundColor: theme.bg,
-    color: theme.text,
-    transform: `rotate(${rotation}deg)`,
-    boxShadow: '2px 4px 10px rgba(0,0,0,0.15)',
-    borderRadius: '2px 12px 12px 2px'
+    backgroundColor: '#FAF6EC',
+    color: '#3D3833',
+    transform: 'rotate(0deg)',
+    border: '1px solid #EDE6D6',
+    boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+    borderRadius: '10px'
   };
 }
 
-const QuestionItem = ({ q, initialAnswer, saveAnswer, deleteAnswer, index, dateSeed, isY2K }: { q: any, initialAnswer: string, saveAnswer: (v: string) => void, deleteAnswer: () => void, index: number, dateSeed: string, isY2K: boolean }) => {
+const QuestionItem = ({ q, initialAnswer, saveAnswer, deleteAnswer, index, dateSeed, isY2K, isAurora }: { q: any, initialAnswer: string, saveAnswer: (v: string) => void, deleteAnswer: () => void, index: number, dateSeed: string, isY2K: boolean, isAurora?: boolean }) => {
   const [localVal, setLocalVal] = useState(initialAnswer)
   const [isFocused, setIsFocused] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -183,8 +194,8 @@ const QuestionItem = ({ q, initialAnswer, saveAnswer, deleteAnswer, index, dateS
     <div 
       className={`group relative transition-all duration-300 p-4 w-36 min-h-[9rem] h-auto flex flex-col shrink-0 cursor-text ${isFocused ? 'z-20' : 'z-0 hover:z-10 hover:scale-[1.02]'}`} 
       style={{
-        ...getPostItStyle(q.id, index, dateSeed, isY2K),
-        transform: isFocused ? 'scale(1.05) rotate(0deg)' : getPostItStyle(q.id, index, dateSeed, isY2K).transform
+        ...getPostItStyle(q.id, index, dateSeed, isY2K, isAurora),
+        transform: isFocused ? 'scale(1.05) rotate(0deg)' : getPostItStyle(q.id, index, dateSeed, isY2K, isAurora).transform
       }}
       onClick={(e) => {
         if (e.target !== textareaRef.current && textareaRef.current) {
@@ -424,13 +435,14 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
                         index={idx}
                         dateSeed={dateKey}
                         isY2K={isY2K}
+                        isAurora={isAurora}
                       />
                     )
                   })}
                   
                   {/* Display snapshot answers that are no longer in settings.questions */}
                   {(dayDiary.answers || []).filter(a => !settings.questions.some(q => q.id === a.questionId)).map((a, idx) => (
-                    <div key={a.questionId} className="group relative transition-all duration-300 hover:scale-105 z-0 hover:z-10 p-4 w-36 min-h-[9rem] h-fit flex flex-col shrink-0" style={getPostItStyle(a.questionId, idx + settings.questions.length, dateKey, isY2K)}>
+                    <div key={a.questionId} className="group relative transition-all duration-300 hover:scale-105 z-0 hover:z-10 p-4 w-36 min-h-[9rem] h-fit flex flex-col shrink-0" style={getPostItStyle(a.questionId, idx + settings.questions.length, dateKey, isY2K, isAurora)}>
                       <CornerDoodle idString={a.questionId} isY2K={isY2K} />
                       <div className="flex justify-between items-start mb-1 gap-2">
                         <div>
@@ -477,7 +489,7 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
 
                 <div className="flex flex-row flex-wrap gap-2.5 items-start mt-2">
                   {[...(dayDiary.memos || [])].reverse().map((memo: DiaryMemo, idx: number) => (
-                    <div key={memo.id} className="group relative transition-all duration-300 hover:scale-105 z-0 hover:z-10 p-5 w-36 min-h-[9rem] h-fit flex flex-col justify-between shrink-0" style={getPostItStyle(memo.id, idx + (dayDiary.answers || []).length, dateKey, isY2K)}>
+                    <div key={memo.id} className="group relative transition-all duration-300 hover:scale-105 z-0 hover:z-10 p-5 w-36 min-h-[9rem] h-fit flex flex-col justify-between shrink-0" style={getPostItStyle(memo.id, idx + (dayDiary.answers || []).length, dateKey, isY2K, isAurora)}>
                       <CornerDoodle idString={memo.id} isY2K={isY2K} />
                       <div className="flex justify-between items-start mb-2 gap-2">
                         <div className="flex-1 text-[14px] whitespace-pre-wrap leading-relaxed font-diary" style={{ color: 'inherit' }}>{memo.text}</div>
@@ -602,13 +614,14 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
                       index={idx}
                       dateSeed={dateKey}
                       isY2K={isY2K}
+                      isAurora={isAurora}
                     />
                   )
                 })}
                 
                 {/* Display snapshot answers that are no longer in settings.questions */}
                 {(dayDiary.answers || []).filter(a => !settings.questions.some(q => q.id === a.questionId)).map((a, idx) => (
-                  <div key={a.questionId} className="group relative transition-all duration-300 hover:scale-105 z-0 hover:z-10 p-4 w-36 min-h-[9rem] h-auto flex flex-col shrink-0" style={getPostItStyle(a.questionId, idx + settings.questions.length, dateKey, isY2K)}>
+                  <div key={a.questionId} className="group relative transition-all duration-300 hover:scale-105 z-0 hover:z-10 p-4 w-36 min-h-[9rem] h-auto flex flex-col shrink-0" style={getPostItStyle(a.questionId, idx + settings.questions.length, dateKey, isY2K, isAurora)}>
                     <CornerDoodle idString={a.questionId} isY2K={isY2K} />
                     <div className="flex justify-between items-start mb-1 gap-2">
                       <div>
@@ -655,7 +668,7 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
 
               <div className="flex flex-row flex-wrap gap-2.5 items-start mt-2">
                 {[...(dayDiary.memos || [])].reverse().map((memo: DiaryMemo, idx: number) => (
-                  <div key={memo.id} className="group relative transition-all duration-300 hover:scale-105 z-0 hover:z-10 p-5 w-36 min-h-[9rem] h-auto flex flex-col justify-between shrink-0" style={getPostItStyle(memo.id, idx + (dayDiary.answers || []).length, dateKey, isY2K)}>
+                  <div key={memo.id} className="group relative transition-all duration-300 hover:scale-105 z-0 hover:z-10 p-5 w-36 min-h-[9rem] h-auto flex flex-col justify-between shrink-0" style={getPostItStyle(memo.id, idx + (dayDiary.answers || []).length, dateKey, isY2K, isAurora)}>
                     <CornerDoodle idString={memo.id} isY2K={isY2K} />
                     <div className="flex justify-between items-start mb-2 gap-2">
                       <div className="text-[14px] whitespace-pre-wrap leading-relaxed font-diary" style={{ color: 'inherit' }}>{memo.text}</div>
