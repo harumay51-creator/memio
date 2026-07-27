@@ -270,6 +270,18 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
   const [newMemo, setNewMemo] = useState('')
   const [monthlyText, setMonthlyText] = useState('')
   const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState(false)
+  const [customEmoji, setCustomEmoji] = useState('')
+  const emojiPickerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (emojiPickerRef.current && !emojiPickerRef.current.contains(e.target as Node)) {
+        setIsEmojiPickerOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   useEffect(() => {
     setMonthlyText(monthlyDiary.text)
@@ -356,8 +368,8 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
         {isY2K ? (
           <RetroWindow title="Diary.exe" className="h-full">
             <div className="flex-1 min-h-0 overflow-y-auto pr-2 -mr-2 flex flex-col gap-6 p-4">
-              {/* 1. Emoji Selector */}
-              <section className="p-2">
+              {/* 1. Emoji Selection */}
+              <section className="p-2" ref={emojiPickerRef}>
                 <div className="flex justify-between items-center mb-3 relative">
                   <h2 className="text-[11px] font-bold text-[#717A8C] tracking-widest uppercase inline-block relative">
                     오늘의 기분/날씨
@@ -384,12 +396,34 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
                 </div>
                 
                 {isEmojiPickerOpen && (
-                  <>
-                    <div 
-                      className="fixed inset-0 z-40" 
-                      onClick={() => setIsEmojiPickerOpen(false)}
-                    />
-                    <div className="mt-4 pt-4 border-t border-[#E5E5EA] flex flex-col gap-3 relative z-50 animate-slide-down">
+                  <div className="mt-4 pt-4 border-t border-[#E5E5EA] flex flex-col gap-3 relative z-50 animate-slide-down">
+                    <div className="flex gap-2 items-center">
+                      <input
+                        type="text"
+                        value={customEmoji}
+                        onChange={(e) => setCustomEmoji(e.target.value)}
+                        placeholder="이모지 직접 입력..."
+                        className="flex-1 bg-white border border-[#E5E5EA] rounded px-3 py-1.5 text-[13px] outline-none focus:border-[#8B7CF8] font-emoji"
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && customEmoji.trim()) {
+                            e.preventDefault();
+                            handleEmojiSelect(customEmoji.trim());
+                            setCustomEmoji('');
+                          }
+                        }}
+                      />
+                      <button
+                        onClick={() => {
+                          if (customEmoji.trim()) {
+                            handleEmojiSelect(customEmoji.trim());
+                            setCustomEmoji('');
+                          }
+                        }}
+                        className="bg-[#8B7CF8] text-white px-3 py-1.5 rounded text-xs font-bold whitespace-nowrap hover:bg-[#7a6aeb] transition-colors"
+                      >
+                        추가
+                      </button>
+                    </div>
                       {EMOJI_CATEGORIES.map(cat => (
                         <div key={cat.name}>
                           <div className="text-[10px] text-[#717A8C] mb-1.5">{cat.name}</div>
@@ -413,8 +447,7 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
                           </div>
                         </div>
                       ))}
-                    </div>
-                  </>
+                  </div>
                 )}
               </section>
 
