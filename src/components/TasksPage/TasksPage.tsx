@@ -2,9 +2,26 @@ import React, { useState, useMemo, useEffect, KeyboardEvent } from 'react'
 import { useAppStore } from '../../store/AppStore'
 import RichTextEditor from '../common/RichTextEditor'
 import type { Task } from '../../types'
+import { SortableItem } from '../common/SortableItem'
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragOverlay,
+  defaultDropAnimationSideEffects,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
 
 const TasksPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId }) => {
-  const { tasks, addTask, toggleTask, updateTaskNote, updateTaskText, deleteTask } = useAppStore()
+  const { tasks, addTask, toggleTask, updateTaskNote, updateTaskText, deleteTask, updateItemOrders } = useAppStore()
   const [selTaskId, setSelTaskId] = useState<string | null>(activeItemId || null)
 
   // Auto-select when activeItemId changes
@@ -18,13 +35,26 @@ const TasksPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId })
 
   const stripHtml = (html: string) => html ? html.replace(/<[^>]*>?/gm, '') : ''
 
+  // Migration: Assign order to tasks that don't have it yet
+  useEffect(() => {
+    const pendingWithoutOrder = tasks.filter(t => !t.done && t.order === undefined)
+    if (pendingWithoutOrder.length > 0) {
+      const sortedByTime = tasks.filter(t => !t.done).sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+      updateItemOrders(sortedByTime.map((t, i) => ({ id: t.id, type: 'task', order: Date.now() + i })))
+    }
+  }, [tasks, updateItemOrders])
+
   // Split tasks into pending and completed
   const pendingTasks = useMemo(() => tasks.filter(t => {
     if (t.done) return false
     if (!searchQuery.trim()) return true
     const lowerQ = searchQuery.toLowerCase()
     return t.text.toLowerCase().includes(lowerQ) || stripHtml(t.note || '').toLowerCase().includes(lowerQ)
-  }).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()), [tasks, searchQuery])
+  }).sort((a, b) => {
+    const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0
+    const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0
+    return (a.order ?? timeA) - (b.order ?? timeB)
+  }), [tasks, searchQuery])
 
   const completedTasks = useMemo(() => tasks.filter(t => {
     if (!t.done) return false
@@ -46,6 +76,29 @@ const TasksPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId })
     if (e) e.stopPropagation()
     deleteTask(id)
     if (selTaskId === id) setSelTaskId(null)
+  }
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  )
+  const [activeId, setActiveId] = useState<string | null>(null)
+
+  const handleDragStart = (event: any) => {
+    setActiveId(event.active.id)
+  }
+
+  const handleDragEnd = (event: any) => {
+    setActiveId(null)
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+
+    const oldIndex = pendingTasks.findIndex(t => t.id === active.id)
+    const newIndex = pendingTasks.findIndex(t => t.id === over.id)
+    if (oldIndex === -1 || newIndex === -1) return
+    
+    const reordered = arrayMove(pendingTasks, oldIndex, newIndex)
+    updateItemOrders(reordered.map((t, i) => ({ id: t.id, type: 'task', order: Date.now() + i })))
   }
 
   return (
@@ -95,26 +148,54 @@ const TasksPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId })
           <div className="flex-1 flex flex-col overflow-hidden p-4">
             {activeTab === 'pending' ? (
               <section className="flex-1 min-h-0 flex flex-col overflow-hidden">
-                <div className="flex-1 overflow-y-auto flex flex-col gap-1 pr-1">
-                  {pendingTasks.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-full text-yuri-400 p-6 text-center">
-                      <p className="text-sm whitespace-pre-wrap">
-                        {searchQuery.trim() ? '검색 결과가 없습니다.' : '진행 중인 업무가 없습니다.\n위 입력창에서 바로 추가해보세요!'}
-                      </p>
-                    </div>
-                  ) : (
-                    pendingTasks.map(t => (
-                      <TaskListItem 
-                        key={t.id} 
-                        task={t} 
-                        isSelected={selTaskId === t.id}
-                        onSelect={() => setSelTaskId(t.id)}
-                        onToggle={(e) => { e.stopPropagation(); toggleTask(t.id) }}
-                        onDelete={(e) => handleDelete(t.id, e)}
-                      />
-                    ))
-                  )}
-                </div>
+                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+                  <div className="flex-1 overflow-y-auto flex flex-col gap-1 pr-1">
+                    {pendingTasks.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center h-full text-yuri-400 p-6 text-center">
+                        <p className="text-sm whitespace-pre-wrap">
+                          {searchQuery.trim() ? '검색 결과가 없습니다.' : '진행 중인 업무가 없습니다.\n위 입력창에서 바로 추가해보세요!'}
+                        </p>
+                      </div>
+                    ) : (
+                      <SortableContext items={pendingTasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
+                        {pendingTasks.map(t => (
+                          <SortableItem key={t.id} id={t.id}>
+                            {({ attributes, listeners, setNodeRef, style, isDragging }) => (
+                              <TaskListItem 
+                                innerRef={setNodeRef}
+                                style={style}
+                                isDragging={isDragging}
+                                dragHandleProps={{ ...attributes, ...listeners }}
+                                task={t} 
+                                isSelected={selTaskId === t.id}
+                                onSelect={() => setSelTaskId(t.id)}
+                                onToggle={(e) => { e.stopPropagation(); toggleTask(t.id) }}
+                                onDelete={(e) => handleDelete(t.id, e)}
+                              />
+                            )}
+                          </SortableItem>
+                        ))}
+                      </SortableContext>
+                    )}
+                  </div>
+                  <DragOverlay dropAnimation={{ sideEffects: defaultDropAnimationSideEffects({ styles: { active: { opacity: '0.4' } } }) }}>
+                    {activeId ? (() => {
+                      const activeTask = pendingTasks.find(t => t.id === activeId)
+                      if (!activeTask) return null
+                      return (
+                        <TaskListItem
+                          task={activeTask}
+                          isSelected={selTaskId === activeTask.id}
+                          onSelect={() => {}}
+                          onToggle={() => {}}
+                          onDelete={() => {}}
+                          isDragging={true}
+                          dragHandleProps={{}}
+                        />
+                      )
+                    })() : null}
+                  </DragOverlay>
+                </DndContext>
               </section>
             ) : (
               <section className="flex-1 flex flex-col min-h-0 overflow-hidden">
@@ -204,9 +285,13 @@ interface TaskListItemProps {
   onSelect: () => void
   onToggle: (e: React.MouseEvent) => void
   onDelete: (e: React.MouseEvent) => void
+  isDragging?: boolean
+  dragHandleProps?: Record<string, any>
+  innerRef?: (node: HTMLElement | null) => void
+  style?: React.CSSProperties
 }
 
-const TaskListItem: React.FC<TaskListItemProps> = ({ task, isSelected, onSelect, onToggle, onDelete }) => {
+const TaskListItem: React.FC<TaskListItemProps> = ({ task, isSelected, onSelect, onToggle, onDelete, isDragging, dragHandleProps, innerRef, style }) => {
   const d = new Date(task.createdAt)
   const createdAtStr = `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
   let updatedAtStr = ''
@@ -217,12 +302,23 @@ const TaskListItem: React.FC<TaskListItemProps> = ({ task, isSelected, onSelect,
 
   return (
     <div
+      ref={innerRef}
+      style={style}
       onClick={onSelect}
       className={`
         group flex items-start gap-3 p-3 rounded-xl cursor-pointer border transition-all duration-150 relative
         ${isSelected ? 'bg-white border-yuri-300 shadow-sm' : 'bg-transparent border-transparent hover:bg-yuri-100/50 hover:border-yuri-200'}
+        ${isDragging ? 'shadow-card bg-white z-50 opacity-90' : ''}
       `}
     >
+      {dragHandleProps && (
+        <div 
+          {...dragHandleProps}
+          className="w-3 shrink-0 flex items-center justify-center opacity-0 group-hover:opacity-100 cursor-grab active:cursor-grabbing text-yuri-300 text-[10px] mt-1 transition-opacity outline-none"
+        >
+          ⠿
+        </div>
+      )}
       <div 
         onClick={onToggle}
         className={`w-5 h-5 rounded flex items-center justify-center shrink-0 mt-0.5 border transition-all ${

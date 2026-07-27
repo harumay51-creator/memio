@@ -7,6 +7,23 @@ import Emoji from '../common/Emoji'
 import DiaryPanel from './DiaryPanel'
 import DiarySearchPanel from './DiarySearchPanel'
 import { RetroWindow } from '../common/Y2KTheme'
+import { SortableItem } from '../common/SortableItem'
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragOverlay,
+  defaultDropAnimationSideEffects,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'] as const
@@ -184,30 +201,37 @@ const CalendarPage: React.FC = () => {
       })
   }, [tasks])
 
-  const [draggedEventIndex, setDraggedEventIndex] = useState<number | null>(null)
-  const [dragOverEventIndex, setDragOverEventIndex] = useState<number | null>(null)
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  )
+  const [activeId, setActiveId] = useState<string | null>(null)
 
-  const handleEventDrop = (dropIndex: number) => {
-    if (draggedEventIndex === null || draggedEventIndex === dropIndex) return
-    const reordered = [...selectedDayEvents]
-    const [item] = reordered.splice(draggedEventIndex, 1)
-    reordered.splice(dropIndex, 0, item)
-    updateItemOrders(reordered.map((e, i) => ({ id: e.id, type: 'event', order: Date.now() + i })))
-    setDraggedEventIndex(null)
-    setDragOverEventIndex(null)
+  const handleDragStart = (event: any) => {
+    setActiveId(event.active.id)
   }
 
-  const [draggedTaskIndex, setDraggedTaskIndex] = useState<number | null>(null)
-  const [dragOverTaskIndex, setDragOverTaskIndex] = useState<number | null>(null)
+  const handleDragEnd = (event: any) => {
+    setActiveId(null)
+    const { active, over } = event
+    if (!over || active.id === over.id) return
 
-  const handleTaskDrop = (dropIndex: number) => {
-    if (draggedTaskIndex === null || draggedTaskIndex === dropIndex) return
-    const reordered = [...activeTasks]
-    const [item] = reordered.splice(draggedTaskIndex, 1)
-    reordered.splice(dropIndex, 0, item)
-    updateItemOrders(reordered.map((t, i) => ({ id: t.id, type: 'task', order: Date.now() + i })))
-    setDraggedTaskIndex(null)
-    setDragOverTaskIndex(null)
+    const activeIsEvent = selectedDayEvents.some(e => e.id === active.id)
+    const activeIsTask = activeTasks.some(t => t.id === active.id)
+
+    if (activeIsEvent) {
+      const oldIndex = selectedDayEvents.findIndex(e => e.id === active.id)
+      const newIndex = selectedDayEvents.findIndex(e => e.id === over.id)
+      if (oldIndex === -1 || newIndex === -1) return
+      const reordered = arrayMove(selectedDayEvents, oldIndex, newIndex)
+      updateItemOrders(reordered.map((e, i) => ({ id: e.id, type: 'event', order: Date.now() + i })))
+    } else if (activeIsTask) {
+      const oldIndex = activeTasks.findIndex(t => t.id === active.id)
+      const newIndex = activeTasks.findIndex(t => t.id === over.id)
+      if (oldIndex === -1 || newIndex === -1) return
+      const reordered = arrayMove(activeTasks, oldIndex, newIndex)
+      updateItemOrders(reordered.map((t, i) => ({ id: t.id, type: 'task', order: Date.now() + i })))
+    }
   }
 
   // ── Monthly Agenda ────────
@@ -460,7 +484,7 @@ const CalendarPage: React.FC = () => {
                     setInlineText('')
                   }
                 }}
-                className={`p-3 flex flex-col cursor-pointer transition-all duration-200 min-h-0 overflow-hidden ${isDiaryMode ? 'rounded-[20px]' : 'rounded-[14px]'} ${
+                className={`p-3 flex flex-col cursor-pointer transition-all duration-200 min-h-0 overflow-visible ${isDiaryMode ? 'rounded-[20px]' : 'rounded-[14px]'} ${
                   isDiaryMode && isY2K
                     ? isSelected
                       ? 'bg-white/60 border border-white/80 shadow-[0_4px_16px_rgba(213,186,255,0.6)]'
@@ -591,6 +615,8 @@ const CalendarPage: React.FC = () => {
         )
       ) : (
         <aside className="relative w-[360px] flex flex-col h-full bg-[#F9FAFB] border-l border-[#E5E5EA] shrink-0 overflow-hidden px-6 py-8">
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+
           
           {/* 1. Selected Day Events (Timeline) */}
           <section className="flex flex-col flex-1 min-h-0 mb-6">
@@ -661,7 +687,9 @@ const CalendarPage: React.FC = () => {
                   );
                 })}
                 
-                {selectedDayEvents.map((e, index) => {
+                {selectedDayEvents.length > 0 && (
+                  <SortableContext items={selectedDayEvents.map(e => e.id)} strategy={verticalListSortingStrategy}>
+                    {selectedDayEvents.map((e) => {
                   const isEditing = editingEventId === e.id;
                   const eColor = e.color || '#8B7CF8';
                   const styleObj = EVENT_STYLE_MAP[eColor] || EVENT_STYLE_MAP['#8B7CF8'];
@@ -684,25 +712,21 @@ const CalendarPage: React.FC = () => {
                   const restStr = match ? match[2] : e.text;
 
                   return (
-                    <li 
-                      key={e.id} 
-                      draggable
-                      onDragStart={(ev) => { 
-                        ev.dataTransfer.effectAllowed = 'move'; 
-                        ev.dataTransfer.setData('text/plain', e.id);
-                        setDraggedEventIndex(index); 
-                      }}
-                      onDragEnter={(ev) => { ev.preventDefault(); setDragOverEventIndex(index); }}
-                      onDragOver={(ev) => { ev.preventDefault(); ev.dataTransfer.dropEffect = 'move'; }}
-                      onDragLeave={() => setDragOverEventIndex(null)}
-                      onDrop={(ev) => { ev.preventDefault(); handleEventDrop(index); }}
-                      onDragEnd={() => { setDraggedEventIndex(null); setDragOverEventIndex(null); }}
-                      className={`flex items-start gap-2 relative group transition-all duration-200 ${draggedEventIndex === index ? 'opacity-30' : 'opacity-100'} ${dragOverEventIndex === index ? 'shadow-[0_-2px_0_#8B7CF8]' : ''}`}
-                    >
-                      <div className="w-3 shrink-0 flex items-center justify-center opacity-0 group-hover:opacity-100 cursor-grab active:cursor-grabbing text-[#A0AABF] text-[10px] mt-1.5 transition-opacity">
-                        ⠿
-                      </div>
-                      <div className="relative w-4 flex justify-center shrink-0 mt-1.5 z-10">
+                    <SortableItem key={e.id} id={e.id}>
+                      {({ attributes, listeners, setNodeRef, style, isDragging }) => (
+                        <li 
+                          ref={setNodeRef}
+                          style={style}
+                          className={`flex items-start gap-2 relative group transition-all duration-200 ${isDragging ? 'shadow-card bg-white rounded-xl z-50' : ''}`}
+                        >
+                          <div 
+                            {...attributes} 
+                            {...listeners} 
+                            className="w-3 shrink-0 flex items-center justify-center opacity-0 group-hover:opacity-100 cursor-grab active:cursor-grabbing text-[#A0AABF] text-[10px] mt-1.5 transition-opacity outline-none"
+                          >
+                            ⠿
+                          </div>
+                          <div className="relative w-4 flex justify-center shrink-0 mt-1.5 z-10">
                         <div className="w-2.5 h-2.5 rounded-full border-2 bg-white" style={{ borderColor: styleObj.bar }} />
                       </div>
                       
@@ -769,7 +793,6 @@ const CalendarPage: React.FC = () => {
                             </div>
                           </div>
                         )}
-                        
                         {!isEditing && (
                           <div className="flex gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity mt-1">
                             <button onClick={() => deleteEvent(e.id)} className="w-5 h-5 flex items-center justify-center rounded text-[#A0AABF] hover:text-[#EF6A7B] text-[10px]">✕</button>
@@ -777,8 +800,12 @@ const CalendarPage: React.FC = () => {
                         )}
                       </div>
                     </li>
+                      )}
+                    </SortableItem>
                   );
                 })}
+              </SortableContext>
+            )}
               </ul>
             ) : (
               <p className="text-xs text-[#A0AABF] py-2 relative z-10">이 날짜의 일정이 없습니다.</p>
@@ -794,26 +821,23 @@ const CalendarPage: React.FC = () => {
           </header>
           <div className="relative flex-1 min-h-0 overflow-y-auto pr-2 -mr-2">
             {activeTasks.length > 0 ? (
-              <ul className="flex flex-col gap-1">
-                {activeTasks.map((t, index) => (
-                  <li 
-                    key={t.id} 
-                    draggable
-                    onDragStart={(ev) => { 
-                      ev.dataTransfer.effectAllowed = 'move'; 
-                      ev.dataTransfer.setData('text/plain', t.id);
-                      setDraggedTaskIndex(index); 
-                    }}
-                    onDragEnter={(ev) => { ev.preventDefault(); setDragOverTaskIndex(index); }}
-                    onDragOver={(ev) => { ev.preventDefault(); ev.dataTransfer.dropEffect = 'move'; }}
-                    onDragLeave={() => setDragOverTaskIndex(null)}
-                    onDrop={(ev) => { ev.preventDefault(); handleTaskDrop(index); }}
-                    onDragEnd={() => { setDraggedTaskIndex(null); setDragOverTaskIndex(null); }}
-                    className={`flex items-start gap-2 group bg-transparent px-1 py-2 rounded-xl hover:bg-white hover:shadow-card transition-all duration-200 ${draggedTaskIndex === index ? 'opacity-30' : 'opacity-100'} ${dragOverTaskIndex === index ? 'shadow-[0_-2px_0_#A0AABF]' : ''}`}
-                  >
-                    <div className="w-3 shrink-0 flex items-center justify-center opacity-0 group-hover:opacity-100 cursor-grab active:cursor-grabbing text-[#A0AABF] text-[10px] mt-1 transition-opacity">
-                      ⠿
-                    </div>
+              <SortableContext items={activeTasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
+                <ul className="flex flex-col gap-1">
+                  {activeTasks.map((t) => (
+                    <SortableItem key={t.id} id={t.id}>
+                      {({ attributes, listeners, setNodeRef, style, isDragging }) => (
+                        <li 
+                          ref={setNodeRef}
+                          style={style}
+                          className={`flex items-start gap-2 group bg-transparent px-1 py-2 rounded-xl hover:bg-white hover:shadow-card transition-all duration-200 ${isDragging ? 'shadow-card bg-white z-50' : ''}`}
+                        >
+                          <div 
+                            {...attributes}
+                            {...listeners}
+                            className="w-3 shrink-0 flex items-center justify-center opacity-0 group-hover:opacity-100 cursor-grab active:cursor-grabbing text-[#A0AABF] text-[10px] mt-1 transition-opacity outline-none"
+                          >
+                            ⠿
+                          </div>
                     <button 
                       onClick={() => toggleTask(t.id)} 
                       className={`w-4 h-4 mt-0.5 rounded-full border-[1.5px] flex items-center justify-center shrink-0 transition-colors ${t.done ? 'bg-[#EEF1F6] border-[#EEF1F6] text-white' : 'border-[#A0AABF] text-transparent hover:border-[#8B7CF8]'}`}
@@ -827,12 +851,15 @@ const CalendarPage: React.FC = () => {
                       </span>
                     </div>
                     
-                    <div className="flex gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity mt-0.5">
-                      <button onClick={() => deleteTask(t.id)} className="w-5 h-5 flex items-center justify-center rounded text-[#A0AABF] hover:text-[#EF6A7B] text-[10px]">✕</button>
-                    </div>
-                  </li>
-                ))}
-              </ul>
+                          <div className="flex gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity mt-0.5">
+                            <button onClick={() => deleteTask(t.id)} className="w-5 h-5 flex items-center justify-center rounded text-[#A0AABF] hover:text-[#EF6A7B] text-[10px]">✕</button>
+                          </div>
+                        </li>
+                      )}
+                    </SortableItem>
+                  ))}
+                </ul>
+              </SortableContext>
             ) : (
               <p className="text-xs text-[#A0AABF] py-2 px-1">모든 업무를 완료했습니다!</p>
             )}
@@ -880,6 +907,36 @@ const CalendarPage: React.FC = () => {
           </div>
         </section>
 
+          {(() => {
+            const activeEvent = selectedDayEvents.find(e => e.id === activeId)
+            const activeTask = activeTasks.find(t => t.id === activeId)
+            return (
+              <DragOverlay dropAnimation={{ sideEffects: defaultDropAnimationSideEffects({ styles: { active: { opacity: '0.4' } } }) }}>
+                {activeEvent ? (
+                  <div className="flex items-start gap-2 bg-white px-2 py-1 rounded-xl shadow-card border border-[#EEF1F6]">
+                    <div className="w-3 shrink-0 flex items-center justify-center text-[#A0AABF] text-[10px] mt-1.5">⠿</div>
+                    <div className="relative w-4 flex justify-center shrink-0 mt-1.5 z-10">
+                      <div className="w-2.5 h-2.5 rounded-full border-2 bg-white" style={{ borderColor: EVENT_STYLE_MAP[activeEvent.color || '#8B7CF8']?.bar || '#8B7CF8' }} />
+                    </div>
+                    <div className="flex-1 bg-transparent flex gap-2 items-start py-0.5">
+                      <div className="flex items-start gap-2">
+                        <span className="text-[13px] font-semibold whitespace-pre-wrap leading-relaxed">{activeEvent.text.replace(/^((?:0?[0-9]|1[0-9]|2[0-3]):[0-5][0-9](?:\s?(?:AM|PM|am|pm))?)\s*/i, '')}</span>
+                      </div>
+                    </div>
+                  </div>
+                ) : activeTask ? (
+                  <div className="flex items-start gap-2 bg-white px-1 py-2 rounded-xl shadow-card">
+                    <div className="w-3 shrink-0 flex items-center justify-center text-[#A0AABF] text-[10px] mt-1">⠿</div>
+                    <div className="w-4 h-4 mt-0.5 rounded-full border-[1.5px] flex items-center justify-center shrink-0 border-[#A0AABF] text-transparent" />
+                    <div className="flex-1 mt-0.5">
+                      <span className="text-xs font-medium whitespace-pre-wrap leading-relaxed text-[#1C1C1E]">{activeTask.text}</span>
+                    </div>
+                  </div>
+                ) : null}
+              </DragOverlay>
+            )
+          })()}
+          </DndContext>
         </aside>
       )}
       </div>
