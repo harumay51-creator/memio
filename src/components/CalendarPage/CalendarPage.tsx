@@ -252,7 +252,7 @@ const CalendarPage: React.FC = () => {
     dayAnnivs.forEach(a => {
       items.push(
         <div key={`a-${a.id}`} className="text-[10.5px] shrink-0 h-[18px] px-1 bg-transparent text-[#1C1C1E] rounded-md flex gap-[6px] items-center w-full overflow-hidden">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#C96A95] shrink-0"></span>
+          <span className="text-[11px] font-bold shrink-0 text-[#B4629C]">↻</span>
           <span className="font-medium truncate leading-none">{a.name}</span>
         </div>
       )
@@ -267,7 +267,7 @@ const CalendarPage: React.FC = () => {
     dayMonthly.forEach(m => {
       items.push(
         <div key={`m-${m.id}`} className="text-[10.5px] shrink-0 h-[18px] px-1 bg-transparent text-[#1C1C1E] rounded-md flex gap-[6px] items-center w-full overflow-hidden">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#3F9E7A] shrink-0"></span>
+          <span className="text-[11px] font-bold shrink-0 text-[#3A4B8C]">↻</span>
           <span className="font-medium truncate leading-none">{m.name}</span>
         </div>
       )
@@ -465,7 +465,9 @@ const CalendarPage: React.FC = () => {
                             : 'bg-[#FFFFFF] hover:bg-[#FCFCFF] shadow-[0_1px_4px_rgba(0,0,0,0.05)] border border-transparent'
                         : isSelected 
                           ? 'bg-[#F7F6FF] shadow-[0_1px_4px_rgba(0,0,0,0.08)]' 
-                          : 'bg-[#FFFFFF] hover:bg-[#FCFCFF] shadow-[0_1px_4px_rgba(0,0,0,0.08)]'
+                          : isRedDay || date.getDay() === 6
+                            ? 'bg-[#FBF3F3] hover:bg-[#F5EAEA] shadow-[0_1px_4px_rgba(0,0,0,0.05)] border border-transparent'
+                            : 'bg-[#FFFFFF] hover:bg-[#FCFCFF] shadow-[0_1px_4px_rgba(0,0,0,0.08)]'
                 }`}
               >
                 <div 
@@ -479,7 +481,7 @@ const CalendarPage: React.FC = () => {
                     isToday ? 'bg-[#8B7CF8] text-[#FFFFFF] shadow-[0_2px_6px_rgba(139,124,248,0.4)]' : 
                     isY2K && isDiaryMode 
                       ? isRedDay ? 'text-[#ff8ca1] drop-shadow-[0_1px_1px_rgba(138,99,210,0.4)]' : 'text-white drop-shadow-[0_1px_2px_rgba(138,99,210,0.8)]'
-                      : isRedDay ? 'text-[#EF6A7B]' : 'text-[#717A8C]'
+                      : isRedDay && isDiaryMode ? 'text-[#EF6A7B]' : 'text-[#717A8C]'
                   }
                 `}>
                   {date.getDate()}
@@ -596,12 +598,12 @@ const CalendarPage: React.FC = () => {
                   return (
                     <li key={`sa-${a.id}`} className={`flex items-start gap-3 relative group transition-opacity ${isPastDay ? 'opacity-40' : 'opacity-100'}`}>
                       <div className="relative w-4 flex justify-center shrink-0 mt-1 z-10">
-                        <div className="w-2.5 h-2.5 rounded-full border-2 border-[#C96A95] bg-white" />
+                        <span className="text-sm font-bold text-[#B4629C]">↻</span>
                       </div>
                       
                       <div className="flex-1 bg-transparent py-0.5 flex gap-2 items-start rounded-lg">
                         <div className="flex-1 flex flex-col">
-                          <span className="text-[10px] font-bold text-[#C96A95] mb-0.5">기념일</span>
+                          <span className="text-[10px] font-bold text-[#B4629C] mb-0.5">매년 반복 (기념일)</span>
                           <span className="text-xs text-[#2D334A] font-medium whitespace-pre-wrap leading-relaxed">
                             {a.name}
                           </span>
@@ -619,12 +621,12 @@ const CalendarPage: React.FC = () => {
                   return (
                     <li key={`sm-${m.id}`} className={`flex items-start gap-3 relative group transition-opacity ${isPastDay ? 'opacity-40' : 'opacity-100'}`}>
                       <div className="relative w-4 flex justify-center shrink-0 mt-1 z-10">
-                        <div className="w-2.5 h-2.5 rounded-full border-2 border-[#3F9E7A] bg-white" />
+                        <span className="text-sm font-bold text-[#3A4B8C]">↻</span>
                       </div>
                       
                       <div className="flex-1 bg-transparent py-0.5 flex gap-2 items-start rounded-lg">
                         <div className="flex-1 flex flex-col">
-                          <span className="text-[10px] font-bold text-[#3F9E7A] mb-0.5">매월 반복</span>
+                          <span className="text-[10px] font-bold text-[#3A4B8C] mb-0.5">매월 반복</span>
                           <span className="text-xs text-[#2D334A] font-medium whitespace-pre-wrap leading-relaxed">
                             {m.name}
                           </span>
