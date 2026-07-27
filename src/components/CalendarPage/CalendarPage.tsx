@@ -15,12 +15,12 @@ const MONTH_KO = [
   '7월','8월','9월','10월','11월','12월',
 ] as const
 
-const EVENT_COLORS = ['#8B7CF8', '#EF6A7B', '#63D2B0', '#F4B73F']
-const EVENT_STYLE_MAP: Record<string, { bg: string, text: string, bar: string }> = {
-  '#8B7CF8': { bg: 'transparent', text: '#1C1C1E', bar: '#8B7CF8' }, // Purple
-  '#EF6A7B': { bg: 'transparent', text: '#1C1C1E', bar: '#EF6A7B' }, // Red
-  '#63D2B0': { bg: 'transparent', text: '#1C1C1E', bar: '#63D2B0' }, // Green
-  '#F4B73F': { bg: 'transparent', text: '#1C1C1E', bar: '#F4B73F' }, // Yellow
+const EVENT_COLORS = ['#8B7CF8', '#F4B73F', '#63D2B0', '#EF6A7B']
+const EVENT_STYLE_MAP: Record<string, { bg: string, text: string, bar: string, label: string }> = {
+  '#8B7CF8': { bg: '#F3F1FF', text: '#5B4FCF', bar: '#8B7CF8', label: '회의' }, // Purple
+  '#F4B73F': { bg: '#FFF8E5', text: '#B38400', bar: '#F4B73F', label: '메모' }, // Yellow
+  '#63D2B0': { bg: '#EAF4F0', text: '#2E795B', bar: '#63D2B0', label: '개인' }, // Green
+  '#EF6A7B': { bg: '#FFF0F0', text: '#D45D6E', bar: '#EF6A7B', label: '중요' }, // Red
 }
 
 function sameDay(a: Date, b: Date): boolean {
@@ -305,9 +305,8 @@ const CalendarPage: React.FC = () => {
       const eColor = e.color || '#8B7CF8'
       const styleObj = EVENT_STYLE_MAP[eColor] || EVENT_STYLE_MAP['#8B7CF8']
       items.push(
-        <div key={`e-${e.id}`} className={`text-[10.5px] shrink-0 h-[18px] px-1 rounded-md flex gap-[6px] items-center w-full overflow-hidden box-border ${isPastCell ? 'text-[#A3A3A3]' : ''}`} style={{ backgroundColor: styleObj.bg, color: isPastCell ? undefined : styleObj.text }}>
-          <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: styleObj.bar }}></span>
-          <span className="font-medium truncate leading-none block w-full text-left">{e.text}</span>
+        <div key={`e-${e.id}`} className={`text-[10px] shrink-0 h-auto py-0.5 px-1.5 rounded-sm flex gap-[4px] items-center w-full overflow-hidden box-border ${isPastCell ? 'opacity-60' : ''}`} style={{ backgroundColor: styleObj.bg, color: styleObj.text }}>
+          <span className="font-medium truncate leading-snug block w-full text-left">{e.text}</span>
         </div>
       )
     })
@@ -719,15 +718,20 @@ const CalendarPage: React.FC = () => {
                                 onChange={ev => setEditDate(ev.target.value)}
                                 className="text-[10px] text-[#717A8C] outline-none bg-transparent"
                               />
-                              <div className="flex gap-1.5">
-                                {EVENT_COLORS.map(c => (
-                                  <button
-                                    key={c}
-                                    onClick={() => setEditColor(c)}
-                                    className={`w-3.5 h-3.5 rounded-full transition-all ${editColor === c ? 'ring-2 ring-offset-1 scale-110' : 'opacity-70 hover:opacity-100'}`}
-                                    style={{ backgroundColor: c, '--tw-ring-color': c } as React.CSSProperties}
-                                  />
-                                ))}
+                              <div className="flex gap-1.5 flex-wrap">
+                                {EVENT_COLORS.map(c => {
+                                  const s = EVENT_STYLE_MAP[c];
+                                  return (
+                                    <button
+                                      key={c}
+                                      onClick={() => setEditColor(c)}
+                                      className={`text-[10px] px-2 py-0.5 rounded transition-all font-semibold ${editColor === c ? 'ring-1 shadow-sm' : 'opacity-60 hover:opacity-100'}`}
+                                      style={{ backgroundColor: s.bg, color: s.text, '--tw-ring-color': s.bar } as React.CSSProperties}
+                                    >
+                                      {s.label}
+                                    </button>
+                                  )
+                                })}
                               </div>
                             </div>
                             <div className="flex justify-end gap-1.5 mt-2">
