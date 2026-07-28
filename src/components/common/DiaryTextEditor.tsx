@@ -86,6 +86,12 @@ const DiaryTextEditor: React.FC<DiaryTextEditorProps> = ({
     }
   }, [editor, autoFocus]);
 
+  useEffect(() => {
+    if (editor && initialContent === '' && !editor.isEmpty) {
+      editor.commands.setContent('');
+    }
+  }, [editor, initialContent]);
+
   if (!editor) return null;
 
   return (
