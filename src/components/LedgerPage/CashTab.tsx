@@ -320,7 +320,7 @@ export default function CashTab({ year, month, onOpenFixedExpense }: { year: num
       </div>
 
       {/* ── 이번 월급 활동 (Reference Section) ── */}
-      <div className="p-4 md:p-5 pb-[120px] bg-gray-50 border-t border-gray-200 flex flex-col gap-3 shrink-0 shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.05)] w-full relative z-10">
+      <div className="p-4 md:p-5 pb-[200px] bg-gray-50 border-t border-gray-200 flex flex-col gap-3 shrink-0 shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.05)] w-full relative z-10">
         <div className="flex flex-col gap-1.5">
           <span className="text-[10px] font-bold text-gray-400">참고</span>
           <div className="flex justify-between items-center">
