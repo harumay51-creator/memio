@@ -507,16 +507,30 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
   const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState(false)
   const [customEmoji, setCustomEmoji] = useState('')
   const emojiPickerRef = useRef<HTMLDivElement>(null)
+  const newMemoFormRef = useRef<HTMLFormElement>(null)
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (emojiPickerRef.current && !emojiPickerRef.current.contains(e.target as Node)) {
         setIsEmojiPickerOpen(false)
       }
+      
+      if (newMemoFormRef.current && !newMemoFormRef.current.contains(e.target as Node)) {
+        if (isNewMemoTagPickerOpen) {
+          setIsNewMemoTagPickerOpen(false)
+        } else {
+          const content = newMemo === '<p></p>' ? '' : newMemo.trim();
+          if (content) {
+            addDayDiaryMemo(dateKey, content, newMemoTags)
+            setNewMemo('')
+            setNewMemoTags([])
+          }
+        }
+      }
     }
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
+  }, [newMemo, newMemoTags, isNewMemoTagPickerOpen, dateKey, addDayDiaryMemo])
 
   useEffect(() => {
     setMonthlyText(monthlyDiary.text)
@@ -536,10 +550,11 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
     saveDayDiaryEmojis(dateKey, newEmojis)
   }
 
-  const handleAddMemo = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (newMemo.trim()) {
-      addDayDiaryMemo(dateKey, newMemo.trim(), newMemoTags)
+  const handleAddMemo = (e?: React.FormEvent) => {
+    if (e) e.preventDefault()
+    const content = newMemo === '<p></p>' ? '' : newMemo.trim();
+    if (content) {
+      addDayDiaryMemo(dateKey, content, newMemoTags)
       setNewMemo('')
       setNewMemoTags([])
     }
@@ -771,9 +786,8 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
                   <h2 className="text-[13px] font-bold text-[#717A8C] tracking-[0.2em] uppercase">MEMO</h2>
                 </div>
                 
-                <form onSubmit={(e) => {
+                <form ref={newMemoFormRef} onSubmit={(e) => {
                   e.preventDefault()
-                  if (!newMemo.trim()) return
                   handleAddMemo(e as any)
                 }} className="flex gap-2">
                   <div className="flex flex-col gap-2 flex-1 relative">
@@ -1010,9 +1024,8 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
                 <h2 className="text-[13px] font-bold text-[#717A8C] tracking-[0.2em] uppercase">MEMO</h2>
               </div>
               
-              <form onSubmit={(e) => {
+              <form ref={newMemoFormRef} onSubmit={(e) => {
                 e.preventDefault()
-                if (!newMemo.trim()) return
                 handleAddMemo(e as any)
               }} className="flex gap-2">
                 <div className="flex flex-col gap-2 flex-1 relative">
