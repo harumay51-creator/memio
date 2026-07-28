@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useRef } from 'react'
 import { useAppStore } from '../../store/AppStore'
 import { calculatePaydayCycle } from '../../utils/ledgerCycle'
 import type { LedgerEntry } from '../../types'
@@ -54,6 +54,28 @@ export default function CashTab({ year, month, onOpenFixedExpense }: { year: num
   } = useAppStore()
   const [editingRowId, setEditingRowId] = useState<string | null>(null)
   const [expandedCat, setExpandedCat] = useState<string | null>(null)
+
+  // Drag to scroll for categories
+  const catScrollRef = useRef<HTMLDivElement>(null)
+  const [isDragging, setIsDragging] = useState(false)
+  const [startX, setStartX] = useState(0)
+  const [scrollLeft, setScrollLeft] = useState(0)
+
+  const handleCatMouseDown = (e: React.MouseEvent) => {
+    if (!catScrollRef.current) return
+    setIsDragging(true)
+    setStartX(e.pageX - catScrollRef.current.offsetLeft)
+    setScrollLeft(catScrollRef.current.scrollLeft)
+  }
+  const handleCatMouseLeave = () => setIsDragging(false)
+  const handleCatMouseUp = () => setIsDragging(false)
+  const handleCatMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging || !catScrollRef.current) return
+    e.preventDefault()
+    const x = e.pageX - catScrollRef.current.offsetLeft
+    const walk = (x - startX) * 2
+    catScrollRef.current.scrollLeft = scrollLeft - walk
+  }
 
   const cycle = useMemo(() => {
     return calculatePaydayCycle(year, month + 1, payday, cardPaymentDay, cardBillingStartDay, cardBillingEndDay)
@@ -281,7 +303,7 @@ export default function CashTab({ year, month, onOpenFixedExpense }: { year: num
       </div>
 
       {/* ── 이번 월급 활동 (Reference Section) ── */}
-      <div className="sticky bottom-0 z-10 p-4 md:p-5 pb-24 bg-gray-50 border-t border-gray-200 flex flex-col gap-3 shrink-0 shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.05)]">
+      <div className="p-4 md:p-5 pb-[120px] bg-gray-50 border-t border-gray-200 flex flex-col gap-3 shrink-0 shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.05)] w-full relative z-10">
         <div className="flex flex-col gap-1.5">
           <span className="text-[10px] font-bold text-gray-400">참고</span>
           <div className="flex justify-between items-center">
@@ -302,7 +324,15 @@ export default function CashTab({ year, month, onOpenFixedExpense }: { year: num
 
         <div className="flex flex-col gap-2 w-full overflow-hidden">
           <h3 className="text-[11px] font-bold text-gray-500 shrink-0">월급 사이클 카테고리 분석</h3>
-          <div className="flex gap-2 items-center overflow-x-auto pb-1 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+          <div 
+            ref={catScrollRef}
+            onMouseDown={handleCatMouseDown}
+            onMouseLeave={handleCatMouseLeave}
+            onMouseUp={handleCatMouseUp}
+            onMouseMove={handleCatMouseMove}
+            className="flex gap-2 items-center overflow-x-auto pb-1 scrollbar-hide cursor-grab active:cursor-grabbing w-full max-w-full" 
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+          >
             <style>{`.scrollbar-hide::-webkit-scrollbar { display: none; }`}</style>
             {categorySums.map(([cat, data]) => {
               const classes = getCatClasses(cat)

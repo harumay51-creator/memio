@@ -216,7 +216,7 @@ export default function CardTab({ year, month }: { year: number, month: number }
   }
 
   return (
-    <div className="flex-1 p-8 pb-24 overflow-y-auto bg-gray-50/50">
+    <div className="flex-1 p-8 pb-[120px] overflow-y-auto bg-gray-50/50">
       <div className="w-full max-w-[840px] mx-auto flex flex-col gap-8">
         
         {/* 1. 상단 - 선택 가능한 탭 */}
