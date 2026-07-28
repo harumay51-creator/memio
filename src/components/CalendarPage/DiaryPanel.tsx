@@ -2,6 +2,22 @@ import React, { useState, useEffect, useRef } from 'react'
 import { useDiaryStore, DiaryMemo } from '../../store/DiaryStore'
 import { RetroWindow } from '../common/Y2KTheme'
 import Emoji from '../common/Emoji'
+import DiaryTextEditor from '../common/DiaryTextEditor'
+
+export const DIARY_TAGS = [
+  { name: '뿌듯', color: '#E4F2EC' },
+  { name: '힘듦', color: '#E7ECF2' },
+  { name: '지침', color: '#E7ECF2' },
+  { name: '평온', color: '#E3F1F8' },
+  { name: '설렘', color: '#E4F2EC' },
+  { name: '기쁨', color: '#E4F2EC' },
+  { name: '웃긴', color: '#EDE9F7' },
+  { name: '감사', color: '#E3F1F8' },
+  { name: '빡침', color: '#EFEAF5' },
+  { name: '우울', color: '#E7ECF2' },
+  { name: '눈물', color: '#E7ECF2' },
+  { name: '홧팅', color: '#EFEAF5' },
+];
 
 const StarDoodle = ({ isY2K }: { isY2K?: boolean }) => (
   <svg style={{ filter: isY2K ? 'drop-shadow(0 0 6px currentColor)' : undefined }} className={`absolute -top-3 -right-8 w-8 h-8 ${isY2K ? 'text-[#ffade4]' : 'text-[#FFD54F]'} opacity-80 rotate-12 pointer-events-none`} viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
@@ -178,18 +194,9 @@ const getPostItStyle = (idString: string, index?: number, dateSeed?: string, isY
 const QuestionItem = ({ q, initialAnswer, saveAnswer, deleteAnswer, index, dateSeed, isY2K, isAurora }: { q: any, initialAnswer: string, saveAnswer: (v: string) => void, deleteAnswer: () => void, index: number, dateSeed: string, isY2K: boolean, isAurora?: boolean }) => {
   const [localVal, setLocalVal] = useState(initialAnswer)
   const [isFocused, setIsFocused] = useState(false)
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
-
-  const handleResize = () => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto'
-      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`
-    }
-  }
 
   useEffect(() => {
     setLocalVal(initialAnswer)
-    setTimeout(handleResize, 0)
   }, [initialAnswer])
 
   const isDefault = !isY2K && !isAurora;
@@ -200,14 +207,6 @@ const QuestionItem = ({ q, initialAnswer, saveAnswer, deleteAnswer, index, dateS
       style={{
         ...getPostItStyle(q.id, index, dateSeed, isY2K, isAurora),
         transform: (isFocused && !isDefault) ? 'scale(1.05) rotate(0deg)' : getPostItStyle(q.id, index, dateSeed, isY2K, isAurora).transform
-      }}
-      onClick={(e) => {
-        if (e.target !== textareaRef.current && textareaRef.current) {
-          e.preventDefault()
-          textareaRef.current.focus()
-          const len = textareaRef.current.value.length
-          textareaRef.current.setSelectionRange(len, len)
-        }
       }}
     >
       <CornerDoodle idString={q.id} isY2K={isY2K} isAurora={isAurora} />
@@ -220,24 +219,185 @@ const QuestionItem = ({ q, initialAnswer, saveAnswer, deleteAnswer, index, dateS
           ✕
         </button>
       </div>
-      <textarea
-        ref={textareaRef}
-        className="w-full bg-transparent resize-none outline-none text-[15px] leading-relaxed transition-all font-diary overflow-hidden force-caret-black"
-        style={{ color: isY2K ? 'inherit' : 'inherit' }}
-        placeholder="답변을 입력하세요..."
-        rows={1}
-        value={localVal}
-        onChange={(e) => {
-          setLocalVal(e.target.value)
-          handleResize()
+      <DiaryTextEditor
+        initialContent={localVal}
+        onChange={(html) => {
+          setLocalVal(html)
         }}
         onFocus={() => setIsFocused(true)}
         onBlur={() => {
           setIsFocused(false)
           saveAnswer(localVal)
         }}
-        spellCheck={false}
+        placeholder="답변을 입력하세요..."
+        className={`bg-transparent resize-none outline-none leading-relaxed transition-all font-diary ${isY2K ? 'text-inherit' : 'text-inherit'}`}
       />
+    </div>
+  )
+}
+
+const TagPicker = ({ selectedTags, onToggleTag, onClose }: { selectedTags: string[], onToggleTag: (tag: string) => void, onClose: () => void }) => {
+  return (
+    <div className="absolute top-full right-0 mt-2 p-3 bg-white/90 backdrop-blur rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] border border-[#E5E5EA] w-64 z-50 animate-slide-down">
+      <div className="flex justify-between items-center mb-2">
+        <span className="text-xs font-bold text-[#717A8C]">태그 선택 (최대 3개)</span>
+        <button onClick={onClose} className="text-[#A0AABF] hover:text-[#717A8C] text-xs">✕</button>
+      </div>
+      <div className="flex flex-wrap gap-1.5">
+        {DIARY_TAGS.map(tag => {
+          const isSelected = selectedTags.includes(tag.name);
+          const isDisabled = !isSelected && selectedTags.length >= 3;
+          return (
+            <button
+              key={tag.name}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (!isDisabled) onToggleTag(tag.name);
+              }}
+              disabled={isDisabled}
+              style={{ backgroundColor: isSelected ? tag.color : 'transparent', borderColor: isSelected ? tag.color : '#E5E5EA' }}
+              className={`px-2.5 py-1 rounded-full text-[11px] font-bold border transition-colors ${isSelected ? 'text-[#3D3833]' : 'text-[#717A8C] hover:bg-[#F5F5F7]'} ${isDisabled ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}
+            >
+              {tag.name}
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+const MemoItem = ({ memo, index, dateSeed, isY2K, isAurora, deleteMemo, updateMemo }: { memo: DiaryMemo, index: number, dateSeed: string, isY2K: boolean, isAurora?: boolean, deleteMemo: (id: string) => void, updateMemo: (id: string, text: string, tags?: string[]) => void }) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [localText, setLocalText] = useState(memo.text);
+  const [localTags, setLocalTags] = useState<string[]>(memo.tags || []);
+  const [isTagPickerOpen, setIsTagPickerOpen] = useState(false);
+  const isDefault = !isY2K && !isAurora;
+
+  if (isEditing) {
+    return (
+      <div 
+        className={`group relative transition-all duration-300 flex flex-col shrink-0 z-20 ${isDefault ? 'w-full min-h-0 py-4 px-2' : 'p-4 w-36 min-h-[9rem] h-auto'}`} 
+        style={{
+          ...getPostItStyle(memo.id, index, dateSeed, isY2K, isAurora),
+          transform: !isDefault ? 'scale(1.05) rotate(0deg)' : getPostItStyle(memo.id, index, dateSeed, isY2K, isAurora).transform
+        }}
+      >
+        <CornerDoodle idString={memo.id} isY2K={isY2K} isAurora={isAurora} />
+        
+        <div className="flex gap-1.5 mb-2 flex-wrap relative">
+          <button 
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsTagPickerOpen(!isTagPickerOpen);
+            }}
+            className="text-[10px] font-bold px-2 py-0.5 rounded-full border border-dashed border-[#A0AABF] text-[#717A8C] hover:bg-white/30"
+          >
+            + 태그
+          </button>
+          {localTags.map(tagName => {
+            const tagDef = DIARY_TAGS.find(t => t.name === tagName);
+            if (!tagDef) return null;
+            return (
+              <span key={tagName} className="text-[10px] font-bold px-2 py-0.5 rounded-full text-[#3D3833] flex items-center gap-1" style={{ backgroundColor: tagDef.color }}>
+                {tagName}
+                <button onClick={(e) => {
+                  e.stopPropagation();
+                  setLocalTags(prev => prev.filter(t => t !== tagName));
+                }} className="opacity-50 hover:opacity-100">✕</button>
+              </span>
+            )
+          })}
+          {isTagPickerOpen && (
+            <TagPicker 
+              selectedTags={localTags} 
+              onToggleTag={(t) => setLocalTags(prev => prev.includes(t) ? prev.filter(x => x !== t) : [...prev, t])}
+              onClose={() => setIsTagPickerOpen(false)}
+            />
+          )}
+        </div>
+
+        <div className="flex-1 min-h-[60px] cursor-text">
+          <DiaryTextEditor
+            initialContent={localText}
+            onChange={(html) => setLocalText(html)}
+            placeholder="기록을 남겨보세요..."
+            autoFocus
+            className={`bg-transparent outline-none leading-relaxed transition-all font-diary ${isY2K ? 'text-inherit' : 'text-inherit'}`}
+          />
+        </div>
+
+        <div className="flex justify-end gap-2 mt-2">
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              setLocalText(memo.text);
+              setLocalTags(memo.tags || []);
+              setIsEditing(false);
+            }}
+            className="px-2 py-1 text-[10px] font-bold rounded bg-black/5 hover:bg-black/10 transition-colors"
+          >
+            취소
+          </button>
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              updateMemo(memo.id, localText, localTags);
+              setIsEditing(false);
+            }}
+            className="px-2 py-1 text-[10px] font-bold rounded bg-black/10 hover:bg-black/20 transition-colors"
+          >
+            저장
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div 
+      className={`group relative transition-all duration-300 flex flex-col justify-between shrink-0 cursor-pointer ${
+        isDefault ? 'w-full min-h-0 py-4 px-2' : 'hover:scale-[1.02] z-0 hover:z-10 p-5 w-36 min-h-[9rem] h-auto'
+      }`} 
+      style={getPostItStyle(memo.id, index, dateSeed, isY2K, isAurora)}
+      onClick={() => setIsEditing(true)}
+    >
+      <CornerDoodle idString={memo.id} isY2K={isY2K} isAurora={isAurora} />
+      
+      {(memo.tags && memo.tags.length > 0) && (
+        <div className="flex gap-1.5 mb-2 flex-wrap">
+          {memo.tags.map(tagName => {
+            const tagDef = DIARY_TAGS.find(t => t.name === tagName);
+            if (!tagDef) return null;
+            return (
+              <span key={tagName} className="text-[10px] font-bold px-2 py-0.5 rounded-full text-[#3D3833]" style={{ backgroundColor: tagDef.color }}>
+                {tagName}
+              </span>
+            )
+          })}
+        </div>
+      )}
+
+      <div className="flex justify-between items-start mb-2 gap-2">
+        <div className="text-[14px] leading-relaxed font-diary" style={{ color: 'inherit' }} dangerouslySetInnerHTML={{ __html: memo.text }} />
+        <button 
+          onClick={(e) => {
+            e.stopPropagation();
+            deleteMemo(memo.id);
+          }}
+          className="w-5 h-5 flex items-center justify-center rounded hover:opacity-50 opacity-30 group-hover:opacity-100 transition-opacity text-[10px] shrink-0"
+          style={{ color: 'inherit' }}
+        >
+          ✕
+        </button>
+      </div>
+      {memo.createdAt && (
+        <div className="text-[9px] opacity-40 font-diary mt-auto pt-2 text-right" style={{ color: 'inherit' }}>
+          {new Intl.DateTimeFormat('ko-KR', { hour: 'numeric', minute: 'numeric', hour12: true }).format(new Date(memo.createdAt))}
+        </div>
+      )}
     </div>
   )
 }
@@ -246,7 +406,7 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
   const { 
     diaries, monthlyDiaries, settings,
     saveDayDiaryEmojis, saveDayDiaryAnswer, deleteDayDiaryAnswer,
-    addDayDiaryMemo, deleteDayDiaryMemo,
+    addDayDiaryMemo, updateDayDiaryMemo, deleteDayDiaryMemo,
     saveMonthlyDiary, updateTheme
   } = useDiaryStore()
 
@@ -268,6 +428,8 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
   const monthlyDiary = monthlyDiaries[monthKey] || { monthKey, text: '' }
 
   const [newMemo, setNewMemo] = useState('')
+  const [newMemoTags, setNewMemoTags] = useState<string[]>([])
+  const [isNewMemoTagPickerOpen, setIsNewMemoTagPickerOpen] = useState(false)
   const [monthlyText, setMonthlyText] = useState('')
   const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState(false)
   const [customEmoji, setCustomEmoji] = useState('')
@@ -304,8 +466,9 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
   const handleAddMemo = (e: React.FormEvent) => {
     e.preventDefault()
     if (newMemo.trim()) {
-      addDayDiaryMemo(dateKey, newMemo.trim())
+      addDayDiaryMemo(dateKey, newMemo.trim(), newMemoTags)
       setNewMemo('')
+      setNewMemoTags([])
     }
   }
 
@@ -530,19 +693,40 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
                   if (!newMemo.trim()) return
                   handleAddMemo(e as any)
                 }} className="flex gap-2">
-                  <textarea
-                    value={newMemo}
-                    onChange={(e) => setNewMemo(e.target.value)}
-                    placeholder="자유롭게 기록을 남겨보세요..."
-                    className="flex-1 bg-white/30 border border-white/20 rounded-xl px-4 py-3 text-[14px] outline-none text-[#1C1C1E] placeholder:text-[#A0AABF] focus:border-white/50 focus:bg-white/40 transition-all font-diary resize-none min-h-[80px]"
-                    spellCheck={false}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        if (newMemo.trim()) handleAddMemo(e as any);
-                      }
-                    }}
-                  />
+                  <div className="flex flex-col gap-2 flex-1 relative">
+                    <div className="flex gap-1.5 flex-wrap">
+                      <button 
+                        type="button"
+                        onClick={() => setIsNewMemoTagPickerOpen(!isNewMemoTagPickerOpen)}
+                        className="text-[10px] font-bold px-2 py-0.5 rounded-full border border-dashed border-[#A0AABF] text-[#717A8C] hover:bg-white/30"
+                      >
+                        + 태그
+                      </button>
+                      {newMemoTags.map(tagName => {
+                        const tagDef = DIARY_TAGS.find(t => t.name === tagName);
+                        if (!tagDef) return null;
+                        return (
+                          <span key={tagName} className="text-[10px] font-bold px-2 py-0.5 rounded-full text-[#3D3833] flex items-center gap-1" style={{ backgroundColor: tagDef.color }}>
+                            {tagName}
+                            <button type="button" onClick={() => setNewMemoTags(prev => prev.filter(t => t !== tagName))} className="opacity-50 hover:opacity-100">✕</button>
+                          </span>
+                        )
+                      })}
+                      {isNewMemoTagPickerOpen && (
+                        <TagPicker 
+                          selectedTags={newMemoTags} 
+                          onToggleTag={(t) => setNewMemoTags(prev => prev.includes(t) ? prev.filter(x => x !== t) : [...prev, t])}
+                          onClose={() => setIsNewMemoTagPickerOpen(false)}
+                        />
+                      )}
+                    </div>
+                    <DiaryTextEditor
+                      initialContent={newMemo}
+                      onChange={(html) => setNewMemo(html)}
+                      placeholder="자유롭게 기록을 남겨보세요..."
+                      className="bg-white/30 border border-white/20 rounded-xl px-4 py-3 outline-none text-[#1C1C1E] focus:border-white/50 focus:bg-white/40 transition-all font-diary"
+                    />
+                  </div>
                   <button type="submit" disabled={!newMemo.trim()} className="px-4 py-2 h-fit bg-white/40 border border-[#C0C0C0] text-[#1C1C1E] rounded-xl font-bold text-xs hover:bg-[#E5E5EA] disabled:opacity-30 transition-all self-end">
                     추가
                   </button>
@@ -550,26 +734,16 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
 
                 <div className={`flex mt-2 ${(!isY2K && !isAurora) ? 'flex-col gap-0' : 'flex-row flex-wrap gap-2.5 items-start'}`}>
                   {[...(dayDiary.memos || [])].reverse().map((memo: DiaryMemo, idx: number) => (
-                    <div key={memo.id} className={`group relative transition-all duration-300 flex flex-col justify-between shrink-0 ${
-                      (!isY2K && !isAurora) ? 'w-full min-h-0 py-4 px-2' : 'hover:scale-[1.02] z-0 hover:z-10 p-5 w-36 min-h-[9rem] h-auto'
-                    }`} style={getPostItStyle(memo.id, idx + (dayDiary.answers || []).length, dateKey, isY2K, isAurora)}>
-                      <CornerDoodle idString={memo.id} isY2K={isY2K} isAurora={isAurora} />
-                      <div className="flex justify-between items-start mb-2 gap-2">
-                        <div className="flex-1 text-[14px] whitespace-pre-wrap leading-relaxed font-diary" style={{ color: 'inherit' }}>{memo.text}</div>
-                        <button 
-                          onClick={() => deleteDayDiaryMemo(dateKey, memo.id)}
-                          className="w-5 h-5 flex items-center justify-center rounded hover:opacity-50 opacity-30 group-hover:opacity-100 transition-opacity text-[10px] shrink-0"
-                          style={{ color: 'inherit' }}
-                        >
-                          ✕
-                        </button>
-                      </div>
-                      {memo.createdAt && (
-                        <div className="text-[9px] opacity-40 font-diary mt-2 text-right" style={{ color: 'inherit' }}>
-                          {new Intl.DateTimeFormat('ko-KR', { hour: 'numeric', minute: 'numeric', hour12: true }).format(new Date(memo.createdAt))}
-                        </div>
-                      )}
-                    </div>
+                    <MemoItem
+                      key={memo.id}
+                      memo={memo}
+                      index={idx + (dayDiary.answers || []).length}
+                      dateSeed={dateKey}
+                      isY2K={isY2K}
+                      isAurora={isAurora}
+                      deleteMemo={(id) => deleteDayDiaryMemo(dateKey, id)}
+                      updateMemo={(id, text, tags) => updateDayDiaryMemo(dateKey, id, text, tags)}
+                    />
                   ))}
                 </div>
               </section>
@@ -756,19 +930,40 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
                 if (!newMemo.trim()) return
                 handleAddMemo(e as any)
               }} className="flex gap-2">
-                <textarea
-                  value={newMemo}
-                  onChange={(e) => setNewMemo(e.target.value)}
-                  placeholder="자유롭게 기록을 남겨보세요..."
-                  className="flex-1 bg-white/30 border border-white/20 rounded-xl px-4 py-3 text-[14px] outline-none text-[#1C1C1E] placeholder:text-[#A0AABF] focus:border-white/50 focus:bg-white/40 transition-all font-diary resize-none min-h-[80px]"
-                  spellCheck={false}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      if (newMemo.trim()) handleAddMemo(e as any);
-                    }
-                  }}
-                />
+                <div className="flex flex-col gap-2 flex-1 relative">
+                  <div className="flex gap-1.5 flex-wrap">
+                    <button 
+                      type="button"
+                      onClick={() => setIsNewMemoTagPickerOpen(!isNewMemoTagPickerOpen)}
+                      className="text-[10px] font-bold px-2 py-0.5 rounded-full border border-dashed border-[#A0AABF] text-[#717A8C] hover:bg-white/30"
+                    >
+                      + 태그
+                    </button>
+                    {newMemoTags.map(tagName => {
+                      const tagDef = DIARY_TAGS.find(t => t.name === tagName);
+                      if (!tagDef) return null;
+                      return (
+                        <span key={tagName} className="text-[10px] font-bold px-2 py-0.5 rounded-full text-[#3D3833] flex items-center gap-1" style={{ backgroundColor: tagDef.color }}>
+                          {tagName}
+                          <button type="button" onClick={() => setNewMemoTags(prev => prev.filter(t => t !== tagName))} className="opacity-50 hover:opacity-100">✕</button>
+                        </span>
+                      )
+                    })}
+                    {isNewMemoTagPickerOpen && (
+                      <TagPicker 
+                        selectedTags={newMemoTags} 
+                        onToggleTag={(t) => setNewMemoTags(prev => prev.includes(t) ? prev.filter(x => x !== t) : [...prev, t])}
+                        onClose={() => setIsNewMemoTagPickerOpen(false)}
+                      />
+                    )}
+                  </div>
+                  <DiaryTextEditor
+                    initialContent={newMemo}
+                    onChange={(html) => setNewMemo(html)}
+                    placeholder="자유롭게 기록을 남겨보세요..."
+                    className="bg-white/30 border border-white/20 rounded-xl px-4 py-3 outline-none text-[#1C1C1E] focus:border-white/50 focus:bg-white/40 transition-all font-diary"
+                  />
+                </div>
                 <button type="submit" disabled={!newMemo.trim()} className="px-4 py-2 h-fit bg-white/40 border border-[#C0C0C0] text-[#1C1C1E] rounded-xl font-bold text-xs hover:bg-[#E5E5EA] disabled:opacity-30 transition-all self-end">
                   추가
                 </button>
@@ -776,26 +971,16 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
 
               <div className={`flex mt-2 ${(!isY2K && !isAurora) ? 'flex-col gap-0' : 'flex-row flex-wrap gap-2.5 items-start'}`}>
                 {[...(dayDiary.memos || [])].reverse().map((memo: DiaryMemo, idx: number) => (
-                  <div key={memo.id} className={`group relative transition-all duration-300 flex flex-col justify-between shrink-0 ${
-                    (!isY2K && !isAurora) ? 'w-full min-h-0 py-4 px-2' : 'hover:scale-[1.02] z-0 hover:z-10 p-5 w-36 min-h-[9rem] h-auto'
-                  }`} style={getPostItStyle(memo.id, idx + (dayDiary.answers || []).length, dateKey, isY2K, isAurora)}>
-                    <CornerDoodle idString={memo.id} isY2K={isY2K} isAurora={isAurora} />
-                    <div className="flex justify-between items-start mb-2 gap-2">
-                      <div className="text-[14px] whitespace-pre-wrap leading-relaxed font-diary" style={{ color: 'inherit' }}>{memo.text}</div>
-                      <button 
-                        onClick={() => deleteDayDiaryMemo(dateKey, memo.id)}
-                        className="w-5 h-5 flex items-center justify-center rounded hover:opacity-50 opacity-30 group-hover:opacity-100 transition-opacity text-[10px] shrink-0"
-                        style={{ color: 'inherit' }}
-                      >
-                        ✕
-                      </button>
-                    </div>
-                    {memo.createdAt && (
-                      <div className="text-[9px] opacity-40 font-diary mt-2 text-right" style={{ color: 'inherit' }}>
-                        {new Intl.DateTimeFormat('ko-KR', { hour: 'numeric', minute: 'numeric', hour12: true }).format(new Date(memo.createdAt))}
-                      </div>
-                    )}
-                  </div>
+                  <MemoItem
+                    key={memo.id}
+                    memo={memo}
+                    index={idx + (dayDiary.answers || []).length}
+                    dateSeed={dateKey}
+                    isY2K={isY2K}
+                    isAurora={isAurora}
+                    deleteMemo={(id) => deleteDayDiaryMemo(dateKey, id)}
+                    updateMemo={(id, text, tags) => updateDayDiaryMemo(dateKey, id, text, tags)}
+                  />
                 ))}
               </div>
             </section>

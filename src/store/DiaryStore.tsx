@@ -11,6 +11,7 @@ export interface DiaryQuestionAnswer {
 export interface DiaryMemo {
   id: string
   text: string
+  tags?: string[]
   createdAt: number
 }
 
@@ -47,7 +48,8 @@ interface DiaryStoreValue {
   saveDayDiaryEmojis: (dateKey: string, emojis: string[]) => Promise<void>
   saveDayDiaryAnswer: (dateKey: string, questionId: string, question: string, answer: string) => Promise<void>
   deleteDayDiaryAnswer: (dateKey: string, questionId: string) => Promise<void>
-  addDayDiaryMemo: (dateKey: string, text: string) => Promise<void>
+  addDayDiaryMemo: (dateKey: string, text: string, tags?: string[]) => Promise<void>
+  updateDayDiaryMemo: (dateKey: string, memoId: string, text: string, tags?: string[]) => Promise<void>
   deleteDayDiaryMemo: (dateKey: string, memoId: string) => Promise<void>
   saveMonthlyDiary: (monthKey: string, text: string) => Promise<void>
 }
@@ -175,11 +177,11 @@ export const DiaryStoreProvider: React.FC<{ children: React.ReactNode, uid: stri
     }
   }
 
-  const addDayDiaryMemo = async (dateKey: string, text: string) => {
+  const addDayDiaryMemo = async (dateKey: string, text: string, tags?: string[]) => {
     if (!uid) return
     const ref = doc(db, `users/${uid}/diaries`, dateKey)
     const snap = await getDoc(ref)
-    const newMemo: DiaryMemo = { id: Date.now().toString(), text, createdAt: Date.now() }
+    const newMemo: DiaryMemo = { id: Date.now().toString(), text, tags, createdAt: Date.now() }
     
     if (snap.exists()) {
       const data = snap.data() as DayDiary
@@ -187,6 +189,21 @@ export const DiaryStoreProvider: React.FC<{ children: React.ReactNode, uid: stri
       await updateDoc(ref, { memos: [...memos, newMemo] })
     } else {
       await setDoc(ref, { dateKey, emojis: [], answers: [], memos: [newMemo] })
+    }
+  }
+
+  const updateDayDiaryMemo = async (dateKey: string, memoId: string, text: string, tags?: string[]) => {
+    if (!uid) return
+    const ref = doc(db, `users/${uid}/diaries`, dateKey)
+    const snap = await getDoc(ref)
+    if (snap.exists()) {
+      const data = snap.data() as DayDiary
+      const memos = data.memos || []
+      const memoIdx = memos.findIndex(m => m.id === memoId)
+      if (memoIdx >= 0) {
+        memos[memoIdx] = { ...memos[memoIdx], text, tags }
+        await updateDoc(ref, { memos })
+      }
     }
   }
 
@@ -216,7 +233,7 @@ export const DiaryStoreProvider: React.FC<{ children: React.ReactNode, uid: stri
     <DiaryContext.Provider value={{
       diaries, monthlyDiaries, settings, isLoading, isDiaryMode, setIsDiaryMode,
         initialize: () => {}, addQuestion, deleteQuestion, updateQuestion, updateTheme,
-        saveDayDiaryEmojis, saveDayDiaryAnswer, deleteDayDiaryAnswer, addDayDiaryMemo, deleteDayDiaryMemo, saveMonthlyDiary
+        saveDayDiaryEmojis, saveDayDiaryAnswer, deleteDayDiaryAnswer, addDayDiaryMemo, updateDayDiaryMemo, deleteDayDiaryMemo, saveMonthlyDiary
     }}>
       {children}
     </DiaryContext.Provider>
