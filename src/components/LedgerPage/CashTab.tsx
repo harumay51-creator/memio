@@ -97,6 +97,7 @@ export default function CashTab({ year, month, onOpenFixedExpense }: { year: num
   // Compute Total Deductions
   const currentSalary = salaryRecords[salaryMonthKey]?.amount || 0
   const totalCashExpense = cashEntries.reduce((s, e) => s + e.amount, 0)
+  const totalConsumedCard = consumedCardEntries.reduce((s, e) => s + e.amount, 0)
   const totalDeductions = totalCashExpense + cardBillAmount
   const salaryBalance = currentSalary - totalDeductions
 
@@ -191,9 +192,15 @@ export default function CashTab({ year, month, onOpenFixedExpense }: { year: num
         </div>
 
         <div className="flex flex-col gap-3">
-          <div>
-            <h3 className="text-xs font-bold text-yuri-400">카테고리별 합산 (카드+현금+고정지출)</h3>
-            <p className="text-[10px] text-yuri-300 mt-0.5">※ 이번 사이클 동안 실제로 사용한 금액 기준</p>
+          <div className="flex justify-between items-start">
+            <div>
+              <h3 className="text-xs font-bold text-yuri-400">카테고리별 합산 (카드+현금+고정지출)</h3>
+              <p className="text-[10px] text-yuri-300 mt-0.5">※ 이번 사이클 동안 실제로 사용한 금액 기준</p>
+            </div>
+            <div className="flex gap-2">
+              <span className="text-[10px] font-bold text-[#FF5D5D] bg-[#FF5D5D]/10 px-1.5 py-0.5 rounded flex items-center">카드총액 {fmtAmt(totalConsumedCard)}</span>
+              <span className="text-[10px] font-bold text-[#4FA596] bg-[#4FA596]/10 px-1.5 py-0.5 rounded flex items-center">현금총액 {fmtAmt(totalCashExpense)}</span>
+            </div>
           </div>
           <div className="flex flex-wrap gap-2 items-start">
             {categorySums.map(([cat, data]) => {
