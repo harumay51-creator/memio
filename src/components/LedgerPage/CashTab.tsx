@@ -51,8 +51,8 @@ export default function CashTab({ year, month, onOpenFixedExpense }: { year: num
     updateLedgerEntry,
     deleteLedgerEntry
   } = useAppStore()
-
   const [editingRowId, setEditingRowId] = useState<string | null>(null)
+  const [expandedCat, setExpandedCat] = useState<string | null>(null)
 
   const cycle = useMemo(() => {
     return calculatePaydayCycle(year, month + 1, payday, cardPaymentDay, cardBillingStartDay, cardBillingEndDay)
@@ -92,26 +92,30 @@ export default function CashTab({ year, month, onOpenFixedExpense }: { year: num
 
   // Category Sums (Cash + Card in this cycle)
   const categorySums = useMemo(() => {
-    const sums: Record<string, number> = {}
-    expenseCategories.forEach(c => sums[c.name] = 0)
-    sums['기타'] = 0
+    const sums: Record<string, { total: number, card: number, cash: number }> = {}
+    expenseCategories.forEach(c => sums[c.name] = { total: 0, card: 0, cash: 0 })
+    sums['기타'] = { total: 0, card: 0, cash: 0 }
 
-    const addSum = (e: LedgerEntry | { category: string, amount: number }) => {
+    const addSum = (e: LedgerEntry | { category: string, amount: number }, isCard: boolean) => {
       const cat = e.category || '기타'
-      if (sums[cat] === undefined) {
-        sums[cat] = 0
+      if (!sums[cat]) {
+        sums[cat] = { total: 0, card: 0, cash: 0 }
       }
-      sums[cat] += e.amount
+      sums[cat].total += e.amount
+      if (isCard) {
+        sums[cat].card += e.amount
+      } else {
+        sums[cat].cash += e.amount
+      }
     }
 
-    cardEntries.forEach(addSum)
-    cashEntries.forEach(addSum)
-
+    cardEntries.forEach(e => addSum(e, true))
+    cashEntries.forEach(e => addSum(e, false))
 
     // Filter out 0 sums and sort by amount descending
     const result = Object.entries(sums)
-      .filter(([_, amt]) => amt > 0)
-      .sort((a, b) => b[1] - a[1])
+      .filter(([_, data]) => data.total > 0)
+      .sort((a, b) => b[1].total - a[1].total)
     return result
   }, [expenseCategories, cardEntries, cashEntries])
 
@@ -178,13 +182,28 @@ export default function CashTab({ year, month, onOpenFixedExpense }: { year: num
 
         <div className="flex flex-col gap-3">
           <h3 className="text-xs font-bold text-yuri-400">카테고리별 합산 (카드+현금+고정지출)</h3>
-          <div className="flex flex-wrap gap-2">
-            {categorySums.map(([cat, amt]) => {
+          <div className="flex flex-wrap gap-2 items-start">
+            {categorySums.map(([cat, data]) => {
               const classes = getCatClasses(cat)
+              const isExpanded = expandedCat === cat
               return (
-                <div key={cat} className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border border-yuri-200 bg-white`}>
-                  <span className={`text-[10px] font-black ${classes.text} bg-gray-50 px-1.5 py-0.5 rounded`}>{cat}</span>
-                  <span className={`text-xs font-bold text-yuri-900`}>{fmtAmt(amt)}</span>
+                <div key={cat} className="flex flex-col gap-1 items-start">
+                  <div 
+                    onClick={() => setExpandedCat(isExpanded ? null : cat)}
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border cursor-pointer select-none transition-all ${
+                      isExpanded ? 'border-yuri-400 bg-yuri-50 shadow-inner' : 'border-yuri-200 bg-white hover:border-yuri-300 shadow-sm'
+                    }`}
+                  >
+                    <span className={`text-[10px] font-black ${classes.text} bg-gray-50 px-1.5 py-0.5 rounded`}>{cat}</span>
+                    <span className={`text-xs font-bold text-yuri-900`}>{fmtAmt(data.total)}</span>
+                  </div>
+                  {isExpanded && (
+                    <div className="flex gap-2 px-2.5 py-1.5 bg-white border border-yuri-200 rounded-md shadow-sm ml-1 animate-in fade-in slide-in-from-top-1">
+                      {data.card > 0 && <span className="text-[10px] text-[#FF5D5D] font-bold">카드 {fmtAmt(data.card)}</span>}
+                      {data.card > 0 && data.cash > 0 && <span className="text-[10px] text-yuri-200">|</span>}
+                      {data.cash > 0 && <span className="text-[10px] text-[#4FA596] font-bold">현금 {fmtAmt(data.cash)}</span>}
+                    </div>
+                  )}
                 </div>
               )
             })}
