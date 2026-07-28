@@ -49,7 +49,8 @@ export default function CashTab({ year, month, onOpenFixedExpense }: { year: num
     updateSalaryRecord,
     cardBills,
     updateLedgerEntry,
-    deleteLedgerEntry
+    deleteLedgerEntry,
+    fixedExpenses
   } = useAppStore()
   const [editingRowId, setEditingRowId] = useState<string | null>(null)
   const [expandedCat, setExpandedCat] = useState<string | null>(null)
@@ -83,6 +84,15 @@ export default function CashTab({ year, month, onOpenFixedExpense }: { year: num
     })
   }, [ledger, cycle])
 
+  // Card entries consumed during this cash cycle (for category sums)
+  const consumedCardEntries = useMemo(() => {
+    return ledger.filter(e => {
+      if (e.paymentMethod !== '카드' || e.type !== 'expense') return false
+      const d = new Date(e.scheduledDate || e.createdAt)
+      return d.getTime() >= cycle.cashStart.getTime() && d.getTime() <= cycle.cashEnd.getTime()
+    })
+  }, [ledger, cycle])
+
 
   // Compute Total Deductions
   const currentSalary = salaryRecords[salaryMonthKey]?.amount || 0
@@ -109,15 +119,18 @@ export default function CashTab({ year, month, onOpenFixedExpense }: { year: num
       }
     }
 
-    cardEntries.forEach(e => addSum(e, true))
+    consumedCardEntries.forEach(e => addSum(e, true))
     cashEntries.forEach(e => addSum(e, false))
+    fixedExpenses.forEach(fe => {
+      addSum({ category: fe.category, amount: fe.amount }, fe.paymentMethod === '카드')
+    })
 
     // Filter out 0 sums and sort by amount descending
     const result = Object.entries(sums)
       .filter(([_, data]) => data.total > 0)
       .sort((a, b) => b[1].total - a[1].total)
     return result
-  }, [expenseCategories, cardEntries, cashEntries])
+  }, [expenseCategories, consumedCardEntries, cashEntries, fixedExpenses])
 
   // Combined timeline list
   const displayList = useMemo(() => {
@@ -181,7 +194,10 @@ export default function CashTab({ year, month, onOpenFixedExpense }: { year: num
         </div>
 
         <div className="flex flex-col gap-3">
-          <h3 className="text-xs font-bold text-yuri-400">카테고리별 합산 (카드+현금+고정지출)</h3>
+          <div>
+            <h3 className="text-xs font-bold text-yuri-400">카테고리별 합산 (카드+현금+고정지출)</h3>
+            <p className="text-[10px] text-yuri-300 mt-0.5">※ 이번 사이클 동안 실제로 사용한 금액 기준</p>
+          </div>
           <div className="flex flex-wrap gap-2 items-start">
             {categorySums.map(([cat, data]) => {
               const classes = getCatClasses(cat)
