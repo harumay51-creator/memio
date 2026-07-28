@@ -474,21 +474,15 @@ const CalendarPage: React.FC = () => {
                   isDiaryMode && isY2K
                     ? isSelected
                       ? 'bg-white/60 border border-white/80 shadow-[0_4px_16px_rgba(213,186,255,0.6)]'
-                      : hasDiaryRecord
-                        ? 'bg-white/30 hover:bg-white/50 border border-white/60 shadow-sm'
-                        : 'bg-white/10 hover:bg-white/30 border border-white/30'
+                      : 'bg-white/10 hover:bg-white/30 border border-white/30'
                     : isAurora && isDiaryMode
                       ? isSelected
                         ? 'bg-white/40 border border-white/40 shadow-[0_4px_16px_rgba(31,38,135,0.07)]'
-                        : hasDiaryRecord
-                          ? 'bg-[#D8D4F0]/30 hover:bg-[#D8D4F0]/40 border border-[#D8D4F0]/50'
-                          : 'bg-white/10 hover:bg-white/30 border-white/20'
+                        : 'bg-white/10 hover:bg-white/30 border-white/20'
                       : isDiaryMode
                         ? isSelected
                           ? 'bg-[#D8D4F0]/40 shadow-[0_1px_4px_rgba(0,0,0,0.08)] border border-[#D8D4F0]/50'
-                          : hasDiaryRecord
-                            ? 'bg-[#D8D4F0]/20 hover:bg-[#D8D4F0]/30 shadow-sm border border-[#D8D4F0]/50'
-                            : 'bg-[#FFFFFF] hover:bg-[#FCFCFF] shadow-[0_1px_4px_rgba(0,0,0,0.05)] border border-transparent'
+                          : 'bg-[#FFFFFF] hover:bg-[#FCFCFF] shadow-[0_1px_4px_rgba(0,0,0,0.05)] border border-transparent'
                         : isSelected 
                           ? 'bg-[#F7F6FF] shadow-[0_1px_4px_rgba(0,0,0,0.08)]' 
                           : isRedDay || date.getDay() === 6
@@ -496,21 +490,26 @@ const CalendarPage: React.FC = () => {
                             : 'bg-[#FFFFFF] hover:bg-[#FCFCFF] shadow-[0_1px_4px_rgba(0,0,0,0.08)]'
                 }`}
               >
-                <div 
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setSelDay(date)
-                  }}
-                  className={`
-                  w-7 h-7 rounded-full flex items-center justify-center text-[12px] font-medium self-start mb-1 shrink-0
-                  ${
-                    isToday ? 'bg-[#8B7CF8] text-[#FFFFFF] shadow-[0_2px_6px_rgba(139,124,248,0.4)]' : 
-                    isY2K && isDiaryMode 
-                      ? isRedDay ? 'text-[#ff8ca1] drop-shadow-[0_1px_1px_rgba(138,99,210,0.4)]' : 'text-white drop-shadow-[0_1px_2px_rgba(138,99,210,0.8)]'
-                      : isRedDay && isDiaryMode ? 'text-[#EF6A7B]' : 'text-[#717A8C]'
-                  }
-                `}>
-                  {date.getDate()}
+                <div className="flex flex-col items-center self-start mb-1 shrink-0">
+                  <div 
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setSelDay(date)
+                    }}
+                    className={`
+                    w-7 h-7 rounded-full flex items-center justify-center text-[12px] font-medium
+                    ${
+                      isToday ? 'border border-[#8B7CF8] text-[#8B7CF8] shadow-sm' : 
+                      isY2K && isDiaryMode 
+                        ? isRedDay ? 'text-[#ff8ca1] drop-shadow-[0_1px_1px_rgba(138,99,210,0.4)]' : 'text-white drop-shadow-[0_1px_2px_rgba(138,99,210,0.8)]'
+                        : isRedDay && isDiaryMode ? 'text-[#EF6A7B]' : 'text-[#717A8C]'
+                    }
+                  `}>
+                    {date.getDate()}
+                  </div>
+                  {isDiaryMode && hasDiaryRecord && (
+                    <div className="w-1 h-1 rounded-full bg-[#8B7CF8] mt-0.5" />
+                  )}
                 </div>
                 <div className="flex flex-col gap-1 overflow-hidden flex-1 min-h-0">
                   {!isDiaryMode ? (

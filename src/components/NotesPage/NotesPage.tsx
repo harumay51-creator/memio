@@ -111,7 +111,7 @@ const NotesPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId })
                   onClick={() => setSelNoteId(note.id)}
                   className={`
                     group p-3 rounded-xl cursor-pointer border transition-all duration-150 relative flex items-start gap-2
-                    ${isSelected ? 'bg-white border-yuri-300 shadow-sm border-l-4 border-l-accent' : 'bg-transparent border-transparent hover:bg-yuri-100/50 hover:border-yuri-200 border-l-4'}
+                    ${isSelected ? 'bg-[#F3F0FF] border-[#F3F0FF] shadow-sm' : 'bg-transparent border-transparent hover:bg-yuri-100/50 hover:border-yuri-200'}
                   `}
                 >
                   <div className="flex-1 min-w-0">
