@@ -4,6 +4,7 @@ import { useAppStore } from '../../store/AppStore'
 import { classifyLedgerCategory } from '../../utils/parser'
 import PinScreen from '../JournalPage/PinScreen'
 import { Lock, X } from 'lucide-react'
+import MonthNavigationBar from '../common/MonthNavigationBar'
 import CardTab from './CardTab'
 import CashTab from './CashTab'
 
@@ -244,56 +245,60 @@ const LedgerPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex items-center gap-6 pb-2">
-            {/* Month Navigator */}
-            <div className="flex items-center gap-4">
-              <button onClick={prevMonth} className="text-yuri-400 hover:text-yuri-800 transition-colors flex items-center justify-center">←</button>
-              <div className="flex flex-col items-center relative">
-                <button 
-                  onClick={() => { setPickerYear(year); setShowPicker(!showPicker); }}
-                  className="text-base font-bold text-yuri-900 hover:text-accent transition-colors flex items-center gap-1"
-                >
-                  {year}년 {MONTH_KO[month]}
-                  <span className="text-[10px] text-yuri-400">{showPicker ? '▲' : '▼'}</span>
-                </button>
-                {!isCurrentMonth && <button onClick={goToday} className="absolute top-full mt-1 text-[10px] text-accent font-semibold hover:underline whitespace-nowrap">이번 달로 이동</button>}
-                {showPicker && (
-                  <div className="absolute top-full right-1/2 translate-x-1/2 md:translate-x-0 md:right-0 mt-2 w-[320px] bg-white border border-yuri-200 shadow-xl p-4 rounded-xl z-50 animate-fade-in">
-                    <div className="flex justify-between items-center mb-4 px-2">
-                      <button onClick={() => setPickerYear(y => y - 1)} className="text-yuri-400 hover:text-yuri-800 font-bold p-1">←</button>
-                      <span className="font-bold text-yuri-900">{pickerYear}년</span>
-                      <button onClick={() => setPickerYear(y => y + 1)} className="text-yuri-400 hover:text-yuri-800 font-bold p-1">→</button>
-                    </div>
-                    <div className="grid grid-cols-4 gap-2">
-                      {MONTH_KO.map((mName, i) => (
-                        <button
-                          key={i}
-                          onClick={() => handleMonthSelect(i)}
-                          className={`py-2 rounded-lg text-sm font-bold transition-colors ${
-                            pickerYear === year && i === month 
-                              ? 'bg-yuri-900 text-white' 
-                              : pickerYear === today.getFullYear() && i === today.getMonth()
-                                ? 'bg-accent/10 text-accent hover:bg-accent/20'
-                                : 'hover:bg-yuri-100 text-yuri-700'
-                          }`}
-                        >
-                          {mName}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
+          <div className="flex items-center gap-6 pb-2 relative z-10 w-full sm:w-auto">
+            <MonthNavigationBar
+              year={year}
+              monthName={MONTH_KO[month]}
+              onPrev={prevMonth}
+              onNext={nextMonth}
+              onDateClick={() => { setPickerYear(year); setShowPicker(!showPicker); }}
+              isDatePickerOpen={showPicker}
+              rightActions={
+                <>
+                  {!isCurrentMonth && (
+                    <button 
+                      onClick={goToday} 
+                      className="h-9 px-4 flex items-center justify-center rounded-full text-sm font-semibold text-[#494552] transition-colors hover:bg-[#8B7CF8]/10 hover:text-[#8B7CF8]"
+                    >
+                      이번 달로 이동
+                    </button>
+                  )}
+                  <button
+                    onClick={lockPrivate}
+                    className="flex items-center gap-1.5 px-2.5 h-9 text-xs font-semibold text-[#494552] hover:bg-[#8B7CF8]/10 hover:text-[#8B7CF8] rounded-full transition-colors cursor-pointer"
+                  >
+                    <Lock size={14} />
+                    잠금
+                  </button>
+                </>
+              }
+            />
+            {showPicker && (
+              <div className="absolute top-full right-0 md:translate-x-0 md:right-0 mt-2 w-[320px] bg-white border border-[#EEF1F6] shadow-float rounded-xl p-4 z-50 animate-fade-in">
+                <div className="flex justify-between items-center mb-4 px-2">
+                  <button onClick={() => setPickerYear(y => y - 1)} className="text-[#717A8C] hover:text-[#2D334A] font-bold p-1">←</button>
+                  <span className="font-semibold text-[#2D334A]">{pickerYear}년</span>
+                  <button onClick={() => setPickerYear(y => y + 1)} className="text-[#717A8C] hover:text-[#2D334A] font-bold p-1">→</button>
+                </div>
+                <div className="grid grid-cols-4 gap-2">
+                  {MONTH_KO.map((mName, i) => (
+                    <button
+                      key={i}
+                      onClick={() => handleMonthSelect(i)}
+                      className={`py-2 rounded-lg text-sm font-medium transition-colors ${
+                        pickerYear === year && i === month 
+                          ? 'bg-[#8B7CF8] text-white' 
+                          : pickerYear === today.getFullYear() && i === today.getMonth()
+                            ? 'bg-[#F1EEFF] text-[#8B7CF8] hover:bg-[#E5E0FF]'
+                            : 'hover:bg-[#F7F6FF] text-[#717A8C]'
+                      }`}
+                    >
+                      {mName}
+                    </button>
+                  ))}
+                </div>
               </div>
-              <button onClick={nextMonth} className="text-yuri-400 hover:text-yuri-800 transition-colors flex items-center justify-center">→</button>
-            </div>
-
-            <button
-              onClick={lockPrivate}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-yuri-500 hover:bg-yuri-100 rounded-lg transition-colors cursor-pointer"
-            >
-              <Lock size={14} />
-              잠금
-            </button>
+            )}
           </div>
         </div>
 
