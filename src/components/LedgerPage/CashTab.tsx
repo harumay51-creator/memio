@@ -281,7 +281,7 @@ export default function CashTab({ year, month, onOpenFixedExpense }: { year: num
       </div>
 
       {/* ── 이번 월급 활동 (Reference Section) ── */}
-      <div className="sticky bottom-0 z-10 p-4 md:p-5 bg-gray-50 border-t border-gray-200 flex flex-col gap-3 shrink-0 shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.05)]">
+      <div className="sticky bottom-0 z-10 p-4 md:p-5 pb-24 bg-gray-50 border-t border-gray-200 flex flex-col gap-3 shrink-0 shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.05)]">
         <div className="flex flex-col gap-1.5">
           <span className="text-[10px] font-bold text-gray-400">참고</span>
           <div className="flex justify-between items-center">
@@ -300,8 +300,8 @@ export default function CashTab({ year, month, onOpenFixedExpense }: { year: num
 
         <div className="h-px w-full bg-gray-200 my-0.5" />
 
-        <div className="flex flex-col gap-2">
-          <h3 className="text-[11px] font-bold text-gray-500">월급 사이클 카테고리 분석</h3>
+        <div className="flex flex-col gap-2 w-full overflow-hidden">
+          <h3 className="text-[11px] font-bold text-gray-500 shrink-0">월급 사이클 카테고리 분석</h3>
           <div className="flex gap-2 items-center overflow-x-auto pb-1 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
             <style>{`.scrollbar-hide::-webkit-scrollbar { display: none; }`}</style>
             {categorySums.map(([cat, data]) => {
