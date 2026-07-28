@@ -227,7 +227,12 @@ const QuestionItem = ({ q, initialAnswer, saveAnswer, deleteAnswer, index, dateS
         onFocus={() => setIsFocused(true)}
         onBlur={() => {
           setIsFocused(false)
-          saveAnswer(localVal)
+          // Normalize empty html to empty string for accurate comparison
+          const current = localVal === '<p></p>' ? '' : localVal;
+          const initial = initialAnswer === '<p></p>' ? '' : initialAnswer;
+          if (current !== initial) {
+            saveAnswer(localVal)
+          }
         }}
         placeholder="답변을 입력하세요..."
         className={`bg-transparent resize-none outline-none leading-relaxed transition-all font-diary ${isY2K ? 'text-inherit' : 'text-inherit'}`}
@@ -472,7 +477,7 @@ const MemoItem = ({ memo, index, dateSeed, isY2K, isAurora, deleteMemo, updateMe
 
 const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) => {
   const { 
-    diaries, monthlyDiaries, settings,
+    diaries, monthlyDiaries, settings, isLoading,
     saveDayDiaryEmojis, saveDayDiaryAnswer, deleteDayDiaryAnswer,
     addDayDiaryMemo, updateDayDiaryMemo, deleteDayDiaryMemo,
     saveMonthlyDiary, updateTheme
@@ -542,6 +547,16 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
 
   const handleSaveMonthly = () => {
     saveMonthlyDiary(monthKey, monthlyText)
+  }
+
+  if (isLoading) {
+    return (
+      <aside className={`relative flex-[6] flex flex-col h-full border-l border-[#E5E5EA] shrink-0 overflow-hidden px-6 py-6 items-center justify-center ${
+        isAurora || isY2K ? 'bg-transparent' : 'bg-[#F9FAFB]'
+      }`}>
+        <div className="text-[#A0AABF] text-sm animate-pulse font-diary">다이어리를 불러오는 중...</div>
+      </aside>
+    )
   }
 
   if (mode === 'month') {
