@@ -25,6 +25,7 @@
     "date-fns": "^4.4.0",
     "emoji-picker-react": "^4.19.1",
     "firebase": "^12.15.0",
+    "firebase-admin": "^14.2.0",
     "korean-lunar-calendar": "^0.4.0",
     "lucide-react": "^1.23.0",
     "react": "^18.3.1",

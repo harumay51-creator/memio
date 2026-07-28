@@ -721,7 +721,7 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
                     const answerText = answerObj ? answerObj.answer : ''
                     return (
                       <QuestionItem 
-                        key={q.id} 
+                        key={`${q.id}-${dateKey}`} 
                         q={q} 
                         initialAnswer={answerText} 
                         saveAnswer={(val) => saveDayDiaryAnswer(dateKey, q.id, q.text, val)} 
@@ -960,7 +960,7 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
                   const answerText = answerObj ? answerObj.answer : ''
                   return (
                     <QuestionItem 
-                      key={q.id} 
+                      key={`${q.id}-${dateKey}`} 
                       q={q} 
                       initialAnswer={answerText} 
                       saveAnswer={(val) => saveDayDiaryAnswer(dateKey, q.id, q.text, val)} 
