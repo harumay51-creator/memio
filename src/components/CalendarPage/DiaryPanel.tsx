@@ -6,17 +6,34 @@ import DiaryTextEditor from '../common/DiaryTextEditor'
 
 export const DIARY_TAGS = [
   { name: '뿌듯', color: '#E4F2EC' },
-  { name: '힘듦', color: '#E7ECF2' },
-  { name: '지침', color: '#E7ECF2' },
+  { name: '설렘', color: '#EDE9F7' },
+  { name: '기쁨', color: '#EFEAF5' },
+  { name: '행복', color: '#E4F2EC' },
+  { name: '만족', color: '#E3F1F8' },
+  { name: '후련', color: '#E7ECF2' },
+  { name: '기대', color: '#EDE9F7' },
+  { name: '무난', color: '#E3F1F8' },
   { name: '평온', color: '#E3F1F8' },
-  { name: '설렘', color: '#E4F2EC' },
-  { name: '기쁨', color: '#E4F2EC' },
-  { name: '웃긴', color: '#EDE9F7' },
-  { name: '감사', color: '#E3F1F8' },
-  { name: '빡침', color: '#EFEAF5' },
+  { name: '힘듦', color: '#E7ECF2' },
   { name: '우울', color: '#E7ECF2' },
-  { name: '눈물', color: '#E7ECF2' },
-  { name: '홧팅', color: '#EFEAF5' },
+  { name: '눈물', color: '#E3F1F8' },
+  { name: '짜증', color: '#EFEAF5' },
+  { name: '귀찮', color: '#E7ECF2' },
+  { name: '답답', color: '#E7ECF2' },
+  { name: '불안', color: '#EDE9F7' },
+  { name: '빡침', color: '#EFEAF5' },
+  { name: '웃김', color: '#EDE9F7' },
+  { name: '감사', color: '#E4F2EC' },
+  { name: '고민', color: '#EFEAF5' },
+  { name: '홧팅', color: '#E4F2EC' },
+  { name: '지침', color: '#E7ECF2' }, // legacy
+  { name: '웃긴', color: '#EDE9F7' }, // legacy
+];
+
+export const DIARY_TAG_GROUPS = [
+  { label: '좋음', tags: ['뿌듯', '설렘', '기쁨', '행복', '만족', '후련', '기대', '무난', '평온'] },
+  { label: '안좋음', tags: ['힘듦', '우울', '눈물', '짜증', '귀찮', '답답', '불안', '빡침'] },
+  { label: '기타', tags: ['웃김', '감사', '고민', '홧팅'] }
 ];
 
 const StarDoodle = ({ isY2K }: { isY2K?: boolean }) => (
@@ -260,26 +277,34 @@ const TagPicker = ({ selectedTags, onToggleTag, onClose }: { selectedTags: strin
         <span className="text-xs font-bold text-[#717A8C]">태그 선택 (최대 3개)</span>
         <button onClick={onClose} className="text-[#A0AABF] hover:text-[#717A8C] text-xs">✕</button>
       </div>
-      <div className="flex flex-wrap gap-1.5">
-        {DIARY_TAGS.map(tag => {
-          const isSelected = selectedTags.includes(tag.name);
-          const isDisabled = !isSelected && selectedTags.length >= 3;
-          return (
-            <button
-              key={tag.name}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                if (!isDisabled) onToggleTag(tag.name);
-              }}
-              disabled={isDisabled}
-              style={{ backgroundColor: isSelected ? tag.color : 'transparent', borderColor: isSelected ? tag.color : '#E5E5EA' }}
-              className={`px-2.5 py-1 rounded-full text-[11px] font-bold border transition-colors ${isSelected ? 'text-[#3D3833]' : 'text-[#717A8C] hover:bg-[#F5F5F7]'} ${isDisabled ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}
-            >
-              {tag.name}
-            </button>
-          )
-        })}
+      <div className="flex flex-col gap-3 max-h-[60vh] overflow-y-auto">
+        {DIARY_TAG_GROUPS.map(group => (
+          <div key={group.label} className="flex flex-col gap-1.5">
+            <span className="text-[10px] font-bold text-[#A0AABF]">{group.label}</span>
+            <div className="flex flex-wrap gap-1.5">
+              {group.tags.map(tagName => {
+                const tag = DIARY_TAGS.find(t => t.name === tagName)!;
+                const isSelected = selectedTags.includes(tag.name);
+                const isDisabled = !isSelected && selectedTags.length >= 3;
+                return (
+                  <button
+                    key={tag.name}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      if (!isDisabled) onToggleTag(tag.name);
+                    }}
+                    disabled={isDisabled}
+                    style={{ backgroundColor: isSelected ? tag.color : 'transparent', borderColor: isSelected ? tag.color : '#E5E5EA' }}
+                    className={`px-2.5 py-1 rounded-full text-[11px] font-bold border transition-colors ${isSelected ? 'text-[#3D3833]' : 'text-[#717A8C] hover:bg-[#F5F5F7]'} ${isDisabled ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}
+                  >
+                    {tag.name}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   )
@@ -342,7 +367,7 @@ const MemoItem = ({ memo, index, dateSeed, isY2K, isAurora, deleteMemo, updateMe
             if (!tagDef) return null;
             return (
               <span key={tagName} className="text-[10px] font-bold px-2 py-0.5 rounded-full text-[#3D3833] flex items-center gap-1" style={{ backgroundColor: tagDef.color }}>
-                {tagName}
+                {tagName === '웃긴' ? '웃김' : tagName}
                 <button onClick={(e) => {
                   e.stopPropagation();
                   setLocalTags(prev => prev.filter(t => t !== tagName));
@@ -421,7 +446,7 @@ const MemoItem = ({ memo, index, dateSeed, isY2K, isAurora, deleteMemo, updateMe
               if (!tagDef) return null;
               return (
                 <span key={tagName} className="text-[10px] font-bold px-2 py-0.5 rounded-full text-[#3D3833]" style={{ backgroundColor: tagDef.color }}>
-                  {tagName}
+                  {tagName === '웃긴' ? '웃김' : tagName}
                 </span>
               )
             })}
@@ -446,7 +471,7 @@ const MemoItem = ({ memo, index, dateSeed, isY2K, isAurora, deleteMemo, updateMe
             if (!tagDef) return null;
             return (
               <span key={tagName} className="text-[10px] font-bold px-2 py-0.5 rounded-full text-[#3D3833]" style={{ backgroundColor: tagDef.color }}>
-                {tagName}
+                {tagName === '웃긴' ? '웃김' : tagName}
               </span>
             )
           })}
@@ -813,7 +838,7 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
                         if (!tagDef) return null;
                         return (
                           <span key={tagName} className="text-[10px] font-bold px-2 py-0.5 rounded-full text-[#3D3833] flex items-center gap-1" style={{ backgroundColor: tagDef.color }}>
-                            {tagName}
+                            {tagName === '웃긴' ? '웃김' : tagName}
                             <button type="button" onClick={() => setNewMemoTags(prev => prev.filter(t => t !== tagName))} className="opacity-50 hover:opacity-100">✕</button>
                           </span>
                         )
@@ -1051,7 +1076,7 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
                       if (!tagDef) return null;
                       return (
                         <span key={tagName} className="text-[10px] font-bold px-2 py-0.5 rounded-full text-[#3D3833] flex items-center gap-1" style={{ backgroundColor: tagDef.color }}>
-                          {tagName}
+                          {tagName === '웃긴' ? '웃김' : tagName}
                           <button type="button" onClick={() => setNewMemoTags(prev => prev.filter(t => t !== tagName))} className="opacity-50 hover:opacity-100">✕</button>
                         </span>
                       )

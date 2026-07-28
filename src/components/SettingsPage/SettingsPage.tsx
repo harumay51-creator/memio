@@ -56,10 +56,20 @@ const SettingsPage: React.FC = () => {
     setExpanded(prev => ({ ...prev, [catName]: !prev[catName] }))
   }
 
+  const [duplicateKwError, setDuplicateKwError] = useState<string | null>(null)
+
   const handleAddKeyword = (e: React.FormEvent, categoryName: string) => {
     e.preventDefault()
     const kw = (newKeywords[categoryName] || '').trim()
     if (!kw) return
+    
+    const cat = expenseCategories.find(c => c.name === categoryName)
+    if (cat?.keywords.includes(kw)) {
+      setDuplicateKwError(categoryName)
+      setTimeout(() => setDuplicateKwError(null), 2000)
+      return
+    }
+
     addCategoryKeyword(categoryName, kw)
     setNewKeywords(prev => ({ ...prev, [categoryName]: '' }))
   }
@@ -421,13 +431,25 @@ const SettingsPage: React.FC = () => {
                           )}
                         </div>
 
-                        <form onSubmit={(e) => handleAddKeyword(e, cat.name)} className="flex gap-2 pt-2 border-t border-yuri-50">
+                        <form onSubmit={(e) => handleAddKeyword(e, cat.name)} className="flex gap-2 pt-2 border-t border-yuri-50 relative">
+                          {duplicateKwError === cat.name && (
+                            <div className="absolute -top-7 right-0 bg-red-50 text-red-500 text-[10px] font-bold px-2 py-1 rounded shadow-sm border border-red-100 animate-slide-down">
+                              이미 등록된 키워드예요
+                            </div>
+                          )}
                           <input spellCheck={false}
                             type="text"
                             placeholder={`${cat.name} 키워드 추가`}
                             value={newKeywords[cat.name] || ''}
-                            onChange={(e) => setNewKeywords(prev => ({ ...prev, [cat.name]: e.target.value }))}
-                            className="flex-1 px-3 py-2 bg-yuri-50 border border-yuri-200 rounded-lg text-sm outline-none focus:border-accent focus:bg-white transition-colors"
+                            onChange={(e) => {
+                              setNewKeywords(prev => ({ ...prev, [cat.name]: e.target.value }))
+                              if (duplicateKwError === cat.name) setDuplicateKwError(null)
+                            }}
+                            className={`flex-1 px-3 py-2 bg-yuri-50 border rounded-lg text-sm outline-none focus:bg-white transition-colors ${
+                              duplicateKwError === cat.name 
+                                ? 'border-red-400 bg-red-50' 
+                                : 'border-yuri-200 focus:border-accent'
+                            }`}
                           />
                           <button 
                             type="submit"

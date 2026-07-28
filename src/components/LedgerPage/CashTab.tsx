@@ -54,6 +54,7 @@ export default function CashTab({ year, month, onOpenFixedExpense }: { year: num
   } = useAppStore()
   const [editingRowId, setEditingRowId] = useState<string | null>(null)
   const [expandedCat, setExpandedCat] = useState<string | null>(null)
+  const [activeCategory, setActiveCategory] = useState<string | null>(null)
 
   // Drag to scroll for categories
   const catScrollRef = useRef<HTMLDivElement>(null)
@@ -152,9 +153,18 @@ export default function CashTab({ year, month, onOpenFixedExpense }: { year: num
     return result
   }, [expenseCategories, consumedCardEntries, cashEntries, fixedExpenses])
 
+  const availableCategories = useMemo(() => {
+    const cats = new Set<string>()
+    cashEntries.forEach(e => cats.add(e.category || '기타'))
+    return Array.from(cats).sort()
+  }, [cashEntries])
+
   // Combined timeline list
   const displayList = useMemo(() => {
-    const all = [...cashEntries]
+    let all = [...cashEntries]
+    if (activeCategory) {
+      all = all.filter(e => (e.category || '기타') === activeCategory)
+    }
     all.sort((a, b) => {
       const ta = new Date(a.scheduledDate || a.createdAt).getTime()
       const tb = new Date(b.scheduledDate || b.createdAt).getTime()
@@ -217,15 +227,44 @@ export default function CashTab({ year, month, onOpenFixedExpense }: { year: num
 
       {/* ── Timeline Section ── */}
       <div className="flex-1 p-5 md:p-8 bg-white flex flex-col gap-6">
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-center mb-2">
           <h2 className="text-sm font-bold text-yuri-900">현금 / 계좌 지출 내역</h2>
           <button 
             onClick={onOpenFixedExpense}
-            className="flex items-center gap-1.5 text-xs font-bold text-yuri-500 hover:text-accent transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-yuri-900 text-white rounded-lg text-[11px] font-bold shadow-sm hover:bg-yuri-800 transition-colors"
           >
             <Settings size={12} />
             고정지출 관리
           </button>
+        </div>
+
+        {/* Category Filter Badges */}
+        <div className="flex gap-2 items-center overflow-x-auto pb-1 scrollbar-hide w-full" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+          <style>{`.scrollbar-hide::-webkit-scrollbar { display: none; }`}</style>
+          <button
+            onClick={() => setActiveCategory(null)}
+            className={`shrink-0 px-3 py-1.5 rounded-full text-[13px] font-bold transition-colors ${
+              activeCategory === null
+                ? 'bg-gray-800 text-white'
+                : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
+            }`}
+          >
+            전체
+          </button>
+          
+          {availableCategories.map(cat => (
+            <button
+              key={cat}
+              onClick={() => setActiveCategory(cat)}
+              className={`shrink-0 px-3 py-1.5 rounded-full text-[13px] font-bold transition-colors ${
+                activeCategory === cat
+                  ? 'bg-blue-600 text-white border-blue-600'
+                  : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
+              }`}
+            >
+              {cat}
+            </button>
+          ))}
         </div>
 
         {displayList.length === 0 ? (
