@@ -34,8 +34,40 @@ export default function CardTab({ year, month }: { year: number, month: number }
     )
   }, [year, month, payday, cardPaymentDay, cardBillingStartDay, cardBillingEndDay])
 
+  const today = useMemo(() => new Date(), [])
+  
+  const ongoingCycle = useMemo(() => {
+    for (let offset = -2; offset <= 2; offset++) {
+      const testDate = new Date(today.getFullYear(), today.getMonth() + offset, 1);
+      const c = calculatePaydayCycle(
+        testDate.getFullYear(),
+        testDate.getMonth() + 1,
+        payday,
+        cardPaymentDay,
+        cardBillingStartDay,
+        cardBillingEndDay
+      );
+      if (today.getTime() >= c.cardBillingStart.getTime() && today.getTime() <= c.cardBillingEnd.getTime()) {
+        return c;
+      }
+    }
+    return calculatePaydayCycle(today.getFullYear(), today.getMonth() + 1, payday, cardPaymentDay, cardBillingStartDay, cardBillingEndDay)
+  }, [today, payday, cardPaymentDay, cardBillingStartDay, cardBillingEndDay])
+
+  const [tabMode, setTabMode] = useState<'billed' | 'ongoing'>('billed')
+  const activeCycle = tabMode === 'billed' ? cycle : ongoingCycle
+
   // Get only the card expenses for this billing cycle
   const cardEntries = useMemo(() => {
+    return ledger.filter(e => {
+      if (e.type !== 'expense' || e.paymentMethod !== '카드') return false
+      const d = new Date(e.scheduledDate || e.createdAt)
+      return d.getTime() >= activeCycle.cardBillingStart.getTime() && d.getTime() <= activeCycle.cardBillingEnd.getTime()
+    })
+  }, [ledger, activeCycle])
+
+  // For the expected bill calculation of the "billed" tab specifically
+  const billedCardEntries = useMemo(() => {
     return ledger.filter(e => {
       if (e.type !== 'expense' || e.paymentMethod !== '카드') return false
       const d = new Date(e.scheduledDate || e.createdAt)
@@ -118,7 +150,7 @@ export default function CardTab({ year, month }: { year: number, month: number }
   }
 
   // ── Estimated vs Actual Bill ──
-  const expectedBill = useMemo(() => cardEntries.reduce((s, e) => s + e.amount, 0), [cardEntries])
+  const expectedBill = useMemo(() => billedCardEntries.reduce((s, e) => s + e.amount, 0), [billedCardEntries])
   
   const monthKey = `${cycle.targetCardPaymentDate.getFullYear()}-${String(cycle.targetCardPaymentDate.getMonth() + 1).padStart(2, '0')}`
   const actualCardBill = cardBills[monthKey]
@@ -175,52 +207,79 @@ export default function CardTab({ year, month }: { year: number, month: number }
       <div className="max-w-[1200px] mx-auto">
         
         {/* Header section */}
-        <div className="flex flex-col gap-4 mb-8">
+        <div className="flex flex-col gap-6 mb-8">
+          
+          <div className="flex bg-gray-100/80 p-1 rounded-xl w-fit">
+            <button 
+              onClick={() => setTabMode('billed')}
+              className={`px-5 py-2 rounded-lg text-sm font-bold transition-all ${
+                tabMode === 'billed' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              이번 달 청구
+            </button>
+            <button 
+              onClick={() => setTabMode('ongoing')}
+              className={`px-5 py-2 rounded-lg text-sm font-bold transition-all ${
+                tabMode === 'ongoing' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              진행 중 사용
+            </button>
+          </div>
+
           <div className="flex justify-between items-start">
             <div>
               <h2 className="text-xl font-bold text-gray-900 tracking-tight">카드 지출</h2>
               <p className="text-sm text-gray-500 mt-1">
-                {cycle.cardBillingStart.getMonth() + 1}월 {cycle.cardBillingStart.getDate()}일 ~ {cycle.cardBillingEnd.getMonth() + 1}월 {cycle.cardBillingEnd.getDate()}일 사용분
+                {activeCycle.cardBillingStart.getMonth() + 1}월 {activeCycle.cardBillingStart.getDate()}일 ~ {activeCycle.cardBillingEnd.getMonth() + 1}월 {activeCycle.cardBillingEnd.getDate()}일 사용분
                 <span className="ml-2 px-2 py-0.5 bg-gray-100 text-gray-600 rounded-md text-xs font-semibold">
-                  결제일: {cycle.targetCardPaymentDate.getMonth() + 1}월 {cycle.targetCardPaymentDate.getDate()}일
+                  결제일: {activeCycle.targetCardPaymentDate.getMonth() + 1}월 {activeCycle.targetCardPaymentDate.getDate()}일
                 </span>
               </p>
             </div>
           </div>
 
-          <div className="flex flex-col gap-2 p-4 bg-white rounded-xl border border-gray-200 shadow-sm max-w-lg">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-bold text-gray-700">예상 결제액</span>
-              <span className="text-base font-bold text-gray-500 line-through decoration-1">{expectedBill.toLocaleString('ko-KR')}원</span>
-            </div>
-            <div className="flex items-center justify-between gap-4">
-              <span className="text-sm font-bold text-gray-900 whitespace-nowrap">실제 확정액</span>
-              <div className="flex items-center gap-2 flex-1 max-w-[200px]">
+          {tabMode === 'billed' ? (
+            <div className="flex flex-col gap-2 p-4 bg-white rounded-xl border border-gray-200 shadow-sm max-w-lg">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-bold text-gray-700">예상 결제액</span>
+                <span className="text-base font-bold text-gray-500 line-through decoration-1">{expectedBill.toLocaleString('ko-KR')}원</span>
+              </div>
+              <div className="flex items-center justify-between gap-4">
+                <span className="text-sm font-bold text-gray-900 whitespace-nowrap">실제 확정액</span>
+                <div className="flex items-center gap-2 flex-1 max-w-[200px]">
+                  <input spellCheck={false}
+                    type="text"
+                    placeholder="미입력"
+                    value={actualBillInput}
+                    onChange={handleActualBillChange}
+                    onBlur={handleActualBillBlur}
+                    className="w-full bg-transparent text-right text-base font-bold text-gray-900 outline-none border-b border-dashed border-gray-300 focus:border-gray-500 transition-colors placeholder:text-gray-300"
+                  />
+                  <span className="text-base font-bold text-gray-900">원</span>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 mt-2">
+                <MessageSquare size={14} className="text-gray-400" />
                 <input spellCheck={false}
                   type="text"
-                  value={actualBillInput}
-                  onChange={handleActualBillChange}
-                  onBlur={handleActualBillBlur}
-                  onKeyDown={e => { if (e.key === 'Enter') handleActualBillBlur() }}
-                  placeholder={expectedBill.toLocaleString('ko-KR')}
-                  className="w-full px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-sm font-bold outline-none focus:border-accent text-right transition-colors"
+                  placeholder="메모를 입력하세요 (예: 할부 포함)"
+                  value={memoInput}
+                  onChange={e => setMemoInput(e.target.value)}
+                  onBlur={handleMemoBlur}
+                  className="flex-1 bg-transparent text-xs text-gray-600 outline-none placeholder:text-gray-400"
                 />
-                <span className="text-sm font-bold text-gray-700">원</span>
               </div>
             </div>
-            <div className="flex items-center gap-2 mt-1">
-              <span className="text-[11px] font-bold text-gray-500 whitespace-nowrap">메모</span>
-              <input spellCheck={false}
-                type="text"
-                value={memoInput}
-                onChange={e => setMemoInput(e.target.value)}
-                onBlur={handleMemoBlur}
-                onKeyDown={e => { if (e.key === 'Enter') handleMemoBlur() }}
-                placeholder="결제 관련 메모 (예: 카드사 5천원 할인 적용)"
-                className="flex-1 px-3 py-1.5 bg-transparent border-b border-gray-200 text-[11px] outline-none focus:border-accent transition-colors"
-              />
+          ) : (
+            <div className="flex flex-col gap-1 max-w-lg mb-2">
+              <span className="text-sm font-bold text-gray-900">
+                진행 중 총 사용액: {cardEntries.reduce((s, e) => s + e.amount, 0).toLocaleString('ko-KR')}원
+              </span>
+              <span className="text-[11px] text-gray-500 font-medium">※ 아직 청구되지 않은, 현재 사용 중인 내역입니다. (잔액 계산 미포함)</span>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Masonry Grid */}

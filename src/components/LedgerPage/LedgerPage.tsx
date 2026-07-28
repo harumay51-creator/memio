@@ -114,14 +114,11 @@ function fmtAmt(n: number): string {
   return n.toLocaleString('ko-KR') + '원'
 }
 
-import { calculatePaydayCycle } from '../../utils/ledgerCycle'
-
 // ── Component ─────────────────────────────────────────────────────────────────
 const LedgerPage: React.FC = () => {
   const { 
     fixedExpenses, addFixedExpense, updateFixedExpense, deleteFixedExpense,
-    expenseCategories, isPrivateUnlocked, lockPrivate,
-    payday, cardPaymentDay, cardBillingStartDay, cardBillingEndDay
+    expenseCategories, isPrivateUnlocked, lockPrivate
   } = useAppStore()
 
   const today = useMemo(() => new Date(), [])

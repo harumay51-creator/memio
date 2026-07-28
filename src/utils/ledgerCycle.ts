@@ -57,7 +57,10 @@ export function calculatePaydayCycle(
   const targetCardPaymentDate = getSafeDate(paymentYear, paymentMonth0, cardPaymentDay);
   targetCardPaymentDate.setHours(23, 59, 59, 999); 
 
-  const cardBillingStart = getSafeDate(paymentYear, paymentMonth0 - 2, cardBillingStartDay);
+  // If start day > end day, it spans two months (e.g., 28th to 27th), so start is month - 2
+  // If start day <= end day, it's within the same month (e.g., 1st to 31st), so start is month - 1
+  const startMonthOffset = cardBillingStartDay > cardBillingEndDay ? 2 : 1;
+  const cardBillingStart = getSafeDate(paymentYear, paymentMonth0 - startMonthOffset, cardBillingStartDay);
   cardBillingStart.setHours(0, 0, 0, 0);
 
   const cardBillingEnd = getSafeDate(paymentYear, paymentMonth0 - 1, cardBillingEndDay);
