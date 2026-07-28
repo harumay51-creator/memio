@@ -152,8 +152,9 @@ export default function CashTab({ year, month, onOpenFixedExpense }: { year: num
   return (
     <div className="flex-1 overflow-y-auto flex flex-col">
       {/* ── Summary Section ── */}
-      <div className="p-5 md:p-8 bg-yuri-50 shrink-0 border-b border-yuri-100 flex flex-col gap-6">
-        <div className="bg-white rounded-2xl shadow-sm border border-yuri-100 p-5 md:p-6 flex flex-col gap-4">
+      <div className="bg-yuri-50 shrink-0 border-b border-yuri-100 flex flex-col items-center">
+        <div className="w-full max-w-[840px] p-5 md:p-8 flex flex-col gap-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-yuri-100 p-5 md:p-6 flex flex-col gap-4">
           <div className="flex justify-between items-center">
             <span className="text-sm font-bold text-yuri-500">이번 달 월급</span>
             <div className="flex items-center gap-2">
@@ -190,11 +191,12 @@ export default function CashTab({ year, month, onOpenFixedExpense }: { year: num
             <span className="text-[15px] font-bold text-[#1F1F1F]">{fmtAmt(salaryBalance)}</span>
           </div>
         </div>
-
+      </div>
       </div>
 
       {/* ── Timeline Section ── */}
-      <div className="flex-1 p-5 md:p-8 bg-white flex flex-col gap-6 relative">
+      <div className="flex-1 bg-white flex flex-col items-center relative">
+        <div className="w-full max-w-[840px] p-5 md:p-8 flex flex-col gap-6 h-full">
         <div className="flex justify-between items-center">
           <h2 className="text-sm font-bold text-yuri-900">현금 / 계좌 지출 내역</h2>
           <button 
@@ -278,10 +280,12 @@ export default function CashTab({ year, month, onOpenFixedExpense }: { year: num
             </div>
           ))
         )}
+        </div>
       </div>
 
       {/* ── 이번 월급 활동 (Reference Section) ── */}
-      <div className="sticky bottom-0 z-10 p-4 md:p-5 bg-gray-50 border-t border-gray-200 flex flex-col gap-3 shrink-0 shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.05)]">
+      <div className="sticky bottom-0 z-10 bg-gray-50 border-t border-gray-200 flex flex-col items-center shrink-0 shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.05)]">
+        <div className="w-full max-w-[840px] p-4 md:p-5 flex flex-col gap-3">
         <div className="flex flex-col gap-1.5">
           <span className="text-[10px] font-bold text-gray-400">참고</span>
           <div className="flex justify-between items-center">
@@ -334,6 +338,7 @@ export default function CashTab({ year, month, onOpenFixedExpense }: { year: num
               )}
             </div>
           </div>
+        </div>
         </div>
       </div>
     </div>
