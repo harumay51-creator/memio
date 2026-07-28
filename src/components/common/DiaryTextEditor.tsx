@@ -6,9 +6,9 @@ import { Highlight } from '@tiptap/extension-highlight';
 import { Placeholder } from '@tiptap/extension-placeholder';
 
 const HIGHLIGHT_COLORS = [
-  { name: 'Icy Blue', value: '#E3F1F8' },
-  { name: 'Lavender Mist', value: '#EDE9F7' },
-  { name: 'Sage Mint', value: '#E4F2EC' },
+  { name: 'Icy Blue', value: '#C8E6F5' },
+  { name: 'Lavender Mist', value: '#DCD3F0' },
+  { name: 'Sage Mint', value: '#C9EBDA' },
 ];
 
 interface DiaryTextEditorProps {

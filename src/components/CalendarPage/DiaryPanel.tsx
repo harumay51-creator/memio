@@ -237,8 +237,20 @@ const QuestionItem = ({ q, initialAnswer, saveAnswer, deleteAnswer, index, dateS
 }
 
 const TagPicker = ({ selectedTags, onToggleTag, onClose }: { selectedTags: string[], onToggleTag: (tag: string) => void, onClose: () => void }) => {
+  const ref = useRef<HTMLDivElement>(null);
+  
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        onClose();
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [onClose]);
+
   return (
-    <div className="absolute top-full right-0 mt-2 p-3 bg-white/90 backdrop-blur rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] border border-[#E5E5EA] w-64 z-50 animate-slide-down">
+    <div ref={ref} className="absolute top-full left-0 mt-2 p-3 bg-white/90 backdrop-blur rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] border border-[#E5E5EA] w-64 z-50 animate-slide-down">
       <div className="flex justify-between items-center mb-2">
         <span className="text-xs font-bold text-[#717A8C]">태그 선택 (최대 3개)</span>
         <button onClick={onClose} className="text-[#A0AABF] hover:text-[#717A8C] text-xs">✕</button>
@@ -274,10 +286,24 @@ const MemoItem = ({ memo, index, dateSeed, isY2K, isAurora, deleteMemo, updateMe
   const [localTags, setLocalTags] = useState<string[]>(memo.tags || []);
   const [isTagPickerOpen, setIsTagPickerOpen] = useState(false);
   const isDefault = !isY2K && !isAurora;
+  const editRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isEditing) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (editRef.current && !editRef.current.contains(e.target as Node)) {
+        updateMemo(memo.id, localText, localTags);
+        setIsEditing(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isEditing, localText, localTags, memo.id, updateMemo]);
 
   if (isEditing) {
     return (
       <div 
+        ref={editRef}
         className={`group relative transition-all duration-300 flex flex-col shrink-0 z-20 ${isDefault ? 'w-full min-h-0 py-4 px-2' : 'p-4 w-36 min-h-[9rem] h-auto'}`} 
         style={{
           ...getPostItStyle(memo.id, index, dateSeed, isY2K, isAurora),
@@ -286,17 +312,26 @@ const MemoItem = ({ memo, index, dateSeed, isY2K, isAurora, deleteMemo, updateMe
       >
         <CornerDoodle idString={memo.id} isY2K={isY2K} isAurora={isAurora} />
         
-        <div className="flex gap-1.5 mb-2 flex-wrap relative">
-          <button 
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              setIsTagPickerOpen(!isTagPickerOpen);
-            }}
-            className="text-[10px] font-bold px-2 py-0.5 rounded-full border border-dashed border-[#A0AABF] text-[#717A8C] hover:bg-white/30"
-          >
-            + 태그
-          </button>
+        <div className="flex gap-1.5 mb-2 flex-wrap items-center">
+          <div className="relative">
+            <button 
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsTagPickerOpen(!isTagPickerOpen);
+              }}
+              className="text-[10px] font-bold px-2 py-0.5 rounded-full border border-dashed border-[#A0AABF] text-[#717A8C] hover:bg-white/30"
+            >
+              + 태그
+            </button>
+            {isTagPickerOpen && (
+              <TagPicker 
+                selectedTags={localTags} 
+                onToggleTag={(t) => setLocalTags(prev => prev.includes(t) ? prev.filter(x => x !== t) : [...prev, t])}
+                onClose={() => setIsTagPickerOpen(false)}
+              />
+            )}
+          </div>
           {localTags.map(tagName => {
             const tagDef = DIARY_TAGS.find(t => t.name === tagName);
             if (!tagDef) return null;
@@ -310,13 +345,6 @@ const MemoItem = ({ memo, index, dateSeed, isY2K, isAurora, deleteMemo, updateMe
               </span>
             )
           })}
-          {isTagPickerOpen && (
-            <TagPicker 
-              selectedTags={localTags} 
-              onToggleTag={(t) => setLocalTags(prev => prev.includes(t) ? prev.filter(x => x !== t) : [...prev, t])}
-              onClose={() => setIsTagPickerOpen(false)}
-            />
-          )}
         </div>
 
         <div className="flex-1 min-h-[60px] cursor-text">
@@ -356,11 +384,51 @@ const MemoItem = ({ memo, index, dateSeed, isY2K, isAurora, deleteMemo, updateMe
     );
   }
 
+  if (isDefault) {
+    return (
+      <div 
+        className="group relative transition-all duration-300 flex flex-col shrink-0 cursor-pointer w-full min-h-0 py-2.5 px-2 border-b border-[#E5E5EA]/50 last:border-b-0 hover:bg-black/5 rounded-lg" 
+        onClick={() => setIsEditing(true)}
+      >
+        <div className="flex justify-between items-start gap-3">
+          <div className="flex items-start gap-3 flex-1 overflow-hidden">
+            {memo.createdAt && (
+              <span className="text-[11px] text-[#A0AABF] font-diary shrink-0 pt-[3px] whitespace-nowrap">
+                {new Intl.DateTimeFormat('ko-KR', { hour: 'numeric', minute: 'numeric', hour12: true }).format(new Date(memo.createdAt))}
+              </span>
+            )}
+            <div className="text-[14px] leading-relaxed font-diary flex-1 prose-p:my-0 prose-p:leading-relaxed" style={{ color: 'inherit' }} dangerouslySetInnerHTML={{ __html: memo.text }} />
+          </div>
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              deleteMemo(memo.id);
+            }}
+            className="w-6 h-6 flex items-center justify-center rounded text-[#A0AABF] hover:bg-[#F5F5F7] hover:text-[#EF6A7B] opacity-0 group-hover:opacity-100 transition-all text-[11px] shrink-0"
+          >
+            ✕
+          </button>
+        </div>
+        {(memo.tags && memo.tags.length > 0) && (
+          <div className="flex gap-1.5 mt-2 flex-wrap pl-[3.25rem]">
+            {memo.tags.map(tagName => {
+              const tagDef = DIARY_TAGS.find(t => t.name === tagName);
+              if (!tagDef) return null;
+              return (
+                <span key={tagName} className="text-[10px] font-bold px-2 py-0.5 rounded-full text-[#3D3833]" style={{ backgroundColor: tagDef.color }}>
+                  {tagName}
+                </span>
+              )
+            })}
+          </div>
+        )}
+      </div>
+    )
+  }
+
   return (
     <div 
-      className={`group relative transition-all duration-300 flex flex-col justify-between shrink-0 cursor-pointer ${
-        isDefault ? 'w-full min-h-0 py-4 px-2' : 'hover:scale-[1.02] z-0 hover:z-10 p-5 w-36 min-h-[9rem] h-auto'
-      }`} 
+      className="group relative transition-all duration-300 flex flex-col justify-between shrink-0 cursor-pointer hover:scale-[1.02] z-0 hover:z-10 p-5 w-36 min-h-[9rem] h-auto"
       style={getPostItStyle(memo.id, index, dateSeed, isY2K, isAurora)}
       onClick={() => setIsEditing(true)}
     >
@@ -381,7 +449,7 @@ const MemoItem = ({ memo, index, dateSeed, isY2K, isAurora, deleteMemo, updateMe
       )}
 
       <div className="flex justify-between items-start mb-2 gap-2">
-        <div className="text-[14px] leading-relaxed font-diary" style={{ color: 'inherit' }} dangerouslySetInnerHTML={{ __html: memo.text }} />
+        <div className="text-[14px] leading-relaxed font-diary prose-p:my-0 prose-p:leading-relaxed" style={{ color: 'inherit' }} dangerouslySetInnerHTML={{ __html: memo.text }} />
         <button 
           onClick={(e) => {
             e.stopPropagation();
@@ -694,14 +762,23 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
                   handleAddMemo(e as any)
                 }} className="flex gap-2">
                   <div className="flex flex-col gap-2 flex-1 relative">
-                    <div className="flex gap-1.5 flex-wrap">
-                      <button 
-                        type="button"
-                        onClick={() => setIsNewMemoTagPickerOpen(!isNewMemoTagPickerOpen)}
-                        className="text-[10px] font-bold px-2 py-0.5 rounded-full border border-dashed border-[#A0AABF] text-[#717A8C] hover:bg-white/30"
-                      >
-                        + 태그
-                      </button>
+                    <div className="flex gap-1.5 flex-wrap items-center">
+                      <div className="relative">
+                        <button 
+                          type="button"
+                          onClick={() => setIsNewMemoTagPickerOpen(!isNewMemoTagPickerOpen)}
+                          className="text-[10px] font-bold px-2 py-0.5 rounded-full border border-dashed border-[#A0AABF] text-[#717A8C] hover:bg-white/30"
+                        >
+                          + 태그
+                        </button>
+                        {isNewMemoTagPickerOpen && (
+                          <TagPicker 
+                            selectedTags={newMemoTags} 
+                            onToggleTag={(t) => setNewMemoTags(prev => prev.includes(t) ? prev.filter(x => x !== t) : [...prev, t])}
+                            onClose={() => setIsNewMemoTagPickerOpen(false)}
+                          />
+                        )}
+                      </div>
                       {newMemoTags.map(tagName => {
                         const tagDef = DIARY_TAGS.find(t => t.name === tagName);
                         if (!tagDef) return null;
@@ -712,13 +789,6 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
                           </span>
                         )
                       })}
-                      {isNewMemoTagPickerOpen && (
-                        <TagPicker 
-                          selectedTags={newMemoTags} 
-                          onToggleTag={(t) => setNewMemoTags(prev => prev.includes(t) ? prev.filter(x => x !== t) : [...prev, t])}
-                          onClose={() => setIsNewMemoTagPickerOpen(false)}
-                        />
-                      )}
                     </div>
                     <DiaryTextEditor
                       initialContent={newMemo}
@@ -931,14 +1001,23 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
                 handleAddMemo(e as any)
               }} className="flex gap-2">
                 <div className="flex flex-col gap-2 flex-1 relative">
-                  <div className="flex gap-1.5 flex-wrap">
-                    <button 
-                      type="button"
-                      onClick={() => setIsNewMemoTagPickerOpen(!isNewMemoTagPickerOpen)}
-                      className="text-[10px] font-bold px-2 py-0.5 rounded-full border border-dashed border-[#A0AABF] text-[#717A8C] hover:bg-white/30"
-                    >
-                      + 태그
-                    </button>
+                  <div className="flex gap-1.5 flex-wrap items-center">
+                    <div className="relative">
+                      <button 
+                        type="button"
+                        onClick={() => setIsNewMemoTagPickerOpen(!isNewMemoTagPickerOpen)}
+                        className="text-[10px] font-bold px-2 py-0.5 rounded-full border border-dashed border-[#A0AABF] text-[#717A8C] hover:bg-white/30"
+                      >
+                        + 태그
+                      </button>
+                      {isNewMemoTagPickerOpen && (
+                        <TagPicker 
+                          selectedTags={newMemoTags} 
+                          onToggleTag={(t) => setNewMemoTags(prev => prev.includes(t) ? prev.filter(x => x !== t) : [...prev, t])}
+                          onClose={() => setIsNewMemoTagPickerOpen(false)}
+                        />
+                      )}
+                    </div>
                     {newMemoTags.map(tagName => {
                       const tagDef = DIARY_TAGS.find(t => t.name === tagName);
                       if (!tagDef) return null;
@@ -949,13 +1028,6 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
                         </span>
                       )
                     })}
-                    {isNewMemoTagPickerOpen && (
-                      <TagPicker 
-                        selectedTags={newMemoTags} 
-                        onToggleTag={(t) => setNewMemoTags(prev => prev.includes(t) ? prev.filter(x => x !== t) : [...prev, t])}
-                        onClose={() => setIsNewMemoTagPickerOpen(false)}
-                      />
-                    )}
                   </div>
                   <DiaryTextEditor
                     initialContent={newMemo}
