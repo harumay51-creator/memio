@@ -107,19 +107,10 @@ export default function CardTab({ year, month }: { year: number, month: number }
     })
   }, [ledger, activeTab])
 
-  // For the expected bill calculation of the "billed" tab specifically
-  const billedCardEntries = useMemo(() => {
-    return ledger.filter(e => {
-      if (e.type !== 'expense' || e.paymentMethod !== '카드') return false
-      const d = new Date(e.scheduledDate || e.createdAt)
-      return d.getTime() >= cycle.cardBillingStart.getTime() && d.getTime() <= cycle.cardBillingEnd.getTime()
-    })
-  }, [ledger, cycle])
-
-  // ── Estimated vs Actual Bill (Only shown when activeTab is billed) ──
-  const expectedBill = useMemo(() => billedCardEntries.reduce((s, e) => s + e.amount, 0), [billedCardEntries])
+  // ── Estimated vs Actual Bill (Only shown when activeTab is billed or pending) ──
+  const expectedBill = useMemo(() => activeEntries.reduce((s, e) => s + e.amount, 0), [activeEntries])
   
-  const monthKey = `${cycle.targetCardPaymentDate.getFullYear()}-${String(cycle.targetCardPaymentDate.getMonth() + 1).padStart(2, '0')}`
+  const monthKey = `${activeTab.cycle.targetCardPaymentDate.getFullYear()}-${String(activeTab.cycle.targetCardPaymentDate.getMonth() + 1).padStart(2, '0')}`
   const actualCardBill = cardBills[monthKey]
   const hasActualBill = typeof actualCardBill?.amount === 'number' && actualCardBill.amount > 0
 
@@ -167,7 +158,6 @@ export default function CardTab({ year, month }: { year: number, month: number }
   // ── Category Filter & List Rendering ──
   const [editingRowId, setEditingRowId] = useState<string | null>(null)
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
-  const [showAllCats, setShowAllCats] = useState(false)
 
   // Get categories available in current entries based on categoryOrder
   const availableCategories = useMemo(() => {
@@ -275,8 +265,8 @@ export default function CardTab({ year, month }: { year: number, month: number }
         {/* 2. 하단 - 거래 목록 및 (이번 달 청구인 경우) 확정액 입력 영역 */}
         <div className="flex flex-col gap-4">
           
-          {/* Billed Tab specific inputs */}
-          {activeTab.isBilled && (
+          {/* Billed & Pending Tab specific inputs */}
+          {(activeTab.type === 'billed' || activeTab.type === 'pending') && (
             <div className="flex flex-col gap-2 p-5 bg-white rounded-2xl border border-gray-200 shadow-sm mb-2">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-bold text-gray-700">예상 결제액</span>
@@ -323,7 +313,7 @@ export default function CardTab({ year, month }: { year: number, month: number }
               전체
             </button>
             
-            {availableCategories.slice(0, showAllCats ? undefined : 4).map(cat => (
+            {availableCategories.map(cat => (
               <button
                 key={cat}
                 onClick={() => setActiveCategory(cat)}
@@ -336,15 +326,6 @@ export default function CardTab({ year, month }: { year: number, month: number }
                 {cat}
               </button>
             ))}
-
-            {!showAllCats && availableCategories.length > 4 && (
-              <button
-                onClick={() => setShowAllCats(true)}
-                className="px-3 py-1.5 rounded-full text-[13px] font-bold bg-gray-100 text-gray-500 hover:bg-gray-200 transition-colors"
-              >
-                더보기 +{availableCategories.length - 4}
-              </button>
-            )}
           </div>
 
           {/* Entries List */}
