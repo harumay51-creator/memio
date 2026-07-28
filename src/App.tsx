@@ -17,7 +17,7 @@ import { ToastProvider } from './components/common/Toast'
 // ── Inner app (needs to be inside AppStoreProvider to access useAppStore) ─────
 const AppInner: React.FC = () => {
   const { isLoading, loadError } = useAppStore()
-  const { isDiaryMode, settings } = useDiaryStore()
+  const { isDiaryMode, settings, setIsDiaryMode } = useDiaryStore()
   const [activePage,    setActivePage]    = useState<PageId>('calendar')
   const [activeItemId,  setActiveItemId]  = useState<string | null>(null)
   
@@ -26,7 +26,10 @@ const AppInner: React.FC = () => {
   const navigate = useCallback((page: PageId, itemId?: string) => {
     setActiveItemId(itemId || null)
     setActivePage(page)
-  }, [])
+    if (page === 'calendar') {
+      setIsDiaryMode(false)
+    }
+  }, [setIsDiaryMode])
 
   // Ctrl+K / Cmd+K → open search page
   useEffect(() => {
