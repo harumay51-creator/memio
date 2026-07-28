@@ -121,9 +121,6 @@ export default function CashTab({ year, month, onOpenFixedExpense }: { year: num
 
     consumedCardEntries.forEach(e => addSum(e, true))
     cashEntries.forEach(e => addSum(e, false))
-    fixedExpenses.forEach(fe => {
-      addSum({ category: fe.category, amount: fe.amount }, fe.paymentMethod === '카드')
-    })
 
     // Filter out 0 sums and sort by amount descending
     const result = Object.entries(sums)
