@@ -191,16 +191,21 @@ export default function CashTab({ year, month, onOpenFixedExpense }: { year: num
           </div>
         </div>
 
-        <div className="flex flex-col gap-3">
-          <div className="flex justify-between items-start">
-            <div>
-              <h3 className="text-xs font-bold text-yuri-400">카테고리별 합산 (카드+현금+고정지출)</h3>
-              <p className="text-[10px] text-yuri-300 mt-0.5">※ 이번 사이클 동안 실제로 사용한 금액 기준</p>
-            </div>
-            <div className="flex gap-2">
-              <span className="text-[10px] font-bold text-[#FF5D5D] bg-[#FF5D5D]/10 px-1.5 py-0.5 rounded flex items-center">카드총액 {fmtAmt(totalConsumedCard)}</span>
-              <span className="text-[10px] font-bold text-[#4FA596] bg-[#4FA596]/10 px-1.5 py-0.5 rounded flex items-center">현금총액 {fmtAmt(totalCashExpense)}</span>
-            </div>
+        {/* ── 사용현황 ── */}
+        <div className="flex flex-col items-center py-4">
+          <span className="text-[10px] text-yuri-400 mb-1">월급 사이클 기준</span>
+          <span className="text-3xl font-black text-gray-900">{fmtAmt(totalConsumedCard + totalCashExpense)}</span>
+          <div className="flex items-center gap-2 mt-2">
+            <span className="text-xs font-bold text-[#FF5D5D]">카드 {fmtAmt(totalConsumedCard)}</span>
+            <span className="text-xs text-yuri-300">·</span>
+            <span className="text-xs font-bold text-[#4FA596]">현금 {fmtAmt(totalCashExpense)}</span>
+          </div>
+        </div>
+
+        {/* ── 카테고리별 분석 ── */}
+        <div className="flex flex-col gap-3 pt-2 border-t border-yuri-100">
+          <div>
+            <h3 className="text-xs font-bold text-yuri-400">카테고리별 분석</h3>
           </div>
           <div className="flex flex-wrap gap-2 items-start">
             {categorySums.map(([cat, data]) => {
