@@ -490,37 +490,36 @@ const CalendarPage: React.FC = () => {
                             : 'bg-[#FFFFFF] hover:bg-[#FCFCFF] shadow-[0_1px_4px_rgba(0,0,0,0.08)]'
                 }`}
               >
-                <div className="flex flex-col items-center self-start mb-1 shrink-0">
-                  <div 
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      setSelDay(date)
-                    }}
-                    className={`
-                    w-7 h-7 rounded-full flex items-center justify-center text-[12px] font-medium
-                    ${
-                      isToday ? 'border border-[#8B7CF8] text-[#8B7CF8] shadow-sm' : 
-                      isY2K && isDiaryMode 
-                        ? isRedDay ? 'text-[#ff8ca1] drop-shadow-[0_1px_1px_rgba(138,99,210,0.4)]' : 'text-white drop-shadow-[0_1px_2px_rgba(138,99,210,0.8)]'
-                        : isRedDay && isDiaryMode ? 'text-[#EF6A7B]' : 'text-[#717A8C]'
-                    }
-                  `}>
-                    {date.getDate()}
-                  </div>
-                  {isDiaryMode && hasDiaryRecord && (
-                    <div className="w-1 h-1 rounded-full bg-[#8B7CF8] mt-0.5" />
-                  )}
+                <div 
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setSelDay(date)
+                  }}
+                  className={`
+                  w-7 h-7 rounded-full flex items-center justify-center text-[12px] font-medium self-start mb-1 shrink-0
+                  ${
+                    isToday ? 'bg-[#8B7CF8] text-[#FFFFFF] shadow-sm' : 
+                    isY2K && isDiaryMode 
+                      ? isRedDay ? 'text-[#ff8ca1] drop-shadow-[0_1px_1px_rgba(138,99,210,0.4)]' : 'text-white drop-shadow-[0_1px_2px_rgba(138,99,210,0.8)]'
+                      : isRedDay && isDiaryMode ? 'text-[#EF6A7B]' : 'text-[#717A8C]'
+                  }
+                `}>
+                  {date.getDate()}
                 </div>
-                <div className="flex flex-col gap-1 overflow-hidden flex-1 min-h-0">
+                <div className="flex flex-col gap-1 overflow-hidden flex-1 min-h-0 w-full">
                   {!isDiaryMode ? (
                     <>
                       {items.slice(0, 2)}
                     </>
                   ) : (
-                    <div className="flex flex-nowrap items-center justify-center gap-0.5 h-full pb-2 overflow-hidden">
-                      {(diaries[`${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`]?.emojis || []).map((emoji: string, idx: number) => (
-                        <Emoji key={idx} emoji={emoji} className="w-3.5 h-3.5 shrink-0" />
-                      ))}
+                    <div className="flex flex-nowrap items-end justify-center gap-0.5 h-full pb-0.5 w-full overflow-hidden">
+                      {(diaryEntry?.emojis || []).length > 0 ? (
+                        diaryEntry!.emojis!.map((emoji: string, idx: number) => (
+                          <Emoji key={idx} emoji={emoji} className="w-3.5 h-3.5 shrink-0" />
+                        ))
+                      ) : hasDiaryRecord ? (
+                        <span className="text-[12px] opacity-70" title="기록 있음">📝</span>
+                      ) : null}
                     </div>
                   )}
                 </div>
