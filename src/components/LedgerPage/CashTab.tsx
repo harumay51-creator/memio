@@ -191,57 +191,6 @@ export default function CashTab({ year, month, onOpenFixedExpense }: { year: num
           </div>
         </div>
 
-        {/* ── 이번 월급기간 사용 (참고) ── */}
-        <div className="flex flex-col gap-5 px-4 py-2 mb-4">
-          <div className="flex flex-col gap-1">
-            <span className="text-[11px] font-bold text-yuri-400">참고</span>
-            <span className="text-sm font-bold text-yuri-900">이번 월급기간 사용</span>
-            <span className="text-[15px] font-extrabold text-gray-800">{fmtAmt(totalConsumedCard + totalCashExpense)}</span>
-          </div>
-          <div className="flex flex-col gap-1">
-            <span className="text-[11px] font-bold text-yuri-400">구성</span>
-            <div className="flex flex-col gap-1 text-[13px] font-medium text-yuri-500">
-              <span>카드 {fmtAmt(totalConsumedCard)}</span>
-              <span>현금 {fmtAmt(totalCashExpense)}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* ── 카테고리별 분석 ── */}
-        <div className="flex flex-col gap-3 pt-2 border-t border-yuri-100">
-          <div>
-            <h3 className="text-xs font-bold text-yuri-400">카테고리별 분석</h3>
-          </div>
-          <div className="flex flex-wrap gap-2 items-start">
-            {categorySums.map(([cat, data]) => {
-              const classes = getCatClasses(cat)
-              const isExpanded = expandedCat === cat
-              return (
-                <div key={cat} className="flex flex-col gap-1 items-start">
-                  <div 
-                    onClick={() => setExpandedCat(isExpanded ? null : cat)}
-                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border cursor-pointer select-none transition-all ${
-                      isExpanded ? 'border-yuri-400 bg-yuri-50 shadow-inner' : 'border-yuri-200 bg-white hover:border-yuri-300 shadow-sm'
-                    }`}
-                  >
-                    <span className={`text-[10px] font-black ${classes.text} bg-gray-50 px-1.5 py-0.5 rounded`}>{cat}</span>
-                    <span className={`text-xs font-bold text-yuri-900`}>{fmtAmt(data.total)}</span>
-                  </div>
-                  {isExpanded && (
-                    <div className="flex gap-2 px-2.5 py-1.5 bg-white border border-yuri-200 rounded-md shadow-sm ml-1 animate-in fade-in slide-in-from-top-1">
-                      {data.card > 0 && <span className="text-[10px] text-[#FF5D5D] font-bold">카드 {fmtAmt(data.card)}</span>}
-                      {data.card > 0 && data.cash > 0 && <span className="text-[10px] text-yuri-200">|</span>}
-                      {data.cash > 0 && <span className="text-[10px] text-[#4FA596] font-bold">현금 {fmtAmt(data.cash)}</span>}
-                    </div>
-                  )}
-                </div>
-              )
-            })}
-            {categorySums.length === 0 && (
-              <span className="text-xs font-bold text-yuri-400">지출 내역이 없습니다.</span>
-            )}
-          </div>
-        </div>
       </div>
 
       {/* ── Timeline Section ── */}
@@ -329,6 +278,63 @@ export default function CashTab({ year, month, onOpenFixedExpense }: { year: num
             </div>
           ))
         )}
+      </div>
+
+      {/* ── 이번 월급 활동 (Reference Section) ── */}
+      <div className="sticky bottom-0 z-10 p-4 md:p-5 bg-gray-50 border-t border-gray-200 flex flex-col gap-3 shrink-0 shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.05)]">
+        <div className="flex flex-col gap-1.5">
+          <span className="text-[10px] font-bold text-gray-400">참고</span>
+          <div className="flex justify-between items-center">
+            <span className="text-xs font-bold text-gray-800">이번 월급 활동</span>
+            <span className="text-sm font-extrabold text-gray-800">{fmtAmt(totalConsumedCard + totalCashExpense)}</span>
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="text-[10px] font-medium text-gray-400">구성</span>
+            <div className="flex items-center gap-2 text-[11px] font-medium text-gray-500">
+              <span>카드 {fmtAmt(totalConsumedCard)}</span>
+              <span className="text-gray-300">·</span>
+              <span>현금 {fmtAmt(totalCashExpense)}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="h-px w-full bg-gray-200 my-0.5" />
+
+        <div className="flex flex-col gap-2">
+          <h3 className="text-[11px] font-bold text-gray-500">월급 사이클 카테고리 분석</h3>
+          <div className="flex gap-2 items-center overflow-x-auto pb-1" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+            <style>{`.scrollbar-hide::-webkit-scrollbar { display: none; }`}</style>
+            <div className="flex gap-2 items-center scrollbar-hide">
+              {categorySums.map(([cat, data]) => {
+                const classes = getCatClasses(cat)
+                const isExpanded = expandedCat === cat
+                return (
+                  <div key={cat} className="flex flex-col items-start gap-1 shrink-0">
+                    <div 
+                      onClick={() => setExpandedCat(isExpanded ? null : cat)}
+                      className={`flex items-center gap-1.5 px-2 py-1 rounded-md border cursor-pointer select-none transition-all ${
+                        isExpanded ? 'border-yuri-400 bg-yuri-50' : 'border-gray-200 bg-white hover:border-gray-300'
+                      }`}
+                    >
+                      <span className={`text-[9px] font-black ${classes.text} bg-gray-50 px-1 py-0.5 rounded`}>{cat}</span>
+                      <span className={`text-[11px] font-bold text-gray-800`}>{fmtAmt(data.total)}</span>
+                    </div>
+                    {isExpanded && (
+                      <div className="flex gap-1.5 px-1.5 py-1 bg-white border border-gray-200 rounded text-[9px] w-full justify-center shadow-sm">
+                        {data.card > 0 && <span className="text-[#FF5D5D] font-bold">카드 {fmtAmt(data.card)}</span>}
+                        {data.card > 0 && data.cash > 0 && <span className="text-gray-200">|</span>}
+                        {data.cash > 0 && <span className="text-[#4FA596] font-bold">현금 {fmtAmt(data.cash)}</span>}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+              {categorySums.length === 0 && (
+                <span className="text-[11px] font-bold text-gray-400">지출 내역이 없습니다.</span>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   )
