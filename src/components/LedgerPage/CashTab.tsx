@@ -3,7 +3,7 @@ import { useAppStore } from '../../store/AppStore'
 import { calculatePaydayCycle } from '../../utils/ledgerCycle'
 import type { LedgerEntry } from '../../types'
 import { EditRow } from './EditRow'
-import { Settings } from 'lucide-react'
+import { Settings, MessageSquare } from 'lucide-react'
 
 const CAT_TW_CLASSES: Record<string, { bg: string, text: string }> = {
   '식비':     { bg: 'bg-orange-50', text: 'text-orange-600' },
@@ -25,14 +25,8 @@ function getCatClasses(name: string) {
   return CAT_TW_CLASSES[name] ?? { bg: 'bg-slate-100', text: 'text-slate-600' }
 }
 
-const WDAY_KO = ['일','월','화','수','목','금','토']
 
-function dayKey(d: Date) {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-}
-function fmtDateHeader(d: Date) {
-  return `${d.getMonth() + 1}월 ${d.getDate()}일 (${WDAY_KO[d.getDay()]})`
-}
+
 function fmtAmt(n: number) {
   return n.toLocaleString('ko-KR') + '원'
 }
@@ -170,16 +164,8 @@ export default function CashTab({ year, month, onOpenFixedExpense }: { year: num
       const tb = new Date(b.scheduledDate || b.createdAt).getTime()
       return tb - ta // Newest first
     })
-
-    const map = new Map<string, { date: Date; entries: (LedgerEntry & { isFixed?: boolean, originalFeId?: string })[] }>()
-    for (const e of all) {
-      const d = new Date(e.scheduledDate || e.createdAt)
-      const k = dayKey(d)
-      if (!map.has(k)) map.set(k, { date: d, entries: [] })
-      map.get(k)!.entries.push(e)
-    }
-    return [...map.values()]
-  }, [cashEntries])
+    return all
+  }, [cashEntries, activeCategory])
 
   return (
     <div className="flex-1 overflow-y-auto flex flex-col items-center bg-gray-50/50">
@@ -273,71 +259,63 @@ export default function CashTab({ year, month, onOpenFixedExpense }: { year: num
             <p className="text-sm font-bold text-yuri-400">이번 사이클 현금 지출이 없습니다.</p>
           </div>
         ) : (
-          displayList.map(g => (
-            <div key={dayKey(g.date)} className="flex flex-col gap-2">
-              <h3 className="text-xs font-bold text-yuri-500 flex items-center gap-2">
-                {fmtDateHeader(g.date)}
-              </h3>
+          <div className="flex flex-col bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
+            {displayList.map(e => {
+              const isEditing = editingRowId === e.id
+              const isFixed = (e as any).isFixed || !!(e as any).fixedExpenseId
               
-              <div className="flex flex-col gap-1.5">
-                {g.entries.map(e => {
-                  const isEditing = editingRowId === e.id
+              if (isEditing) {
+                return (
+                  <EditRow 
+                    key={e.id}
+                    item={e}
+                    expenseCategories={expenseCategories}
+                    onUpdate={updateLedgerEntry}
+                    onDelete={deleteLedgerEntry}
+                    onCancel={() => setEditingRowId(null)}
+                  />
+                )
+              }
 
-                  const isFixed = e.isFixed || !!e.fixedExpenseId
-                  if (isEditing) {
-                    return (
-                      <EditRow 
-                        key={e.id}
-                        item={e}
-                        expenseCategories={expenseCategories}
-                        onUpdate={updateLedgerEntry}
-                        onDelete={deleteLedgerEntry}
-                        onCancel={() => setEditingRowId(null)}
-                      />
-                    )
-                  }
+              const catClasses = getCatClasses(e.category || '기타')
+              const d = new Date(e.scheduledDate || e.createdAt)
+              const dStr = `${d.getMonth() + 1}/${d.getDate()}`
 
-                  const catClasses = getCatClasses(e.category || '기타')
-
-                  return (
-                    <div 
-                      key={e.id} 
-                      onClick={() => {
-                        setEditingRowId(e.id)
-                      }}
-                      className="group flex flex-col p-3 rounded-xl border border-transparent hover:border-yuri-200 transition-colors cursor-pointer bg-white"
-                    >
-                      <div className="flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-2 overflow-hidden flex-1">
-                          <span className={`shrink-0 text-[10px] font-black px-1.5 py-0.5 rounded ${catClasses.bg} ${catClasses.text}`}>
-                            {e.category || '기타'}
-                          </span>
-                          <span className="text-[13px] font-bold text-gray-900 truncate flex items-center gap-1.5">
-                            {e.label}
-                            {isFixed && <span className="text-[9px] bg-yuri-200 text-yuri-600 px-1 py-0.5 rounded font-bold uppercase shrink-0">고정</span>}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-3 shrink-0">
-                          <span className="text-[10px] font-bold text-gray-400 bg-gray-50 px-1.5 py-0.5 rounded">
-                            {e.paymentMethod || '계좌이체'}
-                          </span>
-                          <span className="text-[13px] font-bold text-gray-900 text-right">
-                            {e.amount.toLocaleString('ko-KR')}
-                          </span>
-                        </div>
-                      </div>
-                      
-                      {e.memo && (
-                        <p className="text-[11px] text-gray-400 mt-1.5 leading-snug truncate pl-[46px]">
-                          {e.memo}
-                        </p>
-                      )}
-                    </div>
-                  )
-                })}
-              </div>
+              return (
+                <div 
+                  key={e.id} 
+                  onClick={() => setEditingRowId(e.id)}
+                  className="flex justify-between items-center px-4 py-3 hover:bg-gray-50 bg-white border-b border-gray-100 last:border-b-0 cursor-pointer group transition-colors"
+                >
+                  <div className="flex items-center gap-3 overflow-hidden flex-1">
+                    <span className="text-xs font-semibold text-gray-400 w-10 shrink-0">{dStr}</span>
+                    <span className={`text-[11px] font-bold px-2 py-0.5 rounded shrink-0 ${catClasses.bg} ${catClasses.text}`}>
+                      {e.category || '기타'}
+                    </span>
+                    <span className="text-sm font-medium text-gray-800 truncate flex items-center gap-1.5">
+                      {e.label}
+                      {isFixed && <span className="text-[9px] bg-yuri-200 text-yuri-600 px-1 py-0.5 rounded font-bold uppercase shrink-0">고정</span>}
+                    </span>
+                    {e.memo && <MessageSquare size={12} className="text-gray-400 shrink-0" />}
+                  </div>
+                  <div className="flex items-center gap-3 shrink-0 ml-4">
+                    <span className="text-[10px] text-gray-400 font-medium bg-gray-50 px-1.5 py-0.5 rounded">{e.paymentMethod || '계좌이체'}</span>
+                    <span className="text-[15px] font-bold text-gray-900 group-hover:text-black transition-colors">
+                      {fmtAmt(e.amount)}
+                    </span>
+                  </div>
+                </div>
+              )
+            })}
+            
+            {/* List Bottom Total */}
+            <div className="flex justify-between items-center px-4 py-4 bg-gray-50 border-t border-gray-200">
+              <span className="text-sm font-bold text-gray-500">합계</span>
+              <span className="text-[15px] font-black text-gray-900">
+                {fmtAmt(displayList.reduce((sum, item) => sum + item.amount, 0))}
+              </span>
             </div>
-          ))
+          </div>
         )}
       </div>
 
