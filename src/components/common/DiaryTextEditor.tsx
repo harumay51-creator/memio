@@ -87,8 +87,18 @@ const DiaryTextEditor: React.FC<DiaryTextEditorProps> = ({
   }, [editor, autoFocus]);
 
   useEffect(() => {
-    if (editor && initialContent === '' && !editor.isEmpty) {
+    if (!editor) return;
+
+    const currentHtml = editor.getHTML();
+    const safeIncoming = getSafeContent(initialContent);
+
+    // 1. When externally reset to empty (e.g. after adding a new memo)
+    if (initialContent === '' && !editor.isEmpty) {
       editor.commands.setContent('');
+    } 
+    // 2. When async data loads from DB (editor is empty, but incoming data has content)
+    else if (initialContent !== '' && currentHtml === '<p></p>' && safeIncoming !== '<p></p>') {
+      editor.commands.setContent(safeIncoming);
     }
   }, [editor, initialContent]);
 
