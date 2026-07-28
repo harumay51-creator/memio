@@ -126,49 +126,24 @@ const LedgerPage: React.FC = () => {
 
   const today = useMemo(() => new Date(), [])
   
-  const initialCardView = useMemo(() => {
-    for (let offset = -2; offset <= 2; offset++) {
-      const testDate = new Date(today.getFullYear(), today.getMonth() + offset, 1);
-      const cycle = calculatePaydayCycle(
-        testDate.getFullYear(),
-        testDate.getMonth() + 1,
-        payday,
-        cardPaymentDay,
-        cardBillingStartDay,
-        cardBillingEndDay
-      );
-      if (today.getTime() >= cycle.cardBillingStart.getTime() && today.getTime() <= cycle.cardBillingEnd.getTime()) {
-        return testDate;
-      }
-    }
-    return new Date(today.getFullYear(), today.getMonth(), 1);
-  }, [today, payday, cardPaymentDay, cardBillingStartDay, cardBillingEndDay])
-
   const [activeTab, setActiveTab] = useState<'cash' | 'card'>('cash')
+  const [viewDate, setViewDate] = useState(() => new Date(today.getFullYear(), today.getMonth(), 1))
 
-  const [cashView, setCashView] = useState(() => new Date(today.getFullYear(), today.getMonth(), 1))
-  const [cardView, setCardView] = useState(initialCardView)
+  const year  = viewDate.getFullYear()
+  const month = viewDate.getMonth()
 
-  const view = activeTab === 'cash' ? cashView : cardView
-  const setView = activeTab === 'cash' ? setCashView : setCardView
+  const prevMonth = () => setViewDate(new Date(year, month - 1, 1))
+  const nextMonth = () => setViewDate(new Date(year, month + 1, 1))
+  const goToday   = () => setViewDate(new Date(today.getFullYear(), today.getMonth(), 1))
 
-  const year  = view.getFullYear()
-  const month = view.getMonth()
-
-  const prevMonth = () => setView(new Date(year, month - 1, 1))
-  const nextMonth = () => setView(new Date(year, month + 1, 1))
-  const goToday   = () => setView(activeTab === 'cash' ? new Date(today.getFullYear(), today.getMonth(), 1) : initialCardView)
-
-  const isCurrentMonth = activeTab === 'cash' 
-    ? year === today.getFullYear() && month === today.getMonth()
-    : year === initialCardView.getFullYear() && month === initialCardView.getMonth()
+  const isCurrentMonth = year === today.getFullYear() && month === today.getMonth()
 
   // ── Month Picker ─────────────────────────────────────────────────────────────
   const [showPicker, setShowPicker] = useState(false)
   const [pickerYear, setPickerYear] = useState(year)
 
   const handleMonthSelect = (m: number) => {
-    setView(new Date(pickerYear, m, 1))
+    setViewDate(new Date(pickerYear, m, 1))
     setShowPicker(false)
   }
 
