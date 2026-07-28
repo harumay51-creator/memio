@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react'
 import { useAppStore } from '../../store/AppStore'
 import { calculatePaydayCycle } from '../../utils/ledgerCycle'
-import { MessageSquare } from 'lucide-react'
+import { MessageSquare, ChevronDown, ChevronUp } from 'lucide-react'
 import { EditRow } from './EditRow'
 
 
@@ -210,29 +210,15 @@ export default function CardTab({ year, month }: { year: number, month: number }
         {tabMode === 'billed' ? (
           <CardCycleGrid cycle={cycle} />
         ) : (
-          <div className="flex flex-col gap-12">
+          <div className="flex flex-col gap-4">
             {unbilledCycles.map((uc, i) => (
-              <div key={i} className="flex flex-col gap-4 relative">
-                {/* Visual Connector for multiple cycles */}
-                {i > 0 && <div className="absolute -top-8 left-6 w-0.5 h-6 bg-gray-200"></div>}
-                
-                <div className="flex flex-col gap-2 mb-2">
-                  <div className="flex items-center gap-3">
-                    <h2 className="text-xl font-bold text-gray-900 tracking-tight">
-                      {uc.type === 'pending' ? `${uc.cycle.targetCardPaymentDate.getMonth() + 1}월 청구 예정분` : `현재 진행 중 (이번 달 아님)`}
-                    </h2>
-                    {uc.type === 'pending' && <span className="px-2 py-0.5 bg-orange-100 text-orange-700 rounded-md text-xs font-bold">확정 대기</span>}
-                    {uc.type === 'ongoing' && <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded-md text-xs font-bold">진행 중</span>}
-                  </div>
-                  <p className="text-sm text-gray-500">
-                    {uc.cycle.cardBillingStart.getMonth() + 1}월 {uc.cycle.cardBillingStart.getDate()}일 ~ {uc.cycle.cardBillingEnd.getMonth() + 1}월 {uc.cycle.cardBillingEnd.getDate()}일 사용분
-                    <span className="ml-2 px-2 py-0.5 bg-gray-100 text-gray-600 rounded-md text-xs font-semibold">
-                      예상 결제일: {uc.cycle.targetCardPaymentDate.getMonth() + 1}월 {uc.cycle.targetCardPaymentDate.getDate()}일
-                    </span>
-                  </p>
-                </div>
-                <CardCycleGrid cycle={uc.cycle} showTotal={true} />
-              </div>
+              <OngoingCycleAccordion 
+                key={i} 
+                cycle={uc.cycle} 
+                title={uc.type === 'pending' ? `${uc.cycle.targetCardPaymentDate.getMonth() + 1}월 청구 예정분` : `현재 진행 중`}
+                badge={uc.type === 'pending' ? '확정 대기' : '진행 중'}
+                badgeColor={uc.type === 'pending' ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700'}
+              />
             ))}
           </div>
         )}
@@ -401,6 +387,144 @@ function CardCycleGrid({ cycle, showTotal = false }: { cycle: ReturnType<typeof 
           )
         })}
       </div>
+    </div>
+  )
+}
+
+function OngoingCycleAccordion({ cycle, title, badge, badgeColor }: { cycle: ReturnType<typeof calculatePaydayCycle>, title: string, badge: string, badgeColor: string }) {
+  const { ledger, expenseCategories, updateLedgerEntry, deleteLedgerEntry, categoryOrder } = useAppStore()
+  
+  const cardEntries = useMemo(() => {
+    return ledger.filter(e => {
+      if (e.type !== 'expense' || e.paymentMethod !== '카드') return false
+      const d = new Date(e.scheduledDate || e.createdAt)
+      return d.getTime() >= cycle.cardBillingStart.getTime() && d.getTime() <= cycle.cardBillingEnd.getTime()
+    })
+  }, [ledger, cycle])
+
+  const groupedEntries = useMemo(() => {
+    const groups: Record<string, typeof cardEntries> = {}
+    expenseCategories.forEach(c => { groups[c.name] = [] })
+    groups['기타'] = []
+    cardEntries.forEach(e => {
+      const cat = e.category || '기타'
+      if (!groups[cat]) groups[cat] = []
+      groups[cat].push(e)
+    })
+    for (const key in groups) {
+      groups[key].sort((a, b) => {
+        const da = new Date(a.scheduledDate || a.createdAt).getTime()
+        const db = new Date(b.scheduledDate || b.createdAt).getTime()
+        return da - db
+      })
+    }
+    return groups
+  }, [cardEntries, expenseCategories])
+
+  const sortedCategories = useMemo(() => {
+    const defaultCats = expenseCategories.map(c => c.name)
+    Object.keys(groupedEntries).forEach(cat => {
+      if (!defaultCats.includes(cat) && cat !== '기타') defaultCats.push(cat)
+    })
+    if (!defaultCats.includes('기타')) defaultCats.push('기타')
+    return [...defaultCats].sort((a, b) => {
+      const idxA = categoryOrder.indexOf(a)
+      const idxB = categoryOrder.indexOf(b)
+      if (idxA === -1 && idxB === -1) return 0
+      if (idxA === -1) return 1
+      if (idxB === -1) return -1
+      return idxA - idxB
+    })
+  }, [expenseCategories, categoryOrder, groupedEntries])
+
+  const [isCycleExpanded, setIsCycleExpanded] = useState(false)
+  const [expandedCat, setExpandedCat] = useState<string | null>(null)
+  const [editingRowId, setEditingRowId] = useState<string | null>(null)
+
+  const totalAmount = cardEntries.reduce((s, e) => s + e.amount, 0)
+
+  return (
+    <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden transition-all duration-200">
+      {/* Level 1: Cycle Header */}
+      <div 
+        className="px-5 py-4 cursor-pointer hover:bg-gray-50 flex items-center justify-between"
+        onClick={() => setIsCycleExpanded(!isCycleExpanded)}
+      >
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-3">
+             <h2 className="text-[15px] font-bold text-gray-900 tracking-tight">{title}</h2>
+             <span className={`px-2 py-0.5 rounded-md text-[11px] font-bold ${badgeColor}`}>{badge}</span>
+          </div>
+          <p className="text-xs text-gray-500 font-medium mt-0.5">
+            {cycle.cardBillingStart.getMonth() + 1}/{cycle.cardBillingStart.getDate()} ~ {cycle.cardBillingEnd.getMonth() + 1}/{cycle.cardBillingEnd.getDate()}
+            <span className="ml-2 px-1.5 py-0.5 bg-gray-100 rounded text-gray-500 text-[11px]">결제: {cycle.targetCardPaymentDate.getMonth() + 1}/{cycle.targetCardPaymentDate.getDate()}</span>
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="text-[15px] font-extrabold text-gray-900">{totalAmount.toLocaleString()}원</span>
+          {isCycleExpanded ? <ChevronUp size={18} className="text-gray-400" /> : <ChevronDown size={18} className="text-gray-400" />}
+        </div>
+      </div>
+
+      {/* Level 2: Categories */}
+      {isCycleExpanded && (
+        <div className="border-t border-gray-100 bg-gray-50/50 flex flex-col">
+          {sortedCategories.filter(cat => (groupedEntries[cat] || []).length > 0).map(cat => {
+            const items = groupedEntries[cat]
+            const catTotal = items.reduce((sum, e) => sum + e.amount, 0)
+            const isCatExpanded = expandedCat === cat
+
+            return (
+              <div key={cat} className="flex flex-col border-b border-gray-100 last:border-b-0">
+                {/* Category Header */}
+                <div 
+                  className="px-6 py-3 cursor-pointer hover:bg-gray-100 flex items-center justify-between"
+                  onClick={() => setExpandedCat(isCatExpanded ? null : cat)}
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-gray-800 text-[13px]">{cat}</span>
+                    <span className="text-[11px] text-gray-400 font-medium px-1.5 py-0.5 bg-gray-200/50 rounded-md">{items.length}건</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="font-bold text-gray-900 text-[13px]">{catTotal.toLocaleString()}원</span>
+                    {isCatExpanded ? <ChevronUp size={14} className="text-gray-400" /> : <ChevronDown size={14} className="text-gray-400" />}
+                  </div>
+                </div>
+
+                {/* Level 3: Entries */}
+                {isCatExpanded && (
+                  <div className="bg-white px-5 py-2 flex flex-col">
+                    {items.map(item => {
+                      if (editingRowId === item.id) {
+                        return <EditRow key={item.id} item={item} expenseCategories={expenseCategories} onUpdate={updateLedgerEntry} onDelete={deleteLedgerEntry} onCancel={() => setEditingRowId(null)} />
+                      }
+
+                      const d = new Date(item.scheduledDate || item.createdAt)
+                      const dStr = `${d.getMonth() + 1}/${d.getDate()}`
+                      return (
+                        <div 
+                          key={item.id} 
+                          onClick={() => setEditingRowId(item.id)}
+                          className="flex justify-between items-center px-3 py-2.5 hover:bg-gray-50 rounded-lg transition-colors group cursor-pointer"
+                        >
+                          <div className="flex items-center gap-2 overflow-hidden">
+                            <span className="text-[11px] font-semibold text-gray-400 w-8 shrink-0">{dStr}</span>
+                            <span className="text-[13px] font-medium text-gray-700 truncate">{item.label}</span>
+                            {item.memo && <MessageSquare size={10} className="text-gray-400 shrink-0" />}
+                          </div>
+                          <span className="text-[13px] font-bold text-gray-900 shrink-0 ml-4 group-hover:text-black transition-colors">
+                            {item.amount.toLocaleString()}원
+                          </span>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      )}
     </div>
   )
 }
