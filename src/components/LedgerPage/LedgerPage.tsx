@@ -124,7 +124,11 @@ const LedgerPage: React.FC = () => {
   const today = useMemo(() => new Date(), [])
   
   const [activeTab, setActiveTab] = useState<'cash' | 'card'>('cash')
-  const [viewDate, setViewDate] = useState(() => new Date(today.getFullYear(), today.getMonth(), 1))
+  const [cashDate, setCashDate] = useState(() => new Date(today.getFullYear(), today.getMonth(), 1))
+  const [cardDate, setCardDate] = useState(() => new Date(today.getFullYear(), today.getMonth(), 1))
+
+  const viewDate = activeTab === 'cash' ? cashDate : cardDate
+  const setViewDate = activeTab === 'cash' ? setCashDate : setCardDate
 
   const year  = viewDate.getFullYear()
   const month = viewDate.getMonth()

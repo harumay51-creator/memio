@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useEffect } from 'react'
 import { useAppStore } from '../../store/AppStore'
 import { calculatePaydayCycle } from '../../utils/ledgerCycle'
-import { MessageSquare, ChevronDown } from 'lucide-react'
+import { MessageSquare } from 'lucide-react'
 import { EditRow } from './EditRow'
 
 export default function CardTab({ year, month }: { year: number, month: number }) {
@@ -25,9 +25,11 @@ export default function CardTab({ year, month }: { year: number, month: number }
   }, [year, month, payday, cardPaymentDay, cardBillingStartDay, cardBillingEndDay])
 
   const today = useMemo(() => new Date(), [])
+  const isCurrentMonth = year === today.getFullYear() && month === today.getMonth()
   
   // Unbilled cycles up to today
   const unbilledCycles = useMemo(() => {
+    if (!isCurrentMonth) return []
     const cycles: { type: 'pending' | 'ongoing', cycle: ReturnType<typeof calculatePaydayCycle>, month: number, year: number }[] = []
     
     let C_ongoing = calculatePaydayCycle(today.getFullYear(), today.getMonth() + 1, payday, cardPaymentDay, cardBillingStartDay, cardBillingEndDay);
@@ -64,10 +66,13 @@ export default function CardTab({ year, month }: { year: number, month: number }
       }
     }
     return cycles;
-  }, [year, month, today, payday, cardPaymentDay, cardBillingStartDay, cardBillingEndDay])
+  }, [year, month, today, payday, cardPaymentDay, cardBillingStartDay, cardBillingEndDay, isCurrentMonth])
 
   // Combine into tabs
   const tabs = useMemo(() => {
+    if (!isCurrentMonth) {
+      return [{ id: 'billed', title: `${month + 1}월 확정 내역`, cycle, type: 'billed', isBilled: true }]
+    }
     const t = []
     t.push({ id: 'billed', title: '이번 달 청구', cycle, type: 'billed', isBilled: true })
     unbilledCycles.forEach((uc, i) => {
@@ -78,21 +83,20 @@ export default function CardTab({ year, month }: { year: number, month: number }
       }
     })
     return t
-  }, [cycle, unbilledCycles])
+  }, [cycle, unbilledCycles, isCurrentMonth, month])
 
   const [activeTabId, setActiveTabId] = useState<string>('ongoing')
   
-  // Ensure active tab is valid, fallback to ongoing if missing
+  // Ensure active tab is valid, fallback to ongoing if missing (or first if not current month)
   const activeTab = useMemo(() => {
-    return tabs.find(t => t.id === activeTabId) || tabs.find(t => t.id === 'ongoing') || tabs[tabs.length - 1]
-  }, [tabs, activeTabId])
+    return tabs.find(t => t.id === activeTabId) || (isCurrentMonth ? tabs.find(t => t.id === 'ongoing') : tabs[0]) || tabs[tabs.length - 1]
+  }, [tabs, activeTabId, isCurrentMonth])
 
-  // Update tab if month changes and ongoing is not available (though ongoing is always there)
   useEffect(() => {
     if (!tabs.find(t => t.id === activeTabId)) {
-      setActiveTabId('ongoing')
+      setActiveTabId(isCurrentMonth ? 'ongoing' : tabs[0].id)
     }
-  }, [tabs, activeTabId])
+  }, [tabs, activeTabId, isCurrentMonth])
 
   // Get entries for the ACTIVE tab
   const activeEntries = useMemo(() => {
@@ -102,8 +106,6 @@ export default function CardTab({ year, month }: { year: number, month: number }
       return d.getTime() >= activeTab.cycle.cardBillingStart.getTime() && d.getTime() <= activeTab.cycle.cardBillingEnd.getTime()
     })
   }, [ledger, activeTab])
-
-
 
   // For the expected bill calculation of the "billed" tab specifically
   const billedCardEntries = useMemo(() => {
@@ -162,38 +164,15 @@ export default function CardTab({ year, month }: { year: number, month: number }
     }
   }
 
-  // ── Sorting & List Rendering ──
-  const [sortType, setSortType] = useState<'time' | 'category' | 'amount'>('time')
+  // ── Category Filter & List Rendering ──
   const [editingRowId, setEditingRowId] = useState<string | null>(null)
+  const [activeCategory, setActiveCategory] = useState<string | null>(null)
+  const [showAllCats, setShowAllCats] = useState(false)
 
-  const sortedListEntries = useMemo(() => {
-    if (sortType === 'time') {
-      return [...activeEntries].sort((a, b) => new Date(b.scheduledDate || b.createdAt).getTime() - new Date(a.scheduledDate || a.createdAt).getTime())
-    }
-    if (sortType === 'amount') {
-      return [...activeEntries].sort((a, b) => b.amount - a.amount)
-    }
-    return activeEntries // category is grouped
-  }, [activeEntries, sortType])
-
-  const categoryGrouped = useMemo(() => {
-    if (sortType !== 'category') return []
-    const groups: Record<string, typeof activeEntries> = {}
-    expenseCategories.forEach(c => { groups[c.name] = [] })
-    groups['기타'] = []
-    
-    activeEntries.forEach(e => {
-      const cat = e.category || '기타'
-      if (!groups[cat]) groups[cat] = []
-      groups[cat].push(e)
-    })
-
+  // Get categories available in current entries based on categoryOrder
+  const availableCategories = useMemo(() => {
+    const present = new Set(activeEntries.map(e => e.category || '기타'))
     const defaultCats = expenseCategories.map(c => c.name)
-    Object.keys(groups).forEach(cat => {
-      if (!defaultCats.includes(cat) && cat !== '기타') defaultCats.push(cat)
-    })
-    if (!defaultCats.includes('기타')) defaultCats.push('기타')
-    
     const ordered = [...defaultCats].sort((a, b) => {
       const idxA = categoryOrder.indexOf(a)
       const idxB = categoryOrder.indexOf(b)
@@ -202,13 +181,22 @@ export default function CardTab({ year, month }: { year: number, month: number }
       if (idxB === -1) return -1
       return idxA - idxB
     })
+    
+    const finalCats = ordered.filter(c => present.has(c))
+    if (present.has('기타') && !finalCats.includes('기타')) finalCats.push('기타')
+    return finalCats
+  }, [activeEntries, expenseCategories, categoryOrder])
 
-    return ordered.filter(cat => groups[cat].length > 0).map(cat => ({
-      cat,
-      items: groups[cat].sort((a, b) => new Date(b.scheduledDate || b.createdAt).getTime() - new Date(a.scheduledDate || a.createdAt).getTime()),
-      total: groups[cat].reduce((s, e) => s + e.amount, 0)
-    }))
-  }, [activeEntries, sortType, expenseCategories, categoryOrder])
+  const filteredEntries = useMemo(() => {
+    if (!activeCategory) return activeEntries
+    return activeEntries.filter(e => (e.category || '기타') === activeCategory)
+  }, [activeEntries, activeCategory])
+
+  const sortedListEntries = useMemo(() => {
+    return [...filteredEntries].sort((a, b) => new Date(b.scheduledDate || b.createdAt).getTime() - new Date(a.scheduledDate || a.createdAt).getTime())
+  }, [filteredEntries])
+  
+  const listTotal = useMemo(() => filteredEntries.reduce((s, e) => s + e.amount, 0), [filteredEntries])
 
   // Reusable row renderer
   const renderRow = (item: any) => {
@@ -226,9 +214,7 @@ export default function CardTab({ year, month }: { year: number, month: number }
       >
         <div className="flex items-center gap-3 overflow-hidden">
           <span className="text-xs font-semibold text-gray-400 w-10 shrink-0">{dStr}</span>
-          {sortType !== 'category' && (
-            <span className="text-[11px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded shrink-0">{item.category || '기타'}</span>
-          )}
+          <span className="text-[11px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded shrink-0">{item.category || '기타'}</span>
           <span className="text-sm font-medium text-gray-800 truncate">{item.label}</span>
           {item.memo && <MessageSquare size={12} className="text-gray-400 shrink-0" />}
         </div>
@@ -243,8 +229,8 @@ export default function CardTab({ year, month }: { year: number, month: number }
     <div className="flex-1 p-8 overflow-y-auto bg-gray-50/50">
       <div className="max-w-[1000px] mx-auto flex flex-col gap-8">
         
-        {/* 1. 상단 - 3개의 선택 가능한 탭 */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {/* 1. 상단 - 선택 가능한 탭 */}
+        <div className={`grid gap-4 ${isCurrentMonth ? 'grid-cols-1 sm:grid-cols-3' : 'grid-cols-1 max-w-[400px]'}`}>
           {tabs.map(tab => {
             const isSelected = activeTabId === tab.id
             const tabEntries = ledger.filter(e => {
@@ -270,7 +256,8 @@ export default function CardTab({ year, month }: { year: number, month: number }
                   </span>
                   {tab.type === 'ongoing' && <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded-md text-[10px] font-bold">진행 중</span>}
                   {tab.type === 'pending' && <span className="px-2 py-0.5 bg-orange-100 text-orange-700 rounded-md text-[10px] font-bold">확정 대기</span>}
-                  {tab.type === 'billed' && <span className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded-md text-[10px] font-bold">이번 달</span>}
+                  {!isCurrentMonth && tab.type === 'billed' && <span className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded-md text-[10px] font-bold">확정 내역</span>}
+                  {isCurrentMonth && tab.type === 'billed' && <span className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded-md text-[10px] font-bold">이번 달</span>}
                 </div>
                 <div className={`text-xl font-black ${isSelected ? 'text-gray-900' : 'text-gray-600'}`}>
                   {total.toLocaleString()}원
@@ -323,56 +310,61 @@ export default function CardTab({ year, month }: { year: number, month: number }
             </div>
           )}
 
-          {/* List Toolbar */}
-          <div className="flex items-center justify-between bg-white px-5 py-3 rounded-2xl border border-gray-200 shadow-sm">
-            <div className="text-sm font-bold text-gray-700">
-              총 {activeEntries.length}건
-            </div>
-            <div className="relative">
-              <select
-                value={sortType}
-                onChange={(e) => setSortType(e.target.value as any)}
-                className="appearance-none bg-gray-50 border border-gray-200 text-gray-700 text-sm font-bold rounded-lg px-4 py-2 pr-10 outline-none focus:border-gray-400 cursor-pointer"
+          {/* Category Filter Badges */}
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={() => setActiveCategory(null)}
+              className={`px-3 py-1.5 rounded-full text-[13px] font-bold transition-colors ${
+                activeCategory === null
+                  ? 'bg-gray-800 text-white'
+                  : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
+              }`}
+            >
+              전체
+            </button>
+            
+            {availableCategories.slice(0, showAllCats ? undefined : 4).map(cat => (
+              <button
+                key={cat}
+                onClick={() => setActiveCategory(cat)}
+                className={`px-3 py-1.5 rounded-full text-[13px] font-bold transition-colors ${
+                  activeCategory === cat
+                    ? 'bg-blue-100 text-blue-700 border-blue-200'
+                    : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
+                }`}
               >
-                <option value="time">정렬: 시간순</option>
-                <option value="category">정렬: 카테고리순</option>
-                <option value="amount">정렬: 금액순</option>
-              </select>
-              <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
-            </div>
+                {cat}
+              </button>
+            ))}
+
+            {!showAllCats && availableCategories.length > 4 && (
+              <button
+                onClick={() => setShowAllCats(true)}
+                className="px-3 py-1.5 rounded-full text-[13px] font-bold bg-gray-100 text-gray-500 hover:bg-gray-200 transition-colors"
+              >
+                더보기 +{availableCategories.length - 4}
+              </button>
+            )}
           </div>
 
           {/* Entries List */}
           <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden flex flex-col min-h-[300px]">
-            {activeEntries.length === 0 ? (
+            {sortedListEntries.length === 0 ? (
               <div className="flex flex-col items-center justify-center flex-1 py-12">
                 <p className="text-gray-400 font-bold">이 기간에 등록된 카드 지출이 없습니다.</p>
               </div>
             ) : (
-              <>
-                {sortType === 'category' ? (
-                  <div className="flex flex-col">
-                    {categoryGrouped.map(group => (
-                      <div key={group.cat} className="flex flex-col border-b border-gray-200 last:border-b-0">
-                        <div className="px-5 py-2.5 bg-gray-50 border-b border-gray-100 flex items-center justify-between sticky top-0 z-10">
-                          <div className="flex items-center gap-2">
-                            <span className="font-bold text-gray-800 text-sm">{group.cat}</span>
-                            <span className="text-xs font-semibold text-gray-400 bg-gray-200 px-1.5 py-0.5 rounded">{group.items.length}건</span>
-                          </div>
-                          <span className="font-bold text-gray-900 text-sm">{group.total.toLocaleString()}원</span>
-                        </div>
-                        <div className="flex flex-col">
-                          {group.items.map(renderRow)}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="flex flex-col">
-                    {sortedListEntries.map(renderRow)}
-                  </div>
-                )}
-              </>
+              <div className="flex flex-col">
+                {sortedListEntries.map(renderRow)}
+              </div>
+            )}
+            
+            {/* List Footer Total */}
+            {sortedListEntries.length > 0 && (
+              <div className="mt-auto px-5 py-4 bg-gray-50 border-t border-gray-200 flex justify-between items-center">
+                <span className="text-sm font-bold text-gray-500">합계</span>
+                <span className="text-lg font-black text-gray-900">{listTotal.toLocaleString()}원</span>
+              </div>
             )}
           </div>
           
