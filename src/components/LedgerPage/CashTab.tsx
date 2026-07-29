@@ -139,7 +139,7 @@ export default function CashTab({ year, month, onOpenFixedExpense }: { year: num
   const totalSavings = savingCats.reduce((sum, [_, data]) => sum + data.total, 0)
   const totalCycleUsage = totalConsumedCard + totalCashExpense
   const executionRatio = currentSalary > 0 ? Math.min(100, Math.round((totalCycleUsage / currentSalary) * 100)) : 0
-  const BAR_COLORS = ['bg-[#E3F1F8]', 'bg-[#EDE9F7]', 'bg-[#E4F2EC]', 'bg-[#E7ECF2]', 'bg-[#EFEAF5]']
+  const BAR_COLORS = ['bg-[#CFE7F4]', 'bg-[#DCCFF3]', 'bg-[#CFE8DC]', 'bg-[#D4DFEC]', 'bg-[#E2D8EF]']
 
   // Combined timeline list
   const displayList = useMemo(() => {
@@ -338,7 +338,7 @@ export default function CashTab({ year, month, onOpenFixedExpense }: { year: num
               
               <div className="flex items-center gap-2 mt-1">
                 <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                  <div className="h-full bg-[#E3F1F8] rounded-full transition-all" style={{ width: `${executionRatio}%` }} />
+                  <div className="h-full bg-[#CFE7F4] rounded-full transition-all" style={{ width: `${executionRatio}%` }} />
                 </div>
                 <span className="text-[10px] font-bold text-gray-400 w-6 text-right">{executionRatio}%</span>
               </div>
@@ -371,7 +371,10 @@ export default function CashTab({ year, month, onOpenFixedExpense }: { year: num
                 return (
                   <div key={cat} className="flex flex-col gap-1.5">
                     <div className="flex justify-between items-center text-[11px]">
-                      <span className="font-bold text-gray-700">{cat}</span>
+                      <div className="flex items-center gap-1.5">
+                        <div className={`w-2 h-2 rounded-full ${color}`} />
+                        <span className="font-bold text-gray-700">{cat}</span>
+                      </div>
                       <span className="font-extrabold text-gray-800">{fmtAmt(data.total)}</span>
                     </div>
                     <div className="w-full h-1.5 bg-gray-200/60 rounded-full overflow-hidden">
@@ -401,7 +404,10 @@ export default function CashTab({ year, month, onOpenFixedExpense }: { year: num
                   return (
                     <div key={cat} className="flex flex-col gap-1.5">
                       <div className="flex justify-between items-center text-[11px]">
-                        <span className="font-bold text-gray-700">{cat}</span>
+                        <div className="flex items-center gap-1.5">
+                          <div className={`w-2 h-2 rounded-full ${color}`} />
+                          <span className="font-bold text-gray-700">{cat}</span>
+                        </div>
                         <span className="font-extrabold text-gray-800">{fmtAmt(data.total)}</span>
                       </div>
                       <div className="w-full h-1.5 bg-gray-200/60 rounded-full overflow-hidden">

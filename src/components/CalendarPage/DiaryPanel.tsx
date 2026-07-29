@@ -5,29 +5,29 @@ import Emoji from '../common/Emoji'
 import DiaryTextEditor from '../common/DiaryTextEditor'
 
 export const DIARY_TAGS = [
-  { name: '뿌듯', color: '#E4F2EC' },
-  { name: '설렘', color: '#EDE9F7' },
-  { name: '기쁨', color: '#EFEAF5' },
-  { name: '행복', color: '#E4F2EC' },
-  { name: '만족', color: '#E3F1F8' },
-  { name: '후련', color: '#E7ECF2' },
-  { name: '기대', color: '#EDE9F7' },
-  { name: '무난', color: '#E3F1F8' },
-  { name: '평온', color: '#E3F1F8' },
-  { name: '힘듦', color: '#E7ECF2' },
-  { name: '우울', color: '#E7ECF2' },
-  { name: '눈물', color: '#E3F1F8' },
-  { name: '짜증', color: '#EFEAF5' },
-  { name: '귀찮', color: '#E7ECF2' },
-  { name: '답답', color: '#E7ECF2' },
-  { name: '불안', color: '#EDE9F7' },
-  { name: '빡침', color: '#EFEAF5' },
-  { name: '웃김', color: '#EDE9F7' },
-  { name: '감사', color: '#E4F2EC' },
-  { name: '고민', color: '#EFEAF5' },
-  { name: '홧팅', color: '#E4F2EC' },
-  { name: '지침', color: '#E7ECF2' }, // legacy
-  { name: '웃긴', color: '#EDE9F7' }, // legacy
+  { name: '뿌듯', color: '#CFE8DC' },
+  { name: '설렘', color: '#DCCFF3' },
+  { name: '기쁨', color: '#E2D8EF' },
+  { name: '행복', color: '#CFE8DC' },
+  { name: '만족', color: '#CFE7F4' },
+  { name: '후련', color: '#D4DFEC' },
+  { name: '기대', color: '#DCCFF3' },
+  { name: '무난', color: '#CFE7F4' },
+  { name: '평온', color: '#CFE7F4' },
+  { name: '힘듦', color: '#D4DFEC' },
+  { name: '우울', color: '#D4DFEC' },
+  { name: '눈물', color: '#CFE7F4' },
+  { name: '짜증', color: '#E2D8EF' },
+  { name: '귀찮', color: '#D4DFEC' },
+  { name: '답답', color: '#D4DFEC' },
+  { name: '불안', color: '#DCCFF3' },
+  { name: '빡침', color: '#E2D8EF' },
+  { name: '웃김', color: '#DCCFF3' },
+  { name: '감사', color: '#CFE8DC' },
+  { name: '고민', color: '#E2D8EF' },
+  { name: '홧팅', color: '#CFE8DC' },
+  { name: '지침', color: '#D4DFEC' }, // legacy
+  { name: '웃긴', color: '#DCCFF3' }, // legacy
 ];
 
 export const DIARY_TAG_GROUPS = [
