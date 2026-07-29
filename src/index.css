@@ -82,7 +82,7 @@
 
   /* Quick Capture bar */
   .quick-bar {
-    @apply fixed bottom-5 left-1/2 -translate-x-1/2
+    @apply fixed bottom-5 left-1/2 -translate-x-1/2 z-50
            w-[640px] max-w-[calc(100vw-2rem)]
            bg-white/90 backdrop-blur-xl
            border border-yuri-200 rounded-2xl shadow-float
