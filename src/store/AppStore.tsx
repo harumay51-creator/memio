@@ -82,6 +82,7 @@ interface StoreValue {
   restoreItem: (type: 'note' | 'task' | 'ledger' | 'fixedExpense', id: string) => void
   hardDeleteItem: (type: 'note' | 'task' | 'ledger' | 'fixedExpense', id: string) => void
   addCategory: (name: string, color?: string) => void
+  updateCategory: (oldName: string, newName: string, color: string) => Promise<void>
   deleteCategory: (name: string) => void
   addCategoryKeyword: (categoryName: string, keyword: string) => void
   removeCategoryKeyword: (categoryName: string, keyword: string) => void
@@ -801,6 +802,54 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
     })
   }, [uid])
 
+  const updateCategory = useCallback(async (oldName: string, newName: string, color: string) => {
+    let updatedKeywords: string[] = []
+    setExpenseCategories(prev => {
+      const existing = prev.find(c => c.name === oldName)
+      updatedKeywords = existing ? existing.keywords : []
+      if (oldName !== newName) {
+        deleteDoc(doc(db, 'users', uid, 'expenseCategories', oldName)).catch(console.error)
+      }
+      const newItem = { name: newName, keywords: updatedKeywords, color }
+      setDoc(doc(db, 'users', uid, 'expenseCategories', newName), newItem).catch(console.error)
+      
+      const next = prev.filter(c => c.name !== oldName)
+      next.push(newItem)
+      return next
+    })
+
+    if (oldName !== newName) {
+      setLedger(prev => {
+        const next = [...prev]
+        next.forEach(e => {
+          if (e.category === oldName) {
+            e.category = newName
+            setDoc(doc(db, 'users', uid, 'ledger', e.id), { category: newName }, { merge: true }).catch(console.error)
+          }
+        })
+        return next
+      })
+
+      setFixedExpenses(prev => {
+        const next = [...prev]
+        next.forEach(fe => {
+          if (fe.category === oldName) {
+            fe.category = newName
+            setDoc(doc(db, 'users', uid, 'fixedExpenses', fe.id), { category: newName }, { merge: true }).catch(console.error)
+          }
+        })
+        return next
+      })
+      
+      setCategoryOrderState(prev => {
+        if (!prev.includes(oldName)) return prev
+        const next = prev.map((c: string) => c === oldName ? newName : c)
+        setDoc(doc(db, 'users', uid, 'settings', 'categoryOrder'), { order: next }).catch(console.error)
+        return next
+      })
+    }
+  }, [uid])
+
   const deleteCategory = useCallback((name: string) => {
     setExpenseCategories(prev => {
       const next = prev.filter(c => c.name !== name)
@@ -1145,7 +1194,7 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
       navDate, setNavDate,
       addFixedExpense, updateFixedExpense, deleteFixedExpense,
       restoreItem, hardDeleteItem,
-      addCategory, deleteCategory, addCategoryKeyword, removeCategoryKeyword,
+      addCategory, updateCategory, deleteCategory, addCategoryKeyword, removeCategoryKeyword,
       categoryOrder, setCategoryOrder,
       addAgenda, toggleAgenda, deleteAgenda,
       updateItemOrders,

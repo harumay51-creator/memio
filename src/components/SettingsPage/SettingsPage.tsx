@@ -11,7 +11,7 @@ type TabType = 'ledger' | 'security' | 'anniversaries' | 'monthly' | 'holidays' 
 
 const SettingsPage: React.FC = () => {
   const { 
-    expenseCategories, addCategoryKeyword, removeCategoryKeyword, addCategory, deleteCategory,
+    expenseCategories, addCategoryKeyword, removeCategoryKeyword, addCategory, updateCategory, deleteCategory,
     anniversaries, addAnniversary, deleteAnniversary,
     monthlyEvents, addMonthlyEvent, deleteMonthlyEvent,
     cardPaymentDay, setCardPaymentDay,
@@ -27,6 +27,9 @@ const SettingsPage: React.FC = () => {
   // ── Category States ────────
   const [newCatName, setNewCatName] = useState('')
   const [newCatColor, setNewCatColor] = useState(DEFAULT_CATEGORY_COLOR)
+  const [editingCategory, setEditingCategory] = useState<string | null>(null)
+  const [editCatName, setEditCatName] = useState('')
+  const [editCatColor, setEditCatColor] = useState(DEFAULT_CATEGORY_COLOR)
   const [newKeywords, setNewKeywords] = useState<Record<string, string>>({})
   const [expanded, setExpanded] = useState<Record<string, boolean>>({})
 
@@ -84,6 +87,32 @@ const SettingsPage: React.FC = () => {
     setNewCatName('')
     setNewCatColor(DEFAULT_CATEGORY_COLOR)
     setExpanded(prev => ({ ...prev, [name]: true }))
+  }
+
+  const handleUpdateCategory = async (e: React.FormEvent, oldName: string) => {
+    e.preventDefault()
+    const newName = editCatName.trim()
+    if (!newName) return
+    if (newName !== oldName && expenseCategories.some(c => c.name === newName)) {
+      alert('이미 존재하는 카테고리 이름입니다.')
+      return
+    }
+    await updateCategory(oldName, newName, editCatColor)
+    setEditingCategory(null)
+    if (newName !== oldName) {
+      setExpanded(prev => {
+        const next = { ...prev }
+        next[newName] = next[oldName]
+        delete next[oldName]
+        return next
+      })
+    }
+  }
+
+  const startEditCategory = (cat: any) => {
+    setEditingCategory(cat.name)
+    setEditCatName(cat.name)
+    setEditCatColor(getCategoryColor(cat.name, expenseCategories))
   }
 
   // ── Security Handlers ────────
@@ -380,38 +409,86 @@ const SettingsPage: React.FC = () => {
                 <div className="flex flex-col gap-6">
                   {expenseCategories.map(cat => (
                     <div key={cat.name} className="bg-white border border-yuri-200 rounded-xl overflow-hidden shadow-sm">
-                      <div className="w-full bg-yuri-50 px-5 py-4 border-b border-yuri-200 flex justify-between items-center transition-colors">
-                        <button 
-                          onClick={() => toggleCategory(cat.name)}
-                          className="flex-1 text-left flex items-center gap-2 hover:opacity-70 transition-opacity"
-                        >
-                          <h3 className="text-sm font-bold text-[#374151] flex items-center gap-2">
-                            <span 
-                              className="w-2 h-2 rounded-full" 
-                              style={{ backgroundColor: getCategoryColor(cat.name, expenseCategories) }} 
-                            />
-                            {cat.name}
-                          </h3>
-                        </button>
-                        <div className="flex items-center gap-4">
-                          <button
-                            onClick={() => {
-                              if (confirm(`정말 '${cat.name}' 카테고리를 삭제하시겠어요?\n이미 저장된 거래는 유지되지만, 앞으로 이 카테고리는 선택할 수 없습니다.`)) {
-                                deleteCategory(cat.name)
-                              }
-                            }}
-                            className="text-yuri-400 hover:text-red-500 text-xs font-bold transition-colors"
-                          >
-                            삭제
-                          </button>
+                      {editingCategory === cat.name ? (
+                        <div className="w-full bg-white px-5 py-4 border-b border-yuri-200">
+                          <form onSubmit={(e) => handleUpdateCategory(e, cat.name)} className="flex flex-col gap-3">
+                            <div className="flex gap-2">
+                              <input spellCheck={false}
+                                type="text"
+                                placeholder="카테고리 이름"
+                                value={editCatName}
+                                onChange={(e) => setEditCatName(e.target.value)}
+                                className="flex-1 px-3 py-2 bg-white border border-yuri-200 rounded-lg text-sm outline-none focus:border-accent transition-colors"
+                              />
+                              <button 
+                                type="submit"
+                                disabled={!editCatName.trim()}
+                                className="px-5 py-2 bg-yuri-900 text-white text-sm font-bold rounded-lg hover:bg-yuri-800 disabled:opacity-50 transition-colors"
+                              >
+                                저장
+                              </button>
+                              <button 
+                                type="button"
+                                onClick={() => setEditingCategory(null)}
+                                className="px-5 py-2 bg-gray-100 text-gray-600 text-sm font-bold rounded-lg hover:bg-gray-200 transition-colors"
+                              >
+                                취소
+                              </button>
+                            </div>
+                            <div className="flex flex-wrap gap-2 mt-1">
+                              {CATEGORY_COLORS.map(color => (
+                                <button
+                                  key={color.name}
+                                  type="button"
+                                  onClick={() => setEditCatColor(color.value)}
+                                  className={`w-6 h-6 rounded-full border-2 transition-all ${editCatColor === color.value ? 'border-gray-800 scale-110 shadow-sm' : 'border-transparent hover:scale-110'}`}
+                                  style={{ backgroundColor: color.value }}
+                                  title={color.name}
+                                />
+                              ))}
+                            </div>
+                          </form>
+                        </div>
+                      ) : (
+                        <div className="w-full bg-yuri-50 px-5 py-4 border-b border-yuri-200 flex justify-between items-center transition-colors">
                           <button 
                             onClick={() => toggleCategory(cat.name)}
-                            className="text-yuri-400 text-xs font-bold hover:text-yuri-600 transition-colors"
+                            className="flex-1 text-left flex items-center gap-2 hover:opacity-70 transition-opacity"
                           >
-                            {expanded[cat.name] ? '접기 ▲' : '펼치기 ▼'}
+                            <h3 className="text-sm font-bold text-[#374151] flex items-center gap-2">
+                              <span 
+                                className="w-2 h-2 rounded-full" 
+                                style={{ backgroundColor: getCategoryColor(cat.name, expenseCategories) }} 
+                              />
+                              {cat.name}
+                            </h3>
                           </button>
+                          <div className="flex items-center gap-4">
+                            <button
+                              onClick={() => startEditCategory(cat)}
+                              className="text-yuri-400 hover:text-accent text-xs font-bold transition-colors"
+                            >
+                              수정
+                            </button>
+                            <button
+                              onClick={() => {
+                                if (confirm(`정말 '${cat.name}' 카테고리를 삭제하시겠어요?\n이미 저장된 거래는 유지되지만, 앞으로 이 카테고리는 선택할 수 없습니다.`)) {
+                                  deleteCategory(cat.name)
+                                }
+                              }}
+                              className="text-yuri-400 hover:text-red-500 text-xs font-bold transition-colors"
+                            >
+                              삭제
+                            </button>
+                            <button 
+                              onClick={() => toggleCategory(cat.name)}
+                              className="text-yuri-400 text-xs font-bold hover:text-yuri-600 transition-colors"
+                            >
+                              {expanded[cat.name] ? '접기 ▲' : '펼치기 ▼'}
+                            </button>
+                          </div>
                         </div>
-                      </div>
+                      )}
                       
                       {expanded[cat.name] && (
                         <div className="p-5 flex flex-col gap-4">
