@@ -87,56 +87,54 @@ const QuickCapture: React.FC = () => {
       )}
 
       {/* ── Input bar ─────────────────────────────────────────────────────── */}
-      <div className="bg-white/80 backdrop-blur-xl w-full shadow-lg rounded-2xl p-2 border border-yuri-100/50">
-        <div className={`quick-bar ${focused ? 'ring-2 ring-accent/30 border-accent/40' : ''}`}>
-          {/* Live-updating category icon */}
-          <div
+      <div className={`quick-bar ${focused ? 'ring-2 ring-accent/30 border-accent/40' : ''}`}>
+        {/* Live-updating category icon */}
+        <div
+          className={`
+            w-7 h-7 rounded-lg flex items-center justify-center shrink-0
+            text-sm font-bold transition-all duration-150
+            ${previewCat
+              ? `${previewCat.bg} ${previewCat.color}`
+              : 'bg-accent text-white'}
+          `}
+        >
+          {previewCat ? previewCat.icon : '+'}
+        </div>
+
+        {/* Text input */}
+        <input spellCheck={false}
+          id="quick-capture-input"
+          ref={inputRef}
+          type="text"
+          value={value}
+          onChange={e => setValue(e.target.value)}
+          onKeyDown={handleKeyDown}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          placeholder='무엇이든 입력하세요...'
+          className="
+            flex-1 bg-transparent outline-none
+            text-sm text-yuri-900 placeholder:text-yuri-300
+            font-medium min-w-0
+          "
+          aria-label="빠른 입력창"
+        />
+
+        {/* Live category badge */}
+        {previewCat && (
+          <span
             className={`
-              w-7 h-7 rounded-lg flex items-center justify-center shrink-0
-              text-sm font-bold transition-all duration-150
-              ${previewCat
-                ? `${previewCat.bg} ${previewCat.color}`
-                : 'bg-accent text-white'}
+              text-[10px] px-2 py-0.5 rounded-md font-semibold shrink-0
+              ${previewCat.bg} ${previewCat.color}
             `}
           >
-            {previewCat ? previewCat.icon : '+'}
-          </div>
+            {previewCat.label}
+          </span>
+        )}
 
-          {/* Text input */}
-          <input spellCheck={false}
-            id="quick-capture-input"
-            ref={inputRef}
-            type="text"
-            value={value}
-            onChange={e => setValue(e.target.value)}
-            onKeyDown={handleKeyDown}
-            onFocus={() => setFocused(true)}
-            onBlur={() => setFocused(false)}
-            placeholder='무엇이든 입력하세요...'
-            className="
-              flex-1 bg-transparent outline-none
-              text-sm text-yuri-900 placeholder:text-yuri-300
-              font-medium min-w-0
-            "
-            aria-label="빠른 입력창"
-          />
-
-          {/* Live category badge */}
-          {previewCat && (
-            <span
-              className={`
-                text-[10px] px-2 py-0.5 rounded-md font-semibold shrink-0
-                ${previewCat.bg} ${previewCat.color}
-              `}
-            >
-              {previewCat.label}
-            </span>
-          )}
-
-          {/* Enter hint */}
-          <div className="shrink-0 text-[11px] text-yuri-300 border border-yuri-200 rounded-md px-1.5 py-0.5 font-mono leading-none">
-            ↵
-          </div>
+        {/* Enter hint */}
+        <div className="shrink-0 text-[11px] text-yuri-300 border border-yuri-200 rounded-md px-1.5 py-0.5 font-mono leading-none">
+          ↵
         </div>
       </div>
     </div>
