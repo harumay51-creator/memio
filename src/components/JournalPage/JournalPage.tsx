@@ -68,7 +68,27 @@ const JournalPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId 
     const lines = trimmed.split('\n')
     const previewRaw = lines.length > 1 ? lines.slice(1).join(' ') : lines[0]
     const preview = stripHtml(previewRaw).trim()
-    return preview.length > 40 ? preview.substring(0, 40) + '...' : (preview || '새로운 기록')
+    
+    const query = searchQuery.trim().toLowerCase()
+    if (!query) {
+      return preview.length > 40 ? preview.substring(0, 40) + '...' : (preview || '새로운 기록')
+    }
+    
+    const lowerPreview = preview.toLowerCase()
+    const matchIndex = lowerPreview.indexOf(query)
+    
+    if (matchIndex === -1) {
+      return preview.length > 40 ? preview.substring(0, 40) + '...' : (preview || '새로운 기록')
+    }
+    
+    const start = Math.max(0, matchIndex - 15)
+    const end = Math.min(preview.length, matchIndex + query.length + 25)
+    
+    let result = preview.substring(start, end)
+    if (start > 0) result = '...' + result
+    if (end < preview.length) result = result + '...'
+    
+    return result || '새로운 기록'
   }
 
   const stripHtml = (html: string) => html.replace(/<[^>]*>?/gm, '')

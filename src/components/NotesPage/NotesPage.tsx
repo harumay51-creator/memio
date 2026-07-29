@@ -164,7 +164,27 @@ const NotesPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId })
                             const lines = full.trim().split('\n')
                             const body = lines.length > 1 ? lines.slice(1).join(' ') : lines[0]
                             const stripped = stripHtml(body).trim()
-                            return stripped.length > 40 ? stripped.substring(0, 40) + '...' : stripped
+                            
+                            const query = searchQuery.trim().toLowerCase()
+                            if (!query) {
+                              return stripped.length > 40 ? stripped.substring(0, 40) + '...' : stripped
+                            }
+                            
+                            const lowerPreview = stripped.toLowerCase()
+                            const matchIndex = lowerPreview.indexOf(query)
+                            
+                            if (matchIndex === -1) {
+                              return stripped.length > 40 ? stripped.substring(0, 40) + '...' : stripped
+                            }
+                            
+                            const start = Math.max(0, matchIndex - 15)
+                            const end = Math.min(stripped.length, matchIndex + query.length + 25)
+                            
+                            let result = stripped.substring(start, end)
+                            if (start > 0) result = '...' + result
+                            if (end < stripped.length) result = result + '...'
+                            
+                            return result
                           })()} 
                           highlight={searchQuery} 
                         />
