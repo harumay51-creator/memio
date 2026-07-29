@@ -58,7 +58,7 @@ const NotesPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId })
 
   // Generate a short title from the text
   const getTitle = (note: any) => {
-    const text = note.textPreview || note.text || ''
+    const text = loadedContents[note.id] || note.text || note.textPreview || ''
     const trimmed = text.trim()
     if (!trimmed) return '새로운 메모'
     const firstLine = trimmed.split('\n')[0]
@@ -73,12 +73,25 @@ const NotesPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId })
     if (searchQuery.trim()) {
       const lowerQ = searchQuery.toLowerCase()
       result = notes.filter(n => {
-        const textToSearch = n.textPreview || n.text || ''
+        const textToSearch = loadedContents[n.id] || n.text || n.textPreview || ''
         return stripHtml(textToSearch).toLowerCase().includes(lowerQ)
       })
     }
     return [...result].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-  }, [notes, searchQuery])
+  }, [notes, searchQuery, loadedContents])
+
+  const HighlightText = ({ text, highlight }: { text: string, highlight: string }) => {
+    if (!highlight.trim()) return <>{text}</>
+    const regex = new RegExp(`(${highlight.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi')
+    const parts = text.split(regex)
+    return (
+      <>
+        {parts.map((part, i) => 
+          regex.test(part) ? <span key={i} style={{ backgroundColor: '#CFE7F4', borderRadius: '2px', padding: '0 2px' }}>{part}</span> : <span key={i}>{part}</span>
+        )}
+      </>
+    )
+  }
 
   return (
     <div className="flex h-full w-full bg-white overflow-hidden">
@@ -140,9 +153,21 @@ const NotesPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId })
                     `}
                   >
                     <div className="flex-1 min-w-0">
-                    <h3 className={`text-sm font-bold truncate ${isSelected ? 'text-yuri-900' : 'text-yuri-800'}`}>
-                      {getTitle(note)}
-                    </h3>
+                      <h3 className={`text-sm font-bold truncate ${isSelected ? 'text-yuri-900' : 'text-yuri-800'}`}>
+                        <HighlightText text={getTitle(note)} highlight={searchQuery} />
+                      </h3>
+                      <div className="text-[11px] text-yuri-400 line-clamp-2 leading-relaxed mt-1">
+                        <HighlightText 
+                          text={(() => {
+                            const full = loadedContents[note.id] || note.text || note.textPreview || ''
+                            const lines = full.trim().split('\n')
+                            const body = lines.length > 1 ? lines.slice(1).join(' ') : lines[0]
+                            const stripped = stripHtml(body).trim()
+                            return stripped.length > 100 ? stripped.substring(0, 100) + '...' : stripped
+                          })()} 
+                          highlight={searchQuery} 
+                        />
+                      </div>
                     </div>
                     <div className="flex flex-col items-end gap-0.5 shrink-0 mr-6 mt-0.5">
                       <span className="text-[10px] text-yuri-400">생성일 {createdAtStr}</span>

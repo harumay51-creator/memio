@@ -53,7 +53,7 @@ const JournalPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId 
 
   // Generate a short title from the text (first 30 chars)
   const getTitle = (note: any) => {
-    const text = note.textPreview || note.text || ''
+    const text = loadedContents[note.id] || note.text || note.textPreview || ''
     const trimmed = text.trim()
     if (!trimmed) return '새로운 기록'
     const firstLine = trimmed.split('\n')[0]
@@ -62,7 +62,7 @@ const JournalPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId 
   }
 
   const getPreview = (note: any) => {
-    const text = note.textPreview || note.text || ''
+    const text = loadedContents[note.id] || note.text || note.textPreview || ''
     const trimmed = text.trim()
     if (!trimmed) return '새로운 기록'
     const lines = trimmed.split('\n')
@@ -78,12 +78,25 @@ const JournalPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId 
     if (searchQuery.trim()) {
       const lowerQ = searchQuery.toLowerCase()
       result = journals.filter(n => {
-        const textToSearch = n.textPreview || n.text || ''
+        const textToSearch = loadedContents[n.id] || n.text || n.textPreview || ''
         return stripHtml(textToSearch).toLowerCase().includes(lowerQ)
       })
     }
     return [...result].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-  }, [journals, searchQuery])
+  }, [journals, searchQuery, loadedContents])
+
+  const HighlightText = ({ text, highlight }: { text: string, highlight: string }) => {
+    if (!highlight.trim()) return <>{text}</>
+    const regex = new RegExp(`(${highlight.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi')
+    const parts = text.split(regex)
+    return (
+      <>
+        {parts.map((part, i) => 
+          regex.test(part) ? <span key={i} style={{ backgroundColor: '#CFE7F4', borderRadius: '2px', padding: '0 2px' }}>{part}</span> : <span key={i}>{part}</span>
+        )}
+      </>
+    )
+  }
 
   if (isLoading) {
     return (
@@ -161,11 +174,13 @@ const JournalPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId 
                     `}
                   >
                     <h3 className={`text-sm font-bold truncate ${isSelected ? 'text-yuri-900' : 'text-yuri-800'}`}>
-                      {getTitle(note)}
+                      <HighlightText text={getTitle(note)} highlight={searchQuery} />
                     </h3>
                     <div className="flex items-center gap-2 mt-1">
                       <span className="text-[11px] font-semibold text-yuri-400 shrink-0">{dateStr}</span>
-                      <span className="text-[11px] text-yuri-400 truncate">{getPreview(note)}</span>
+                      <span className="text-[11px] text-yuri-400 truncate">
+                        <HighlightText text={getPreview(note)} highlight={searchQuery} />
+                      </span>
                     </div>
 
                     {/* Delete Button (Hover) */}
