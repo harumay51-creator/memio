@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react'
 import { useAppStore } from '../../store/AppStore'
 import RichTextEditor from '../common/RichTextEditor'
+import { HighlightText } from '../common/HighlightText'
 import { Virtuoso } from 'react-virtuoso'
 
 const NotesPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId }) => {
@@ -79,20 +80,6 @@ const NotesPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId })
     }
     return [...result].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
   }, [notes, searchQuery, loadedContents])
-
-  const HighlightText = ({ text, highlight }: { text: string, highlight: string }) => {
-    if (!highlight.trim()) return <>{text}</>
-    const regex = new RegExp(`(${highlight.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi')
-    const parts = text.split(regex)
-    const lowerHighlight = highlight.toLowerCase()
-    return (
-      <>
-        {parts.map((part, i) => 
-          part.toLowerCase() === lowerHighlight ? <span key={i} style={{ backgroundColor: '#CFE7F4', borderRadius: '2px', padding: '0 2px' }}>{part}</span> : <span key={i}>{part}</span>
-        )}
-      </>
-    )
-  }
 
   return (
     <div className="flex h-full w-full bg-white overflow-hidden">

@@ -1,8 +1,9 @@
 import React, { useState, useMemo, useEffect } from 'react'
 import { useAppStore } from '../../store/AppStore'
-import RichTextEditor from '../common/RichTextEditor'
-import type { Task } from '../../types'
 import { Trash2 } from 'lucide-react'
+import RichTextEditor from '../common/RichTextEditor'
+import { HighlightText } from '../common/HighlightText'
+import type { Task } from '../../types'
 import { Virtuoso } from 'react-virtuoso'
 import { SortableItem } from '../common/SortableItem'
 import {
@@ -193,6 +194,7 @@ const TasksPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId })
                                 onSelect={() => setSelTaskId(t.id)}
                                 onToggle={(e) => { e.stopPropagation(); toggleTask(t.id) }}
                                 onDelete={(e) => handleDelete(t.id, e)}
+                                searchQuery={searchQuery}
                               />
                             )}
                           </SortableItem>
@@ -213,6 +215,7 @@ const TasksPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId })
                           onDelete={() => {}}
                           isDragging={true}
                           dragHandleProps={{}}
+                          searchQuery={searchQuery}
                         />
                       )
                     })() : null}
@@ -239,6 +242,7 @@ const TasksPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId })
                             onSelect={() => setSelTaskId(t.id)}
                             onToggle={(e) => { e.stopPropagation(); toggleTask(t.id) }}
                             onDelete={(e) => handleDelete(t.id, e)}
+                            searchQuery={searchQuery}
                           />
                         </div>
                       )}
@@ -325,9 +329,10 @@ interface TaskListItemProps {
   dragHandleProps?: Record<string, any>
   innerRef?: (node: HTMLElement | null) => void
   style?: React.CSSProperties
+  searchQuery: string
 }
 
-const TaskListItem: React.FC<TaskListItemProps> = ({ task, isSelected, onSelect, onToggle, onDelete, isDragging, dragHandleProps, innerRef, style }) => {
+const TaskListItem: React.FC<TaskListItemProps> = ({ task, isSelected, onSelect, onToggle, onDelete, isDragging, dragHandleProps, innerRef, style, searchQuery }) => {
   const d = new Date(task.createdAt)
   const createdAtStr = `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
   let updatedAtStr = ''
@@ -366,10 +371,38 @@ const TaskListItem: React.FC<TaskListItemProps> = ({ task, isSelected, onSelect,
       
       <div className="flex-1 min-w-0">
         <h3 className={`text-sm font-semibold truncate ${task.done ? 'text-yuri-400 line-through' : isSelected ? 'text-yuri-900' : 'text-yuri-800'}`}>
-          {task.text}
+          <HighlightText text={task.text} highlight={searchQuery} />
         </h3>
         {task.note && (
-          <p className="text-xs text-yuri-400 truncate mt-1.5 line-clamp-1">{task.note.replace(/<[^>]*>?/gm, '').replace(/\n/g, ' ')}</p>
+          <p className="text-xs text-yuri-400 truncate mt-1.5 line-clamp-1">
+            <HighlightText 
+              text={(() => {
+                const stripped = task.note.replace(/<[^>]*>?/gm, '').replace(/\n/g, ' ')
+                
+                const query = searchQuery.trim().toLowerCase()
+                if (!query) {
+                  return stripped
+                }
+                
+                const lowerPreview = stripped.toLowerCase()
+                const matchIndex = lowerPreview.indexOf(query)
+                
+                if (matchIndex === -1) {
+                  return stripped
+                }
+                
+                const start = Math.max(0, matchIndex - 15)
+                const end = Math.min(stripped.length, matchIndex + query.length + 25)
+                
+                let result = stripped.substring(start, end)
+                if (start > 0) result = '...' + result
+                if (end < stripped.length) result = result + '...'
+                
+                return result
+              })()} 
+              highlight={searchQuery} 
+            />
+          </p>
         )}
       </div>
       <div className="flex flex-col items-end gap-0.5 mt-0.5 shrink-0 mr-6">
