@@ -75,6 +75,7 @@ export interface FixedExpense {
 export interface CategoryConfig {
   name: string
   keywords: string[]
+  color?: string
 }
 
 // ─── Calendar ─────────────────────────────────────────────────────────────────

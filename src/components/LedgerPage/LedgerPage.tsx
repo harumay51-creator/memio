@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react'
-import type { FixedExpense } from '../../types'
+import type { FixedExpense, CategoryConfig } from '../../types'
 import { useAppStore } from '../../store/AppStore'
-import { classifyLedgerCategory } from '../../utils/parser'
+import { classifyLedgerCategory, getCategoryColor } from '../../utils/parser'
 import PinScreen from '../JournalPage/PinScreen'
 import { Lock, X } from 'lucide-react'
 import MonthNavigationBar from '../common/MonthNavigationBar'
@@ -10,28 +10,6 @@ import CashTab from './CashTab'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const MONTH_KO = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'] as const
-
-const CAT_TW_CLASSES: Record<string, { bg: string, text: string }> = {
-  '식비':     { bg: 'bg-orange-50', text: 'text-orange-600' },
-  '카페':     { bg: 'bg-yellow-50', text: 'text-yellow-600' },
-  '교통':     { bg: 'bg-blue-50',   text: 'text-blue-600' },
-  '쇼핑':     { bg: 'bg-fuchsia-50',text: 'text-fuchsia-600' },
-  '문화':     { bg: 'bg-purple-50', text: 'text-purple-600' },
-  '의료':     { bg: 'bg-rose-50',   text: 'text-rose-600' },
-  '통신':     { bg: 'bg-cyan-50',   text: 'text-cyan-600' },
-  '급여':     { bg: 'bg-emerald-50',text: 'text-emerald-600' },
-  '용돈':     { bg: 'bg-lime-50',   text: 'text-lime-600' },
-  '이자/배당': { bg: 'bg-teal-50',   text: 'text-teal-600' },
-  '환급':     { bg: 'bg-sky-50',    text: 'text-sky-600' },
-  '저축':     { bg: 'bg-indigo-50', text: 'text-indigo-600' },
-  '보험':     { bg: 'bg-pink-50',   text: 'text-pink-600' },
-  '기타':     { bg: 'bg-slate-100', text: 'text-slate-600' },
-  '기타수입':  { bg: 'bg-slate-100', text: 'text-slate-600' },
-}
-
-function getCatClasses(name: string) {
-  return CAT_TW_CLASSES[name] ?? { bg: 'bg-slate-100', text: 'text-slate-600' }
-}
 
 function getCategoryOptions(type: 'income' | 'expense', currentCat: string, expenseCats: { name: string }[]) {
   if (type === 'expense') {
@@ -50,12 +28,14 @@ function CategoryDropdown({
   value, 
   onChange, 
   options, 
-  fallbackText 
+  fallbackText,
+  expenseCategories
 }: { 
   value: string; 
   onChange: (val: string) => void; 
   options: string[]; 
   fallbackText?: string;
+  expenseCategories: CategoryConfig[];
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -71,13 +51,14 @@ function CategoryDropdown({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isOpen]);
 
-  const classes = value ? getCatClasses(value) : { bg: 'bg-yuri-100', text: 'text-yuri-500' };
+  const bgCol = value ? getCategoryColor(value, expenseCategories) : '#F3F4F6';
 
   return (
     <div className="relative inline-block" ref={containerRef}>
       <div 
         onClick={(e) => { e.stopPropagation(); setIsOpen(!isOpen); }}
-        className={`text-[10px] font-bold px-1.5 py-0.5 rounded-sm cursor-pointer select-none ${classes.bg} ${classes.text}`}
+        className="text-[10px] font-bold px-1.5 py-0.5 rounded-sm cursor-pointer select-none text-[#374151]"
+        style={{ backgroundColor: bgCol }}
       >
         {value || fallbackText}
       </div>
@@ -88,7 +69,7 @@ function CategoryDropdown({
           onClick={(e) => e.stopPropagation()}
         >
           {options.map(opt => {
-            const optClasses = getCatClasses(opt);
+            const optCol = getCategoryColor(opt, expenseCategories);
             return (
               <div 
                 key={opt}
@@ -99,7 +80,10 @@ function CategoryDropdown({
                 }}
                 className="px-4 py-2.5 hover:bg-yuri-100/50 cursor-pointer flex items-center transition-colors"
               >
-                <span className={`text-[11px] font-bold px-2 py-1 rounded-sm ${optClasses.bg} ${optClasses.text}`}>
+                <span 
+                  className="text-[11px] font-bold px-2 py-0.5 rounded text-[#374151]"
+                  style={{ backgroundColor: optCol }}
+                >
                   {opt}
                 </span>
               </div>
@@ -333,6 +317,7 @@ const LedgerPage: React.FC = () => {
                       value={feCategory}
                       onChange={setFeCategory}
                       options={getCategoryOptions('expense', feCategory, expenseCategories)}
+                      expenseCategories={expenseCategories}
                       fallbackText="카테고리 (자동)"
                     />
                   </div>
@@ -364,7 +349,10 @@ const LedgerPage: React.FC = () => {
                   <div key={fe.id} className={`group p-4 rounded-xl border ${editingFeId === fe.id ? 'border-accent bg-accent/5' : 'border-yuri-200 bg-white hover:border-yuri-300'} shadow-sm`}>
                     <div className="flex justify-between items-start mb-2">
                       <div className="flex items-center gap-2">
-                        <span className={`w-2 h-2 rounded-full ${getCatClasses(fe.category).text.replace('text-', 'bg-')}`} />
+                        <span 
+                          className="w-2 h-2 rounded-full"
+                          style={{ backgroundColor: getCategoryColor(fe.category, expenseCategories) }} 
+                        />
                         <span className="text-sm font-bold text-yuri-900">{fe.label}</span>
                       </div>
                       <div className="flex items-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity">

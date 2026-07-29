@@ -2,6 +2,7 @@ import React, { useMemo, useState, useEffect } from 'react'
 import { useAppStore } from '../../store/AppStore'
 import { calculatePaydayCycle } from '../../utils/ledgerCycle'
 import { MessageSquare } from 'lucide-react'
+import { getCategoryColor } from '../../utils/parser'
 import { EditRow } from './EditRow'
 
 export default function CardTab({ year, month }: { year: number, month: number }) {
@@ -204,7 +205,12 @@ export default function CardTab({ year, month }: { year: number, month: number }
       >
         <div className="flex items-center gap-3 overflow-hidden">
           <span className="text-xs font-semibold text-gray-400 w-10 shrink-0">{dStr}</span>
-          <span className="text-[11px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded shrink-0">{item.category || '기타'}</span>
+          <span 
+            className="text-[11px] font-bold text-[#374151] px-2 py-0.5 rounded shrink-0"
+            style={{ backgroundColor: getCategoryColor(item.category || '기타', expenseCategories) }}
+          >
+            {item.category || '기타'}
+          </span>
           <span className="text-sm font-medium text-gray-800 truncate">{item.label}</span>
           {item.memo && <MessageSquare size={12} className="text-gray-400 shrink-0" />}
         </div>
@@ -313,19 +319,23 @@ export default function CardTab({ year, month }: { year: number, month: number }
               전체
             </button>
             
-            {availableCategories.map(cat => (
-              <button
-                key={cat}
-                onClick={() => setActiveCategory(cat)}
-                className={`px-3 py-1.5 rounded-full text-[13px] font-bold transition-colors ${
-                  activeCategory === cat
-                    ? 'bg-blue-100 text-blue-700 border-blue-200'
-                    : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
-                }`}
-              >
-                {cat}
-              </button>
-            ))}
+            {availableCategories.map(cat => {
+              const isActive = activeCategory === cat;
+              return (
+                <button
+                  key={cat}
+                  onClick={() => setActiveCategory(cat)}
+                  className={`px-3 py-1.5 rounded-full text-[13px] font-bold transition-colors border ${
+                    isActive
+                      ? 'border-transparent text-[#374151]'
+                      : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
+                  }`}
+                  style={isActive ? { backgroundColor: getCategoryColor(cat, expenseCategories) } : undefined}
+                >
+                  {cat}
+                </button>
+              )
+            })}
           </div>
 
           {/* Entries List */}

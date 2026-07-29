@@ -81,7 +81,7 @@ interface StoreValue {
   deleteFixedExpense: (id: string) => void
   restoreItem: (type: 'note' | 'task' | 'ledger' | 'fixedExpense', id: string) => void
   hardDeleteItem: (type: 'note' | 'task' | 'ledger' | 'fixedExpense', id: string) => void
-  addCategory: (name: string) => void
+  addCategory: (name: string, color?: string) => void
   deleteCategory: (name: string) => void
   addCategoryKeyword: (categoryName: string, keyword: string) => void
   removeCategoryKeyword: (categoryName: string, keyword: string) => void
@@ -791,10 +791,10 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
     })
   }, [uid])
 
-  const addCategory = useCallback((name: string) => {
+  const addCategory = useCallback((name: string, color?: string) => {
     setExpenseCategories(prev => {
       if (prev.some(c => c.name === name)) return prev
-      const newItem = { name, keywords: [] }
+      const newItem = { name, keywords: [], color }
       const next = [...prev, newItem]
       setDoc(doc(db, 'users', uid, 'expenseCategories', name), newItem).catch(console.error)
       return next

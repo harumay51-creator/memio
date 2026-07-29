@@ -11,45 +11,82 @@ export interface ParseResult {
   paymentMethod?: '카드' | '계좌이체'
 }
 
+export const CATEGORY_COLORS = [
+  { name: '아이시 블루', value: '#CFE8F5' },
+  { name: '라벤더', value: '#DDD4F4' },
+  { name: '세이지', value: '#D3EBDD' },
+  { name: '그레이블루', value: '#D5DFEC' },
+  { name: '라일락', value: '#E7DCF3' },
+  { name: '더스티 로즈', value: '#F2D6DC' },
+  { name: '피치', value: '#F6DFC9' },
+  { name: '바닐라', value: '#F6EDC9' },
+  { name: '민트', value: '#CFEFE6' },
+  { name: '스카이', value: '#CFE3F8' },
+  { name: '모브', value: '#DCCEEA' },
+  { name: '샌드', value: '#E8DFD3' },
+]
+
+export const DEFAULT_CATEGORY_COLOR = '#F6EDC9' // 바닐라
+
 // ── Ledger category classification ───────────────────────────────────────────
 export const DEFAULT_EXPENSE_CATS: CategoryConfig[] = [
   {
     name: '식비',
     keywords: ['점심','저녁','아침','식당','밥','국밥','치킨','피자','햄버거','식사','분식','마라탕','도시락','식비','떡볶이','라면','삼겹살','갈비','한식','중식','초밥','우동','냉면','파스타','샐러드','샌드위치','버거','순대','배달','배민','요기요'],
+    color: '#CFEFE6',
   },
   {
     name: '카페',
     keywords: ['스타벅스','카페','커피','아메리카노','라떼','디저트','빵','케이크','베이커리','투썸','이디야','폴바셋','블루보틀','공차','버블티','메가커피','컴포즈'],
+    color: '#DDD4F4',
   },
   {
     name: '교통',
     keywords: ['버스','지하철','택시','기차','ktx','srt','우버','카카오t','교통','주유','기름','톨게이트','주차','고속도로'],
+    color: '#CFE3F8',
   },
   {
     name: '쇼핑',
     keywords: ['쿠팡','네이버쇼핑','아마존','옷','신발','가방','의류','배송','쇼핑','다이소','이케아','올리브영','무신사','바지','티','셔츠','자켓','코트','지그재그','에이블리','유니클로'],
+    color: '#F6DFC9',
   },
   {
     name: '문화',
     keywords: ['영화','콘서트','전시','뮤지컬','책','게임','공연','넷플릭스','유튜브','스포티파이','멜론','넷플','웨이브','디즈니','왓챠','유튜브프리미엄'],
+    color: '#DCCEEA',
   },
   {
     name: '의료',
     keywords: ['병원','약국','치과','진료','의원','한의원','클리닉','약'],
+    color: '#F2D6DC',
   },
   {
     name: '통신',
     keywords: ['핸드폰','인터넷','통신','요금제','알뜰폰'],
+    color: '#D5DFEC',
   },
   {
     name: '저축',
     keywords: ['저축','적금','예금','청약','투자','주식'],
+    color: '#CFE8F5',
   },
   {
     name: '보험',
     keywords: ['보험','보험료','실비','생명','화재'],
+    color: '#D3EBDD',
+  },
+  {
+    name: '대출이자',
+    keywords: ['대출','이자'],
+    color: '#E8DFD3',
   },
 ]
+
+export function getCategoryColor(catName: string, customExpenseCats: CategoryConfig[] = DEFAULT_EXPENSE_CATS): string {
+  if (catName === '기타') return '#E7DCF3' // 라일락
+  const cat = customExpenseCats.find(c => c.name === catName)
+  return cat?.color || DEFAULT_CATEGORY_COLOR
+}
 
 const INCOME_CATS: Array<{ name: string; keywords: string[] }> = [
   { name: '급여',     keywords: ['월급','급여','임금','알바비','페이','수당','보수','보너스'] },

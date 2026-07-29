@@ -1,33 +1,10 @@
 import { useMemo, useState } from 'react'
 import { useAppStore } from '../../store/AppStore'
 import { calculatePaydayCycle } from '../../utils/ledgerCycle'
+import { getCategoryColor } from '../../utils/parser'
 import type { LedgerEntry } from '../../types'
 import { EditRow } from './EditRow'
 import { Settings, MessageSquare } from 'lucide-react'
-
-const CAT_TW_CLASSES: Record<string, { bg: string, text: string }> = {
-  '식비':     { bg: 'bg-orange-50', text: 'text-orange-600' },
-  '카페':     { bg: 'bg-yellow-50', text: 'text-yellow-600' },
-  '교통':     { bg: 'bg-blue-50',   text: 'text-blue-600' },
-  '쇼핑':     { bg: 'bg-fuchsia-50',text: 'text-fuchsia-600' },
-  '문화':     { bg: 'bg-purple-50', text: 'text-purple-600' },
-  '의료':     { bg: 'bg-rose-50',   text: 'text-rose-600' },
-  '통신':     { bg: 'bg-cyan-50',   text: 'text-cyan-600' },
-  '급여':     { bg: 'bg-emerald-50',text: 'text-emerald-600' },
-  '용돈':     { bg: 'bg-lime-50',   text: 'text-lime-600' },
-  '이자/배당': { bg: 'bg-teal-50',   text: 'text-teal-600' },
-  '환급':     { bg: 'bg-sky-50',    text: 'text-sky-600' },
-  '저축':     { bg: 'bg-indigo-50', text: 'text-indigo-600' },
-  '보험':     { bg: 'bg-pink-50',   text: 'text-pink-600' },
-  '기타':     { bg: 'bg-slate-100', text: 'text-slate-600' },
-  '기타수입':  { bg: 'bg-slate-100', text: 'text-slate-600' },
-}
-
-function getCatClasses(name: string) {
-  return CAT_TW_CLASSES[name] ?? { bg: 'bg-slate-100', text: 'text-slate-600' }
-}
-
-
 
 function fmtAmt(n: number) {
   return n.toLocaleString('ko-KR') + '원'
@@ -231,19 +208,23 @@ export default function CashTab({ year, month, onOpenFixedExpense }: { year: num
                 전체
               </button>
               
-              {availableCategories.map(cat => (
-                <button
-                  key={cat}
-                  onClick={() => setActiveCategory(cat)}
-                  className={`shrink-0 px-3 py-1.5 rounded-full text-[13px] font-bold transition-colors ${
-                    activeCategory === cat
-                      ? 'bg-blue-600 text-white border-blue-600'
-                      : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
-                  }`}
-                >
-                  {cat}
-                </button>
-              ))}
+              {availableCategories.map(cat => {
+                const isActive = activeCategory === cat;
+                return (
+                  <button
+                    key={cat}
+                    onClick={() => setActiveCategory(cat)}
+                    className={`shrink-0 px-3 py-1.5 rounded-full text-[13px] font-bold transition-colors border ${
+                      isActive
+                        ? 'border-transparent text-[#374151]'
+                        : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50'
+                    }`}
+                    style={isActive ? { backgroundColor: getCategoryColor(cat, expenseCategories) } : undefined}
+                  >
+                    {cat}
+                  </button>
+                )
+              })}
             </div>
 
             {displayList.length === 0 ? (
@@ -269,8 +250,7 @@ export default function CashTab({ year, month, onOpenFixedExpense }: { year: num
                       />
                     )
                   }
-
-                  const catClasses = getCatClasses(e.category || '기타')
+                  const catColor = getCategoryColor(e.category || '기타', expenseCategories)
                   const d = new Date(e.scheduledDate || e.createdAt)
                   const dStr = `${d.getMonth() + 1}/${d.getDate()}`
 
@@ -282,7 +262,10 @@ export default function CashTab({ year, month, onOpenFixedExpense }: { year: num
                     >
                       <div className="flex items-center gap-3 overflow-hidden flex-1">
                         <span className="text-xs font-semibold text-gray-400 w-10 shrink-0">{dStr}</span>
-                        <span className={`text-[11px] font-bold px-2 py-0.5 rounded shrink-0 ${catClasses.bg} ${catClasses.text}`}>
+                        <span 
+                          className="text-[11px] font-bold px-2 py-0.5 rounded shrink-0 text-[#374151]"
+                          style={{ backgroundColor: catColor }}
+                        >
                           {e.category || '기타'}
                         </span>
                         <span className="text-sm font-medium text-gray-800 truncate flex items-center gap-1.5">

@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
-import type { LedgerEntry } from '../../types'
+import type { LedgerEntry, CategoryConfig } from '../../types'
 import { Trash2, MessageSquare, CreditCard, Banknote } from 'lucide-react'
+import { getCategoryColor } from '../../utils/parser'
 
 export const EditRow = ({ 
   item, 
@@ -10,7 +11,7 @@ export const EditRow = ({
   onCancel 
 }: { 
   item: LedgerEntry, 
-  expenseCategories: {name: string}[], 
+  expenseCategories: CategoryConfig[], 
   onUpdate: (id: string, updates: Partial<LedgerEntry>) => void, 
   onDelete: (id: string) => void, 
   onCancel: () => void 
@@ -92,7 +93,8 @@ export const EditRow = ({
       </div>
       <div className="flex items-center gap-2 mt-1">
         <select 
-          className="text-[11px] font-bold text-gray-500 bg-gray-50 border border-gray-200 rounded px-1 py-0.5 outline-none focus:border-accent"
+          className="text-[11px] font-bold text-[#374151] rounded px-1 py-0.5 outline-none focus:border-accent"
+          style={{ backgroundColor: getCategoryColor(category, expenseCategories) }}
           value={category}
           onChange={e => setCategory(e.target.value)}
           onKeyDown={handleKeyDown}
@@ -103,11 +105,7 @@ export const EditRow = ({
         
         <button 
           onClick={() => setPaymentMethod(p => p === '카드' ? '계좌이체' : '카드')}
-          className={`flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold transition-colors border ${
-            paymentMethod === '카드' 
-              ? 'bg-blue-50 text-blue-600 border-blue-200' 
-              : 'bg-emerald-50 text-emerald-600 border-emerald-200'
-          }`}
+          className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold transition-colors border bg-[#F1F0F5] text-[#374151] border-gray-200 hover:bg-gray-200"
           title="클릭하여 결제수단 변경"
         >
           {paymentMethod === '카드' ? <CreditCard size={10} /> : <Banknote size={10} />}

@@ -5,6 +5,7 @@ import { EmailAuthProvider, reauthenticateWithCredential, updatePassword } from 
 import TrashSection from './TrashSection'
 import HolidaySection from './HolidaySection'
 import { useDiaryStore } from '../../store/DiaryStore'
+import { CATEGORY_COLORS, DEFAULT_CATEGORY_COLOR, getCategoryColor } from '../../utils/parser'
 
 type TabType = 'ledger' | 'security' | 'anniversaries' | 'monthly' | 'holidays' | 'trash' | 'usage' | 'diary'
 
@@ -25,6 +26,7 @@ const SettingsPage: React.FC = () => {
 
   // ── Category States ────────
   const [newCatName, setNewCatName] = useState('')
+  const [newCatColor, setNewCatColor] = useState(DEFAULT_CATEGORY_COLOR)
   const [newKeywords, setNewKeywords] = useState<Record<string, string>>({})
   const [expanded, setExpanded] = useState<Record<string, boolean>>({})
 
@@ -78,8 +80,9 @@ const SettingsPage: React.FC = () => {
     e.preventDefault()
     const name = newCatName.trim()
     if (!name) return
-    addCategory(name)
+    addCategory(name, newCatColor)
     setNewCatName('')
+    setNewCatColor(DEFAULT_CATEGORY_COLOR)
     setExpanded(prev => ({ ...prev, [name]: true }))
   }
 
@@ -382,8 +385,11 @@ const SettingsPage: React.FC = () => {
                           onClick={() => toggleCategory(cat.name)}
                           className="flex-1 text-left flex items-center gap-2 hover:opacity-70 transition-opacity"
                         >
-                          <h3 className="text-sm font-bold text-yuri-900 flex items-center gap-2">
-                            <span className="w-2 h-2 rounded-full bg-yuri-400" />
+                          <h3 className="text-sm font-bold text-[#374151] flex items-center gap-2">
+                            <span 
+                              className="w-2 h-2 rounded-full" 
+                              style={{ backgroundColor: getCategoryColor(cat.name, expenseCategories) }} 
+                            />
                             {cat.name}
                           </h3>
                         </button>
@@ -466,21 +472,35 @@ const SettingsPage: React.FC = () => {
 
                   <div className="bg-yuri-50/50 border border-dashed border-yuri-300 rounded-xl overflow-hidden shadow-sm p-5 mt-4">
                     <h3 className="text-sm font-bold text-yuri-900 mb-3">새 카테고리 만들기</h3>
-                    <form onSubmit={handleCreateCategory} className="flex gap-2">
-                      <input spellCheck={false}
-                        type="text"
-                        placeholder="카테고리 이름"
-                        value={newCatName}
-                        onChange={(e) => setNewCatName(e.target.value)}
-                        className="flex-1 px-3 py-2 bg-white border border-yuri-200 rounded-lg text-sm outline-none focus:border-accent transition-colors"
-                      />
-                      <button 
-                        type="submit"
-                        disabled={!newCatName.trim()}
-                        className="px-5 py-2 bg-yuri-900 text-white text-sm font-bold rounded-lg hover:bg-yuri-800 disabled:opacity-50 transition-colors"
-                      >
-                        카테고리 추가
-                      </button>
+                    <form onSubmit={handleCreateCategory} className="flex flex-col gap-3">
+                      <div className="flex gap-2">
+                        <input spellCheck={false}
+                          type="text"
+                          placeholder="카테고리 이름"
+                          value={newCatName}
+                          onChange={(e) => setNewCatName(e.target.value)}
+                          className="flex-1 px-3 py-2 bg-white border border-yuri-200 rounded-lg text-sm outline-none focus:border-accent transition-colors"
+                        />
+                        <button 
+                          type="submit"
+                          disabled={!newCatName.trim()}
+                          className="px-5 py-2 bg-yuri-900 text-white text-sm font-bold rounded-lg hover:bg-yuri-800 disabled:opacity-50 transition-colors"
+                        >
+                          카테고리 추가
+                        </button>
+                      </div>
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        {CATEGORY_COLORS.map(color => (
+                          <button
+                            key={color.name}
+                            type="button"
+                            onClick={() => setNewCatColor(color.value)}
+                            className={`w-6 h-6 rounded-full border-2 transition-all ${newCatColor === color.value ? 'border-gray-800 scale-110 shadow-sm' : 'border-transparent hover:scale-110'}`}
+                            style={{ backgroundColor: color.value }}
+                            title={color.name}
+                          />
+                        ))}
+                      </div>
                     </form>
                   </div>
                 </div>
