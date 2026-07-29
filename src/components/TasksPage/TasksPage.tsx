@@ -3,6 +3,7 @@ import { useAppStore } from '../../store/AppStore'
 import RichTextEditor from '../common/RichTextEditor'
 import type { Task } from '../../types'
 import { Trash2 } from 'lucide-react'
+import { Virtuoso } from 'react-virtuoso'
 import { SortableItem } from '../common/SortableItem'
 import {
   DndContext,
@@ -156,13 +157,13 @@ const TasksPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId })
               onClick={() => setActiveTab('pending')}
               className={`pb-2 text-sm font-bold border-b-2 transition-colors ${activeTab === 'pending' ? 'border-accent text-accent' : 'border-transparent text-yuri-400 hover:text-yuri-600'}`}
             >
-              진행 중
+              진행 중 ({pendingTasks.length})
             </button>
             <button 
               onClick={() => setActiveTab('completed')}
               className={`pb-2 text-sm font-bold border-b-2 transition-colors ${activeTab === 'completed' ? 'border-accent text-accent' : 'border-transparent text-yuri-400 hover:text-yuri-600'}`}
             >
-              완료됨 ({completedTasks.length}개)
+              완료됨 ({completedTasks.length})
             </button>
           </div>
 
@@ -220,22 +221,28 @@ const TasksPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId })
               </section>
             ) : (
               <section className="flex-1 flex flex-col min-h-0 overflow-hidden">
-                <div className="flex-1 overflow-y-auto flex flex-col gap-1 pr-1">
+                <div className="flex-1 overflow-hidden p-1">
                   {completedTasks.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-full text-yuri-400 p-2 text-center">
                       <p className="text-xs">{searchQuery.trim() ? '검색 결과가 없습니다.' : '완료된 업무가 없습니다.'}</p>
                     </div>
                   ) : (
-                    completedTasks.map(t => (
-                      <TaskListItem 
-                        key={t.id} 
-                        task={t} 
-                        isSelected={selTaskId === t.id}
-                        onSelect={() => setSelTaskId(t.id)}
-                        onToggle={(e) => { e.stopPropagation(); toggleTask(t.id) }}
-                        onDelete={(e) => handleDelete(t.id, e)}
-                      />
-                    ))
+                    <Virtuoso
+                      data={completedTasks}
+                      totalCount={completedTasks.length}
+                      style={{ height: '100%' }}
+                      itemContent={(_, t) => (
+                        <div className="mb-1">
+                          <TaskListItem 
+                            task={t} 
+                            isSelected={selTaskId === t.id}
+                            onSelect={() => setSelTaskId(t.id)}
+                            onToggle={(e) => { e.stopPropagation(); toggleTask(t.id) }}
+                            onDelete={(e) => handleDelete(t.id, e)}
+                          />
+                        </div>
+                      )}
+                    />
                   )}
                 </div>
               </section>

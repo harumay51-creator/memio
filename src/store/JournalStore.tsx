@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
 import type { Note } from '../types'
-import { collection, getDocs, setDoc, deleteDoc, doc } from 'firebase/firestore'
+import { collection, getDocs, getDoc, setDoc, deleteDoc, doc } from 'firebase/firestore'
 import { db } from '../config/firebase'
 
 function genId(): string {
@@ -15,9 +15,10 @@ interface JournalStoreValue {
   loadError: string | null
   journals: Note[]
   
-  addJournal: (text: string) => string
-  updateJournal: (id: string, text: string) => void
+  addJournal: (text: string) => Promise<string>
+  updateJournal: (id: string, text: string) => Promise<void>
   deleteJournal: (id: string) => void
+  loadJournalContent: (id: string) => Promise<string | null>
 }
 
 const JournalContext = createContext<JournalStoreValue | null>(null)
@@ -63,35 +64,76 @@ export const JournalStoreProvider: React.FC<{ uid: string, children: React.React
     return () => { isMounted = false }
   }, [uid])
 
-  const addJournal = (text: string) => {
+  const addJournal = async (text: string) => {
     const id = genId()
     const now = new Date().toISOString()
+    const { extractPreview } = await import('../utils/textUtils')
+    const textPreview = extractPreview(text)
+    
     const newEntry: Note = {
       id,
-      text,
+      text: '', // local store initially, but we can set to text for instant loading
+      textPreview,
+      hasContentDoc: true,
       createdAt: now,
       updatedAt: now
     }
-    setJournals(prev => [...prev, newEntry])
-    setDoc(doc(db, `users/${uid}/journal_entries/${id}`), newEntry).catch(e => console.error(e))
+    
+    // Set text locally so it feels fast
+    setJournals(prev => [...prev, { ...newEntry, text }])
+    
+    try {
+      await Promise.all([
+        setDoc(doc(db, `users/${uid}/journal_entries/${id}`), newEntry),
+        setDoc(doc(db, `users/${uid}/journal_contents/${id}`), { text })
+      ])
+    } catch (e) {
+      console.error(e)
+    }
     return id
   }
 
-  const updateJournal = (id: string, text: string) => {
+  const updateJournal = async (id: string, text: string) => {
     const updatedAt = new Date().toISOString()
-    setJournals(prev => prev.map(j => j.id === id ? { ...j, text, updatedAt } : j))
-    setDoc(doc(db, `users/${uid}/journal_entries/${id}`), { text, updatedAt }, { merge: true }).catch(e => console.error(e))
+    const { extractPreview } = await import('../utils/textUtils')
+    const textPreview = extractPreview(text)
+
+    setJournals(prev => prev.map(j => j.id === id ? { ...j, text, textPreview, hasContentDoc: true, updatedAt } : j))
+    
+    try {
+      await Promise.all([
+        setDoc(doc(db, `users/${uid}/journal_entries/${id}`), { textPreview, hasContentDoc: true, updatedAt }, { merge: true }),
+        setDoc(doc(db, `users/${uid}/journal_contents/${id}`), { text }, { merge: true })
+      ])
+    } catch (e) {
+      console.error(e)
+    }
   }
 
   const deleteJournal = (id: string) => {
     setJournals(prev => prev.filter(j => j.id !== id))
     deleteDoc(doc(db, `users/${uid}/journal_entries/${id}`)).catch(e => console.error(e))
+    deleteDoc(doc(db, `users/${uid}/journal_contents/${id}`)).catch(e => console.error(e))
+  }
+
+  const loadJournalContent = async (id: string) => {
+    if (!uid) return null
+    try {
+      const snap = await getDoc(doc(db, `users/${uid}/journal_contents/${id}`))
+      if (snap.exists() && snap.data().text !== undefined) {
+        return snap.data().text as string
+      }
+      return null
+    } catch (e) {
+      console.error('Failed to load journal content:', e)
+      return null
+    }
   }
 
   return (
     <JournalContext.Provider value={{
       isLoading, loadError, journals,
-      addJournal, updateJournal, deleteJournal
+      addJournal, updateJournal, deleteJournal, loadJournalContent
     }}>
       {children}
     </JournalContext.Provider>

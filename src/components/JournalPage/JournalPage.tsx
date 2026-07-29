@@ -4,11 +4,14 @@ import { useAppStore } from '../../store/AppStore'
 import RichTextEditor from '../common/RichTextEditor'
 import PinScreen from './PinScreen'
 import { Lock } from 'lucide-react'
+import { Virtuoso } from 'react-virtuoso'
 
 const JournalPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId }) => {
-  const { journals, addJournal, updateJournal, deleteJournal, isLoading } = useJournalStore()
+  const { journals, addJournal, updateJournal, deleteJournal, isLoading, loadJournalContent } = useJournalStore()
   const { isPrivateUnlocked, lockPrivate } = useAppStore()
   const [selNoteId, setSelNoteId] = useState<string | null>(activeItemId || null)
+  const [loadedContents, setLoadedContents] = useState<Record<string, string>>({})
+  const [isContentLoading, setIsContentLoading] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [inputText, setInputText] = useState('')
 
@@ -20,35 +23,52 @@ const JournalPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId 
   // Deselect if the selected note is deleted
   const selectedNote = useMemo(() => journals.find(n => n.id === selNoteId) || null, [journals, selNoteId])
 
+  useEffect(() => {
+    if (selectedNote && selectedNote.hasContentDoc && !loadedContents[selectedNote.id]) {
+      setIsContentLoading(true)
+      loadJournalContent(selectedNote.id).then(content => {
+        if (content !== null) {
+          setLoadedContents(prev => ({ ...prev, [selectedNote.id]: content }))
+        }
+        setIsContentLoading(false)
+      })
+    } else {
+      setIsContentLoading(false)
+    }
+  }, [selectedNote?.id, selectedNote?.hasContentDoc, loadJournalContent, loadedContents])
+
   const handleDelete = (id: string, e?: React.MouseEvent) => {
     if (e) e.stopPropagation()
     deleteJournal(id)
     if (selNoteId === id) setSelNoteId(null)
   }
 
-  const handleAdd = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleAdd = async (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && inputText.trim()) {
-      const newId = addJournal(inputText.trim())
+      const newId = await addJournal(inputText.trim())
       setInputText('')
       setSelNoteId(newId) // Auto-select the newly created note
     }
   }
 
   // Generate a short title from the text (first 30 chars)
-  const getTitle = (text: string) => {
+  const getTitle = (note: any) => {
+    const text = note.textPreview || note.text || ''
     const trimmed = text.trim()
     if (!trimmed) return '새로운 기록'
     const firstLine = trimmed.split('\n')[0]
-    return firstLine.length > 30 ? firstLine.slice(0, 30) + '...' : firstLine
+    const stripped = stripHtml(firstLine).trim()
+    return stripped.length > 30 ? stripped.substring(0, 30) + '...' : (stripped || '새로운 기록')
   }
 
-  const getPreview = (text: string) => {
+  const getPreview = (note: any) => {
+    const text = note.textPreview || note.text || ''
     const trimmed = text.trim()
     if (!trimmed) return '새로운 기록'
     const lines = trimmed.split('\n')
-    const previewRaw = lines.length > 1 ? lines[1] : lines[0]
-    const preview = previewRaw.replace(/<[^>]*>?/gm, '')
-    return preview.length > 40 ? preview.slice(0, 40) + '...' : preview
+    const previewRaw = lines.length > 1 ? lines.slice(1).join(' ') : lines[0]
+    const preview = stripHtml(previewRaw).trim()
+    return preview.length > 40 ? preview.substring(0, 40) + '...' : (preview || '새로운 기록')
   }
 
   const stripHtml = (html: string) => html.replace(/<[^>]*>?/gm, '')
@@ -57,7 +77,10 @@ const JournalPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId 
     let result = journals
     if (searchQuery.trim()) {
       const lowerQ = searchQuery.toLowerCase()
-      result = journals.filter(n => stripHtml(n.text).toLowerCase().includes(lowerQ))
+      result = journals.filter(n => {
+        const textToSearch = n.textPreview || n.text || ''
+        return stripHtml(textToSearch).toLowerCase().includes(lowerQ)
+      })
     }
     return [...result].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
   }, [journals, searchQuery])
@@ -107,7 +130,7 @@ const JournalPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId 
           />
         </header>
 
-        <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-2">
+        <div className="flex-1 overflow-hidden p-4 flex flex-col gap-2">
           {filteredNotes.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-yuri-400 p-6 text-center">
               <p className="text-sm">
@@ -119,43 +142,48 @@ const JournalPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId 
               </p>
             </div>
           ) : (
-            filteredNotes.map(note => {
-              const isSelected = selNoteId === note.id
-              const d = new Date(note.createdAt)
-              const dateStr = d.toLocaleDateString('ko-KR', { year: 'numeric', month: 'short', day: 'numeric' })
+            <Virtuoso
+              data={filteredNotes}
+              totalCount={filteredNotes.length}
+              style={{ height: '100%' }}
+              itemContent={(_, note) => {
+                const isSelected = selNoteId === note.id
+                const d = new Date(note.createdAt)
+                const dateStr = d.toLocaleDateString('ko-KR', { year: 'numeric', month: 'short', day: 'numeric' })
 
-              return (
-                <div
-                  key={note.id}
-                  onClick={() => setSelNoteId(note.id)}
-                  className={`
-                    group p-3 rounded-xl cursor-pointer border transition-all duration-150 relative
-                    ${isSelected ? 'bg-white border-yuri-300 shadow-sm' : 'bg-transparent border-transparent hover:bg-yuri-100/50 hover:border-yuri-200'}
-                  `}
-                >
-                  <h3 className={`text-sm font-bold truncate ${isSelected ? 'text-yuri-900' : 'text-yuri-800'}`}>
-                    {getTitle(note.text)}
-                  </h3>
-                  <div className="flex items-center gap-2 mt-1">
-                    <span className="text-[11px] font-semibold text-yuri-400 shrink-0">{dateStr}</span>
-                    <span className="text-[11px] text-yuri-400 truncate">{getPreview(note.text)}</span>
-                  </div>
-
-                  {/* Delete Button (Hover) */}
-                  <button
-                    onClick={(e) => handleDelete(note.id, e)}
-                    aria-label="기록 삭제"
+                return (
+                  <div
+                    key={note.id}
+                    onClick={() => setSelNoteId(note.id)}
                     className={`
-                      absolute top-3 right-3 w-6 h-6 flex items-center justify-center rounded text-yuri-300
-                      opacity-0 group-hover:opacity-100 hover:text-red-400 hover:bg-red-50 transition-all cursor-pointer
-                      ${isSelected ? 'opacity-100' : ''}
+                      group p-3 rounded-xl cursor-pointer border transition-all duration-150 relative mb-2
+                      ${isSelected ? 'bg-white border-yuri-300 shadow-sm' : 'bg-transparent border-transparent hover:bg-yuri-100/50 hover:border-yuri-200'}
                     `}
                   >
-                    ✕
-                  </button>
-                </div>
-              )
-            })
+                    <h3 className={`text-sm font-bold truncate ${isSelected ? 'text-yuri-900' : 'text-yuri-800'}`}>
+                      {getTitle(note)}
+                    </h3>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="text-[11px] font-semibold text-yuri-400 shrink-0">{dateStr}</span>
+                      <span className="text-[11px] text-yuri-400 truncate">{getPreview(note)}</span>
+                    </div>
+
+                    {/* Delete Button (Hover) */}
+                    <button
+                      onClick={(e) => handleDelete(note.id, e)}
+                      aria-label="기록 삭제"
+                      className={`
+                        absolute top-3 right-3 w-6 h-6 flex items-center justify-center rounded text-yuri-300
+                        opacity-0 group-hover:opacity-100 hover:text-red-400 hover:bg-red-50 transition-all cursor-pointer
+                        ${isSelected ? 'opacity-100' : ''}
+                      `}
+                    >
+                      ✕
+                    </button>
+                  </div>
+                )
+              }}
+            />
           )}
         </div>
       </aside>
@@ -181,23 +209,41 @@ const JournalPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId 
             <div className="flex-1 overflow-hidden flex flex-col px-8 pb-8 gap-4 mt-2">
               <input spellCheck={false}
                 type="text"
-                value={selectedNote.text.split('\n')[0] || ''}
+                value={(selectedNote.hasContentDoc ? (loadedContents[selectedNote.id] || selectedNote.text) : selectedNote.text).split('\n')[0] || ''}
                 onChange={(e) => {
-                  const lines = selectedNote.text.split('\n')
+                  const fullText = selectedNote.hasContentDoc ? (loadedContents[selectedNote.id] || selectedNote.text) : selectedNote.text
+                  const lines = fullText.split('\n')
                   lines[0] = e.target.value
-                  updateJournal(selectedNote.id, lines.join('\n'))
+                  const newText = lines.join('\n')
+                  if (selectedNote.hasContentDoc) {
+                    setLoadedContents(prev => ({ ...prev, [selectedNote.id]: newText }))
+                  }
+                  updateJournal(selectedNote.id, newText)
                 }}
                 className="text-2xl font-bold bg-transparent outline-none text-yuri-900 placeholder:text-yuri-300 w-full"
                 placeholder="제목"
               />
-              <div className="flex-1 overflow-hidden">
+              <div className="flex-1 overflow-hidden relative">
+                {isContentLoading ? (
+                  <div className="absolute inset-0 flex items-center justify-center bg-white/80 z-10">
+                    <div className="w-8 h-8 border-4 border-yuri-200 border-t-accent rounded-full animate-spin"></div>
+                  </div>
+                ) : null}
                 <RichTextEditor
                   key={selectedNote.id}
-                  initialContent={selectedNote.text.split('\n').length > 1 ? selectedNote.text.split('\n').slice(1).join('\n') : ''}
+                  initialContent={(() => {
+                    const fullText = selectedNote.hasContentDoc ? (loadedContents[selectedNote.id] || selectedNote.text) : selectedNote.text
+                    return fullText.split('\n').length > 1 ? fullText.split('\n').slice(1).join('\n') : ''
+                  })()}
                   onChange={(html) => {
-                    const lines = selectedNote.text.split('\n')
+                    const fullText = selectedNote.hasContentDoc ? (loadedContents[selectedNote.id] || selectedNote.text) : selectedNote.text
+                    const lines = fullText.split('\n')
                     const firstLine = lines[0] || ''
-                    updateJournal(selectedNote.id, firstLine + '\n' + html)
+                    const newText = firstLine + '\n' + html
+                    if (selectedNote.hasContentDoc) {
+                      setLoadedContents(prev => ({ ...prev, [selectedNote.id]: newText }))
+                    }
+                    updateJournal(selectedNote.id, newText)
                   }}
                   placeholder="여기에 비공개 기록을 작성하세요..."
                 />

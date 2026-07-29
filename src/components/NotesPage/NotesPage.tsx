@@ -1,10 +1,13 @@
 import React, { useState, useMemo, useEffect } from 'react'
 import { useAppStore } from '../../store/AppStore'
 import RichTextEditor from '../common/RichTextEditor'
+import { Virtuoso } from 'react-virtuoso'
 
 const NotesPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId }) => {
-  const { notes, addNote, updateNote, deleteNote } = useAppStore()
+  const { notes, addNote, updateNote, deleteNote, loadNoteContent } = useAppStore()
   const [selNoteId, setSelNoteId] = useState<string | null>(activeItemId || null)
+  const [loadedContents, setLoadedContents] = useState<Record<string, string>>({})
+  const [isContentLoading, setIsContentLoading] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [inputText, setInputText] = useState('')
   const [toastMsg, setToastMsg] = useState('')
@@ -16,6 +19,20 @@ const NotesPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId })
 
   // Deselect if the selected note is deleted
   const selectedNote = useMemo(() => notes.find(n => n.id === selNoteId) || null, [notes, selNoteId])
+  
+  useEffect(() => {
+    if (selectedNote && selectedNote.hasContentDoc && !loadedContents[selectedNote.id]) {
+      setIsContentLoading(true)
+      loadNoteContent(selectedNote.id).then(content => {
+        if (content !== null) {
+          setLoadedContents(prev => ({ ...prev, [selectedNote.id]: content }))
+        }
+        setIsContentLoading(false)
+      })
+    } else {
+      setIsContentLoading(false)
+    }
+  }, [selectedNote?.id, selectedNote?.hasContentDoc, loadNoteContent, loadedContents])
 
   const showToast = (msg: string) => {
     setToastMsg(msg)
@@ -40,13 +57,14 @@ const NotesPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId })
   }
 
   // Generate a short title from the text
-  const getTitle = (text: string) => {
+  const getTitle = (note: any) => {
+    const text = note.textPreview || note.text || ''
     const trimmed = text.trim()
     if (!trimmed) return '새로운 메모'
     const firstLine = trimmed.split('\n')[0]
-    return firstLine.length > 30 ? firstLine.slice(0, 30) + '...' : firstLine
+    const stripped = stripHtml(firstLine).trim()
+    return stripped.length > 50 ? stripped.substring(0, 50) + '...' : (stripped || '새로운 메모')
   }
-
 
   const stripHtml = (html: string) => html.replace(/<[^>]*>?/gm, '')
 
@@ -54,7 +72,10 @@ const NotesPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId })
     let result = notes
     if (searchQuery.trim()) {
       const lowerQ = searchQuery.toLowerCase()
-      result = notes.filter(n => stripHtml(n.text).toLowerCase().includes(lowerQ))
+      result = notes.filter(n => {
+        const textToSearch = n.textPreview || n.text || ''
+        return stripHtml(textToSearch).toLowerCase().includes(lowerQ)
+      })
     }
     return [...result].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
   }, [notes, searchQuery])
@@ -83,7 +104,7 @@ const NotesPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId })
           />
         </header>
 
-        <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-2">
+        <div className="flex-1 overflow-hidden p-4 flex flex-col gap-2">
           {filteredNotes.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-yuri-400 p-6 text-center">
               <p className="text-sm">
@@ -95,50 +116,55 @@ const NotesPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId })
               </p>
             </div>
           ) : (
-            filteredNotes.map(note => {
-              const isSelected = selNoteId === note.id
-              const d = new Date(note.createdAt)
-              const createdAtStr = `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
-              let updatedAtStr = ''
-              if (note.updatedAt) {
-                const u = new Date(note.updatedAt)
-                updatedAtStr = `${u.getFullYear()}.${String(u.getMonth() + 1).padStart(2, '0')}.${String(u.getDate()).padStart(2, '0')} ${String(u.getHours()).padStart(2, '0')}:${String(u.getMinutes()).padStart(2, '0')}`
-              }
+            <Virtuoso
+              data={filteredNotes}
+              totalCount={filteredNotes.length}
+              style={{ height: '100%' }}
+              itemContent={(_, note) => {
+                const isSelected = selNoteId === note.id
+                const d = new Date(note.createdAt)
+                const createdAtStr = `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+                let updatedAtStr = ''
+                if (note.updatedAt) {
+                  const u = new Date(note.updatedAt)
+                  updatedAtStr = `${u.getFullYear()}.${String(u.getMonth() + 1).padStart(2, '0')}.${String(u.getDate()).padStart(2, '0')} ${String(u.getHours()).padStart(2, '0')}:${String(u.getMinutes()).padStart(2, '0')}`
+                }
 
-              return (
-                <div
-                  key={note.id}
-                  onClick={() => setSelNoteId(note.id)}
-                  className={`
-                    group p-3 rounded-xl cursor-pointer border transition-all duration-150 relative flex items-start gap-2
-                    ${isSelected ? 'bg-[#F3F0FF] border-[#F3F0FF] shadow-sm' : 'bg-transparent border-transparent hover:bg-yuri-100/50 hover:border-yuri-200'}
-                  `}
-                >
-                  <div className="flex-1 min-w-0">
-                  <h3 className={`text-sm font-bold truncate ${isSelected ? 'text-yuri-900' : 'text-yuri-800'}`}>
-                    {getTitle(note.text)}
-                  </h3>
-                  </div>
-                  <div className="flex flex-col items-end gap-0.5 shrink-0 mr-6 mt-0.5">
-                    <span className="text-[10px] text-yuri-400">생성일 {createdAtStr}</span>
-                    {updatedAtStr && <span className="text-[10px] text-yuri-400">최종 저장 {updatedAtStr}</span>}
-                  </div>
-
-                  {/* Delete Button (Hover) */}
-                  <button
-                    onClick={(e) => handleDelete(note.id, e)}
-                    aria-label="메모 삭제"
+                return (
+                  <div
+                    key={note.id}
+                    onClick={() => setSelNoteId(note.id)}
                     className={`
-                      absolute top-3 right-3 w-6 h-6 flex items-center justify-center rounded text-yuri-300
-                      opacity-30 group-hover:opacity-100 hover:text-red-400 hover:bg-red-50 transition-all
-                      ${isSelected ? 'opacity-100' : ''}
+                      group p-3 rounded-xl cursor-pointer border transition-all duration-150 relative flex items-start gap-2 mb-2
+                      ${isSelected ? 'bg-[#F3F0FF] border-[#F3F0FF] shadow-sm' : 'bg-transparent border-transparent hover:bg-yuri-100/50 hover:border-yuri-200'}
                     `}
                   >
-                    ✕
-                  </button>
-                </div>
-              )
-            })
+                    <div className="flex-1 min-w-0">
+                    <h3 className={`text-sm font-bold truncate ${isSelected ? 'text-yuri-900' : 'text-yuri-800'}`}>
+                      {getTitle(note)}
+                    </h3>
+                    </div>
+                    <div className="flex flex-col items-end gap-0.5 shrink-0 mr-6 mt-0.5">
+                      <span className="text-[10px] text-yuri-400">생성일 {createdAtStr}</span>
+                      {updatedAtStr && <span className="text-[10px] text-yuri-400">최종 저장 {updatedAtStr}</span>}
+                    </div>
+
+                    {/* Delete Button (Hover) */}
+                    <button
+                      onClick={(e) => handleDelete(note.id, e)}
+                      aria-label="메모 삭제"
+                      className={`
+                        absolute top-3 right-3 w-6 h-6 flex items-center justify-center rounded text-yuri-300
+                        opacity-30 group-hover:opacity-100 hover:text-red-400 hover:bg-red-50 transition-all
+                        ${isSelected ? 'opacity-100' : ''}
+                      `}
+                    >
+                      ✕
+                    </button>
+                  </div>
+                )
+              }}
+            />
           )}
         </div>
       </aside>
@@ -164,11 +190,17 @@ const NotesPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId })
             <div className="flex-1 overflow-hidden flex flex-col px-8 pb-8 gap-4 mt-2">
               <input spellCheck={false}
                 type="text"
-                value={selectedNote.text.split('\n')[0] || ''}
+                value={(selectedNote.hasContentDoc ? (loadedContents[selectedNote.id] || selectedNote.text) : selectedNote.text).split('\n')[0] || ''}
                 onChange={(e) => {
-                  const lines = selectedNote.text.split('\n')
+                  const fullText = selectedNote.hasContentDoc ? (loadedContents[selectedNote.id] || selectedNote.text) : selectedNote.text
+                  const lines = fullText.split('\n')
                   lines[0] = e.target.value
-                  updateNote(selectedNote.id, lines.join('\n'))
+                  const newText = lines.join('\n')
+                  // Also optimistically update local loaded contents
+                  if (selectedNote.hasContentDoc) {
+                    setLoadedContents(prev => ({ ...prev, [selectedNote.id]: newText }))
+                  }
+                  updateNote(selectedNote.id, newText)
                 }}
                 className="text-2xl font-bold bg-transparent outline-none text-yuri-900 placeholder:text-yuri-300 w-full"
                 placeholder="메모 제목"
@@ -176,14 +208,27 @@ const NotesPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId })
               <div className="text-[11px] text-yuri-300 font-medium px-1">
                 ※ 이미지는 메모당 최대 5장까지 첨부할 수 있어요 (Ctrl+V)
               </div>
-              <div className="flex-1 overflow-hidden">
+              <div className="flex-1 overflow-hidden relative">
+                {isContentLoading ? (
+                  <div className="absolute inset-0 flex items-center justify-center bg-white/80 z-10">
+                    <div className="w-8 h-8 border-4 border-yuri-200 border-t-accent rounded-full animate-spin"></div>
+                  </div>
+                ) : null}
                 <RichTextEditor
                   key={selectedNote.id}
-                  initialContent={selectedNote.text.split('\n').length > 1 ? selectedNote.text.split('\n').slice(1).join('\n') : ''}
+                  initialContent={(() => {
+                    const fullText = selectedNote.hasContentDoc ? (loadedContents[selectedNote.id] || selectedNote.text) : selectedNote.text;
+                    return fullText.split('\n').length > 1 ? fullText.split('\n').slice(1).join('\n') : '';
+                  })()}
                   onChange={(html) => {
-                    const lines = selectedNote.text.split('\n')
+                    const fullText = selectedNote.hasContentDoc ? (loadedContents[selectedNote.id] || selectedNote.text) : selectedNote.text
+                    const lines = fullText.split('\n')
                     const firstLine = lines[0] || ''
-                    updateNote(selectedNote.id, firstLine + '\n' + html)
+                    const newText = firstLine + '\n' + html
+                    if (selectedNote.hasContentDoc) {
+                      setLoadedContents(prev => ({ ...prev, [selectedNote.id]: newText }))
+                    }
+                    updateNote(selectedNote.id, newText)
                   }}
                   placeholder="여기에 내용을 작성하세요..."
                 />

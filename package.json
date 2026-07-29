@@ -30,6 +30,7 @@
     "lucide-react": "^1.23.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-virtuoso": "^4.18.11",
     "ts-morph": "^28.0.0",
     "twemoji": "^14.0.2"
   },

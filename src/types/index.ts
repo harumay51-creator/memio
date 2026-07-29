@@ -35,7 +35,9 @@ export interface Task {
 // ─── Notes (Memos) ────────────────────────────────────────────────────────────
 export interface Note {
   id: string
-  text: string
+  text: string          // HTML or legacy text
+  textPreview?: string  // Clean text preview for list view
+  hasContentDoc?: boolean // If true, full text is stored in separate contents collection
   createdAt: string
   updatedAt?: string
   isDeleted?: boolean

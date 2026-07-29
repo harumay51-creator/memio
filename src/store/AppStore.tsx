@@ -74,6 +74,7 @@ interface StoreValue {
   addNote:        (text: string) => Promise<string | null>
   updateNote:     (id: string, text: string) => void
   deleteNote:     (id: string) => void
+  loadNoteContent: (id: string) => Promise<string | null>
   navDate:        Date | null
   setNavDate:     (d: Date | null) => void
   addFixedExpense: (label: string, amount: number, day: number, category: string, paymentMethod?: '카드' | '계좌이체') => void
@@ -696,10 +697,20 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
 
   const addNote = useCallback(async (text: string) => {
     const now = new Date().toISOString()
-    const newItem: Note = { id: genId(), text, createdAt: now, updatedAt: now }
+    const { extractPreview } = await import('../utils/textUtils')
+    const textPreview = extractPreview(text)
+    
+    // Note list item (lightweight)
+    const newItem: Note = { id: genId(), text: '', textPreview, hasContentDoc: true, createdAt: now, updatedAt: now }
     try {
-      await setDoc(doc(db, 'users', uid, 'notes', newItem.id), newItem)
-      setNotes(prev => [newItem, ...prev])
+      await Promise.all([
+        setDoc(doc(db, 'users', uid, 'notes', newItem.id), newItem),
+        setDoc(doc(db, 'users', uid, 'note_contents', newItem.id), { text })
+      ])
+      // In local state, we can keep the full text so it feels instantaneous if viewed right away, 
+      // but to be safe and consistent with the list, we can just store the full text in state too!
+      // Wait, if list renders from AppStore, and detailed view reads from AppStore if it exists, it's better to store text locally.
+      setNotes(prev => [{...newItem, text}, ...prev])
       showToast('메모가 추가되었습니다.', 'success')
       return newItem.id
     } catch (err) {
@@ -709,30 +720,50 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
     }
   }, [uid, showToast])
 
-  const deleteNote = useCallback((id: string) => {
-    setNotes(prev => {
-      const item = prev.find(n => n.id === id)
-      if (item) {
-        const label = item.text.trim().split('\n')[0].slice(0, 30) || '새로운 메모'
-        setTrashedItems(curr => [{ id, type: 'note' as const, label, deletedAt: Date.now() }, ...curr].sort((a,b)=>b.deletedAt-a.deletedAt))
-      }
-      return prev.filter(n => n.id !== id)
-    })
-    updateDoc(doc(db, 'users', uid, 'notes', id), { isDeleted: true, deletedAt: Date.now() }).catch(console.error)
-  }, [uid])
-
-  const updateNote = useCallback((id: string, text: string) => {
+  const updateNote = useCallback(async (id: string, text: string) => {
     const updatedAt = new Date().toISOString()
+    const { extractPreview } = await import('../utils/textUtils')
+    const textPreview = extractPreview(text)
     
     setNotes(prev => {
       const oldNote = prev.find(n => n.id === id)
       if (oldNote) {
         cleanupRemovedImages(oldNote.text, text).catch(console.error)
       }
-      return prev.map(n => n.id === id ? { ...n, text, updatedAt } : n)
+      return prev.map(n => n.id === id ? { ...n, text, textPreview, hasContentDoc: true, updatedAt } : n)
     })
-    updateDoc(doc(db, 'users', uid, 'notes', id), { text, updatedAt }).catch(console.error)
+    
+    updateDoc(doc(db, 'users', uid, 'notes', id), { textPreview, hasContentDoc: true, updatedAt }).catch(console.error)
+    setDoc(doc(db, 'users', uid, 'note_contents', id), { text }, { merge: true }).catch(console.error)
   }, [uid])
+
+  const loadNoteContent = useCallback(async (id: string) => {
+    if (!uid) return null
+    try {
+      const snap = await getDoc(doc(db, 'users', uid, 'note_contents', id))
+      if (snap.exists() && snap.data().text !== undefined) {
+        return snap.data().text as string
+      }
+      return null
+    } catch (e) {
+      console.error('Failed to load note content:', e)
+      return null
+    }
+  }, [uid])
+
+  const deleteNote = useCallback((id: string) => {
+    setNotes(prev => {
+      const item = prev.find(n => n.id === id)
+      if (item) {
+        const label = item.textPreview ? item.textPreview.slice(0, 30) : (item.text.trim().split('\n')[0].slice(0, 30) || '새로운 메모')
+        setTrashedItems(curr => [{ id, type: 'note' as const, label, deletedAt: Date.now() }, ...curr].sort((a,b)=>b.deletedAt-a.deletedAt))
+      }
+      return prev.filter(n => n.id !== id)
+    })
+    updateDoc(doc(db, 'users', uid, 'notes', id), { isDeleted: true, deletedAt: Date.now() }).catch(console.error)
+    updateDoc(doc(db, 'users', uid, 'note_contents', id), { isDeleted: true, deletedAt: Date.now() }).catch(console.error)
+  }, [uid])
+
 
   const addFixedExpense = useCallback(async (label: string, amount: number, day: number, category: string, paymentMethod?: '카드' | '계좌이체') => {
     const newItem: FixedExpense = { id: genId(), label, amount, day, category, paymentMethod, createdAt: new Date().toISOString() }
@@ -1190,7 +1221,7 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
       addEvent,
       updateEvent,
       deleteEvent,
-      addNote, updateNote, deleteNote,
+      addNote, updateNote, deleteNote, loadNoteContent,
       navDate, setNavDate,
       addFixedExpense, updateFixedExpense, deleteFixedExpense,
       restoreItem, hardDeleteItem,
