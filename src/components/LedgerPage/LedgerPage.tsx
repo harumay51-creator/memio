@@ -23,6 +23,8 @@ const CAT_TW_CLASSES: Record<string, { bg: string, text: string }> = {
   '용돈':     { bg: 'bg-lime-50',   text: 'text-lime-600' },
   '이자/배당': { bg: 'bg-teal-50',   text: 'text-teal-600' },
   '환급':     { bg: 'bg-sky-50',    text: 'text-sky-600' },
+  '저축':     { bg: 'bg-indigo-50', text: 'text-indigo-600' },
+  '보험':     { bg: 'bg-pink-50',   text: 'text-pink-600' },
   '기타':     { bg: 'bg-slate-100', text: 'text-slate-600' },
   '기타수입':  { bg: 'bg-slate-100', text: 'text-slate-600' },
 }

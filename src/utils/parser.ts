@@ -41,6 +41,14 @@ export const DEFAULT_EXPENSE_CATS: CategoryConfig[] = [
     name: '통신',
     keywords: ['핸드폰','인터넷','통신','요금제','알뜰폰'],
   },
+  {
+    name: '저축',
+    keywords: ['저축','적금','예금','청약','투자','주식'],
+  },
+  {
+    name: '보험',
+    keywords: ['보험','보험료','실비','생명','화재'],
+  },
 ]
 
 const INCOME_CATS: Array<{ name: string; keywords: string[] }> = [

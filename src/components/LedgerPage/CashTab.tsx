@@ -17,6 +17,8 @@ const CAT_TW_CLASSES: Record<string, { bg: string, text: string }> = {
   '용돈':     { bg: 'bg-lime-50',   text: 'text-lime-600' },
   '이자/배당': { bg: 'bg-teal-50',   text: 'text-teal-600' },
   '환급':     { bg: 'bg-sky-50',    text: 'text-sky-600' },
+  '저축':     { bg: 'bg-indigo-50', text: 'text-indigo-600' },
+  '보험':     { bg: 'bg-pink-50',   text: 'text-pink-600' },
   '기타':     { bg: 'bg-slate-100', text: 'text-slate-600' },
   '기타수입':  { bg: 'bg-slate-100', text: 'text-slate-600' },
 }
@@ -131,8 +133,8 @@ export default function CashTab({ year, month, onOpenFixedExpense }: { year: num
   }, [cashEntries])
 
   // Split categorySums into savings and consumption
-  const consumptionCats = categorySums.filter(([cat]) => cat !== '저축')
-  const savingCats = categorySums.filter(([cat]) => cat === '저축')
+  const consumptionCats = categorySums.filter(([cat]) => cat !== '저축' && cat !== '보험')
+  const savingCats = categorySums.filter(([cat]) => cat === '저축' || cat === '보험')
   const totalConsumption = consumptionCats.reduce((sum, [_, data]) => sum + data.total, 0)
   const totalSavings = savingCats.reduce((sum, [_, data]) => sum + data.total, 0)
   const totalCycleUsage = totalConsumedCard + totalCashExpense
@@ -393,9 +395,9 @@ export default function CashTab({ year, month, onOpenFixedExpense }: { year: num
               </div>
               
               <div className="flex flex-col gap-3">
-                {savingCats.map(([cat, data]) => {
+                {savingCats.map(([cat, data], idx) => {
                   const ratio = totalSavings > 0 ? Math.max((data.total / totalSavings) * 100, 1.5) : 0
-                  const color = BAR_COLORS[0]
+                  const color = BAR_COLORS[idx % BAR_COLORS.length]
                   return (
                     <div key={cat} className="flex flex-col gap-1.5">
                       <div className="flex justify-between items-center text-[11px]">

@@ -225,6 +225,28 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
         const customCats = fetchedExpenseCats.filter((c: any) => !DEFAULT_EXPENSE_CATS.some(defCat => defCat.name === c.name)) as CategoryConfig[]
         const finalCats = [...mergedCats, ...customCats]
 
+        // --- One-time Migration for '보험' ---
+        let hasMigration = false;
+        const migrationBatch = writeBatch(db);
+        fetchedLedger.forEach((item: any) => {
+          if (item.category === '저축' && (item.label.includes('보험') || item.label.includes('보험료'))) {
+            migrationBatch.update(doc(db, 'users', uid, 'ledger', item.id), { category: '보험' });
+            item.category = '보험';
+            hasMigration = true;
+          }
+        });
+        fetchedFixedExpenses.forEach((item: any) => {
+          if (item.category === '저축' && (item.label.includes('보험') || item.label.includes('보험료'))) {
+            migrationBatch.update(doc(db, 'users', uid, 'fixedExpenses', item.id), { category: '보험' });
+            item.category = '보험';
+            hasMigration = true;
+          }
+        });
+        if (hasMigration) {
+          migrationBatch.commit().catch(console.error);
+        }
+        // -------------------------------------
+
         const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
         const nowMs = Date.now();
         const batch = writeBatch(db);
