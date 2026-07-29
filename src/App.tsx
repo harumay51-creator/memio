@@ -121,7 +121,7 @@ service cloud.firestore {
       />
       
       <main className="flex-1 flex flex-col relative h-full min-w-0 z-10 bg-transparent">
-        <div className="flex-1 overflow-y-auto w-full relative">
+        <div className="flex-1 overflow-y-auto w-full relative min-h-0">
           <Router page={activePage} activeItemId={activeItemId} />
         </div>
         

@@ -225,7 +225,7 @@ export default function CashTab({ year, month, onOpenFixedExpense }: { year: num
         </div>
 
         {/* Category Filter Badges */}
-        <div className="flex gap-2 items-center overflow-x-auto pb-1 scrollbar-hide w-full" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+        <div className="flex gap-2 items-center overflow-x-auto pb-1 scrollbar-hide w-full min-w-0" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
           <style>{`.scrollbar-hide::-webkit-scrollbar { display: none; }`}</style>
           <button
             onClick={() => setActiveCategory(null)}
@@ -320,7 +320,7 @@ export default function CashTab({ year, month, onOpenFixedExpense }: { year: num
       </div>
 
       {/* ── 이번 월급 활동 (Reference Section) ── */}
-      <div className="p-4 md:p-5 pb-[200px] bg-gray-50 border-t border-gray-200 flex flex-col gap-3 shrink-0 shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.05)] w-full relative z-10">
+      <div className="p-4 md:p-5 pb-[200px] bg-gray-50 border-t border-gray-200 flex flex-col gap-3 shrink-0 shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.05)] w-full min-w-0 relative z-10">
         <div className="flex flex-col gap-1.5">
           <span className="text-[10px] font-bold text-gray-400">참고</span>
           <div className="flex justify-between items-center">
@@ -339,7 +339,7 @@ export default function CashTab({ year, month, onOpenFixedExpense }: { year: num
 
         <div className="h-px w-full bg-gray-200 my-0.5" />
 
-        <div className="flex flex-col gap-2 w-full overflow-hidden">
+        <div className="flex flex-col gap-2 w-full min-w-0 overflow-hidden">
           <h3 className="text-[11px] font-bold text-gray-500 shrink-0">월급 사이클 카테고리 분석</h3>
           <div 
             ref={catScrollRef}
@@ -347,7 +347,7 @@ export default function CashTab({ year, month, onOpenFixedExpense }: { year: num
             onMouseLeave={handleCatMouseLeave}
             onMouseUp={handleCatMouseUp}
             onMouseMove={handleCatMouseMove}
-            className="flex gap-2 items-center overflow-x-auto pb-1 scrollbar-hide cursor-grab active:cursor-grabbing w-full max-w-full" 
+            className="flex gap-2 items-center overflow-x-auto pb-1 scrollbar-hide cursor-grab active:cursor-grabbing w-full min-w-0" 
             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           >
             <style>{`.scrollbar-hide::-webkit-scrollbar { display: none; }`}</style>
