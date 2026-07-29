@@ -201,7 +201,10 @@ export default function CashTab({ year, month, onOpenFixedExpense }: { year: num
           {/* ── Timeline Section ── */}
           <div className="flex-1 p-5 md:p-8 bg-white flex flex-col gap-6">
             <div className="flex justify-between items-center mb-2">
-              <h2 className="text-sm font-bold text-yuri-900">현금 / 계좌 지출 내역</h2>
+              <div className="flex items-center gap-2">
+                <h2 className="text-sm font-bold text-yuri-900">현금 / 계좌 지출 내역</h2>
+                <span className="text-[10px] font-medium text-gray-400">현금·계좌이체 거래만 표시</span>
+              </div>
               <button 
                 onClick={onOpenFixedExpense}
                 className="flex items-center gap-1.5 px-3 py-1.5 bg-yuri-900 text-white rounded-lg text-[11px] font-bold shadow-sm hover:bg-yuri-800 transition-colors"
@@ -314,7 +317,7 @@ export default function CashTab({ year, month, onOpenFixedExpense }: { year: num
           
           {/* 1. 이번 월급 현황 대시보드 */}
           <div className="flex flex-col gap-3">
-            <h3 className="text-sm font-bold text-gray-800">이번 월급 현황 대시보드</h3>
+            <h3 className="text-sm font-bold text-gray-800">월급 현황</h3>
             
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 flex flex-col gap-3">
               <div className="flex justify-between items-center text-xs">
@@ -351,13 +354,16 @@ export default function CashTab({ year, month, onOpenFixedExpense }: { year: num
           {/* 2. 소비 카테고리 */}
           <div className="flex flex-col gap-3">
             <div className="flex justify-between items-center">
-              <h3 className="text-xs font-bold text-gray-500">소비 카테고리</h3>
+              <div className="flex items-center gap-1.5">
+                <h3 className="text-xs font-bold text-gray-500">소비 카테고리</h3>
+                <span className="text-[10px] font-medium text-gray-400">월급 사이클 기준</span>
+              </div>
               <span className="text-xs font-extrabold text-gray-800">{fmtAmt(totalConsumption)}</span>
             </div>
             
             <div className="flex flex-col gap-3">
               {consumptionCats.map(([cat, data], idx) => {
-                const ratio = totalConsumption > 0 ? (data.total / totalConsumption) * 100 : 0
+                const ratio = totalConsumption > 0 ? Math.max((data.total / totalConsumption) * 100, 1.5) : 0
                 const color = BAR_COLORS[idx % BAR_COLORS.length]
                 return (
                   <div key={cat} className="flex flex-col gap-1.5">
@@ -365,7 +371,7 @@ export default function CashTab({ year, month, onOpenFixedExpense }: { year: num
                       <span className="font-bold text-gray-700">{cat}</span>
                       <span className="font-extrabold text-gray-800">{fmtAmt(data.total)}</span>
                     </div>
-                    <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                    <div className="w-full h-1.5 bg-gray-200/60 rounded-full overflow-hidden">
                       <div className={`h-full rounded-full ${color} transition-all`} style={{ width: `${ratio}%` }} />
                     </div>
                   </div>
@@ -387,7 +393,7 @@ export default function CashTab({ year, month, onOpenFixedExpense }: { year: num
               
               <div className="flex flex-col gap-3">
                 {savingCats.map(([cat, data]) => {
-                  const ratio = totalSavings > 0 ? (data.total / totalSavings) * 100 : 0
+                  const ratio = totalSavings > 0 ? Math.max((data.total / totalSavings) * 100, 1.5) : 0
                   const color = BAR_COLORS[0]
                   return (
                     <div key={cat} className="flex flex-col gap-1.5">
@@ -395,7 +401,7 @@ export default function CashTab({ year, month, onOpenFixedExpense }: { year: num
                         <span className="font-bold text-gray-700">{cat}</span>
                         <span className="font-extrabold text-gray-800">{fmtAmt(data.total)}</span>
                       </div>
-                      <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                      <div className="w-full h-1.5 bg-gray-200/60 rounded-full overflow-hidden">
                         <div className={`h-full rounded-full ${color} transition-all`} style={{ width: `${ratio}%` }} />
                       </div>
                     </div>
