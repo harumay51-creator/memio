@@ -135,7 +135,8 @@ export default function CashTab({ year, month, onOpenFixedExpense }: { year: num
   const savingCats = categorySums.filter(([cat]) => cat === '저축')
   const totalConsumption = consumptionCats.reduce((sum, [_, data]) => sum + data.total, 0)
   const totalSavings = savingCats.reduce((sum, [_, data]) => sum + data.total, 0)
-  const executionRatio = currentSalary > 0 ? Math.min(100, Math.round((totalDeductions / currentSalary) * 100)) : 0
+  const totalCycleUsage = totalConsumedCard + totalCashExpense
+  const executionRatio = currentSalary > 0 ? Math.min(100, Math.round((totalCycleUsage / currentSalary) * 100)) : 0
   const BAR_COLORS = ['bg-[#E3F1F8]', 'bg-[#EDE9F7]', 'bg-[#E4F2EC]', 'bg-[#E7ECF2]', 'bg-[#EFEAF5]']
 
   // Combined timeline list
@@ -326,7 +327,7 @@ export default function CashTab({ year, month, onOpenFixedExpense }: { year: num
               </div>
               <div className="flex justify-between items-center text-xs">
                 <span className="font-bold text-gray-500">집행</span>
-                <span className="font-extrabold text-gray-900">{fmtAmt(totalDeductions)}</span>
+                <span className="font-extrabold text-gray-900">{fmtAmt(totalCycleUsage)}</span>
               </div>
               <div className="flex justify-between items-center text-xs">
                 <span className="font-bold text-gray-500">잔액</span>
