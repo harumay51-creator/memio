@@ -89,10 +89,11 @@ const JournalPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId 
     if (!highlight.trim()) return <>{text}</>
     const regex = new RegExp(`(${highlight.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi')
     const parts = text.split(regex)
+    const lowerHighlight = highlight.toLowerCase()
     return (
       <>
         {parts.map((part, i) => 
-          regex.test(part) ? <span key={i} style={{ backgroundColor: '#CFE7F4', borderRadius: '2px', padding: '0 2px' }}>{part}</span> : <span key={i}>{part}</span>
+          part.toLowerCase() === lowerHighlight ? <span key={i} style={{ backgroundColor: '#CFE7F4', borderRadius: '2px', padding: '0 2px' }}>{part}</span> : <span key={i}>{part}</span>
         )}
       </>
     )

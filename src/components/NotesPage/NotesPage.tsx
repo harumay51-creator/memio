@@ -84,10 +84,11 @@ const NotesPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId })
     if (!highlight.trim()) return <>{text}</>
     const regex = new RegExp(`(${highlight.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi')
     const parts = text.split(regex)
+    const lowerHighlight = highlight.toLowerCase()
     return (
       <>
         {parts.map((part, i) => 
-          regex.test(part) ? <span key={i} style={{ backgroundColor: '#CFE7F4', borderRadius: '2px', padding: '0 2px' }}>{part}</span> : <span key={i}>{part}</span>
+          part.toLowerCase() === lowerHighlight ? <span key={i} style={{ backgroundColor: '#CFE7F4', borderRadius: '2px', padding: '0 2px' }}>{part}</span> : <span key={i}>{part}</span>
         )}
       </>
     )
@@ -163,7 +164,7 @@ const NotesPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId })
                             const lines = full.trim().split('\n')
                             const body = lines.length > 1 ? lines.slice(1).join(' ') : lines[0]
                             const stripped = stripHtml(body).trim()
-                            return stripped.length > 100 ? stripped.substring(0, 100) + '...' : stripped
+                            return stripped.length > 40 ? stripped.substring(0, 40) + '...' : stripped
                           })()} 
                           highlight={searchQuery} 
                         />
