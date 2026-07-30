@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react'
+import { isSearchMatch, getSearchPreview } from '../../utils/textUtils'
 import { useAppStore } from '../../store/AppStore'
 import RichTextEditor from '../common/RichTextEditor'
 import { HighlightText } from '../common/HighlightText'
@@ -72,10 +73,9 @@ const NotesPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId })
   const filteredNotes = useMemo(() => {
     let result = notes
     if (searchQuery.trim()) {
-      const lowerQ = searchQuery.toLowerCase()
       result = result.filter(n => {
-        const target = (n.searchText || n.text || n.textPreview || '').toLowerCase()
-        return target.includes(lowerQ)
+        const target = n.searchText || n.text || n.textPreview || ''
+        return isSearchMatch(target, searchQuery)
       })
     }
     return [...result].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
@@ -153,29 +153,7 @@ const NotesPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId })
                             const full = loadedContents[note.id] || note.text || note.textPreview || ''
                             const lines = full.trim().split('\n')
                             const body = lines.length > 1 ? lines.slice(1).join(' ') : lines[0]
-                            const stripped = stripHtml(body).trim()
-                            
-                            const query = searchQuery.trim().toLowerCase()
-                            if (!query) {
-                              return stripped.length > 40 ? stripped.substring(0, 40) + '...' : stripped
-                            }
-                            
-                            const fullStripped = stripHtml(full).trim()
-                            const lowerFull = fullStripped.toLowerCase()
-                            const matchIndex = lowerFull.indexOf(query)
-                            
-                            if (matchIndex === -1) {
-                              return stripped.length > 40 ? stripped.substring(0, 40) + '...' : stripped
-                            }
-                            
-                            const start = Math.max(0, matchIndex - 15)
-                            const end = Math.min(fullStripped.length, matchIndex + query.length + 25)
-                            
-                            let resultStr = fullStripped.substring(start, end)
-                            if (start > 0) resultStr = '...' + resultStr
-                            if (end < fullStripped.length) resultStr = resultStr + '...'
-                            
-                            return resultStr
+                            return getSearchPreview(full, searchQuery, body)
                           })()} 
                           highlight={searchQuery} 
                         />

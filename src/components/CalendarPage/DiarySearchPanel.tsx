@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react'
 import { useDiaryStore } from '../../store/DiaryStore'
 import { HighlightText } from '../common/HighlightText'
+import { isSearchMatch, getSearchPreview } from '../../utils/textUtils'
 
 interface DiarySearchPanelProps {
   onResultClick: (dateKey: string) => void
@@ -16,7 +17,6 @@ const DiarySearchPanel: React.FC<DiarySearchPanelProps> = ({ onResultClick, onCl
 
   const results = useMemo(() => {
     if (!query.trim()) return []
-    const q = query.toLowerCase()
     
     const matches: {
       dateKey: string
@@ -29,14 +29,14 @@ const DiarySearchPanel: React.FC<DiarySearchPanelProps> = ({ onResultClick, onCl
       
       // Search answers
       diary.answers?.forEach(a => {
-        if (a.answer.toLowerCase().includes(q)) {
+        if (isSearchMatch(a.answer, query)) {
           daySnippets.push(a.answer)
         }
       })
       
       // Search memos
       diary.memos?.forEach(m => {
-        if (m.text.toLowerCase().includes(q)) {
+        if (isSearchMatch(m.text, query)) {
           daySnippets.push(m.text)
         }
       })
@@ -55,22 +55,7 @@ const DiarySearchPanel: React.FC<DiarySearchPanelProps> = ({ onResultClick, onCl
   }, [diaries, query])
 
   const getPreview = (text: string, query: string) => {
-    const stripped = text.replace(/<[^>]*>?/gm, '').trim()
-    const lowerStripped = stripped.toLowerCase()
-    const matchIndex = lowerStripped.indexOf(query)
-    
-    if (matchIndex === -1) {
-      return stripped.length > 40 ? stripped.substring(0, 40) + '...' : stripped
-    }
-    
-    const start = Math.max(0, matchIndex - 15)
-    const end = Math.min(stripped.length, matchIndex + query.length + 25)
-    
-    let result = stripped.substring(start, end)
-    if (start > 0) result = '...' + result
-    if (end < stripped.length) result = result + '...'
-    
-    return result || '새로운 기록'
+    return getSearchPreview(text, query) || '새로운 기록'
   }
 
   return (

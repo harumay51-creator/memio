@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect, useRef } from 'react'
 import { useAppStore } from '../../store/AppStore'
 import RichTextEditor from '../common/RichTextEditor'
 import { HighlightText } from '../common/HighlightText'
+import { isSearchMatch, getSearchPreview } from '../../utils/textUtils'
 
 type SearchResultItem = {
   id: string
@@ -36,26 +37,7 @@ const SearchPage: React.FC = () => {
   }
 
   const getPreview = (text: string, query: string) => {
-    const stripped = text.replace(/<[^>]*>?/gm, '').trim()
-    if (!query) {
-      return stripped.length > 40 ? stripped.substring(0, 40) + '...' : stripped
-    }
-    
-    const lowerStripped = stripped.toLowerCase()
-    const matchIndex = lowerStripped.indexOf(query)
-    
-    if (matchIndex === -1) {
-      return stripped.length > 40 ? stripped.substring(0, 40) + '...' : stripped
-    }
-    
-    const start = Math.max(0, matchIndex - 15)
-    const end = Math.min(stripped.length, matchIndex + query.length + 25)
-    
-    let result = stripped.substring(start, end)
-    if (start > 0) result = '...' + result
-    if (end < stripped.length) result = result + '...'
-    
-    return result || '새로운 항목'
+    return getSearchPreview(text, query) || '새로운 항목'
   }
 
   const results = useMemo(() => {
@@ -66,23 +48,23 @@ const SearchPage: React.FC = () => {
 
     // Tasks
     tasks.forEach(t => {
-      const target = (t.searchText || t.text + ' ' + (t.note ? t.note.replace(/<[^>]*>?/gm, '') : '')).toLowerCase()
-      if (target.includes(q)) {
+      const target = t.searchText || t.text + ' ' + (t.note ? t.note.replace(/<[^>]*>?/gm, '') : '')
+      if (isSearchMatch(target, query)) {
         matched.push({ id: t.id, type: 'task', text: t.text, note: t.note, date: new Date(t.createdAt), done: t.done })
       }
     })
 
     // Events
     events.forEach(e => {
-      if (e.text.toLowerCase().includes(q)) {
+      if (isSearchMatch(e.text, query)) {
         matched.push({ id: e.id, type: 'event', text: e.text, date: new Date(e.scheduledDate ?? e.createdAt) })
       }
     })
 
     // Notes
     notes.forEach(n => {
-      const target = (n.searchText || n.text || n.textPreview || '').toLowerCase()
-      if (target.includes(q)) {
+      const target = n.searchText || n.text || n.textPreview || ''
+      if (isSearchMatch(target, query)) {
         matched.push({ id: n.id, type: 'memo', text: n.text || n.textPreview || '', date: new Date(n.createdAt) })
       }
     })

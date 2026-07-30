@@ -3,8 +3,9 @@ import { useJournalStore } from '../../store/JournalStore'
 import { useAppStore } from '../../store/AppStore'
 import RichTextEditor from '../common/RichTextEditor'
 import { HighlightText } from '../common/HighlightText'
-import PinScreen from './PinScreen'
 import { Lock } from 'lucide-react'
+import { isSearchMatch, getSearchPreview } from '../../utils/textUtils'
+import PinScreen from './PinScreen'
 import { Virtuoso } from 'react-virtuoso'
 
 const JournalPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId }) => {
@@ -68,30 +69,8 @@ const JournalPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId 
     if (!trimmed) return '새로운 기록'
     const lines = trimmed.split('\n')
     const previewRaw = lines.length > 1 ? lines.slice(1).join(' ') : lines[0]
-    const preview = stripHtml(previewRaw).trim()
     
-    const query = searchQuery.trim().toLowerCase()
-    if (!query) {
-      return preview.length > 40 ? preview.substring(0, 40) + '...' : (preview || '새로운 기록')
-    }
-    
-    // For preview, we search within the full text instead of just preview
-    const fullStripped = stripHtml(text).trim()
-    const lowerFull = fullStripped.toLowerCase()
-    const matchIndex = lowerFull.indexOf(query)
-    
-    if (matchIndex === -1) {
-      return preview.length > 40 ? preview.substring(0, 40) + '...' : (preview || '새로운 기록')
-    }
-    
-    const start = Math.max(0, matchIndex - 15)
-    const end = Math.min(fullStripped.length, matchIndex + query.length + 25)
-    
-    let result = fullStripped.substring(start, end)
-    if (start > 0) result = '...' + result
-    if (end < fullStripped.length) result = result + '...'
-    
-    return result || '새로운 기록'
+    return getSearchPreview(text, searchQuery, previewRaw) || '새로운 기록'
   }
 
   const stripHtml = (html: string) => html.replace(/<[^>]*>?/gm, '')
@@ -99,10 +78,9 @@ const JournalPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId 
   const filteredNotes = useMemo(() => {
     let result = journals
     if (searchQuery.trim()) {
-      const lowerQ = searchQuery.toLowerCase()
       result = result.filter(n => {
-        const target = (n.searchText || n.text || n.textPreview || '').toLowerCase()
-        return target.includes(lowerQ)
+        const target = n.searchText || n.text || n.textPreview || ''
+        return isSearchMatch(target, searchQuery)
       })
     }
     return [...result].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
