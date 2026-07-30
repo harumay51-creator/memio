@@ -230,47 +230,50 @@ const JournalPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId 
             </header>
             
             <div className="flex-1 overflow-hidden flex flex-col px-8 pb-8 gap-4 mt-2">
-              <input spellCheck={false}
-                type="text"
-                value={(selectedNote.hasContentDoc ? (loadedContents[selectedNote.id] || selectedNote.text) : selectedNote.text).split('\n')[0] || ''}
-                onChange={(e) => {
-                  const fullText = selectedNote.hasContentDoc ? (loadedContents[selectedNote.id] || selectedNote.text) : selectedNote.text
-                  const lines = fullText.split('\n')
-                  lines[0] = e.target.value
-                  const newText = lines.join('\n')
-                  if (selectedNote.hasContentDoc) {
-                    setLoadedContents(prev => ({ ...prev, [selectedNote.id]: newText }))
-                  }
-                  updateJournal(selectedNote.id, newText)
-                }}
-                className="text-2xl font-bold bg-transparent outline-none text-yuri-900 placeholder:text-yuri-300 w-full"
-                placeholder="제목"
-              />
-              <div className="flex-1 overflow-hidden relative">
-                {isContentLoading ? (
-                  <div className="absolute inset-0 flex items-center justify-center bg-white/80 z-10">
-                    <div className="w-8 h-8 border-4 border-yuri-200 border-t-accent rounded-full animate-spin"></div>
+              {isContentLoading || (selectedNote.hasContentDoc && loadedContents[selectedNote.id] === undefined) ? (
+                <div className="flex-1 flex items-center justify-center">
+                  <div className="w-8 h-8 border-4 border-yuri-200 border-t-accent rounded-full animate-spin"></div>
+                </div>
+              ) : (
+                <>
+                  <input spellCheck={false}
+                    type="text"
+                    value={(selectedNote.hasContentDoc ? (loadedContents[selectedNote.id] || selectedNote.text) : selectedNote.text).split('\n')[0] || ''}
+                    onChange={(e) => {
+                      const fullText = selectedNote.hasContentDoc ? (loadedContents[selectedNote.id] || selectedNote.text) : selectedNote.text
+                      const lines = fullText.split('\n')
+                      lines[0] = e.target.value
+                      const newText = lines.join('\n')
+                      if (selectedNote.hasContentDoc) {
+                        setLoadedContents(prev => ({ ...prev, [selectedNote.id]: newText }))
+                      }
+                      updateJournal(selectedNote.id, newText)
+                    }}
+                    className="text-2xl font-bold bg-transparent outline-none text-yuri-900 placeholder:text-yuri-300 w-full"
+                    placeholder="제목"
+                  />
+                  <div className="flex-1 overflow-hidden relative">
+                    <RichTextEditor
+                      key={selectedNote.id}
+                      initialContent={(() => {
+                        const fullText = selectedNote.hasContentDoc ? (loadedContents[selectedNote.id] || selectedNote.text) : selectedNote.text
+                        return fullText.split('\n').length > 1 ? fullText.split('\n').slice(1).join('\n') : ''
+                      })()}
+                      onChange={(html) => {
+                        const fullText = selectedNote.hasContentDoc ? (loadedContents[selectedNote.id] || selectedNote.text) : selectedNote.text
+                        const lines = fullText.split('\n')
+                        const firstLine = lines[0] || ''
+                        const newText = firstLine + '\n' + html
+                        if (selectedNote.hasContentDoc) {
+                          setLoadedContents(prev => ({ ...prev, [selectedNote.id]: newText }))
+                        }
+                        updateJournal(selectedNote.id, newText)
+                      }}
+                      placeholder="여기에 비공개 기록을 작성하세요..."
+                    />
                   </div>
-                ) : null}
-                <RichTextEditor
-                  key={selectedNote.id}
-                  initialContent={(() => {
-                    const fullText = selectedNote.hasContentDoc ? (loadedContents[selectedNote.id] || selectedNote.text) : selectedNote.text
-                    return fullText.split('\n').length > 1 ? fullText.split('\n').slice(1).join('\n') : ''
-                  })()}
-                  onChange={(html) => {
-                    const fullText = selectedNote.hasContentDoc ? (loadedContents[selectedNote.id] || selectedNote.text) : selectedNote.text
-                    const lines = fullText.split('\n')
-                    const firstLine = lines[0] || ''
-                    const newText = firstLine + '\n' + html
-                    if (selectedNote.hasContentDoc) {
-                      setLoadedContents(prev => ({ ...prev, [selectedNote.id]: newText }))
-                    }
-                    updateJournal(selectedNote.id, newText)
-                  }}
-                  placeholder="여기에 비공개 기록을 작성하세요..."
-                />
-              </div>
+                </>
+              )}
             </div>
           </>
         ) : (
