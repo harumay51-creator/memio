@@ -135,6 +135,7 @@ const DiaryTextEditor: React.FC<DiaryTextEditorProps> = ({
               const isActive = editor.isActive('highlight', { color: color.value });
               return (
                 <button
+                  type="button"
                   key={color.value}
                   onClick={(e) => {
                     e.stopPropagation();
