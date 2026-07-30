@@ -19,6 +19,7 @@ interface DiaryTextEditorProps {
   placeholder?: string;
   className?: string;
   autoFocus?: boolean;
+  onMenuStateChange?: (isOpen: boolean) => void;
 }
 
 const DiaryTextEditor: React.FC<DiaryTextEditorProps> = ({ 
@@ -28,7 +29,8 @@ const DiaryTextEditor: React.FC<DiaryTextEditorProps> = ({
   onFocus,
   placeholder, 
   className = '',
-  autoFocus = false
+  autoFocus = false,
+  onMenuStateChange
 }) => {
   // Parse plain text compatibility
   const getSafeContent = (text: string) => {
@@ -62,6 +64,11 @@ const DiaryTextEditor: React.FC<DiaryTextEditorProps> = ({
     content: getSafeContent(initialContent),
     onUpdate: ({ editor }) => {
       onChange(editor.getHTML());
+    },
+    onSelectionUpdate: ({ editor }) => {
+      if (onMenuStateChange) {
+        onMenuStateChange(!editor.state.selection.empty);
+      }
     },
     onBlur: () => {
       if (onBlur) onBlur();
@@ -125,6 +132,9 @@ const DiaryTextEditor: React.FC<DiaryTextEditorProps> = ({
                       editor.chain().focus().unsetHighlight().run();
                     } else {
                       editor.chain().focus().setHighlight({ color: color.value }).run();
+                    }
+                    if (onMenuStateChange) {
+                      setTimeout(() => onMenuStateChange(false), 150);
                     }
                   }}
                   className={`diary-color-btn w-5 h-5 rounded-full border-2 transition-transform cursor-pointer flex-shrink-0 ${

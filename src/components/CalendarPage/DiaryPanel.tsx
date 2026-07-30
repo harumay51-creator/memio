@@ -317,12 +317,25 @@ const MemoItem = ({ memo, index, dateSeed, isY2K, isAurora, deleteMemo, updateMe
   const [isTagPickerOpen, setIsTagPickerOpen] = useState(false);
   const isDefault = !isY2K && !isAurora;
   const editRef = useRef<HTMLDivElement>(null);
+  
+  const [isColorPickerActive, setIsColorPickerActive] = useState(false);
+  const colorPickerTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleMenuStateChange = (isOpen: boolean) => {
+    if (colorPickerTimerRef.current) clearTimeout(colorPickerTimerRef.current);
+    if (isOpen) {
+      setIsColorPickerActive(true);
+    } else {
+      colorPickerTimerRef.current = setTimeout(() => {
+        setIsColorPickerActive(false);
+      }, 200);
+    }
+  };
 
   useEffect(() => {
     if (!isEditing) return;
     const handleClickOutside = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-      if (target.closest('.diary-color-btn') || target.closest('.diary-bubble-menu') || target.closest('[data-tippy-root]')) return;
+      if (isColorPickerActive) return;
       
       if (editRef.current && !editRef.current.contains(e.target as Node)) {
         updateMemo(memo.id, localText, localTags);
@@ -331,7 +344,7 @@ const MemoItem = ({ memo, index, dateSeed, isY2K, isAurora, deleteMemo, updateMe
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isEditing, localText, localTags, memo.id, updateMemo]);
+  }, [isEditing, localText, localTags, memo.id, updateMemo, isColorPickerActive]);
 
   if (isEditing) {
     return (
@@ -387,6 +400,7 @@ const MemoItem = ({ memo, index, dateSeed, isY2K, isAurora, deleteMemo, updateMe
             placeholder="기록을 남겨보세요..."
             autoFocus
             className={`bg-transparent outline-none leading-relaxed transition-all font-diary ${isY2K ? 'text-inherit' : 'text-inherit'}`}
+            onMenuStateChange={handleMenuStateChange}
           />
         </div>
 
