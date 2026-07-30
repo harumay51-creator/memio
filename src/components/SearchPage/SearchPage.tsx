@@ -34,7 +34,7 @@ const SearchPage: React.FC = () => {
     const trimmed = stripped.trim()
     if (!trimmed) return '새로운 항목'
     const firstLine = trimmed.split('\n')[0]
-    return firstLine.length > 50 ? firstLine.slice(0, 50) + '...' : firstLine
+    return firstLine.length > 30 ? firstLine.slice(0, 30) + '...' : firstLine
   }
 
   const getPreview = (text: string, query: string) => {

@@ -64,7 +64,7 @@ const NotesPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId })
     if (!trimmed) return '새로운 메모'
     const firstLine = trimmed.split('\n')[0]
     const stripped = stripHtml(firstLine).trim()
-    return stripped.length > 50 ? stripped.substring(0, 50) + '...' : (stripped || '새로운 메모')
+    return stripped.length > 30 ? stripped.substring(0, 30) + '...' : (stripped || '새로운 메모')
   }
 
   const stripHtml = (html: string) => html.replace(/<[^>]*>?/gm, '')
