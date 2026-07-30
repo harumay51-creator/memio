@@ -112,31 +112,30 @@ const DiaryTextEditor: React.FC<DiaryTextEditorProps> = ({
       }
     }}>
       {editor && (
-        <BubbleMenu 
-          editor={editor} 
-          className="flex items-center gap-1.5 p-1.5 bg-white/90 backdrop-blur shadow-[0_4px_16px_rgba(0,0,0,0.12)] rounded-full border border-[#E5E5EA]"
-        >
-          {HIGHLIGHT_COLORS.map(color => {
-            const isActive = editor.isActive('highlight', { color: color.value });
-            return (
-              <button
-                key={color.value}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (isActive) {
-                    editor.chain().focus().unsetHighlight().run();
-                  } else {
-                    editor.chain().focus().setHighlight({ color: color.value }).run();
-                  }
-                }}
-                className={`w-5 h-5 rounded-full border-2 transition-transform cursor-pointer flex-shrink-0 ${
-                  isActive ? 'border-[#8B7CF8] scale-110 shadow-sm' : 'border-transparent hover:scale-110'
-                }`}
-                style={{ backgroundColor: color.value }}
-                title="형광펜"
-              />
-            );
-          })}
+        <BubbleMenu editor={editor}>
+          <div className="diary-bubble-menu flex items-center gap-1.5 p-1.5 bg-white/90 backdrop-blur shadow-[0_4px_16px_rgba(0,0,0,0.12)] rounded-full border border-[#E5E5EA]">
+            {HIGHLIGHT_COLORS.map(color => {
+              const isActive = editor.isActive('highlight', { color: color.value });
+              return (
+                <button
+                  key={color.value}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (isActive) {
+                      editor.chain().focus().unsetHighlight().run();
+                    } else {
+                      editor.chain().focus().setHighlight({ color: color.value }).run();
+                    }
+                  }}
+                  className={`w-5 h-5 rounded-full border-2 transition-transform cursor-pointer flex-shrink-0 ${
+                    isActive ? 'border-[#8B7CF8] scale-110 shadow-sm' : 'border-transparent hover:scale-110'
+                  }`}
+                  style={{ backgroundColor: color.value }}
+                  title="형광펜"
+                />
+              );
+            })}
+          </div>
         </BubbleMenu>
       )}
       <EditorContent editor={editor} className="h-full" />

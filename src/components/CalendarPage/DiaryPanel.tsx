@@ -322,7 +322,7 @@ const MemoItem = ({ memo, index, dateSeed, isY2K, isAurora, deleteMemo, updateMe
     if (!isEditing) return;
     const handleClickOutside = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
-      if (target.closest('[data-tippy-root]')) return;
+      if (target.closest('.diary-bubble-menu') || target.closest('[data-tippy-root]')) return;
       
       if (editRef.current && !editRef.current.contains(e.target as Node)) {
         updateMemo(memo.id, localText, localTags);

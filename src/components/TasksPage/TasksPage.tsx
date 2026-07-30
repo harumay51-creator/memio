@@ -3,7 +3,7 @@ import { useAppStore } from '../../store/AppStore'
 import { Trash2 } from 'lucide-react'
 import RichTextEditor from '../common/RichTextEditor'
 import { HighlightText } from '../common/HighlightText'
-import { isSearchMatch } from '../../utils/textUtils'
+import { isSearchMatch, decodeHtmlEntities } from '../../utils/textUtils'
 import type { Task } from '../../types'
 import { Virtuoso } from 'react-virtuoso'
 import { SortableItem } from '../common/SortableItem'
@@ -381,7 +381,7 @@ const TaskListItem: React.FC<TaskListItemProps> = ({ task, isSelected, onSelect,
           <p className="text-xs text-yuri-400 truncate mt-1.5 line-clamp-1">
             <HighlightText 
               text={(() => {
-                const stripped = task.note.replace(/<[^>]*>?/gm, '').replace(/\n/g, ' ')
+                const stripped = decodeHtmlEntities(task.note.replace(/<[^>]*>?/gm, '').replace(/\n/g, ' '))
                 
                 const query = searchQuery.trim().toLowerCase()
                 if (!query) {
