@@ -92,6 +92,9 @@ const NotesPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId })
             placeholder="메모 검색..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') setSearchQuery('')
+            }}
             className="w-full bg-yuri-50 border border-yuri-200 rounded-lg px-3 py-1.5 text-sm outline-none focus:border-accent transition-colors"
           />
           <div className="border-t border-yuri-100 my-1" />

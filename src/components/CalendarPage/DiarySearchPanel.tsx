@@ -89,6 +89,9 @@ const DiarySearchPanel: React.FC<DiarySearchPanelProps> = ({ onResultClick, onCl
             placeholder="다이어리 내용 검색..."
             value={query}
             onChange={e => setQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') setQuery('')
+            }}
             className={`w-full pl-10 pr-4 py-2 text-sm rounded-xl outline-none transition-all ${isAurora ? 'glass-card-refined text-[#1C1C1E] placeholder:text-[#717A8C]' : 'bg-white border border-[#E5E5EA] focus:border-[#8B7CF8] text-[#1C1C1E] placeholder:text-[#A0AABF]'}`}
           />
           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[16px]">🔍</span>

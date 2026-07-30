@@ -145,6 +145,9 @@ const SearchPage: React.FC = () => {
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') setQuery('')
+            }}
             placeholder="기록 검색 (키워드 입력)"
             className="w-full pl-11 pr-4 py-2.5 rounded-xl border border-yuri-200 bg-white outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-all text-sm font-medium"
           />
