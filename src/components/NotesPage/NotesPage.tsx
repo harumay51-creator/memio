@@ -3,6 +3,7 @@ import { isSearchMatch, getSearchPreview, decodeHtmlEntities } from '../../utils
 import { useAppStore } from '../../store/AppStore'
 import RichTextEditor from '../common/RichTextEditor'
 import { HighlightText } from '../common/HighlightText'
+import { DebouncedInput } from '../common/DebouncedInput'
 import { Virtuoso } from 'react-virtuoso'
 
 const NotesPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId }) => {
@@ -209,13 +210,13 @@ const NotesPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId })
                 </div>
               ) : (
                 <>
-                  <input spellCheck={false}
+                  <DebouncedInput spellCheck={false}
                     type="text"
                     value={(selectedNote.hasContentDoc ? (loadedContents[selectedNote.id] || selectedNote.text) : selectedNote.text).split('\n')[0] || ''}
-                    onChange={(e) => {
+                    onChangeValue={(val) => {
                       const fullText = selectedNote.hasContentDoc ? (loadedContents[selectedNote.id] || selectedNote.text) : selectedNote.text
                       const lines = fullText.split('\n')
-                      lines[0] = e.target.value
+                      lines[0] = val
                       const newText = lines.join('\n')
                       if (selectedNote.hasContentDoc) {
                         setLoadedContents(prev => ({ ...prev, [selectedNote.id]: newText }))

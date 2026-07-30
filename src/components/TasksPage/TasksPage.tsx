@@ -3,6 +3,7 @@ import { useAppStore } from '../../store/AppStore'
 import { Trash2 } from 'lucide-react'
 import RichTextEditor from '../common/RichTextEditor'
 import { HighlightText } from '../common/HighlightText'
+import { DebouncedInput } from '../common/DebouncedInput'
 import { isSearchMatch, decodeHtmlEntities } from '../../utils/textUtils'
 import type { Task } from '../../types'
 import { Virtuoso } from 'react-virtuoso'
@@ -272,10 +273,10 @@ const TasksPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId })
                   ✓
                 </button>
                 <div className="flex flex-col flex-1 min-w-0">
-                  <input spellCheck={false}
+                  <DebouncedInput spellCheck={false}
                     type="text"
                     value={selectedTask.text}
-                    onChange={(e) => updateTaskText(selectedTask.id, e.target.value)}
+                    onChangeValue={(val) => updateTaskText(selectedTask.id, val)}
                     className={`text-base font-bold truncate w-full bg-transparent outline-none focus:border-b focus:border-yuri-300 pb-0.5 placeholder:text-yuri-300 ${selectedTask.done ? 'text-yuri-400 line-through' : 'text-yuri-900'}`}
                     placeholder="업무 제목 입력"
                   />

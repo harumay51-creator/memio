@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect, useRef } from 'react'
 import { useAppStore } from '../../store/AppStore'
 import RichTextEditor from '../common/RichTextEditor'
 import { HighlightText } from '../common/HighlightText'
+import { DebouncedInput } from '../common/DebouncedInput'
 import { isSearchMatch, getSearchPreview, decodeHtmlEntities } from '../../utils/textUtils'
 
 type SearchResultItem = {
@@ -260,10 +261,10 @@ const SearchPage: React.FC = () => {
                     <div className="flex flex-col flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         <span className="text-[10px] font-bold px-1.5 py-0.5 rounded tracking-wider bg-yuri-100 text-yuri-700 shrink-0">업무</span>
-                        <input spellCheck={false}
+                        <DebouncedInput spellCheck={false}
                           type="text"
                           value={selectedItem.text}
-                          onChange={(e) => updateTaskText(selectedItem.id, e.target.value)}
+                          onChangeValue={(val) => updateTaskText(selectedItem.id, val)}
                           className={`text-base font-bold truncate w-full bg-transparent outline-none focus:border-b focus:border-yuri-300 pb-0.5 placeholder:text-yuri-300 ${selectedItem.done ? 'text-yuri-400 line-through' : 'text-yuri-900'}`}
                           placeholder="업무 제목 입력"
                         />
@@ -305,10 +306,10 @@ const SearchPage: React.FC = () => {
                         })}
                       </span>
                     </div>
-                    <input spellCheck={false}
+                    <DebouncedInput spellCheck={false}
                       type="text"
                       value={selectedItem.text}
-                      onChange={(e) => updateEvent(selectedItem.id, { text: e.target.value })}
+                      onChangeValue={(val) => updateEvent(selectedItem.id, { text: val })}
                       className="text-xl font-bold leading-snug text-yuri-900 bg-transparent outline-none focus:border-b focus:border-yuri-300 w-full"
                       placeholder="일정 제목 입력"
                     />
