@@ -4,10 +4,11 @@ import { auth } from '../../config/firebase'
 import { EmailAuthProvider, reauthenticateWithCredential, updatePassword } from 'firebase/auth'
 import TrashSection from './TrashSection'
 import HolidaySection from './HolidaySection'
+import LoginHistorySection from './LoginHistorySection'
 import { useDiaryStore } from '../../store/DiaryStore'
 import { CATEGORY_COLORS, DEFAULT_CATEGORY_COLOR, getCategoryColor } from '../../utils/parser'
 
-type TabType = 'ledger' | 'security' | 'anniversaries' | 'monthly' | 'holidays' | 'trash' | 'usage' | 'diary'
+type TabType = 'ledger' | 'security' | 'anniversaries' | 'monthly' | 'holidays' | 'trash' | 'usage' | 'diary' | 'loginHistory'
 
 const SettingsPage: React.FC = () => {
   const { 
@@ -286,6 +287,14 @@ const SettingsPage: React.FC = () => {
             }`}
           >
             휴지통
+          </button>
+          <button 
+            onClick={() => setActiveTab('loginHistory')}
+            className={`w-full text-left px-4 py-3 rounded-lg font-bold text-sm transition-colors ${
+              activeTab === 'loginHistory' ? 'bg-yuri-100 text-yuri-900' : 'text-yuri-600 hover:bg-yuri-50'
+            }`}
+          >
+            접속 기록
           </button>
         </div>
       </aside>
@@ -874,6 +883,10 @@ const SettingsPage: React.FC = () => {
 
             {activeTab === 'trash' && (
               <TrashSection />
+            )}
+
+            {activeTab === 'loginHistory' && (
+              <LoginHistorySection />
             )}
           </div>
         </div>

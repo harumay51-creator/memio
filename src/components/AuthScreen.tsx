@@ -2,6 +2,30 @@ import React, { useState } from 'react'
 import { auth } from '../config/firebase'
 import { signInWithEmailAndPassword, setPersistence, browserSessionPersistence, sendPasswordResetEmail } from 'firebase/auth'
 
+function getDeviceBrowserInfo(): string {
+  const ua = navigator.userAgent;
+  let browser = "알 수 없는 브라우저";
+  if (ua.includes("Firefox")) browser = "Firefox";
+  else if (ua.includes("SamsungBrowser")) browser = "Samsung Internet";
+  else if (ua.includes("Opera") || ua.includes("OPR")) browser = "Opera";
+  else if (ua.includes("Trident")) browser = "Internet Explorer";
+  else if (ua.includes("Edge") || ua.includes("Edg")) browser = "Edge";
+  else if (ua.includes("Chrome")) browser = "Chrome";
+  else if (ua.includes("Safari")) browser = "Safari";
+
+  let os = "알 수 없는 기기";
+  if (ua.includes("Win")) os = "Windows";
+  else if (ua.includes("Mac")) os = "Mac";
+  else if (ua.includes("X11")) os = "UNIX";
+  else if (ua.includes("Linux")) os = "Linux";
+  if (ua.includes("Android")) os = "Android";
+  if (ua.includes("like Mac")) os = "iOS";
+  if (ua.includes("iPhone")) os = "iPhone";
+  if (ua.includes("iPad")) os = "iPad";
+
+  return `${os}, ${browser}`;
+}
+
 const AuthScreen: React.FC = () => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -39,7 +63,19 @@ const AuthScreen: React.FC = () => {
 
     try {
       await setPersistence(auth, browserSessionPersistence)
-      await signInWithEmailAndPassword(auth, email, password)
+      const userCredential = await signInWithEmailAndPassword(auth, email, password)
+      
+      const deviceInfo = getDeviceBrowserInfo()
+      try {
+        const { collection, addDoc } = await import('firebase/firestore')
+        const { db } = await import('../config/firebase')
+        await addDoc(collection(db, 'users', userCredential.user.uid, 'loginHistory'), {
+          timestamp: new Date().toISOString(),
+          deviceInfo
+        })
+      } catch (e) {
+        console.error('Failed to log login history', e)
+      }
     } catch (err: any) {
       console.error(err)
       if (err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found') {
