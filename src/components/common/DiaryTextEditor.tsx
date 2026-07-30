@@ -127,7 +127,7 @@ const DiaryTextEditor: React.FC<DiaryTextEditorProps> = ({
                       editor.chain().focus().setHighlight({ color: color.value }).run();
                     }
                   }}
-                  className={`w-5 h-5 rounded-full border-2 transition-transform cursor-pointer flex-shrink-0 ${
+                  className={`diary-color-btn w-5 h-5 rounded-full border-2 transition-transform cursor-pointer flex-shrink-0 ${
                     isActive ? 'border-[#8B7CF8] scale-110 shadow-sm' : 'border-transparent hover:scale-110'
                   }`}
                   style={{ backgroundColor: color.value }}
