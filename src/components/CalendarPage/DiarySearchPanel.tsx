@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react'
 import { useDiaryStore } from '../../store/DiaryStore'
+import { HighlightText } from '../common/HighlightText'
 
 interface DiarySearchPanelProps {
   onResultClick: (dateKey: string) => void
@@ -53,14 +54,24 @@ const DiarySearchPanel: React.FC<DiarySearchPanelProps> = ({ onResultClick, onCl
     return matches.sort((a, b) => b.dateObj.getTime() - a.dateObj.getTime())
   }, [diaries, query])
 
-  const highlightText = (text: string, highlight: string) => {
-    if (!highlight.trim()) return text;
-    const parts = text.split(new RegExp(`(${highlight})`, 'gi'));
-    return parts.map((part, i) => 
-      part.toLowerCase() === highlight.toLowerCase() ? 
-        <span key={i} className="bg-[#8B7CF8]/20 text-[#8B7CF8] font-bold rounded px-0.5">{part}</span> : part
-    );
-  };
+  const getPreview = (text: string, query: string) => {
+    const stripped = text.replace(/<[^>]*>?/gm, '').trim()
+    const lowerStripped = stripped.toLowerCase()
+    const matchIndex = lowerStripped.indexOf(query)
+    
+    if (matchIndex === -1) {
+      return stripped.length > 40 ? stripped.substring(0, 40) + '...' : stripped
+    }
+    
+    const start = Math.max(0, matchIndex - 15)
+    const end = Math.min(stripped.length, matchIndex + query.length + 25)
+    
+    let result = stripped.substring(start, end)
+    if (start > 0) result = '...' + result
+    if (end < stripped.length) result = result + '...'
+    
+    return result || '새로운 기록'
+  }
 
   return (
     <aside className={`relative flex-[6] flex flex-col h-full border-l border-[#E5E5EA] shrink-0 overflow-hidden px-6 py-6 ${isAurora ? 'bg-transparent' : 'bg-[#F9FAFB]'}`}>
@@ -108,7 +119,7 @@ const DiarySearchPanel: React.FC<DiarySearchPanelProps> = ({ onResultClick, onCl
               <div className="flex flex-col gap-1.5 w-full">
                 {res.snippets.slice(0, 3).map((snippet, i) => (
                   <div key={i} className="text-xs text-[#717A8C] line-clamp-2 leading-relaxed">
-                    {highlightText(snippet, query)}
+                    <HighlightText text={getPreview(snippet, query)} highlight={query} />
                   </div>
                 ))}
                 {res.snippets.length > 3 && (

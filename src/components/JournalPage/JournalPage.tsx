@@ -75,19 +75,21 @@ const JournalPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId 
       return preview.length > 40 ? preview.substring(0, 40) + '...' : (preview || '새로운 기록')
     }
     
-    const lowerPreview = preview.toLowerCase()
-    const matchIndex = lowerPreview.indexOf(query)
+    // For preview, we search within the full text instead of just preview
+    const fullStripped = stripHtml(text).trim()
+    const lowerFull = fullStripped.toLowerCase()
+    const matchIndex = lowerFull.indexOf(query)
     
     if (matchIndex === -1) {
       return preview.length > 40 ? preview.substring(0, 40) + '...' : (preview || '새로운 기록')
     }
     
     const start = Math.max(0, matchIndex - 15)
-    const end = Math.min(preview.length, matchIndex + query.length + 25)
+    const end = Math.min(fullStripped.length, matchIndex + query.length + 25)
     
-    let result = preview.substring(start, end)
+    let result = fullStripped.substring(start, end)
     if (start > 0) result = '...' + result
-    if (end < preview.length) result = result + '...'
+    if (end < fullStripped.length) result = result + '...'
     
     return result || '새로운 기록'
   }
@@ -98,9 +100,9 @@ const JournalPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId 
     let result = journals
     if (searchQuery.trim()) {
       const lowerQ = searchQuery.toLowerCase()
-      result = journals.filter(n => {
-        const textToSearch = loadedContents[n.id] || n.text || n.textPreview || ''
-        return stripHtml(textToSearch).toLowerCase().includes(lowerQ)
+      result = result.filter(n => {
+        const target = (n.searchText || n.text || n.textPreview || '').toLowerCase()
+        return target.includes(lowerQ)
       })
     }
     return [...result].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
@@ -230,7 +232,7 @@ const JournalPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId 
             </header>
             
             <div className="flex-1 overflow-hidden flex flex-col px-8 pb-8 gap-4 mt-2">
-              {isContentLoading || (selectedNote.hasContentDoc && loadedContents[selectedNote.id] === undefined) ? (
+              {(isContentLoading || (selectedNote.hasContentDoc && loadedContents[selectedNote.id] === undefined && !selectedNote.isFullyLoaded)) ? (
                 <div className="flex-1 flex items-center justify-center">
                   <div className="w-8 h-8 border-4 border-yuri-200 border-t-accent rounded-full animate-spin"></div>
                 </div>

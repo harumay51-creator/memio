@@ -73,9 +73,9 @@ const NotesPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId })
     let result = notes
     if (searchQuery.trim()) {
       const lowerQ = searchQuery.toLowerCase()
-      result = notes.filter(n => {
-        const textToSearch = loadedContents[n.id] || n.text || n.textPreview || ''
-        return stripHtml(textToSearch).toLowerCase().includes(lowerQ)
+      result = result.filter(n => {
+        const target = (n.searchText || n.text || n.textPreview || '').toLowerCase()
+        return target.includes(lowerQ)
       })
     }
     return [...result].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
@@ -157,21 +157,22 @@ const NotesPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId })
                               return stripped.length > 40 ? stripped.substring(0, 40) + '...' : stripped
                             }
                             
-                            const lowerPreview = stripped.toLowerCase()
-                            const matchIndex = lowerPreview.indexOf(query)
+                            const fullStripped = stripHtml(full).trim()
+                            const lowerFull = fullStripped.toLowerCase()
+                            const matchIndex = lowerFull.indexOf(query)
                             
                             if (matchIndex === -1) {
                               return stripped.length > 40 ? stripped.substring(0, 40) + '...' : stripped
                             }
                             
                             const start = Math.max(0, matchIndex - 15)
-                            const end = Math.min(stripped.length, matchIndex + query.length + 25)
+                            const end = Math.min(fullStripped.length, matchIndex + query.length + 25)
                             
-                            let result = stripped.substring(start, end)
-                            if (start > 0) result = '...' + result
-                            if (end < stripped.length) result = result + '...'
+                            let resultStr = fullStripped.substring(start, end)
+                            if (start > 0) resultStr = '...' + resultStr
+                            if (end < fullStripped.length) resultStr = resultStr + '...'
                             
-                            return result
+                            return resultStr
                           })()} 
                           highlight={searchQuery} 
                         />
@@ -221,7 +222,7 @@ const NotesPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId })
             </header>
             
             <div className="flex-1 overflow-hidden flex flex-col px-8 pb-8 gap-4 mt-2">
-              {isContentLoading || (selectedNote.hasContentDoc && loadedContents[selectedNote.id] === undefined) ? (
+              {(isContentLoading || (selectedNote.hasContentDoc && loadedContents[selectedNote.id] === undefined && !selectedNote.isFullyLoaded)) ? (
                 <div className="flex-1 flex items-center justify-center">
                   <div className="w-8 h-8 border-4 border-yuri-200 border-t-accent rounded-full animate-spin"></div>
                 </div>

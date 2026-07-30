@@ -53,7 +53,8 @@ const TasksPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId })
     if (t.done) return false
     if (!searchQuery.trim()) return true
     const lowerQ = searchQuery.toLowerCase()
-    return t.text.toLowerCase().includes(lowerQ) || stripHtml(t.note || '').toLowerCase().includes(lowerQ)
+    const target = (t.searchText || t.text + ' ' + stripHtml(t.note || '')).toLowerCase()
+    return target.includes(lowerQ)
   }).sort((a, b) => {
     const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0
     const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0
@@ -64,7 +65,8 @@ const TasksPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId })
     if (!t.done) return false
     if (!searchQuery.trim()) return true
     const lowerQ = searchQuery.toLowerCase()
-    return t.text.toLowerCase().includes(lowerQ) || stripHtml(t.note || '').toLowerCase().includes(lowerQ)
+    const target = (t.searchText || t.text + ' ' + stripHtml(t.note || '')).toLowerCase()
+    return target.includes(lowerQ)
   }).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()), [tasks, searchQuery])
 
   const selectedTask = useMemo(() => tasks.find(t => t.id === selTaskId) || null, [tasks, selTaskId])

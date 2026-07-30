@@ -1,6 +1,8 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react'
 import { useAppStore } from '../../store/AppStore'
+import { useJournalStore } from '../../store/JournalStore'
 import RichTextEditor from '../common/RichTextEditor'
+import { HighlightText } from '../common/HighlightText'
 
 type SearchResultItem = {
   id: string
@@ -15,6 +17,7 @@ const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토']
 
 const SearchPage: React.FC = () => {
   const { tasks, events, notes, updateNote, updateTaskText, updateTaskNote, toggleTask, updateEvent, deleteNote, deleteTask, deleteEvent } = useAppStore()
+  const { journals } = useJournalStore()
   const [query, setQuery] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
   
@@ -29,9 +32,32 @@ const SearchPage: React.FC = () => {
   const getTitle = (text: string) => {
     const stripped = text.replace(/<[^>]*>?/gm, '')
     const trimmed = stripped.trim()
-    if (!trimmed) return '새로운 기록'
+    if (!trimmed) return '새로운 항목'
     const firstLine = trimmed.split('\n')[0]
-    return firstLine.length > 30 ? firstLine.slice(0, 30) + '...' : firstLine
+    return firstLine.length > 50 ? firstLine.slice(0, 50) + '...' : firstLine
+  }
+
+  const getPreview = (text: string, query: string) => {
+    const stripped = text.replace(/<[^>]*>?/gm, '').trim()
+    if (!query) {
+      return stripped.length > 40 ? stripped.substring(0, 40) + '...' : stripped
+    }
+    
+    const lowerStripped = stripped.toLowerCase()
+    const matchIndex = lowerStripped.indexOf(query)
+    
+    if (matchIndex === -1) {
+      return stripped.length > 40 ? stripped.substring(0, 40) + '...' : stripped
+    }
+    
+    const start = Math.max(0, matchIndex - 15)
+    const end = Math.min(stripped.length, matchIndex + query.length + 25)
+    
+    let result = stripped.substring(start, end)
+    if (start > 0) result = '...' + result
+    if (end < stripped.length) result = result + '...'
+    
+    return result || '새로운 항목'
   }
 
   const results = useMemo(() => {
@@ -42,7 +68,8 @@ const SearchPage: React.FC = () => {
 
     // Tasks
     tasks.forEach(t => {
-      if (t.text.toLowerCase().includes(q) || (t.note && t.note.toLowerCase().includes(q))) {
+      const target = (t.searchText || t.text + ' ' + (t.note ? t.note.replace(/<[^>]*>?/gm, '') : '')).toLowerCase()
+      if (target.includes(q)) {
         matched.push({ id: t.id, type: 'task', text: t.text, note: t.note, date: new Date(t.createdAt), done: t.done })
       }
     })
@@ -56,8 +83,17 @@ const SearchPage: React.FC = () => {
 
     // Notes
     notes.forEach(n => {
-      if (n.text.toLowerCase().includes(q)) {
-        matched.push({ id: n.id, type: 'memo', text: n.text, date: new Date(n.createdAt) })
+      const target = (n.searchText || n.text || n.textPreview || '').toLowerCase()
+      if (target.includes(q)) {
+        matched.push({ id: n.id, type: 'memo', text: n.text || n.textPreview || '', date: new Date(n.createdAt) })
+      }
+    })
+
+    // Journals
+    journals.forEach(j => {
+      const target = (j.searchText || j.text || j.textPreview || '').toLowerCase()
+      if (target.includes(q)) {
+        matched.push({ id: j.id, type: 'memo', text: j.text || j.textPreview || '', date: new Date(j.createdAt) }) // mapped as memo for UI reuse
       }
     })
 
@@ -180,13 +216,17 @@ const SearchPage: React.FC = () => {
                           {/* Content Preview */}
                           <div className="flex-1 min-w-0">
                             <p className={`text-sm font-semibold truncate ${item.done ? 'text-yuri-400 line-through' : isSelected ? 'text-yuri-900' : 'text-yuri-800'}`}>
-                              {item.type === 'memo' ? getTitle(item.text) : item.text}
+                              <HighlightText text={item.type === 'memo' ? getTitle(item.text) : item.text} highlight={query} />
                             </p>
                             {item.type === 'memo' && (
-                              <p className="text-xs text-yuri-400 mt-1 line-clamp-1">{item.text.replace(/<[^>]*>?/gm, '').replace(/\n/g, ' ').replace(getTitle(item.text), '').trim() || '내용 없음'}</p>
+                              <p className="text-xs text-yuri-400 mt-1 line-clamp-1">
+                                <HighlightText text={getPreview(item.text, query)} highlight={query} />
+                              </p>
                             )}
                             {item.type === 'task' && item.note && (
-                              <p className="text-xs text-yuri-400 mt-1 line-clamp-1">{item.note.replace(/<[^>]*>?/gm, '').replace(/\n/g, ' ')}</p>
+                              <p className="text-xs text-yuri-400 mt-1 line-clamp-1">
+                                <HighlightText text={getPreview(item.note, query)} highlight={query} />
+                              </p>
                             )}
                           </div>
                         </div>

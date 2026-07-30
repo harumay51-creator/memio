@@ -534,7 +534,9 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
 
   const addTask = useCallback(async (text: string) => {
     const now = new Date().toISOString()
-    const newItem: Task = { id: genId(), text, done: false, createdAt: now, updatedAt: now, order: tasks.length }
+    const { extractSearchText } = await import('../utils/textUtils')
+    const minOrder = tasks.length > 0 ? Math.min(...tasks.map(t => t.order ?? Date.now())) : Date.now()
+    const newItem: Task = { id: genId(), text, searchText: extractSearchText(text), done: false, createdAt: now, updatedAt: now, order: minOrder - 1 }
     try {
       await setDoc(doc(db, 'users', uid, 'tasks', newItem.id), newItem)
       setTasks(prev => [newItem, ...prev])
@@ -543,7 +545,7 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
       console.error(err)
       showToast('저장에 실패했습니다.', 'error')
     }
-  }, [tasks.length, uid, showToast])
+  }, [tasks, uid, showToast])
 
   const toggleTask = useCallback(async (id: string) => {
     const updatedAt = new Date().toISOString()
@@ -566,20 +568,28 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
     }
   }, [uid, showToast])
 
-  const updateTaskNote = useCallback((id: string, note: string) => {
+  const updateTaskNote = useCallback(async (id: string, note: string) => {
     const updatedAt = new Date().toISOString()
+    const { extractSearchText } = await import('../utils/textUtils')
     setTasks(prev => {
-      const next = prev.map(t => t.id === id ? { ...t, note, updatedAt } : t)
-      updateDoc(doc(db, 'users', uid, 'tasks', id), { note, updatedAt }).catch(console.error)
+      const task = prev.find(t => t.id === id)
+      if (!task) return prev
+      const searchText = extractSearchText(task.text + ' ' + note)
+      const next = prev.map(t => t.id === id ? { ...t, note, searchText, updatedAt } : t)
+      updateDoc(doc(db, 'users', uid, 'tasks', id), { note, searchText, updatedAt }).catch(console.error)
       return next
     })
   }, [uid])
 
-  const updateTaskText = useCallback((id: string, text: string) => {
+  const updateTaskText = useCallback(async (id: string, text: string) => {
     const updatedAt = new Date().toISOString()
+    const { extractSearchText } = await import('../utils/textUtils')
     setTasks(prev => {
-      const next = prev.map(t => t.id === id ? { ...t, text, updatedAt } : t)
-      updateDoc(doc(db, 'users', uid, 'tasks', id), { text, updatedAt }).catch(console.error)
+      const task = prev.find(t => t.id === id)
+      if (!task) return prev
+      const searchText = extractSearchText(text + ' ' + (task.note || ''))
+      const next = prev.map(t => t.id === id ? { ...t, text, searchText, updatedAt } : t)
+      updateDoc(doc(db, 'users', uid, 'tasks', id), { text, searchText, updatedAt }).catch(console.error)
       return next
     })
   }, [uid])
@@ -697,11 +707,12 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
 
   const addNote = useCallback(async (text: string) => {
     const now = new Date().toISOString()
-    const { extractPreview } = await import('../utils/textUtils')
+    const { extractPreview, extractSearchText } = await import('../utils/textUtils')
     const textPreview = extractPreview(text)
+    const searchText = extractSearchText(text)
     
     // Note list item (lightweight)
-    const newItem: Note = { id: genId(), text: '', textPreview, hasContentDoc: true, createdAt: now, updatedAt: now }
+    const newItem: Note = { id: genId(), text: '', textPreview, searchText, hasContentDoc: true, createdAt: now, updatedAt: now }
     try {
       await Promise.all([
         setDoc(doc(db, 'users', uid, 'notes', newItem.id), newItem),
@@ -710,7 +721,7 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
       // In local state, we can keep the full text so it feels instantaneous if viewed right away, 
       // but to be safe and consistent with the list, we can just store the full text in state too!
       // Wait, if list renders from AppStore, and detailed view reads from AppStore if it exists, it's better to store text locally.
-      setNotes(prev => [{...newItem, text}, ...prev])
+      setNotes(prev => [{...newItem, text, isFullyLoaded: true}, ...prev])
       showToast('메모가 추가되었습니다.', 'success')
       return newItem.id
     } catch (err) {
@@ -722,18 +733,19 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
 
   const updateNote = useCallback(async (id: string, text: string) => {
     const updatedAt = new Date().toISOString()
-    const { extractPreview } = await import('../utils/textUtils')
+    const { extractPreview, extractSearchText } = await import('../utils/textUtils')
     const textPreview = extractPreview(text)
+    const searchText = extractSearchText(text)
     
     setNotes(prev => {
       const oldNote = prev.find(n => n.id === id)
       if (oldNote) {
         cleanupRemovedImages(oldNote.text, text).catch(console.error)
       }
-      return prev.map(n => n.id === id ? { ...n, text, textPreview, hasContentDoc: true, updatedAt } : n)
+      return prev.map(n => n.id === id ? { ...n, text, textPreview, searchText, hasContentDoc: true, updatedAt, isFullyLoaded: true } : n)
     })
     
-    updateDoc(doc(db, 'users', uid, 'notes', id), { textPreview, hasContentDoc: true, updatedAt }).catch(console.error)
+    updateDoc(doc(db, 'users', uid, 'notes', id), { textPreview, searchText, hasContentDoc: true, updatedAt }).catch(console.error)
     setDoc(doc(db, 'users', uid, 'note_contents', id), { text }, { merge: true }).catch(console.error)
   }, [uid])
 

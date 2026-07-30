@@ -67,20 +67,22 @@ export const JournalStoreProvider: React.FC<{ uid: string, children: React.React
   const addJournal = async (text: string) => {
     const id = genId()
     const now = new Date().toISOString()
-    const { extractPreview } = await import('../utils/textUtils')
+    const { extractPreview, extractSearchText } = await import('../utils/textUtils')
     const textPreview = extractPreview(text)
+    const searchText = extractSearchText(text)
     
     const newEntry: Note = {
       id,
       text: '', // local store initially, but we can set to text for instant loading
       textPreview,
+      searchText,
       hasContentDoc: true,
       createdAt: now,
       updatedAt: now
     }
     
     // Set text locally so it feels fast
-    setJournals(prev => [...prev, { ...newEntry, text }])
+    setJournals(prev => [...prev, { ...newEntry, text, isFullyLoaded: true }])
     
     try {
       await Promise.all([
@@ -95,14 +97,15 @@ export const JournalStoreProvider: React.FC<{ uid: string, children: React.React
 
   const updateJournal = async (id: string, text: string) => {
     const updatedAt = new Date().toISOString()
-    const { extractPreview } = await import('../utils/textUtils')
+    const { extractPreview, extractSearchText } = await import('../utils/textUtils')
     const textPreview = extractPreview(text)
+    const searchText = extractSearchText(text)
 
-    setJournals(prev => prev.map(j => j.id === id ? { ...j, text, textPreview, hasContentDoc: true, updatedAt } : j))
+    setJournals(prev => prev.map(j => j.id === id ? { ...j, text, textPreview, searchText, hasContentDoc: true, updatedAt, isFullyLoaded: true } : j))
     
     try {
       await Promise.all([
-        setDoc(doc(db, `users/${uid}/journal_entries/${id}`), { textPreview, hasContentDoc: true, updatedAt }, { merge: true }),
+        setDoc(doc(db, `users/${uid}/journal_entries/${id}`), { textPreview, searchText, hasContentDoc: true, updatedAt }, { merge: true }),
         setDoc(doc(db, `users/${uid}/journal_contents/${id}`), { text }, { merge: true })
       ])
     } catch (e) {

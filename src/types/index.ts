@@ -23,10 +23,11 @@ export interface NavItem {
 export interface Task {
   id: string
   text: string
+  note?: string
+  searchText?: string // Pure text for searching
   done: boolean
-  note?: string      // detailed note content
-  createdAt: string  // ISO string
-  updatedAt?: string // ISO string
+  createdAt: string
+  updatedAt?: string
   order?: number     // sorting order
   isDeleted?: boolean
   deletedAt?: number
@@ -37,7 +38,9 @@ export interface Note {
   id: string
   text: string          // HTML or legacy text
   textPreview?: string  // Clean text preview for list view
+  searchText?: string   // Pure text for searching
   hasContentDoc?: boolean // If true, full text is stored in separate contents collection
+  isFullyLoaded?: boolean // Local flag: if true, 'text' is full and fully loaded locally
   createdAt: string
   updatedAt?: string
   isDeleted?: boolean
