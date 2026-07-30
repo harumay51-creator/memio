@@ -1,6 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react'
 import { useAppStore } from '../../store/AppStore'
-import { useJournalStore } from '../../store/JournalStore'
 import RichTextEditor from '../common/RichTextEditor'
 import { HighlightText } from '../common/HighlightText'
 
@@ -17,7 +16,6 @@ const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토']
 
 const SearchPage: React.FC = () => {
   const { tasks, events, notes, updateNote, updateTaskText, updateTaskNote, toggleTask, updateEvent, deleteNote, deleteTask, deleteEvent } = useAppStore()
-  const { journals } = useJournalStore()
   const [query, setQuery] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
   
@@ -86,14 +84,6 @@ const SearchPage: React.FC = () => {
       const target = (n.searchText || n.text || n.textPreview || '').toLowerCase()
       if (target.includes(q)) {
         matched.push({ id: n.id, type: 'memo', text: n.text || n.textPreview || '', date: new Date(n.createdAt) })
-      }
-    })
-
-    // Journals
-    journals.forEach(j => {
-      const target = (j.searchText || j.text || j.textPreview || '').toLowerCase()
-      if (target.includes(q)) {
-        matched.push({ id: j.id, type: 'memo', text: j.text || j.textPreview || '', date: new Date(j.createdAt) }) // mapped as memo for UI reuse
       }
     })
 

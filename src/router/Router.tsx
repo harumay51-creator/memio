@@ -28,11 +28,7 @@ const Router: React.FC<RouterProps> = ({ page, activeItemId }) => {
   switch (page) {
       // ── Implemented pages ─────────────────────────────────────────────
       case 'search':
-        return (
-          <JournalStoreProvider uid={auth.currentUser?.uid || ''}>
-            <SearchPage />
-          </JournalStoreProvider>
-        )
+        return <SearchPage />
 
       case 'calendar':
         return <CalendarPage />
