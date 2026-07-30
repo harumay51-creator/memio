@@ -1,7 +1,20 @@
+export function decodeHtmlEntities(text: string): string {
+  const map: Record<string, string> = {
+    '&amp;': '&',
+    '&lt;': '<',
+    '&gt;': '>',
+    '&quot;': '"',
+    '&#39;': "'",
+    '&nbsp;': ' '
+  }
+  return text.replace(/&(amp|lt|gt|quot|#39|nbsp);/g, (m) => map[m] || m)
+}
+
 export function extractPreview(html: string, maxLength: number = 200): string {
   if (!html) return ''
-  // Remove HTML tags
-  const text = html.replace(/<[^>]*>?/gm, '')
+  // Remove HTML tags and decode entities
+  let text = html.replace(/<[^>]*>?/gm, '')
+  text = decodeHtmlEntities(text)
   // Replace multiple spaces (but keep newlines) with single space
   const cleanText = text.replace(/[ \t]+/g, ' ').replace(/\n+/g, '\n').trim()
   
@@ -11,7 +24,8 @@ export function extractPreview(html: string, maxLength: number = 200): string {
 
 export function extractSearchText(html: string): string {
   if (!html) return ''
-  const text = html.replace(/<[^>]*>?/gm, '')
+  let text = html.replace(/<[^>]*>?/gm, '')
+  text = decodeHtmlEntities(text)
   // For search text, we can remove newlines completely
   return text.replace(/\s+/g, ' ').trim()
 }
@@ -30,13 +44,13 @@ export function isSearchMatch(text: string, query: string): boolean {
 export function getSearchPreview(fullText: string, query: string, fallbackText?: string): string {
   const tokens = getSearchTokens(query)
   const textForFallback = fallbackText !== undefined ? fallbackText : fullText
-  const strippedFallback = textForFallback.replace(/<[^>]*>?/gm, '').trim()
+  const strippedFallback = decodeHtmlEntities(textForFallback.replace(/<[^>]*>?/gm, '')).trim()
   
   if (tokens.length === 0) {
     return strippedFallback.length > 40 ? strippedFallback.substring(0, 40) + '...' : strippedFallback
   }
   
-  const strippedFull = fullText.replace(/<[^>]*>?/gm, '').trim()
+  const strippedFull = decodeHtmlEntities(fullText.replace(/<[^>]*>?/gm, '')).trim()
   const lowerFull = strippedFull.toLowerCase()
   const matchIndices = tokens.map(token => lowerFull.indexOf(token)).filter(index => index !== -1)
   

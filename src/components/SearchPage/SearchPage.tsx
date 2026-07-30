@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect, useRef } from 'react'
 import { useAppStore } from '../../store/AppStore'
 import RichTextEditor from '../common/RichTextEditor'
 import { HighlightText } from '../common/HighlightText'
-import { isSearchMatch, getSearchPreview } from '../../utils/textUtils'
+import { isSearchMatch, getSearchPreview, decodeHtmlEntities } from '../../utils/textUtils'
 
 type SearchResultItem = {
   id: string
@@ -29,7 +29,7 @@ const SearchPage: React.FC = () => {
   }, [])
 
   const getTitle = (text: string) => {
-    const stripped = text.replace(/<[^>]*>?/gm, '')
+    const stripped = decodeHtmlEntities(text.replace(/<[^>]*>?/gm, ''))
     const trimmed = stripped.trim()
     if (!trimmed) return '새로운 항목'
     const firstLine = trimmed.split('\n')[0]

@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react'
-import { isSearchMatch, getSearchPreview } from '../../utils/textUtils'
+import { isSearchMatch, getSearchPreview, decodeHtmlEntities } from '../../utils/textUtils'
 import { useAppStore } from '../../store/AppStore'
 import RichTextEditor from '../common/RichTextEditor'
 import { HighlightText } from '../common/HighlightText'
@@ -68,7 +68,7 @@ const NotesPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId })
     return stripped.length > 30 ? stripped.substring(0, 30) + '...' : (stripped || '새로운 메모')
   }
 
-  const stripHtml = (html: string) => html.replace(/<[^>]*>?/gm, '')
+  const stripHtml = (html: string) => decodeHtmlEntities(html.replace(/<[^>]*>?/gm, ''))
 
   const filteredNotes = useMemo(() => {
     let result = notes

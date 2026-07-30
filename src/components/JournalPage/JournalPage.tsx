@@ -4,7 +4,7 @@ import { useAppStore } from '../../store/AppStore'
 import RichTextEditor from '../common/RichTextEditor'
 import { HighlightText } from '../common/HighlightText'
 import { Lock } from 'lucide-react'
-import { isSearchMatch, getSearchPreview } from '../../utils/textUtils'
+import { isSearchMatch, getSearchPreview, decodeHtmlEntities } from '../../utils/textUtils'
 import PinScreen from './PinScreen'
 import { Virtuoso } from 'react-virtuoso'
 
@@ -73,7 +73,7 @@ const JournalPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId 
     return getSearchPreview(text, searchQuery, previewRaw) || '새로운 기록'
   }
 
-  const stripHtml = (html: string) => html.replace(/<[^>]*>?/gm, '')
+  const stripHtml = (html: string) => decodeHtmlEntities(html.replace(/<[^>]*>?/gm, ''))
 
   const filteredNotes = useMemo(() => {
     let result = journals
