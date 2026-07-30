@@ -120,7 +120,17 @@ const DiaryTextEditor: React.FC<DiaryTextEditorProps> = ({
     }}>
       {editor && (
         <BubbleMenu editor={editor}>
-          <div className="diary-bubble-menu flex items-center gap-1.5 p-1.5 bg-white/90 backdrop-blur shadow-[0_4px_16px_rgba(0,0,0,0.12)] rounded-full border border-[#E5E5EA]">
+          <div 
+            className="diary-bubble-menu flex items-center gap-1.5 p-1.5 bg-white/90 backdrop-blur shadow-[0_4px_16px_rgba(0,0,0,0.12)] rounded-full border border-[#E5E5EA]"
+            onMouseDown={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+            }}
+            onTouchStart={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+            }}
+          >
             {HIGHLIGHT_COLORS.map(color => {
               const isActive = editor.isActive('highlight', { color: color.value });
               return (
