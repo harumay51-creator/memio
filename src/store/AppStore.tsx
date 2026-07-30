@@ -283,7 +283,10 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
           return { active, trashed };
         };
 
-        const notesData = processItems(fetchedNotes, 'note', n => n.text.trim().split('\n')[0].slice(0, 30) || '새로운 메모');
+        const notesData = processItems(fetchedNotes, 'note', n => {
+          if (n.textPreview) return n.textPreview.slice(0, 30);
+          return (n.text || '').trim().split('\n')[0].slice(0, 30) || '새로운 메모';
+        });
         const tasksData = processItems(fetchedTasks, 'task', t => t.text);
         const ledgerData = processItems(fetchedLedger, 'ledger', l => {
           const dateStr = l.scheduledDate ? new Date(l.scheduledDate).toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' }) : '';
