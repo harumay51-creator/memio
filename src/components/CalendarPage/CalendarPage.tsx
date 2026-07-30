@@ -465,6 +465,7 @@ const CalendarPage: React.FC = () => {
                     setInlineText('')
                   }
                   setSelDay(date)
+                  setIsDiarySearchOpen(false)
                   if (!inlineDate || !sameDay(inlineDate, date)) {
                     setInlineDate(date)
                     setInlineText('')
@@ -494,6 +495,7 @@ const CalendarPage: React.FC = () => {
                   onClick={(e) => {
                     e.stopPropagation()
                     setSelDay(date)
+                    setIsDiarySearchOpen(false)
                   }}
                   className={`
                   w-7 h-7 rounded-full flex items-center justify-center text-[12px] font-medium self-start mb-1 shrink-0

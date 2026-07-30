@@ -105,9 +105,10 @@ const DiaryTextEditor: React.FC<DiaryTextEditorProps> = ({
   if (!editor) return null;
 
   return (
-    <div className="relative w-full h-full cursor-text" onClick={() => {
-      if (!editor.isFocused) {
-        editor.commands.focus('end');
+    <div className="relative w-full h-full cursor-text" onClick={(e) => {
+      const isEditor = (e.target as HTMLElement).closest('.ProseMirror');
+      if (!isEditor) {
+        editor.chain().focus('end').run();
       }
     }}>
       {editor && (

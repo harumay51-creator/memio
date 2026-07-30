@@ -390,9 +390,10 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ initialContent, onChang
       {/* Editor Content */}
       <div 
         className="flex-1 overflow-y-auto cursor-text rounded-lg" 
-        onClick={() => {
-          if (!editor.isFocused) {
-            editor.commands.focus();
+        onClick={(e) => {
+          const isEditor = (e.target as HTMLElement).closest('.ProseMirror');
+          if (!isEditor) {
+            editor.chain().focus('end').run();
           }
         }}
       >
