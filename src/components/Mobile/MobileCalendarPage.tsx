@@ -23,6 +23,10 @@ const MobileCalendarPage: React.FC = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const mergedHolidays = useMergedHolidays(currentDate.getFullYear())
 
+  useEffect(() => {
+    console.timeEnd('[MobileApp] Calendar UI Rendered')
+  }, [])
+
   const [newEventText, setNewEventText] = useState('')
   const [newEventColor, setNewEventColor] = useState(EVENT_COLORS[0])
   const [newEventTime, setNewEventTime] = useState('')

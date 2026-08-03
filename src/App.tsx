@@ -136,11 +136,15 @@ service cloud.firestore {
 }
 
 // ── Root app ──────────────────────────────────────────────────────────────────
+console.time('[App] 0. Script Load to App Render')
+
 export default function App() {
   const [user, setUser] = useState<User | null>(null)
   const [isAuthLoading, setIsAuthLoading] = useState(true)
 
   useEffect(() => {
+    console.timeEnd('[App] 0. Script Load to App Render')
+    console.time('[App] 1. Auth Initialization Time')
     let timerId: ReturnType<typeof setTimeout> | null = null;
     
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -162,9 +166,11 @@ export default function App() {
           sessionStorage.removeItem('yuri-login-time');
           sessionStorage.removeItem('yuri-private-unlocked');
           setUser(null);
+          console.timeEnd('[App] 1. Auth Initialization Time')
           setIsAuthLoading(false);
         } else {
           setUser(currentUser);
+          console.timeEnd('[App] 1. Auth Initialization Time')
           setIsAuthLoading(false);
           
           if (timerId) clearTimeout(timerId);
@@ -177,6 +183,7 @@ export default function App() {
       } else {
         if (timerId) clearTimeout(timerId);
         setUser(null);
+        console.timeEnd('[App] 1. Auth Initialization Time')
         setIsAuthLoading(false);
         sessionStorage.removeItem('yuri-login-time');
         sessionStorage.removeItem('yuri-private-unlocked');

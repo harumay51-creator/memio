@@ -259,6 +259,7 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
           
           console.timeEnd('[AppStore] 3. Essential 6 Collections Load Time')
           console.timeEnd('[AppStore] 1. Total Initial Load Time')
+          console.time('[MobileApp] Calendar UI Rendered')
           
           setIsLoading(false)
         }
