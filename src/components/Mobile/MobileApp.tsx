@@ -7,6 +7,8 @@ import MobileCashTab from './MobileCashTab'
 import MobileLedgerSearchTab from './MobileLedgerSearchTab'
 import MobileJournalPage from './MobileJournalPage'
 import MobileSettingsPage from './MobileSettingsPage'
+import { JournalStoreProvider } from '../../store/JournalStore'
+import { auth } from '../../config/firebase'
 
 interface MobileAppProps {
   activePage: PageId
@@ -213,7 +215,11 @@ const MobileApp: React.FC<MobileAppProps> = ({ activePage, onNavigate, onLogout 
         )
       }
       case 'journal':
-        return <MobileJournalPage />
+        return (
+          <JournalStoreProvider uid={auth.currentUser?.uid || ''}>
+            <MobileJournalPage />
+          </JournalStoreProvider>
+        )
       case 'settings':
         return <MobileSettingsPage onNavigate={onNavigate} onLogout={onLogout} />
       default:
