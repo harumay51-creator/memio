@@ -3,10 +3,11 @@ import type { FixedExpense, CategoryConfig } from '../../types'
 import { useAppStore } from '../../store/AppStore'
 import { classifyLedgerCategory, getCategoryColor } from '../../utils/parser'
 import PinScreen from '../JournalPage/PinScreen'
-import { Lock, X } from 'lucide-react'
+import { Lock, X, Search } from 'lucide-react'
 import MonthNavigationBar from '../common/MonthNavigationBar'
 import CardTab from './CardTab'
 import CashTab from './CashTab'
+import { LedgerSearchTab } from './LedgerSearchTab'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const MONTH_KO = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'] as const
@@ -103,6 +104,7 @@ function fmtAmt(n: number): string {
 // ── Component ─────────────────────────────────────────────────────────────────
 const LedgerPage: React.FC = () => {
   const { 
+    ledger, updateLedgerEntry, deleteLedgerEntry,
     fixedExpenses, addFixedExpense, updateFixedExpense, deleteFixedExpense,
     expenseCategories, isPrivateUnlocked, lockPrivate
   } = useAppStore()
@@ -112,6 +114,7 @@ const LedgerPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'cash' | 'card'>('cash')
   const [cashDate, setCashDate] = useState(() => new Date(today.getFullYear(), today.getMonth(), 1))
   const [cardDate, setCardDate] = useState(() => new Date(today.getFullYear(), today.getMonth(), 1))
+  const [searchQuery, setSearchQuery] = useState('')
 
   const viewDate = activeTab === 'cash' ? cashDate : cardDate
   const setViewDate = activeTab === 'cash' ? setCashDate : setCardDate
@@ -208,6 +211,19 @@ const LedgerPage: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-6 pb-2 relative z-10 w-full sm:w-auto">
+            <div className="relative hidden md:block">
+              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-yuri-300" />
+              <input
+                type="text"
+                placeholder="가계부 검색..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Escape') setSearchQuery('')
+                }}
+                className="pl-9 pr-4 py-1.5 bg-yuri-50 border border-yuri-100 rounded-full text-sm outline-none focus:bg-white focus:border-yuri-300 focus:ring-2 focus:ring-yuri-100 transition-all w-48"
+              />
+            </div>
             <MonthNavigationBar
               year={year}
               monthName={MONTH_KO[month]}
@@ -267,11 +283,46 @@ const LedgerPage: React.FC = () => {
 
       </header>
 
-      {/* ── Main Content Area ─────────────────────────────────────────────── */}
-      {activeTab === 'cash' ? (
-        <CashTab year={year} month={month} onOpenFixedExpense={() => setShowFeModal(true)} />
+      <div className="md:hidden px-6 py-3 border-b border-yuri-100 bg-white">
+        <div className="relative">
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-yuri-300" />
+          <input
+            type="text"
+            placeholder="가계부 검색..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') setSearchQuery('')
+            }}
+            className="pl-9 pr-4 py-2 bg-yuri-50 border border-yuri-100 rounded-full text-sm outline-none focus:bg-white focus:border-yuri-300 focus:ring-2 focus:ring-yuri-100 transition-all w-full"
+          />
+        </div>
+      </div>
+
+      {searchQuery.trim() ? (
+        <LedgerSearchTab 
+          searchQuery={searchQuery}
+          ledger={ledger}
+          fixedExpenses={fixedExpenses}
+          expenseCategories={expenseCategories}
+          updateLedgerEntry={updateLedgerEntry}
+          deleteLedgerEntry={deleteLedgerEntry}
+          onEditFixedExpense={(fe) => {
+            startEditFe(fe)
+            setShowFeModal(true)
+          }}
+        />
+      ) : activeTab === 'cash' ? (
+        <CashTab 
+          year={year} 
+          month={month} 
+          onOpenFixedExpense={() => setShowFeModal(true)} 
+        />
       ) : (
-        <CardTab year={year} month={month} />
+        <CardTab 
+          year={year} 
+          month={month} 
+        />
       )}
 
       {/* ── Fixed Expense Modal ────────────────────────────────────────────── */}
