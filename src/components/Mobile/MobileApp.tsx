@@ -4,6 +4,7 @@ import MobileCalendarPage from './MobileCalendarPage'
 import MobileLedgerInputSheet from './MobileLedgerInputSheet'
 import MobileCardTab from './MobileCardTab'
 import MobileCashTab from './MobileCashTab'
+import MobileLedgerSearchTab from './MobileLedgerSearchTab'
 
 interface MobileAppProps {
   activePage: PageId
@@ -25,8 +26,10 @@ const MobileApp: React.FC<MobileAppProps> = ({ activePage, onNavigate }) => {
   const [isLedgerInputOpen, setIsLedgerInputOpen] = useState(false)
   
   const [ledgerSubTab, setLedgerSubTab] = useState<'card' | 'cash'>('card')
-  const [ledgerYear, setLedgerYear] = useState(() => new Date().getFullYear())
-  const [ledgerMonth, setLedgerMonth] = useState(() => new Date().getMonth())
+  const [cardYear, setCardYear] = useState(() => new Date().getFullYear())
+  const [cardMonth, setCardMonth] = useState(() => new Date().getMonth())
+  const [cashYear, setCashYear] = useState(() => new Date().getFullYear())
+  const [cashMonth, setCashMonth] = useState(() => new Date().getMonth())
   const [isLedgerSearchOpen, setIsLedgerSearchOpen] = useState(false)
   const [ledgerSearchQuery, setLedgerSearchQuery] = useState('')
 
@@ -91,65 +94,80 @@ const MobileApp: React.FC<MobileAppProps> = ({ activePage, onNavigate }) => {
     switch (activePage) {
       case 'calendar':
         return <MobileCalendarPage />
-      case 'ledger':
+      case 'ledger': {
+        const isSearchActive = isLedgerSearchOpen && ledgerSearchQuery.trim() !== ''
+        const currentYear = ledgerSubTab === 'card' ? cardYear : cashYear
+        const currentMonth = ledgerSubTab === 'card' ? cardMonth : cashMonth
+        
+        const setYear = ledgerSubTab === 'card' ? setCardYear : setCashYear
+        const setMonth = ledgerSubTab === 'card' ? setCardMonth : setCashMonth
+
         return (
           <div className="flex-1 flex flex-col h-full overflow-hidden bg-white">
             {/* Header */}
-            <div className="flex items-center justify-between px-4 py-3 bg-white shrink-0 z-20">
-              <div className="flex items-center gap-2">
-                <button onClick={() => {
-                  let y = ledgerYear; let m = ledgerMonth - 1;
-                  if (m < 0) { m = 11; y--; }
-                  setLedgerYear(y); setLedgerMonth(m);
-                }} className="p-2 text-yuri-400 hover:text-accent rounded-full hover:bg-yuri-50 transition-colors">
-                  <span className="text-xl leading-none">◀</span>
-                </button>
-                <h2 className="text-lg font-bold text-yuri-900 flex items-center justify-center min-w-[100px]">
-                  {ledgerYear}년 {ledgerMonth + 1}월
-                </h2>
-                <button onClick={() => {
-                  let y = ledgerYear; let m = ledgerMonth + 1;
-                  if (m > 11) { m = 0; y++; }
-                  setLedgerYear(y); setLedgerMonth(m);
-                }} className="p-2 text-yuri-400 hover:text-accent rounded-full hover:bg-yuri-50 transition-colors">
-                  <span className="text-xl leading-none">▶</span>
-                </button>
-              </div>
-              <div className="flex items-center gap-1">
-                <div className="flex bg-yuri-50 p-1 rounded-xl mr-2">
-                  <button 
-                    onClick={() => setLedgerSubTab('card')}
-                    className={`px-3 py-1 text-[11px] font-bold rounded-lg transition-colors ${ledgerSubTab === 'card' ? 'bg-white text-yuri-900 shadow-sm' : 'text-yuri-400'}`}
-                  >
-                    카드
+            <div className="flex flex-col bg-white shrink-0 z-20 shadow-sm border-b border-yuri-100">
+              {/* Row 1: Month Nav & Actions */}
+              <div className="flex items-center justify-between px-4 py-2">
+                <div className="flex items-center gap-2">
+                  <button onClick={() => {
+                    let y = currentYear; let m = currentMonth - 1;
+                    if (m < 0) { m = 11; y--; }
+                    setYear(y); setMonth(m);
+                  }} className="p-2 text-yuri-400 hover:text-accent rounded-full hover:bg-yuri-50 transition-colors">
+                    <span className="text-xl leading-none">◀</span>
                   </button>
-                  <button 
-                    onClick={() => setLedgerSubTab('cash')}
-                    className={`px-3 py-1 text-[11px] font-bold rounded-lg transition-colors ${ledgerSubTab === 'cash' ? 'bg-white text-yuri-900 shadow-sm' : 'text-yuri-400'}`}
-                  >
-                    현금·계좌
+                  <h2 className="text-lg font-bold text-yuri-900 flex items-center justify-center min-w-[90px]">
+                    {currentYear}년 {currentMonth + 1}월
+                  </h2>
+                  <button onClick={() => {
+                    let y = currentYear; let m = currentMonth + 1;
+                    if (m > 11) { m = 0; y++; }
+                    setYear(y); setMonth(m);
+                  }} className="p-2 text-yuri-400 hover:text-accent rounded-full hover:bg-yuri-50 transition-colors">
+                    <span className="text-xl leading-none">▶</span>
                   </button>
                 </div>
-                
-                <button onClick={() => {
-                  setLedgerYear(new Date().getFullYear())
-                  setLedgerMonth(new Date().getMonth())
-                }} className="px-3 py-1 text-xs font-bold text-yuri-500 hover:text-accent bg-yuri-50 rounded-full transition-colors mr-1">
-                  이번 달
-                </button>
-                <button onClick={() => {
-                  if (isLedgerSearchOpen) closeLedgerSearch()
-                  else openLedgerSearch()
-                }} className={`p-2 rounded-full transition-colors ${isLedgerSearchOpen ? 'text-accent bg-accent/10' : 'text-yuri-400 hover:text-accent hover:bg-yuri-50'}`}>
-                  <span className="text-xl leading-none">🔍</span>
-                </button>
-                <button 
-                  onClick={openLedgerInput}
-                  className="p-1 text-accent hover:bg-yuri-50 rounded-full transition-colors ml-1"
-                >
-                  <span className="text-3xl font-light leading-none">+</span>
-                </button>
+                <div className="flex items-center gap-1">
+                  <button onClick={() => {
+                    setYear(new Date().getFullYear())
+                    setMonth(new Date().getMonth())
+                  }} className="px-3 py-1 text-xs font-bold text-yuri-500 hover:text-accent bg-yuri-50 rounded-full transition-colors mr-1">
+                    이번 달
+                  </button>
+                  <button onClick={() => {
+                    if (isLedgerSearchOpen) closeLedgerSearch()
+                    else openLedgerSearch()
+                  }} className={`p-2 rounded-full transition-colors ${isLedgerSearchOpen ? 'text-accent bg-accent/10' : 'text-yuri-400 hover:text-accent hover:bg-yuri-50'}`}>
+                    <span className="text-xl leading-none">🔍</span>
+                  </button>
+                  <button 
+                    onClick={openLedgerInput}
+                    className="p-1 text-accent hover:bg-yuri-50 rounded-full transition-colors ml-1"
+                  >
+                    <span className="text-3xl font-light leading-none">+</span>
+                  </button>
+                </div>
               </div>
+
+              {/* Row 2: Sub-tabs */}
+              {!isSearchActive && (
+                <div className="px-4 pb-3">
+                  <div className="flex bg-yuri-50 p-1 rounded-xl w-full">
+                    <button 
+                      onClick={() => setLedgerSubTab('card')}
+                      className={`flex-1 py-1.5 text-sm font-bold rounded-lg transition-all ${ledgerSubTab === 'card' ? 'bg-white text-yuri-900 shadow-sm scale-100' : 'text-yuri-400 scale-95'}`}
+                    >
+                      카드
+                    </button>
+                    <button 
+                      onClick={() => setLedgerSubTab('cash')}
+                      className={`flex-1 py-1.5 text-sm font-bold rounded-lg transition-all ${ledgerSubTab === 'cash' ? 'bg-white text-yuri-900 shadow-sm scale-100' : 'text-yuri-400 scale-95'}`}
+                    >
+                      현금·계좌
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Search Bar */}
@@ -179,16 +197,19 @@ const MobileApp: React.FC<MobileAppProps> = ({ activePage, onNavigate }) => {
 
             {/* Body */}
             <div className="flex-1 overflow-hidden relative flex flex-col">
-              {ledgerSubTab === 'card' ? (
-                <MobileCardTab year={ledgerYear} month={ledgerMonth} searchQuery={ledgerSearchQuery} />
+              {isSearchActive ? (
+                <MobileLedgerSearchTab searchQuery={ledgerSearchQuery} />
+              ) : ledgerSubTab === 'card' ? (
+                <MobileCardTab year={currentYear} month={currentMonth} searchQuery={ledgerSearchQuery} />
               ) : (
-                <MobileCashTab year={ledgerYear} month={ledgerMonth} searchQuery={ledgerSearchQuery} />
+                <MobileCashTab year={currentYear} month={currentMonth} searchQuery={ledgerSearchQuery} />
               )}
             </div>
 
             <MobileLedgerInputSheet isOpen={isLedgerInputOpen} onClose={() => setIsLedgerInputOpen(false)} />
           </div>
         )
+      }
       default:
         return (
           <div className="flex-1 flex flex-col h-full items-center justify-center text-yuri-400 p-6 text-center">
