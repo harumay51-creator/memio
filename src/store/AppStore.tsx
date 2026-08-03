@@ -160,6 +160,7 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
   const { showToast } = useToast()
 
   useEffect(() => {
+    let isMounted = true
     async function loadData() {
       try {
         // Fetch from Firestore
@@ -177,7 +178,6 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
           setPinHash(null)
         }
         
-        // Load general settings
         const settingsDoc = await getDoc(doc(db, `users/${uid}/settings/config`))
         if (settingsDoc.exists()) {
           const data = settingsDoc.data()
@@ -185,76 +185,32 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
           setCardBillingStartDay(data.cardBillingStartDay || 28)
           setCardBillingEndDay(data.cardBillingEndDay || 27)
           setPaydayState(data.payday || 25)
-
           setCategoryOrderState(data.categoryOrder || [])
-          if (data.holidayConfig) {
-            setHolidayConfig(data.holidayConfig)
-          }
+          if (data.holidayConfig) setHolidayConfig(data.holidayConfig)
         }
         
         const [
           fetchedTasks,
-          fetchedLedger,
           fetchedEvents,
-          fetchedNotes,
-          fetchedFixedExpenses,
-          fetchedExpenseCats,
-          fetchedAgendas,
           fetchedAnnivs,
           fetchedMonthly,
-          fetchedCardBills,
-          fetchedSalaryRecords,
+          fetchedAgendas,
           fetchedRecurringInstances
         ] = await Promise.all([
           fetchCol('tasks'),
-          fetchCol('ledger'),
           fetchCol('events'),
-          fetchCol('notes'),
-          fetchCol('fixedExpenses'),
-          fetchCol('expenseCategories'),
-          fetchCol('agendas'),
           fetchCol('anniversaries'),
           fetchCol('monthlyEvents'),
-          fetchCol('cardBills'),
-          fetchCol('salaryRecords'),
+          fetchCol('agendas'),
           fetchCol('recurringInstances')
         ])
-
-        const mergedCats = DEFAULT_EXPENSE_CATS.map(defCat => {
-          const fetched = fetchedExpenseCats.find((c: any) => c.name === defCat.name) as any
-          return fetched ? { ...defCat, keywords: fetched.keywords || [] } : defCat
-        })
-        const customCats = fetchedExpenseCats.filter((c: any) => !DEFAULT_EXPENSE_CATS.some(defCat => defCat.name === c.name)) as CategoryConfig[]
-        const finalCats = [...mergedCats, ...customCats]
-
-        // --- One-time Migration for '보험' ---
-        let hasMigration = false;
-        const migrationBatch = writeBatch(db);
-        fetchedLedger.forEach((item: any) => {
-          if (item.category === '저축' && (item.label.includes('보험') || item.label.includes('보험료'))) {
-            migrationBatch.update(doc(db, 'users', uid, 'ledger', item.id), { category: '보험' });
-            item.category = '보험';
-            hasMigration = true;
-          }
-        });
-        fetchedFixedExpenses.forEach((item: any) => {
-          if (item.category === '저축' && (item.label.includes('보험') || item.label.includes('보험료'))) {
-            migrationBatch.update(doc(db, 'users', uid, 'fixedExpenses', item.id), { category: '보험' });
-            item.category = '보험';
-            hasMigration = true;
-          }
-        });
-        if (hasMigration) {
-          migrationBatch.commit().catch(console.error);
-        }
-        // -------------------------------------
 
         const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
         const nowMs = Date.now();
         const batch = writeBatch(db);
         let hasHardDeletes = false;
 
-        const processItems = (items: any[], type: 'note' | 'task' | 'ledger' | 'fixedExpense', labelExtractor: (item: any) => string) => {
+        const processItems = (items: any[], type: 'note' | 'task' | 'ledger' | 'fixedExpense', labelExtractor: (item: any) => string, currentBatch: any) => {
           const active: any[] = [];
           const trashed: TrashedItem[] = [];
           items.forEach(item => {
@@ -271,7 +227,7 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
                     deleteFirestoreImages(urls).catch(console.error);
                   }
                 }
-                batch.delete(doc(db, 'users', uid, colName, item.id));
+                currentBatch.delete(doc(db, 'users', uid, colName, item.id));
                 hasHardDeletes = true;
               } else {
                 trashed.push({ id: item.id, type, label: labelExtractor(item), deletedAt: item.deletedAt || 0, metadata: item });
@@ -283,69 +239,125 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
           return { active, trashed };
         };
 
-        const notesData = processItems(fetchedNotes, 'note', n => {
-          if (n.textPreview) return n.textPreview.slice(0, 30);
-          return (n.text || '').trim().split('\n')[0].slice(0, 30) || '새로운 메모';
-        });
-        const tasksData = processItems(fetchedTasks, 'task', t => t.text);
-        const ledgerData = processItems(fetchedLedger, 'ledger', l => {
-          const dateStr = l.scheduledDate ? new Date(l.scheduledDate).toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' }) : '';
-          return `${dateStr} ${l.label} ${l.amount.toLocaleString()}원`.trim();
-        });
-        const fixedExpData = processItems(fetchedFixedExpenses, 'fixedExpense', f => `${f.label} ${f.amount.toLocaleString()}원`);
-
+        const tasksData = processItems(fetchedTasks, 'task', t => t.text, batch);
+        
         if (hasHardDeletes) {
           batch.commit().catch(console.error);
         }
 
-        const allTrashed = [...notesData.trashed, ...tasksData.trashed, ...ledgerData.trashed, ...fixedExpData.trashed];
-        setTrashedItems(allTrashed.sort((a, b) => b.deletedAt - a.deletedAt));
+        if (isMounted) {
+          setTasks((tasksData.active as Task[]).sort((a, b) => (a.order || 0) - (b.order || 0)))
+          setEvents((fetchedEvents as ScheduleEvent[]).sort((a, b) => (a.order || 0) - (b.order || 0)))
+          setAnniversaries(fetchedAnnivs as Anniversary[])
+          setMonthlyEvents(fetchedMonthly as MonthlyEvent[])
+          setAgendas(fetchedAgendas as AgendaItem[])
+          setRecurringInstances(fetchedRecurringInstances as RecurringInstance[])
+          setIsLoading(false)
+        }
 
-        setTasks((tasksData.active as Task[]).sort((a, b) => (a.order || 0) - (b.order || 0)))
-        setLedger(ledgerData.active as LedgerEntry[])
-        setEvents((fetchedEvents as ScheduleEvent[]).sort((a, b) => (a.order || 0) - (b.order || 0)))
-        setNotes(notesData.active as Note[])
-        setFixedExpenses(fixedExpData.active as FixedExpense[])
-        setExpenseCategories(finalCats)
-        setAgendas(fetchedAgendas as AgendaItem[])
-        setAnniversaries(fetchedAnnivs as Anniversary[])
-        setMonthlyEvents(fetchedMonthly as MonthlyEvent[])
-        setRecurringInstances(fetchedRecurringInstances as RecurringInstance[])
-        
-        const billsMap: Record<string, { amount: number, memo?: string }> = {}
-        console.log('[AppStore] fetchedCardBills raw:', fetchedCardBills)
-        ;(fetchedCardBills as any[]).forEach((b: any) => {
-          if (b.id) {
-            let amt = 0
-            if (b.amount !== undefined) amt = Number(b.amount)
-            else if (b.actualAmount !== undefined) amt = Number(b.actualAmount)
-            
-            if (!isNaN(amt)) {
-              billsMap[b.id] = { amount: amt, memo: b.memo || '' }
-            } else if (b.memo) {
-              billsMap[b.id] = { amount: 0, memo: b.memo }
+        // Background load for non-essential tabs
+        Promise.all([
+          fetchCol('ledger'),
+          fetchCol('notes'),
+          fetchCol('fixedExpenses'),
+          fetchCol('expenseCategories'),
+          fetchCol('cardBills'),
+          fetchCol('salaryRecords')
+        ]).then(([
+          fetchedLedger,
+          fetchedNotes,
+          fetchedFixedExpenses,
+          fetchedExpenseCats,
+          fetchedCardBills,
+          fetchedSalaryRecords
+        ]) => {
+          if (!isMounted) return
+          
+          const mergedCats = DEFAULT_EXPENSE_CATS.map(defCat => {
+            const fetched = fetchedExpenseCats.find((c: any) => c.name === defCat.name) as any
+            return fetched ? { ...defCat, keywords: fetched.keywords || [] } : defCat
+          })
+          const customCats = fetchedExpenseCats.filter((c: any) => !DEFAULT_EXPENSE_CATS.some(defCat => defCat.name === c.name)) as CategoryConfig[]
+          const finalCats = [...mergedCats, ...customCats]
+
+          const bgBatch = writeBatch(db);
+          let bgHasDeletesOrMigration = false;
+
+          fetchedLedger.forEach((item: any) => {
+            if (item.category === '저축' && (item.label.includes('보험') || item.label.includes('보험료'))) {
+              bgBatch.update(doc(db, 'users', uid, 'ledger', item.id), { category: '보험' });
+              item.category = '보험';
+              bgHasDeletesOrMigration = true;
             }
-          }
-        })
-        console.log('[AppStore] resulting billsMap:', billsMap)
-        setCardBills(billsMap)
+          });
+          fetchedFixedExpenses.forEach((item: any) => {
+            if (item.category === '저축' && (item.label.includes('보험') || item.label.includes('보험료'))) {
+              bgBatch.update(doc(db, 'users', uid, 'fixedExpenses', item.id), { category: '보험' });
+              item.category = '보험';
+              bgHasDeletesOrMigration = true;
+            }
+          });
 
-        const salaryMap: Record<string, { amount: number }> = {}
-        ;(fetchedSalaryRecords as any[]).forEach((s: any) => {
-          if (s.id && s.amount !== undefined) {
-            salaryMap[s.id] = { amount: Number(s.amount) }
+          const notesData = processItems(fetchedNotes, 'note', n => {
+            if (n.textPreview) return n.textPreview.slice(0, 30);
+            return (n.text || '').trim().split('\n')[0].slice(0, 30) || '새로운 메모';
+          }, bgBatch);
+          
+          const ledgerData = processItems(fetchedLedger, 'ledger', l => {
+            const dateStr = l.scheduledDate ? new Date(l.scheduledDate).toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' }) : '';
+            return `${dateStr} ${l.label} ${l.amount.toLocaleString()}원`.trim();
+          }, bgBatch);
+          
+          const fixedExpData = processItems(fetchedFixedExpenses, 'fixedExpense', f => `${f.label} ${f.amount.toLocaleString()}원`, bgBatch);
+
+          if (hasHardDeletes || bgHasDeletesOrMigration) {
+            bgBatch.commit().catch(console.error);
           }
+
+          const allTrashed = [...notesData.trashed, ...tasksData.trashed, ...ledgerData.trashed, ...fixedExpData.trashed];
+          setTrashedItems(allTrashed.sort((a, b) => b.deletedAt - a.deletedAt));
+
+          setLedger(ledgerData.active as LedgerEntry[])
+          setNotes(notesData.active as Note[])
+          setFixedExpenses(fixedExpData.active as FixedExpense[])
+          setExpenseCategories(finalCats)
+          
+          const billsMap: Record<string, { amount: number, memo?: string }> = {}
+          ;(fetchedCardBills as any[]).forEach((b: any) => {
+            if (b.id) {
+              let amt = 0
+              if (b.amount !== undefined) amt = Number(b.amount)
+              else if (b.actualAmount !== undefined) amt = Number(b.actualAmount)
+              
+              if (!isNaN(amt)) {
+                billsMap[b.id] = { amount: amt, memo: b.memo || '' }
+              } else if (b.memo) {
+                billsMap[b.id] = { amount: 0, memo: b.memo }
+              }
+            }
+          })
+          setCardBills(billsMap)
+          
+          const salaryMap: Record<string, { amount: number }> = {}
+          ;(fetchedSalaryRecords as any[]).forEach((s: any) => {
+            if (s.id && s.amount !== undefined) {
+              salaryMap[s.id] = { amount: Number(s.amount) }
+            }
+          })
+          setSalaryRecords(salaryMap)
+
+        }).catch(err => {
+          console.error("Background load error:", err)
         })
-        setSalaryRecords(salaryMap)
+
       } catch (err: any) {
         console.error("Firebase load error:", err)
-        setLoadError(err.message || '데이터를 불러오는 중 알 수 없는 오류가 발생했습니다.')
-      } finally {
-        setIsLoading(false)
+        if (isMounted) setLoadError(err.message || '데이터를 불러오는 중 알 수 없는 오류가 발생했습니다.')
       }
     }
     
     loadData()
+    return () => { isMounted = false }
   }, [uid])
 
   // Auto-inject logic (only when NOT loading)

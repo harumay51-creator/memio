@@ -33,7 +33,7 @@ export default function MobileJournalPage() {
   const selectedNote = useMemo(() => journals.find(n => n.id === selNoteId) || null, [journals, selNoteId])
 
   useEffect(() => {
-    if (selectedNote && selectedNote.hasContentDoc && !loadedContents[selectedNote.id]) {
+    if (selectedNote && selectedNote.hasContentDoc && !selectedNote.isFullyLoaded && !loadedContents[selectedNote.id]) {
       setIsContentLoading(true)
       loadJournalContent(selectedNote.id).then(content => {
         if (content !== null) {
@@ -44,7 +44,7 @@ export default function MobileJournalPage() {
     } else {
       setIsContentLoading(false)
     }
-  }, [selectedNote?.id, selectedNote?.hasContentDoc, loadJournalContent, loadedContents])
+  }, [selectedNote?.id, selectedNote?.hasContentDoc, selectedNote?.isFullyLoaded, loadJournalContent, loadedContents])
 
   const handleDelete = (id: string, e?: React.MouseEvent) => {
     if (e) e.stopPropagation()
