@@ -23,15 +23,15 @@ const MobileCalendarPage: React.FC = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const mergedHolidays = useMergedHolidays(currentDate.getFullYear())
 
-  // Editor (adding new event)
-  const [isAdding, setIsAdding] = useState(false)
   const [newEventText, setNewEventText] = useState('')
   const [newEventColor, setNewEventColor] = useState(EVENT_COLORS[0])
+  const [newEventTime, setNewEventTime] = useState('')
   
   // Editor (editing existing event)
   const [editingEventId, setEditingEventId] = useState<string | null>(null)
   const [editTitle, setEditTitle] = useState('')
   const [editColor, setEditColor] = useState(EVENT_COLORS[0])
+  const [editDate, setEditDate] = useState('')
 
   const scrollRef = useRef<HTMLDivElement>(null)
 
@@ -136,7 +136,6 @@ const MobileCalendarPage: React.FC = () => {
   const handleDateClick = (d: Date) => {
     setSelectedDate(d)
     setEditingEventId(null)
-    setIsAdding(false)
     setTimeout(() => {
       scrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
     }, 100)
@@ -190,10 +189,14 @@ const MobileCalendarPage: React.FC = () => {
     if (!newEventText.trim()) return
 
     const dStr = format(selectedDate, 'yyyy-MM-dd')
+    const finalDate = newEventTime ? `${dStr}T${newEventTime}:00` : dStr
 
-    addEvent(newEventText.trim(), dStr, newEventColor)
+    addEvent(newEventText.trim(), finalDate, newEventColor)
     setNewEventText('')
-    setIsAdding(false)
+    setNewEventTime('')
+    setTimeout(() => {
+      scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
+    }, 100)
   }
 
   // Update event
@@ -202,6 +205,7 @@ const MobileCalendarPage: React.FC = () => {
     if (!editingEventId || !editTitle.trim()) return
     updateEvent(editingEventId, {
       text: editTitle.trim(),
+      scheduledDate: editDate,
       color: editColor
     })
     setEditingEventId(null)
@@ -224,8 +228,10 @@ const MobileCalendarPage: React.FC = () => {
         </div>
         <div className="flex items-center gap-1">
           <button onClick={() => {
-            if (isDiaryMode) setCurrentDiaryDate(new Date())
-            else setCurrentDate(new Date())
+            const today = new Date()
+            if (isDiaryMode) setCurrentDiaryDate(today)
+            else setCurrentDate(today)
+            setSelectedDate(today)
           }} className="px-3 py-1 text-xs font-bold text-yuri-500 hover:text-accent bg-yuri-50 rounded-full transition-colors mr-1">
             오늘
           </button>
@@ -330,7 +336,7 @@ const MobileCalendarPage: React.FC = () => {
           )}
         </h3>
 
-        {selectedDayEvents.length === 0 && !isAdding && (
+        {selectedDayEvents.length === 0 && (
           <div className="text-center text-yuri-400 text-sm py-8">
             일정이 없습니다.
           </div>
@@ -383,9 +389,16 @@ const MobileCalendarPage: React.FC = () => {
                     autoFocus
                   />
                   <div className="flex items-center gap-2 mt-1">
-                    <button type="button" onClick={() => { setIsEditingTime(true); setShowTimePicker(true) }} className="text-xs font-semibold text-accent bg-accent/10 px-3 py-1.5 rounded-lg border border-accent/20">
-                      시간 추가
-                    </button>
+                    {editDate.length > 10 ? (
+                      <div className="flex items-center gap-1 text-xs font-semibold text-accent bg-accent/10 px-3 py-1.5 rounded-lg border border-accent/20">
+                        <span>{format(new Date(editDate), 'a h:mm', { locale: ko })}</span>
+                        <button type="button" onClick={() => setEditDate(editDate.split('T')[0])} className="ml-1 text-accent/70 hover:text-accent">✕</button>
+                      </div>
+                    ) : (
+                      <button type="button" onClick={() => { setIsEditingTime(true); setShowTimePicker(true) }} className="text-xs font-semibold text-accent bg-accent/10 px-3 py-1.5 rounded-lg border border-accent/20">
+                        시간 추가
+                      </button>
+                    )}
                   </div>
                   <div className="flex items-center justify-between">
                     <div className="flex gap-2">
@@ -414,7 +427,7 @@ const MobileCalendarPage: React.FC = () => {
                   setEditingEventId(ev.id)
                   setEditTitle(ev.text)
                   setEditColor(ev.color || EVENT_COLORS[0])
-                  setIsAdding(false)
+                  setEditDate(ev.scheduledDate ? new Date(ev.scheduledDate).toISOString().slice(0, 16) : format(selectedDate, 'yyyy-MM-dd'))
                 }}
                 className="bg-white p-3 rounded-xl shadow-sm border border-yuri-100 flex items-start gap-3 active:scale-[0.98] transition-transform"
               >
@@ -440,58 +453,40 @@ const MobileCalendarPage: React.FC = () => {
             )
           })}
 
-          {/* Add form */}
-          {isAdding && (
-            <form onSubmit={handleAddEventSubmit} className="bg-white p-4 rounded-xl border border-accent shadow-sm flex flex-col gap-3">
-              <input spellCheck={false}
-                type="text"
-                value={newEventText}
-                onChange={e => setNewEventText(e.target.value)}
-                className="w-full text-sm font-semibold text-yuri-900 focus:outline-none placeholder-yuri-400"
-                placeholder="새로운 일정"
-                autoFocus
-              />
-              <div className="flex items-center gap-2 mt-1">
+          {/* Add form always visible at bottom */}
+          <form onSubmit={handleAddEventSubmit} className="bg-white p-4 rounded-xl border border-yuri-100 shadow-sm flex flex-col gap-3 mt-4 shrink-0 mb-4">
+            <input spellCheck={false}
+              type="text"
+              value={newEventText}
+              onChange={e => setNewEventText(e.target.value)}
+              className="w-full text-sm font-semibold text-yuri-900 focus:outline-none placeholder-yuri-400"
+              placeholder="새로운 일정을 입력하세요..."
+            />
+            <div className="flex items-center gap-2 mt-1">
+              {newEventTime ? (
+                <div className="flex items-center gap-1 text-xs font-semibold text-accent bg-accent/10 px-3 py-1.5 rounded-lg border border-accent/20">
+                  <span>{format(new Date(`2000-01-01T${newEventTime}`), 'a h:mm', { locale: ko })}</span>
+                  <button type="button" onClick={() => setNewEventTime('')} className="ml-1 text-accent/70 hover:text-accent">✕</button>
+                </div>
+              ) : (
                 <button type="button" onClick={() => { setIsEditingTime(false); setShowTimePicker(true) }} className="text-xs font-semibold text-accent bg-accent/10 px-3 py-1.5 rounded-lg border border-accent/20">
                   시간 추가
                 </button>
+              )}
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="flex gap-2">
+                {EVENT_COLORS.map(c => (
+                  <button type="button" key={c} onClick={() => setNewEventColor(c)} className={`w-6 h-6 rounded-full border-2 ${newEventColor === c ? 'border-yuri-900' : 'border-transparent'}`} style={{ backgroundColor: c }} />
+                ))}
               </div>
-              <div className="flex items-center justify-between">
-                <div className="flex gap-2">
-                  {EVENT_COLORS.map(c => (
-                    <button type="button" key={c} onClick={() => setNewEventColor(c)} className={`w-6 h-6 rounded-full border-2 ${newEventColor === c ? 'border-yuri-900' : 'border-transparent'}`} style={{ backgroundColor: c }} />
-                  ))}
-                </div>
-                <div className="flex gap-2">
-                  <button type="button" onClick={() => setIsAdding(false)} className="text-xs font-semibold text-yuri-500 hover:text-yuri-700 bg-yuri-100 px-3 py-1.5 rounded-lg">
-                    취소
-                  </button>
-                  <button type="submit" disabled={!newEventText.trim()} className="text-xs font-bold text-white bg-accent px-3 py-1.5 rounded-lg disabled:opacity-50">
-                    추가
-                  </button>
-                </div>
-              </div>
-            </form>
-          )}
+              <button type="submit" disabled={!newEventText.trim()} className="text-xs font-bold text-white bg-accent px-4 py-1.5 rounded-lg disabled:opacity-50">
+                추가
+              </button>
+            </div>
+          </form>
         </div>
       </div>
-      )}
-
-      {/* FAB */}
-      {!isAdding && (
-        <button
-          onClick={() => {
-            setIsAdding(true)
-            setEditingEventId(null)
-            setTimeout(() => {
-              scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
-            }, 100)
-          }}
-          className="absolute bottom-6 right-6 w-14 h-14 bg-accent hover:bg-accent/90 text-white rounded-full shadow-lg flex items-center justify-center text-3xl font-light transition-transform active:scale-95 z-30"
-          style={{ paddingBottom: '2px' }}
-        >
-          +
-        </button>
       )}
 
       {isSearchOpen && (
@@ -510,9 +505,10 @@ const MobileCalendarPage: React.FC = () => {
           onClose={() => setShowTimePicker(false)}
           onSelect={(timeStr) => {
             if (isEditingTime) {
-              setEditTitle(timeStr + ' ' + editTitle)
+              const d = editDate.split('T')[0] || format(selectedDate, 'yyyy-MM-dd')
+              setEditDate(`${d}T${timeStr}`)
             } else {
-              setNewEventText(timeStr + ' ' + newEventText)
+              setNewEventTime(timeStr)
             }
             setShowTimePicker(false)
           }}
@@ -550,7 +546,12 @@ const TimePickerModal: React.FC<{ onClose: () => void, onSelect: (timeStr: strin
         </div>
         <div className="flex gap-2">
           <button onClick={onClose} className="flex-1 py-3 bg-yuri-100 text-yuri-600 font-bold rounded-xl active:bg-yuri-200 transition-colors">취소</button>
-          <button onClick={() => onSelect(`${ampm} ${hour}:${minute}`)} className="flex-1 py-3 bg-accent text-white font-bold rounded-xl active:bg-accent/90 transition-colors">확인</button>
+          <button onClick={() => {
+            let h = parseInt(hour, 10)
+            if (ampm === '오후' && h < 12) h += 12
+            if (ampm === '오전' && h === 12) h = 0
+            onSelect(`${h.toString().padStart(2, '0')}:${minute}`)
+          }} className="flex-1 py-3 bg-accent text-white font-bold rounded-xl active:bg-accent/90 transition-colors">확인</button>
         </div>
       </div>
     </div>
