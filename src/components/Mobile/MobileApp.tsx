@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import type { PageId } from '../../types'
 import MobileCalendarPage from './MobileCalendarPage'
+import MobileLedgerInputSheet from './MobileLedgerInputSheet'
 
 interface MobileAppProps {
   activePage: PageId
@@ -19,6 +20,7 @@ const MobileApp: React.FC<MobileAppProps> = ({ activePage, onNavigate }) => {
   }
 
   const [isKeyboardOpen, setIsKeyboardOpen] = useState(false)
+  const [isLedgerInputOpen, setIsLedgerInputOpen] = useState(false)
 
   useEffect(() => {
     const handleFocus = (e: FocusEvent) => {
@@ -51,6 +53,20 @@ const MobileApp: React.FC<MobileAppProps> = ({ activePage, onNavigate }) => {
     switch (activePage) {
       case 'calendar':
         return <MobileCalendarPage />
+      case 'ledger':
+        return (
+          <div className="flex-1 flex flex-col h-full items-center justify-center text-yuri-400 p-6 text-center">
+            <span className="text-4xl mb-4">🚧</span>
+            <p>모바일 가계부 탭은 준비 중입니다.</p>
+            <button 
+              onClick={() => setIsLedgerInputOpen(true)}
+              className="mt-6 px-6 py-3 bg-accent text-white font-bold rounded-xl shadow-md hover:bg-accent/90 transition-colors"
+            >
+              새 내역 입력 (테스트)
+            </button>
+            <MobileLedgerInputSheet isOpen={isLedgerInputOpen} onClose={() => setIsLedgerInputOpen(false)} />
+          </div>
+        )
       default:
         return (
           <div className="flex-1 flex flex-col h-full items-center justify-center text-yuri-400 p-6 text-center">
