@@ -6,6 +6,7 @@ import MobileCardTab from './MobileCardTab'
 import MobileCashTab from './MobileCashTab'
 import MobileLedgerSearchTab from './MobileLedgerSearchTab'
 import MobileJournalPage from './MobileJournalPage'
+import MobileSettingsPage from './MobileSettingsPage'
 
 interface MobileAppProps {
   activePage: PageId
@@ -13,7 +14,7 @@ interface MobileAppProps {
   onLogout: () => void
 }
 
-const MobileApp: React.FC<MobileAppProps> = ({ activePage, onNavigate }) => {
+const MobileApp: React.FC<MobileAppProps> = ({ activePage, onNavigate, onLogout }) => {
   const getPageTitle = (page: PageId) => {
     switch (page) {
       case 'calendar': return '달력'
@@ -213,6 +214,8 @@ const MobileApp: React.FC<MobileAppProps> = ({ activePage, onNavigate }) => {
       }
       case 'journal':
         return <MobileJournalPage />
+      case 'settings':
+        return <MobileSettingsPage onNavigate={onNavigate} onLogout={onLogout} />
       default:
         return (
           <div className="flex-1 flex flex-col h-full items-center justify-center text-yuri-400 p-6 text-center">
@@ -225,7 +228,7 @@ const MobileApp: React.FC<MobileAppProps> = ({ activePage, onNavigate }) => {
 
   return (
     <div className="fixed inset-0 flex flex-col bg-yuri-50 font-sans text-yuri-900 selection:bg-accent/20 overflow-hidden w-full h-full">
-      {activePage !== 'calendar' && activePage !== 'ledger' && activePage !== 'journal' && (
+      {activePage !== 'calendar' && activePage !== 'ledger' && activePage !== 'journal' && activePage !== 'settings' && (
         <header className="shrink-0 h-14 flex items-center justify-center border-b border-yuri-100 bg-white sticky top-0 z-10 shadow-sm transition-all">
           <h1 className="text-lg font-bold text-yuri-900">{getPageTitle(activePage)}</h1>
         </header>
