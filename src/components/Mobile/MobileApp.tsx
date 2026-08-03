@@ -9,6 +9,9 @@ import MobileJournalPage from './MobileJournalPage'
 import MobileSettingsPage from './MobileSettingsPage'
 import { JournalStoreProvider } from '../../store/JournalStore'
 import { auth } from '../../config/firebase'
+import SettingsPage from '../SettingsPage/SettingsPage'
+import LoginHistorySection from '../SettingsPage/LoginHistorySection'
+import { ChevronLeft } from 'lucide-react'
 
 interface MobileAppProps {
   activePage: PageId
@@ -222,6 +225,40 @@ const MobileApp: React.FC<MobileAppProps> = ({ activePage, onNavigate, onLogout 
         )
       case 'settings':
         return <MobileSettingsPage onNavigate={onNavigate} onLogout={onLogout} />
+      case 'pc_settings' as PageId:
+        return (
+          <div className="flex flex-col h-full bg-white relative">
+            <header className="shrink-0 h-14 flex items-center px-2 border-b border-yuri-100 bg-white">
+              <button 
+                onClick={() => onNavigate('settings')}
+                className="p-2 text-yuri-500 hover:text-accent flex items-center gap-1"
+              >
+                <ChevronLeft size={24} />
+                <span className="font-bold">돌아가기</span>
+              </button>
+            </header>
+            <div className="flex-1 overflow-auto">
+              <SettingsPage />
+            </div>
+          </div>
+        )
+      case 'login_history' as PageId:
+        return (
+          <div className="flex flex-col h-full bg-white relative">
+            <header className="shrink-0 h-14 flex items-center px-2 border-b border-yuri-100 bg-white">
+              <button 
+                onClick={() => onNavigate('settings')}
+                className="p-2 text-yuri-500 hover:text-accent flex items-center gap-1"
+              >
+                <ChevronLeft size={24} />
+                <span className="font-bold">돌아가기</span>
+              </button>
+            </header>
+            <div className="flex-1 overflow-auto p-4">
+              <LoginHistorySection />
+            </div>
+          </div>
+        )
       default:
         return (
           <div className="flex-1 flex flex-col h-full items-center justify-center text-yuri-400 p-6 text-center">
@@ -234,7 +271,7 @@ const MobileApp: React.FC<MobileAppProps> = ({ activePage, onNavigate, onLogout 
 
   return (
     <div className="fixed inset-0 flex flex-col bg-yuri-50 font-sans text-yuri-900 selection:bg-accent/20 overflow-hidden w-full h-full">
-      {activePage !== 'calendar' && activePage !== 'ledger' && activePage !== 'journal' && activePage !== 'settings' && (
+      {activePage !== 'calendar' && activePage !== 'ledger' && activePage !== 'journal' && activePage !== 'settings' && activePage !== 'pc_settings' as PageId && activePage !== 'login_history' as PageId && (
         <header className="shrink-0 h-14 flex items-center justify-center border-b border-yuri-100 bg-white sticky top-0 z-10 shadow-sm transition-all">
           <h1 className="text-lg font-bold text-yuri-900">{getPageTitle(activePage)}</h1>
         </header>

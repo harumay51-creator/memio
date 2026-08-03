@@ -84,14 +84,12 @@ export const JournalStoreProvider: React.FC<{ uid: string, children: React.React
     // Set text locally so it feels fast
     setJournals(prev => [...prev, { ...newEntry, text, isFullyLoaded: true }])
     
-    try {
-      await Promise.all([
-        setDoc(doc(db, `users/${uid}/journal_entries/${id}`), newEntry),
-        setDoc(doc(db, `users/${uid}/journal_contents/${id}`), { text })
-      ])
-    } catch (e) {
-      console.error(e)
-    }
+    // Async write
+    Promise.all([
+      setDoc(doc(db, `users/${uid}/journal_entries/${id}`), newEntry),
+      setDoc(doc(db, `users/${uid}/journal_contents/${id}`), { text })
+    ]).catch(e => console.error(e))
+
     return id
   }
 
@@ -103,14 +101,11 @@ export const JournalStoreProvider: React.FC<{ uid: string, children: React.React
 
     setJournals(prev => prev.map(j => j.id === id ? { ...j, text, textPreview, searchText, hasContentDoc: true, updatedAt, isFullyLoaded: true } : j))
     
-    try {
-      await Promise.all([
-        setDoc(doc(db, `users/${uid}/journal_entries/${id}`), { textPreview, searchText, hasContentDoc: true, updatedAt }, { merge: true }),
-        setDoc(doc(db, `users/${uid}/journal_contents/${id}`), { text }, { merge: true })
-      ])
-    } catch (e) {
-      console.error(e)
-    }
+    // Async write
+    Promise.all([
+      setDoc(doc(db, `users/${uid}/journal_entries/${id}`), { textPreview, searchText, hasContentDoc: true, updatedAt }, { merge: true }),
+      setDoc(doc(db, `users/${uid}/journal_contents/${id}`), { text }, { merge: true })
+    ]).catch(e => console.error(e))
   }
 
   const deleteJournal = (id: string) => {

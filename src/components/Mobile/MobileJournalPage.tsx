@@ -127,6 +127,12 @@ export default function MobileJournalPage() {
             <span className="text-xl leading-none">🔍</span>
           </button>
           <button
+            onClick={handleAdd}
+            className="p-2 text-yuri-400 hover:text-yuri-600 rounded-full hover:bg-yuri-50 transition-colors"
+          >
+            <Plus size={20} />
+          </button>
+          <button
             onClick={lockPrivate}
             className="p-2 text-yuri-400 hover:text-yuri-600 rounded-full hover:bg-yuri-50 transition-colors"
           >
@@ -201,13 +207,6 @@ export default function MobileJournalPage() {
         )}
       </div>
 
-      {/* FAB */}
-      <button
-        onClick={handleAdd}
-        className="absolute bottom-6 right-4 w-14 h-14 bg-accent text-white rounded-2xl shadow-[0_4px_20px_rgba(139,124,248,0.4)] flex items-center justify-center hover:bg-accent/90 hover:scale-105 active:scale-95 transition-all z-20"
-      >
-        <Plus size={28} />
-      </button>
 
       {/* Full Screen Editor overlay */}
       {selNoteId && selectedNote && (
@@ -236,8 +235,11 @@ export default function MobileJournalPage() {
               </div>
             ) : (
               <RichTextEditor
-                initialContent={loadedContents[selectedNote.id] || selectedNote.text}
-                onChange={(html) => updateJournal(selectedNote.id, html)}
+                initialContent={loadedContents[selectedNote.id] || selectedNote.text || ''}
+                onChange={(html) => {
+                  setLoadedContents(prev => ({ ...prev, [selectedNote.id]: html }))
+                  updateJournal(selectedNote.id, html)
+                }}
                 placeholder="내용을 입력하세요..."
                 className="flex-1 h-full w-full"
               />

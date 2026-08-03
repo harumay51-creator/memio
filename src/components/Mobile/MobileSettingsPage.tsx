@@ -1,5 +1,5 @@
 import type { PageId } from '../../types'
-import { Lock, LogOut } from 'lucide-react'
+import { Lock, LogOut, Settings, History } from 'lucide-react'
 
 interface MobileSettingsPageProps {
   onNavigate: (page: PageId) => void
@@ -21,6 +21,34 @@ export default function MobileSettingsPage({ onNavigate, onLogout }: MobileSetti
                 <Lock size={16} />
               </span>
               개인 기록
+            </div>
+            <span className="text-yuri-400">›</span>
+          </button>
+
+          {/* 설정 메뉴 */}
+          <button
+            onClick={() => onNavigate('pc_settings' as PageId)}
+            className="w-full flex items-center justify-between p-4 bg-white hover:bg-yuri-50 active:bg-yuri-100 transition-colors text-left border-b border-yuri-100"
+          >
+            <div className="flex items-center gap-3 text-yuri-900 font-bold">
+              <span className="w-8 h-8 rounded-full bg-yuri-100 text-yuri-500 flex items-center justify-center">
+                <Settings size={16} />
+              </span>
+              전체 설정 (PC 버전)
+            </div>
+            <span className="text-yuri-400">›</span>
+          </button>
+
+          {/* 접속 기록 메뉴 */}
+          <button
+            onClick={() => onNavigate('login_history' as PageId)}
+            className="w-full flex items-center justify-between p-4 bg-white hover:bg-yuri-50 active:bg-yuri-100 transition-colors text-left border-b border-yuri-100"
+          >
+            <div className="flex items-center gap-3 text-yuri-900 font-bold">
+              <span className="w-8 h-8 rounded-full bg-blue-100 text-blue-500 flex items-center justify-center">
+                <History size={16} />
+              </span>
+              접속 기록
             </div>
             <span className="text-yuri-400">›</span>
           </button>
