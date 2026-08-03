@@ -29,34 +29,93 @@ const EMOJI_CATEGORIES = [
 ]
 
 const QuestionItem = ({ q, initialAnswer, saveAnswer, deleteAnswer }: { q: any, initialAnswer: string, saveAnswer: (v: string) => void, deleteAnswer: () => void }) => {
-  const [localVal, setLocalVal] = useState(initialAnswer)
+  const [isEditing, setIsEditing] = useState(false);
+  const [localVal, setLocalVal] = useState(initialAnswer);
+  const editRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    setLocalVal(initialAnswer)
-  }, [initialAnswer])
+    setLocalVal(initialAnswer);
+  }, [initialAnswer]);
+
+  useEffect(() => {
+    if (!isEditing) return;
+
+    setTimeout(() => {
+      if (editRef.current) {
+        const container = editRef.current.closest('.overflow-y-auto') as HTMLElement;
+        if (container) {
+          const top = editRef.current.offsetTop - container.offsetTop - 20;
+          container.scrollTo({ top, behavior: 'smooth' });
+        }
+      }
+    }, 50);
+
+    const handleClickOutside = (e: MouseEvent) => {
+      if (editRef.current && !editRef.current.contains(e.target as Node)) {
+        if (localVal !== initialAnswer) saveAnswer(localVal);
+        setIsEditing(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isEditing, localVal, initialAnswer, saveAnswer]);
+
+  if (isEditing) {
+    return (
+      <div ref={editRef} className="group relative transition-all duration-300 flex flex-col shrink-0 z-20 w-full min-h-0 py-4 px-2 bg-transparent text-[#3D3833] border-b border-[#EDE6D6]">
+        <div className="flex justify-between items-start mb-1 gap-2">
+          <div className="text-[11px] font-bold font-diary opacity-70">{q.text}</div>
+        </div>
+        <div className="flex-1 min-h-[60px] cursor-text">
+          <DiaryTextEditor
+            initialContent={localVal}
+            onChange={(html) => setLocalVal(html)}
+            placeholder="답변을 입력하세요..."
+            autoFocus
+            className="bg-transparent outline-none leading-relaxed transition-all font-diary"
+          />
+        </div>
+        <div className="flex justify-end gap-2 mt-2">
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              setLocalVal(initialAnswer);
+              setIsEditing(false);
+            }}
+            className="px-2 py-1 text-[10px] font-bold rounded bg-black/5 hover:bg-black/10 transition-colors"
+          >
+            취소
+          </button>
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              saveAnswer(localVal);
+              setIsEditing(false);
+            }}
+            className="px-2 py-1 text-[10px] font-bold rounded bg-black/10 hover:bg-black/20 transition-colors"
+          >
+            저장
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="group relative transition-all duration-300 flex flex-col shrink-0 cursor-text w-full min-h-0 py-4 px-2 bg-transparent text-[#3D3833] border-b border-[#EDE6D6]">
-      <div className="flex justify-between items-start mb-1 gap-2">
+    <div 
+      className="group relative transition-all duration-300 flex flex-col shrink-0 cursor-pointer w-full min-h-0 py-4 px-2 bg-transparent text-[#3D3833] border-b border-[#E5E5EA]/50 hover:bg-black/5 rounded-lg"
+      onClick={() => setIsEditing(true)}
+    >
+      <div className="flex justify-between items-start mb-2 gap-2">
         <div className="text-[11px] font-bold font-diary opacity-70">{q.text}</div>
         <button 
-          onClick={deleteAnswer}
+          onClick={(e) => { e.stopPropagation(); deleteAnswer(); }}
           className="w-5 h-5 flex items-center justify-center rounded text-[#717A8C] hover:text-[#EF6A7B] opacity-30 group-hover:opacity-100 transition-opacity text-[10px] shrink-0"
         >
           ✕
         </button>
       </div>
-      <DiaryTextEditor
-        initialContent={localVal}
-        onChange={(html) => setLocalVal(html)}
-        onBlur={() => {
-          const current = localVal === '<p></p>' ? '' : localVal;
-          const initial = initialAnswer === '<p></p>' ? '' : initialAnswer;
-          if (current !== initial) saveAnswer(localVal)
-        }}
-        placeholder="답변을 입력하세요..."
-        className="bg-transparent resize-none outline-none leading-relaxed transition-all font-diary"
-      />
+      <div className="text-[14px] leading-relaxed font-diary flex-1 prose-p:my-0 prose-p:leading-relaxed" dangerouslySetInnerHTML={{ __html: initialAnswer || '<p className="text-[#A0AABF]">답변을 입력하세요...</p>' }} />
     </div>
   )
 }

@@ -33,7 +33,7 @@ const MobileApp: React.FC<MobileAppProps> = ({ activePage, onNavigate }) => {
   }
 
   return (
-    <div className="flex flex-col h-screen w-screen bg-yuri-50 font-sans text-yuri-900 selection:bg-accent/20">
+    <div className="flex flex-col h-[100dvh] w-screen bg-yuri-50 font-sans text-yuri-900 selection:bg-accent/20 overflow-hidden">
       {activePage !== 'calendar' && (
         <header className="shrink-0 h-14 flex items-center justify-center border-b border-yuri-100 bg-white sticky top-0 z-10 shadow-sm transition-all">
           <h1 className="text-lg font-bold text-yuri-900">{getPageTitle(activePage)}</h1>
