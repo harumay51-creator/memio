@@ -625,18 +625,26 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
     if (paymentMethod !== undefined) newEntry.paymentMethod = paymentMethod
     if (memo !== undefined) newEntry.memo = memo
 
+    // Optimistic Update
+    setLedger(prev => [...prev, newEntry as LedgerEntry])
+
     try {
       await setDoc(doc(db, 'users', uid, 'ledger', id), newEntry)
-      setLedger(prev => [...prev, newEntry as LedgerEntry])
       showToast('가계부 내역이 추가되었습니다.', 'success')
     } catch (err) {
       console.error(err)
       showToast('저장에 실패했습니다.', 'error')
+      // Rollback
+      setLedger(prev => prev.filter(l => l.id !== id))
     }
   }, [uid, showToast])
 
   const updateLedgerEntry = useCallback((id: string, updates: Partial<LedgerEntry>) => {
-    setLedger(prev => prev.map(l => l.id === id ? { ...l, ...updates } : l))
+    let previousEntry: LedgerEntry | undefined
+    setLedger(prev => {
+      previousEntry = prev.find(l => l.id === id)
+      return prev.map(l => l.id === id ? { ...l, ...updates } : l)
+    })
     
     const sanitizedUpdates: any = { ...updates }
     Object.keys(sanitizedUpdates).forEach(k => {
@@ -645,8 +653,14 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
       }
     })
     
-    updateDoc(doc(db, 'users', uid, 'ledger', id), sanitizedUpdates).catch(console.error)
-  }, [uid])
+    updateDoc(doc(db, 'users', uid, 'ledger', id), sanitizedUpdates).catch(err => {
+      console.error(err)
+      showToast('저장에 실패했습니다.', 'error')
+      if (previousEntry) {
+        setLedger(prev => prev.map(l => l.id === id ? previousEntry! : l))
+      }
+    })
+  }, [uid, showToast])
 
   const deleteLedgerEntry = useCallback((id: string) => {
     setLedger(prev => {

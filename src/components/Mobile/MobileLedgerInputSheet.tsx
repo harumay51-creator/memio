@@ -3,14 +3,16 @@ import { format } from 'date-fns'
 import MiniCalendarPicker from './MiniCalendarPicker'
 import { classifyLedgerCategory, getCategoryColor } from '../../utils/parser'
 import { useAppStore } from '../../store/AppStore'
+import type { LedgerEntry } from '../../types'
 
 interface MobileLedgerInputSheetProps {
   isOpen: boolean
   onClose: () => void
+  initialEntry?: LedgerEntry | null
 }
 
-const MobileLedgerInputSheet: React.FC<MobileLedgerInputSheetProps> = ({ isOpen, onClose }) => {
-  const { addLedgerEntry, expenseCategories } = useAppStore()
+const MobileLedgerInputSheet: React.FC<MobileLedgerInputSheetProps> = ({ isOpen, onClose, initialEntry }) => {
+  const { addLedgerEntry, updateLedgerEntry, expenseCategories } = useAppStore()
   
   const [date, setDate] = useState<Date>(new Date())
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false)
@@ -20,6 +22,30 @@ const MobileLedgerInputSheet: React.FC<MobileLedgerInputSheetProps> = ({ isOpen,
   const [category, setCategory] = useState<string>('기타')
   const [isManualCategory, setIsManualCategory] = useState(false)
   const [isCategoryPickerOpen, setIsCategoryPickerOpen] = useState(false)
+
+  // Pre-fill on open if initialEntry is provided
+  useEffect(() => {
+    if (isOpen && initialEntry) {
+      setDate(initialEntry.scheduledDate ? new Date(initialEntry.scheduledDate) : new Date(initialEntry.createdAt))
+      setAmountStr(initialEntry.amount.toString())
+      setDescription(initialEntry.label)
+      setCategory(initialEntry.category)
+      setIsManualCategory(true)
+      if (initialEntry.paymentMethod === '계좌이체') {
+        setPaymentMethod('계좌이체')
+      } else {
+        setPaymentMethod('카드')
+      }
+    } else if (isOpen) {
+      // Reset if no initial entry
+      setDate(new Date())
+      setAmountStr('')
+      setDescription('')
+      setCategory('기타')
+      setIsManualCategory(false)
+      setPaymentMethod('카드')
+    }
+  }, [isOpen, initialEntry])
 
   // Auto category assignment
   useEffect(() => {
@@ -51,14 +77,24 @@ const MobileLedgerInputSheet: React.FC<MobileLedgerInputSheetProps> = ({ isOpen,
       return
     }
     
-    await addLedgerEntry(
-      description.trim() || category,
-      parseInt(amountStr, 10),
-      'expense',
-      category,
-      date.toISOString(),
-      paymentMethod
-    )
+    if (initialEntry) {
+      updateLedgerEntry(initialEntry.id, {
+        label: description.trim() || category,
+        amount: parseInt(amountStr, 10),
+        category: category,
+        scheduledDate: date.toISOString(),
+        paymentMethod: paymentMethod
+      })
+    } else {
+      await addLedgerEntry(
+        description.trim() || category,
+        parseInt(amountStr, 10),
+        'expense',
+        category,
+        date.toISOString(),
+        paymentMethod
+      )
+    }
     
     // Reset state after save
     setAmountStr('')

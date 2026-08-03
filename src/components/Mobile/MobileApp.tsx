@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import type { PageId } from '../../types'
 import MobileCalendarPage from './MobileCalendarPage'
 import MobileLedgerInputSheet from './MobileLedgerInputSheet'
+import MobileCardTab from './MobileCardTab'
 
 interface MobileAppProps {
   activePage: PageId
@@ -21,6 +22,11 @@ const MobileApp: React.FC<MobileAppProps> = ({ activePage, onNavigate }) => {
 
   const [isKeyboardOpen, setIsKeyboardOpen] = useState(false)
   const [isLedgerInputOpen, setIsLedgerInputOpen] = useState(false)
+  
+  const [ledgerYear, setLedgerYear] = useState(() => new Date().getFullYear())
+  const [ledgerMonth, setLedgerMonth] = useState(() => new Date().getMonth())
+  const [isLedgerSearchOpen, setIsLedgerSearchOpen] = useState(false)
+  const [ledgerSearchQuery, setLedgerSearchQuery] = useState('')
 
   useEffect(() => {
     const handleFocus = (e: FocusEvent) => {
@@ -55,15 +61,82 @@ const MobileApp: React.FC<MobileAppProps> = ({ activePage, onNavigate }) => {
         return <MobileCalendarPage />
       case 'ledger':
         return (
-          <div className="flex-1 flex flex-col h-full items-center justify-center text-yuri-400 p-6 text-center">
-            <span className="text-4xl mb-4">🚧</span>
-            <p>모바일 가계부 탭은 준비 중입니다.</p>
-            <button 
-              onClick={() => setIsLedgerInputOpen(true)}
-              className="mt-6 px-6 py-3 bg-accent text-white font-bold rounded-xl shadow-md hover:bg-accent/90 transition-colors"
-            >
-              새 내역 입력 (테스트)
-            </button>
+          <div className="flex-1 flex flex-col h-full overflow-hidden bg-white">
+            {/* Header */}
+            <div className="flex items-center justify-between px-4 py-3 bg-white shrink-0 z-20">
+              <div className="flex items-center gap-2">
+                <button onClick={() => {
+                  let y = ledgerYear; let m = ledgerMonth - 1;
+                  if (m < 0) { m = 11; y--; }
+                  setLedgerYear(y); setLedgerMonth(m);
+                }} className="p-2 text-yuri-400 hover:text-accent rounded-full hover:bg-yuri-50 transition-colors">
+                  <span className="text-xl leading-none">◀</span>
+                </button>
+                <h2 className="text-lg font-bold text-yuri-900 flex items-center justify-center min-w-[100px]">
+                  {ledgerYear}년 {ledgerMonth + 1}월
+                </h2>
+                <button onClick={() => {
+                  let y = ledgerYear; let m = ledgerMonth + 1;
+                  if (m > 11) { m = 0; y++; }
+                  setLedgerYear(y); setLedgerMonth(m);
+                }} className="p-2 text-yuri-400 hover:text-accent rounded-full hover:bg-yuri-50 transition-colors">
+                  <span className="text-xl leading-none">▶</span>
+                </button>
+              </div>
+              <div className="flex items-center gap-1">
+                <button onClick={() => {
+                  setLedgerYear(new Date().getFullYear())
+                  setLedgerMonth(new Date().getMonth())
+                }} className="px-3 py-1 text-xs font-bold text-yuri-500 hover:text-accent bg-yuri-50 rounded-full transition-colors mr-1">
+                  이번 달
+                </button>
+                <button onClick={() => setIsLedgerSearchOpen(!isLedgerSearchOpen)} className={`p-2 rounded-full transition-colors ${isLedgerSearchOpen ? 'text-accent bg-accent/10' : 'text-yuri-400 hover:text-accent hover:bg-yuri-50'}`}>
+                  <span className="text-xl leading-none">🔍</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Search Bar */}
+            {isLedgerSearchOpen && (
+              <div className="px-4 py-3 bg-yuri-50 border-b border-yuri-100 flex items-center gap-2 z-10 shrink-0">
+                <input spellCheck={false}
+                  type="text"
+                  autoFocus
+                  placeholder="내역, 카테고리 검색"
+                  value={ledgerSearchQuery}
+                  onChange={e => setLedgerSearchQuery(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Escape') {
+                      setLedgerSearchQuery('');
+                      setIsLedgerSearchOpen(false);
+                    }
+                  }}
+                  className="flex-1 bg-white border border-yuri-200 rounded-xl px-4 py-2 text-sm text-yuri-900 outline-none focus:border-accent shadow-sm"
+                />
+                {ledgerSearchQuery && (
+                  <button onClick={() => setLedgerSearchQuery('')} className="p-2 text-yuri-400 hover:text-yuri-600">
+                    ✕
+                  </button>
+                )}
+              </div>
+            )}
+
+            {/* Body */}
+            <div className="flex-1 overflow-hidden relative">
+              <MobileCardTab year={ledgerYear} month={ledgerMonth} searchQuery={ledgerSearchQuery} />
+              
+              {/* Floating Action Button */}
+              <button
+                onClick={() => setIsLedgerInputOpen(true)}
+                className="absolute right-4 bottom-6 w-14 h-14 bg-accent text-white rounded-2xl shadow-lg flex items-center justify-center hover:bg-accent/90 active:scale-95 transition-all z-20"
+                style={{
+                  boxShadow: '0 4px 14px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(0,0,0,0.05)'
+                }}
+              >
+                <span className="text-2xl font-light leading-none mb-1">+</span>
+              </button>
+            </div>
+
             <MobileLedgerInputSheet isOpen={isLedgerInputOpen} onClose={() => setIsLedgerInputOpen(false)} />
           </div>
         )
