@@ -55,6 +55,36 @@ const MobileApp: React.FC<MobileAppProps> = ({ activePage, onNavigate }) => {
     }
   }, [])
 
+  useEffect(() => {
+    const handlePopState = (e: PopStateEvent) => {
+      if (isLedgerInputOpen) setIsLedgerInputOpen(false)
+      if (isLedgerSearchOpen) setIsLedgerSearchOpen(false)
+      
+      // Handle back button for activePage if state exists
+      if (e.state?.page && e.state.page !== activePage) {
+        onNavigate(e.state.page)
+      }
+    }
+    window.addEventListener('popstate', handlePopState)
+    return () => window.removeEventListener('popstate', handlePopState)
+  }, [isLedgerInputOpen, isLedgerSearchOpen, activePage, onNavigate])
+
+  const openLedgerInput = () => {
+    setIsLedgerInputOpen(true)
+  }
+
+  const openLedgerSearch = () => {
+    setIsLedgerSearchOpen(true)
+    window.history.pushState({ modal: 'ledgerSearch' }, '')
+  }
+
+  const closeLedgerSearch = () => {
+    if (window.history.state?.modal === 'ledgerSearch') {
+      window.history.back()
+    }
+    setIsLedgerSearchOpen(false)
+  }
+
   const renderPage = () => {
     switch (activePage) {
       case 'calendar':
@@ -90,8 +120,17 @@ const MobileApp: React.FC<MobileAppProps> = ({ activePage, onNavigate }) => {
                 }} className="px-3 py-1 text-xs font-bold text-yuri-500 hover:text-accent bg-yuri-50 rounded-full transition-colors mr-1">
                   이번 달
                 </button>
-                <button onClick={() => setIsLedgerSearchOpen(!isLedgerSearchOpen)} className={`p-2 rounded-full transition-colors ${isLedgerSearchOpen ? 'text-accent bg-accent/10' : 'text-yuri-400 hover:text-accent hover:bg-yuri-50'}`}>
+                <button onClick={() => {
+                  if (isLedgerSearchOpen) closeLedgerSearch()
+                  else openLedgerSearch()
+                }} className={`p-2 rounded-full transition-colors ${isLedgerSearchOpen ? 'text-accent bg-accent/10' : 'text-yuri-400 hover:text-accent hover:bg-yuri-50'}`}>
                   <span className="text-xl leading-none">🔍</span>
+                </button>
+                <button 
+                  onClick={openLedgerInput}
+                  className="p-1 text-accent hover:bg-yuri-50 rounded-full transition-colors ml-1"
+                >
+                  <span className="text-3xl font-light leading-none">+</span>
                 </button>
               </div>
             </div>
@@ -102,13 +141,13 @@ const MobileApp: React.FC<MobileAppProps> = ({ activePage, onNavigate }) => {
                 <input spellCheck={false}
                   type="text"
                   autoFocus
-                  placeholder="내역, 카테고리 검색"
+                  placeholder="내역, 메모 검색"
                   value={ledgerSearchQuery}
                   onChange={e => setLedgerSearchQuery(e.target.value)}
                   onKeyDown={e => {
                     if (e.key === 'Escape') {
                       setLedgerSearchQuery('');
-                      setIsLedgerSearchOpen(false);
+                      closeLedgerSearch();
                     }
                   }}
                   className="flex-1 bg-white border border-yuri-200 rounded-xl px-4 py-2 text-sm text-yuri-900 outline-none focus:border-accent shadow-sm"
@@ -124,17 +163,6 @@ const MobileApp: React.FC<MobileAppProps> = ({ activePage, onNavigate }) => {
             {/* Body */}
             <div className="flex-1 overflow-hidden relative">
               <MobileCardTab year={ledgerYear} month={ledgerMonth} searchQuery={ledgerSearchQuery} />
-              
-              {/* Floating Action Button */}
-              <button
-                onClick={() => setIsLedgerInputOpen(true)}
-                className="absolute right-4 bottom-6 w-14 h-14 bg-accent text-white rounded-2xl shadow-lg flex items-center justify-center hover:bg-accent/90 active:scale-95 transition-all z-20"
-                style={{
-                  boxShadow: '0 4px 14px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(0,0,0,0.05)'
-                }}
-              >
-                <span className="text-2xl font-light leading-none mb-1">+</span>
-              </button>
             </div>
 
             <MobileLedgerInputSheet isOpen={isLedgerInputOpen} onClose={() => setIsLedgerInputOpen(false)} />
@@ -152,7 +180,7 @@ const MobileApp: React.FC<MobileAppProps> = ({ activePage, onNavigate }) => {
 
   return (
     <div className="fixed inset-0 flex flex-col bg-yuri-50 font-sans text-yuri-900 selection:bg-accent/20 overflow-hidden w-full h-full">
-      {activePage !== 'calendar' && (
+      {activePage !== 'calendar' && activePage !== 'ledger' && (
         <header className="shrink-0 h-14 flex items-center justify-center border-b border-yuri-100 bg-white sticky top-0 z-10 shadow-sm transition-all">
           <h1 className="text-lg font-bold text-yuri-900">{getPageTitle(activePage)}</h1>
         </header>

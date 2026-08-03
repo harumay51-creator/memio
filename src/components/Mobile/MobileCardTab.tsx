@@ -183,7 +183,7 @@ export default function MobileCardTab({ year, month, searchQuery = '' }: MobileC
     if (searchQuery.trim()) {
       const queries = searchQuery.trim().toLowerCase().split(/\s+/)
       filtered = filtered.filter(item => {
-        const target = extractSearchText((item.label || '') + ' ' + (item.category || '')).toLowerCase()
+        const target = extractSearchText((item.label || '') + ' ' + (item.memo || '')).toLowerCase()
         return queries.every(q => target.includes(q))
       })
     }
@@ -231,21 +231,21 @@ export default function MobileCardTab({ year, month, searchQuery = '' }: MobileC
               <div 
                 key={tab.id}
                 onClick={() => setActiveTabId(tab.id)}
-                className={`cursor-pointer shrink-0 snap-center rounded-2xl p-4 transition-all border-2 min-w-[200px] flex flex-col gap-1 ${
+                className={`cursor-pointer shrink-0 snap-center rounded-2xl p-3 transition-all border-2 min-w-[140px] flex flex-col gap-1 ${
                   isSelected 
                     ? 'bg-white border-yuri-900 shadow-md scale-100' 
                     : 'bg-yuri-50 border-transparent opacity-70'
                 }`}
               >
                 <div className="flex items-center justify-between mb-1">
-                  <span className={`text-sm font-extrabold ${isSelected ? 'text-yuri-900' : 'text-yuri-500'}`}>
+                  <span className={`text-xs font-extrabold ${isSelected ? 'text-yuri-900' : 'text-yuri-500'}`}>
                     {tab.title}
                   </span>
                 </div>
-                <div className={`text-xl font-black ${isSelected ? 'text-yuri-900' : 'text-yuri-600'}`}>
+                <div className={`text-lg font-black ${isSelected ? 'text-yuri-900' : 'text-yuri-600'}`}>
                   {total.toLocaleString()}원
                 </div>
-                <div className="text-[10px] text-yuri-400 font-medium mt-1">
+                <div className="text-[9px] text-yuri-400 font-medium mt-1 leading-tight">
                   {tab.cycle.cardBillingStart.getMonth() + 1}/{tab.cycle.cardBillingStart.getDate()} ~ {tab.cycle.cardBillingEnd.getMonth() + 1}/{tab.cycle.cardBillingEnd.getDate()}
                   <span className="mx-1">·</span>결제 {tab.cycle.targetCardPaymentDate.getMonth() + 1}/{tab.cycle.targetCardPaymentDate.getDate()}
                 </div>
@@ -346,6 +346,7 @@ export default function MobileCardTab({ year, month, searchQuery = '' }: MobileC
                     <span className="text-sm font-semibold text-yuri-900 truncate">
                       {highlightText(item.label)}
                     </span>
+                    {item.memo && <MessageSquare size={12} className="text-yuri-300 shrink-0" />}
                   </div>
                   <div className="flex items-center gap-3 shrink-0 ml-2">
                     <span className="text-base font-black text-yuri-900">

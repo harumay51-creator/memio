@@ -40,9 +40,7 @@ export const LedgerSearchTab: React.FC<LedgerSearchTabProps> = ({
     ledger.forEach(entry => {
       const searchTarget = [
         entry.label,
-        entry.memo,
-        entry.category,
-        entry.paymentMethod
+        entry.memo
       ].filter(Boolean).join(' ')
       
       if (isSearchMatch(searchTarget, searchQuery)) {
@@ -53,9 +51,7 @@ export const LedgerSearchTab: React.FC<LedgerSearchTabProps> = ({
     // Search fixed expenses
     fixedExpenses.forEach(fe => {
       const searchTarget = [
-        fe.label,
-        fe.category,
-        fe.paymentMethod
+        fe.label
       ].filter(Boolean).join(' ')
       
       if (isSearchMatch(searchTarget, searchQuery)) {

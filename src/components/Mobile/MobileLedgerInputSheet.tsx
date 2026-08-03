@@ -20,8 +20,29 @@ const MobileLedgerInputSheet: React.FC<MobileLedgerInputSheetProps> = ({ isOpen,
   const [description, setDescription] = useState('')
   const [paymentMethod, setPaymentMethod] = useState<'카드' | '계좌이체'>('카드')
   const [category, setCategory] = useState<string>('기타')
+  const [memo, setMemo] = useState('')
   const [isManualCategory, setIsManualCategory] = useState(false)
   const [isCategoryPickerOpen, setIsCategoryPickerOpen] = useState(false)
+
+  // History API for back button
+  useEffect(() => {
+    if (isOpen) {
+      window.history.pushState({ sheet: 'ledgerInput' }, '')
+      
+      const handlePopState = () => {
+        onClose()
+      }
+      window.addEventListener('popstate', handlePopState)
+      return () => window.removeEventListener('popstate', handlePopState)
+    }
+  }, [isOpen, onClose])
+
+  const handleClose = () => {
+    if (window.history.state?.sheet === 'ledgerInput') {
+      window.history.back()
+    }
+    onClose()
+  }
 
   // Pre-fill on open if initialEntry is provided
   useEffect(() => {
@@ -30,6 +51,7 @@ const MobileLedgerInputSheet: React.FC<MobileLedgerInputSheetProps> = ({ isOpen,
       setAmountStr(initialEntry.amount.toString())
       setDescription(initialEntry.label)
       setCategory(initialEntry.category)
+      setMemo(initialEntry.memo || '')
       setIsManualCategory(true)
       if (initialEntry.paymentMethod === '계좌이체') {
         setPaymentMethod('계좌이체')
@@ -41,6 +63,7 @@ const MobileLedgerInputSheet: React.FC<MobileLedgerInputSheetProps> = ({ isOpen,
       setDate(new Date())
       setAmountStr('')
       setDescription('')
+      setMemo('')
       setCategory('기타')
       setIsManualCategory(false)
       setPaymentMethod('카드')
@@ -71,7 +94,7 @@ const MobileLedgerInputSheet: React.FC<MobileLedgerInputSheetProps> = ({ isOpen,
     setAmountStr(prev => prev.slice(0, -1))
   }
 
-  const handleSave = async () => {
+  const handleSave = () => {
     if (!amountStr || parseInt(amountStr, 10) === 0) {
       alert('금액을 입력해주세요.')
       return
@@ -83,27 +106,22 @@ const MobileLedgerInputSheet: React.FC<MobileLedgerInputSheetProps> = ({ isOpen,
         amount: parseInt(amountStr, 10),
         category: category,
         scheduledDate: date.toISOString(),
-        paymentMethod: paymentMethod
+        paymentMethod: paymentMethod,
+        memo: memo.trim() || undefined
       })
     } else {
-      await addLedgerEntry(
+      addLedgerEntry(
         description.trim() || category,
         parseInt(amountStr, 10),
         'expense',
         category,
         date.toISOString(),
-        paymentMethod
+        paymentMethod,
+        memo.trim() || undefined
       )
     }
     
-    // Reset state after save
-    setAmountStr('')
-    setDescription('')
-    setDate(new Date())
-    setIsManualCategory(false)
-    setCategory('기타')
-    
-    onClose()
+    handleClose()
   }
 
   if (!isOpen) return null
@@ -169,6 +187,20 @@ const MobileLedgerInputSheet: React.FC<MobileLedgerInputSheetProps> = ({ isOpen,
                 onChange={e => setDescription(e.target.value)}
                 placeholder="어디에 쓰셨나요?"
                 className="flex-1 bg-yuri-50 border-none rounded-xl px-4 py-3 text-base text-yuri-900 outline-none focus:ring-2 focus:ring-accent/20"
+                autoComplete="off"
+                spellCheck="false"
+              />
+            </div>
+            
+            {/* Memo */}
+            <div className="flex items-center gap-3 mb-6">
+              <span className="shrink-0 px-3 py-2 w-[54px] text-center text-sm">💬</span>
+              <input
+                type="text"
+                value={memo}
+                onChange={e => setMemo(e.target.value)}
+                placeholder="메모를 입력하세요"
+                className="flex-1 bg-yuri-50 border-none rounded-xl px-4 py-3 text-sm text-yuri-900 outline-none focus:ring-2 focus:ring-accent/20"
                 autoComplete="off"
                 spellCheck="false"
               />
