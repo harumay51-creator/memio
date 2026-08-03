@@ -1,6 +1,7 @@
 import React from 'react'
 import type { PageId } from '../../types'
 import MobileCalendarPage from './MobileCalendarPage'
+import { useDiaryStore } from '../../store/DiaryStore'
 
 interface MobileAppProps {
   activePage: PageId
@@ -9,6 +10,8 @@ interface MobileAppProps {
 }
 
 const MobileApp: React.FC<MobileAppProps> = ({ activePage, onNavigate }) => {
+  const { isDiaryMode } = useDiaryStore()
+
   const getPageTitle = (page: PageId) => {
     switch (page) {
       case 'calendar': return '달력'
@@ -34,9 +37,11 @@ const MobileApp: React.FC<MobileAppProps> = ({ activePage, onNavigate }) => {
 
   return (
     <div className="flex flex-col h-screen w-screen bg-yuri-50 font-sans text-yuri-900 selection:bg-accent/20">
-      <header className="shrink-0 h-14 flex items-center justify-center border-b border-yuri-100 bg-white sticky top-0 z-10 shadow-sm">
-        <h1 className="text-lg font-bold text-yuri-900">{getPageTitle(activePage)}</h1>
-      </header>
+      {!(activePage === 'calendar' && isDiaryMode) && (
+        <header className="shrink-0 h-14 flex items-center justify-center border-b border-yuri-100 bg-white sticky top-0 z-10 shadow-sm transition-all">
+          <h1 className="text-lg font-bold text-yuri-900">{getPageTitle(activePage)}</h1>
+        </header>
+      )}
 
       <main className="flex-1 overflow-y-auto relative w-full h-full">
         {renderPage()}

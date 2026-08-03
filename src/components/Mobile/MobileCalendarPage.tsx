@@ -10,10 +10,11 @@ const EVENT_COLORS = ['#8B7CF8', '#EF6A7B', '#63D2B0', '#F4B73F']
 
 import { MobileDiaryView } from './MobileDiaryView'
 import { MobileDiarySearchModal } from './MobileDiarySearchModal'
+import Emoji from '../common/Emoji'
 
 const MobileCalendarPage: React.FC = () => {
   const { events, addEvent, updateEvent, deleteEvent } = useAppStore()
-  const { isDiaryMode, setIsDiaryMode } = useDiaryStore()
+  const { isDiaryMode, setIsDiaryMode, diaries } = useDiaryStore()
   
   const [currentDate, setCurrentDate] = useState(new Date())
   const [selectedDate, setSelectedDate] = useState(new Date())
@@ -144,12 +145,14 @@ const MobileCalendarPage: React.FC = () => {
           const isSelected = isSameDay(d, selectedDate)
           const isCurrentMonth = isSameMonth(d, currentDate)
           const isToday = isSameDay(d, new Date())
+          const diaryEntry = diaries[dStr]
+          const hasDiaryRecord = diaryEntry && ((diaryEntry.answers && diaryEntry.answers.length > 0) || (diaryEntry.memos && diaryEntry.memos.length > 0))
 
           return (
             <button
               key={d.toISOString()}
               onClick={() => handleDateClick(d)}
-              className={`flex flex-col items-center justify-start aspect-square p-1 border border-transparent ${
+              className={`flex flex-col items-center justify-start border border-transparent ${isDiaryMode ? 'py-1 h-12' : 'aspect-square p-1'} ${
                 isSelected ? 'bg-accent/10 rounded-xl' : ''
               } ${!isCurrentMonth ? 'opacity-30' : ''}`}
             >
@@ -159,15 +162,27 @@ const MobileCalendarPage: React.FC = () => {
                 {format(d, 'd')}
               </span>
               
-              {/* Event Dots */}
-              <div className="flex gap-0.5 mt-1 flex-wrap justify-center w-full px-1">
-                {dayEvents.slice(0, 3).map((ev, i) => (
-                  <span key={i} className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: ev.color || EVENT_COLORS[0] }} />
-                ))}
-                {dayEvents.length > 3 && (
-                  <span className="w-1.5 h-1.5 rounded-full bg-yuri-300" />
-                )}
-              </div>
+              {/* Event Dots or Emojis */}
+              {isDiaryMode ? (
+                <div className="flex flex-nowrap items-center justify-center gap-0.5 w-full overflow-hidden mt-1 px-1 h-4">
+                  {(diaryEntry?.emojis || []).length > 0 ? (
+                    diaryEntry!.emojis!.map((emoji: string, idx: number) => (
+                      <Emoji key={idx} emoji={emoji} className="w-3.5 h-3.5 shrink-0" />
+                    ))
+                  ) : hasDiaryRecord ? (
+                    <span className="text-[12px] leading-none opacity-70">📝</span>
+                  ) : null}
+                </div>
+              ) : (
+                <div className="flex gap-0.5 mt-1 flex-wrap justify-center w-full px-1">
+                  {dayEvents.slice(0, 3).map((ev, i) => (
+                    <span key={i} className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: ev.color || EVENT_COLORS[0] }} />
+                  ))}
+                  {dayEvents.length > 3 && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-yuri-300" />
+                  )}
+                </div>
+              )}
             </button>
           )
         })}

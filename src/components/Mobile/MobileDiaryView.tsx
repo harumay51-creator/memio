@@ -377,11 +377,11 @@ export const MobileDiaryView = ({ selectedDate }: { selectedDate: Date }) => {
                         <button
                           key={emoji}
                           onClick={() => handleEmojiSelect(emoji)}
-                          className={`w-8 h-8 flex items-center justify-center rounded-full ${
-                            (dayDiary.emojis || []).includes(emoji) ? 'bg-[#8B7CF8] scale-110' : 'bg-white border border-[#E5E5EA]'
+                          className={`w-9 h-9 p-2 flex items-center justify-center rounded-full shrink-0 transition-all ${
+                            (dayDiary.emojis || []).includes(emoji) ? 'bg-[#8B7CF8] shadow-md scale-110' : 'bg-white hover:bg-[#F0F0F5] border border-[#E5E5EA]'
                           }`}
                         >
-                          <Emoji emoji={emoji} />
+                          <Emoji emoji={emoji} className="w-full h-full flex-shrink-0" />
                         </button>
                       ))}
                     </div>
