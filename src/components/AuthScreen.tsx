@@ -118,6 +118,7 @@ const AuthScreen: React.FC = () => {
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 required
+                autoComplete="off"
                 className="w-full bg-yuri-50 border border-yuri-200 focus:border-accent text-yuri-900 rounded-xl px-4 py-3 text-sm outline-none transition-colors"
               />
             </div>
@@ -129,6 +130,7 @@ const AuthScreen: React.FC = () => {
                   value={password}
                   onChange={e => setPassword(e.target.value)}
                   required
+                  autoComplete="off"
                   className="w-full bg-yuri-50 border border-yuri-200 focus:border-accent text-yuri-900 rounded-xl px-4 py-3 text-sm outline-none transition-colors"
                   placeholder="비밀번호 (6자리 이상)"
                 />

@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import type { PageId } from '../../types'
 import MobileCalendarPage from './MobileCalendarPage'
 
@@ -18,6 +18,35 @@ const MobileApp: React.FC<MobileAppProps> = ({ activePage, onNavigate }) => {
     }
   }
 
+  const [isKeyboardOpen, setIsKeyboardOpen] = useState(false)
+
+  useEffect(() => {
+    const handleFocus = (e: FocusEvent) => {
+      const target = e.target as HTMLElement
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) {
+        setIsKeyboardOpen(true)
+      }
+    }
+    const handleBlur = (e: FocusEvent) => {
+      const target = e.target as HTMLElement
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) {
+        setTimeout(() => {
+          // Check if another input is focused
+          const active = document.activeElement as HTMLElement
+          if (!active || (active.tagName !== 'INPUT' && active.tagName !== 'TEXTAREA' && !active.isContentEditable)) {
+            setIsKeyboardOpen(false)
+          }
+        }, 100)
+      }
+    }
+    document.addEventListener('focusin', handleFocus)
+    document.addEventListener('focusout', handleBlur)
+    return () => {
+      document.removeEventListener('focusin', handleFocus)
+      document.removeEventListener('focusout', handleBlur)
+    }
+  }, [])
+
   const renderPage = () => {
     switch (activePage) {
       case 'calendar':
@@ -33,7 +62,7 @@ const MobileApp: React.FC<MobileAppProps> = ({ activePage, onNavigate }) => {
   }
 
   return (
-    <div className="flex flex-col h-[100dvh] w-screen bg-yuri-50 font-sans text-yuri-900 selection:bg-accent/20 overflow-hidden">
+    <div className="fixed inset-0 flex flex-col bg-yuri-50 font-sans text-yuri-900 selection:bg-accent/20 overflow-hidden w-full h-full">
       {activePage !== 'calendar' && (
         <header className="shrink-0 h-14 flex items-center justify-center border-b border-yuri-100 bg-white sticky top-0 z-10 shadow-sm transition-all">
           <h1 className="text-lg font-bold text-yuri-900">{getPageTitle(activePage)}</h1>
@@ -44,12 +73,14 @@ const MobileApp: React.FC<MobileAppProps> = ({ activePage, onNavigate }) => {
         {renderPage()}
       </main>
 
-      <nav className="shrink-0 h-16 border-t border-yuri-100 bg-white flex items-center justify-around pb-[env(safe-area-inset-bottom)] shadow-[0_-1px_10px_rgba(0,0,0,0.02)] z-20">
-        <TabItem icon="📅" label="달력" isActive={activePage === 'calendar'} onClick={() => onNavigate('calendar')} />
-        <TabItem icon="📝" label="메모" isActive={activePage === 'notes'} onClick={() => onNavigate('notes')} />
-        <TabItem icon="💰" label="가계부" isActive={activePage === 'ledger'} onClick={() => onNavigate('ledger')} />
-        <TabItem icon="⋯" label="더보기" isActive={activePage === 'settings'} onClick={() => onNavigate('settings')} />
-      </nav>
+      {!isKeyboardOpen && (
+        <nav className="shrink-0 h-16 border-t border-yuri-100 bg-white flex items-center justify-around pb-[env(safe-area-inset-bottom)] shadow-[0_-1px_10px_rgba(0,0,0,0.02)] z-20">
+          <TabItem icon="📅" label="달력" isActive={activePage === 'calendar'} onClick={() => onNavigate('calendar')} />
+          <TabItem icon="📝" label="메모" isActive={activePage === 'notes'} onClick={() => onNavigate('notes')} />
+          <TabItem icon="💰" label="가계부" isActive={activePage === 'ledger'} onClick={() => onNavigate('ledger')} />
+          <TabItem icon="⋯" label="더보기" isActive={activePage === 'settings'} onClick={() => onNavigate('settings')} />
+        </nav>
+      )}
     </div>
   )
 }
