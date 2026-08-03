@@ -226,17 +226,19 @@ const MobileLedgerInputSheet: React.FC<MobileLedgerInputSheetProps> = ({ isOpen,
                 ⌫
               </button>
             </div>
-
-            {/* Save Button */}
-            <button
-              type="button"
-              onClick={handleSave}
-              disabled={!amountStr || parseInt(amountStr, 10) === 0}
-              className="w-full mt-4 py-4 bg-accent text-white font-bold text-lg rounded-2xl shadow-md hover:bg-accent/90 active:bg-accent/80 disabled:opacity-50 disabled:shadow-none transition-all"
-            >
-              저장하기
-            </button>
           </div>
+        </div>
+
+        {/* Save Button Fixed at Bottom */}
+        <div className="p-4 border-t border-yuri-100 bg-white shrink-0 pb-[max(1rem,env(safe-area-inset-bottom))]">
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={!amountStr || parseInt(amountStr, 10) === 0}
+            className="w-full py-4 bg-accent text-white font-bold text-lg rounded-2xl shadow-md hover:bg-accent/90 active:bg-accent/80 disabled:opacity-50 disabled:shadow-none transition-all"
+          >
+            저장하기
+          </button>
         </div>
       </div>
 

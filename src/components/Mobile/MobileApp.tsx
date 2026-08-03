@@ -3,6 +3,7 @@ import type { PageId } from '../../types'
 import MobileCalendarPage from './MobileCalendarPage'
 import MobileLedgerInputSheet from './MobileLedgerInputSheet'
 import MobileCardTab from './MobileCardTab'
+import MobileCashTab from './MobileCashTab'
 
 interface MobileAppProps {
   activePage: PageId
@@ -23,6 +24,7 @@ const MobileApp: React.FC<MobileAppProps> = ({ activePage, onNavigate }) => {
   const [isKeyboardOpen, setIsKeyboardOpen] = useState(false)
   const [isLedgerInputOpen, setIsLedgerInputOpen] = useState(false)
   
+  const [ledgerSubTab, setLedgerSubTab] = useState<'card' | 'cash'>('card')
   const [ledgerYear, setLedgerYear] = useState(() => new Date().getFullYear())
   const [ledgerMonth, setLedgerMonth] = useState(() => new Date().getMonth())
   const [isLedgerSearchOpen, setIsLedgerSearchOpen] = useState(false)
@@ -114,6 +116,21 @@ const MobileApp: React.FC<MobileAppProps> = ({ activePage, onNavigate }) => {
                 </button>
               </div>
               <div className="flex items-center gap-1">
+                <div className="flex bg-yuri-50 p-1 rounded-xl mr-2">
+                  <button 
+                    onClick={() => setLedgerSubTab('card')}
+                    className={`px-3 py-1 text-[11px] font-bold rounded-lg transition-colors ${ledgerSubTab === 'card' ? 'bg-white text-yuri-900 shadow-sm' : 'text-yuri-400'}`}
+                  >
+                    카드
+                  </button>
+                  <button 
+                    onClick={() => setLedgerSubTab('cash')}
+                    className={`px-3 py-1 text-[11px] font-bold rounded-lg transition-colors ${ledgerSubTab === 'cash' ? 'bg-white text-yuri-900 shadow-sm' : 'text-yuri-400'}`}
+                  >
+                    현금·계좌
+                  </button>
+                </div>
+                
                 <button onClick={() => {
                   setLedgerYear(new Date().getFullYear())
                   setLedgerMonth(new Date().getMonth())
@@ -161,8 +178,12 @@ const MobileApp: React.FC<MobileAppProps> = ({ activePage, onNavigate }) => {
             )}
 
             {/* Body */}
-            <div className="flex-1 overflow-hidden relative">
-              <MobileCardTab year={ledgerYear} month={ledgerMonth} searchQuery={ledgerSearchQuery} />
+            <div className="flex-1 overflow-hidden relative flex flex-col">
+              {ledgerSubTab === 'card' ? (
+                <MobileCardTab year={ledgerYear} month={ledgerMonth} searchQuery={ledgerSearchQuery} />
+              ) : (
+                <MobileCashTab year={ledgerYear} month={ledgerMonth} searchQuery={ledgerSearchQuery} />
+              )}
             </div>
 
             <MobileLedgerInputSheet isOpen={isLedgerInputOpen} onClose={() => setIsLedgerInputOpen(false)} />
