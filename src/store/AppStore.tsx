@@ -687,12 +687,13 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
     const newItem: any = { id: genId(), text, createdAt: new Date().toISOString(), order: events.length }
     if (scheduledDate) newItem.scheduledDate = scheduledDate
     if (color) newItem.color = color
+    setEvents(prev => [newItem as ScheduleEvent, ...prev])
     try {
       await setDoc(doc(db, 'users', uid, 'events', newItem.id), newItem)
-      setEvents(prev => [newItem as ScheduleEvent, ...prev])
       showToast('일정이 추가되었습니다.', 'success')
     } catch (err) {
       console.error(err)
+      setEvents(prev => prev.filter(e => e.id !== newItem.id))
       showToast('저장에 실패했습니다.', 'error')
       throw err
     }

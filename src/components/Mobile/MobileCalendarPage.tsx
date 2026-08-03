@@ -18,6 +18,7 @@ const MobileCalendarPage: React.FC = () => {
   const { isDiaryMode, setIsDiaryMode, diaries } = useDiaryStore()
   
   const [currentDate, setCurrentDate] = useState(new Date())
+  const [currentDiaryDate, setCurrentDiaryDate] = useState(new Date())
   const [selectedDate, setSelectedDate] = useState(new Date())
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const mergedHolidays = useMergedHolidays(currentDate.getFullYear())
@@ -26,13 +27,11 @@ const MobileCalendarPage: React.FC = () => {
   const [isAdding, setIsAdding] = useState(false)
   const [newEventText, setNewEventText] = useState('')
   const [newEventColor, setNewEventColor] = useState(EVENT_COLORS[0])
-  const [newEventTime, setNewEventTime] = useState('')
   
   // Editor (editing existing event)
   const [editingEventId, setEditingEventId] = useState<string | null>(null)
   const [editTitle, setEditTitle] = useState('')
   const [editColor, setEditColor] = useState(EVENT_COLORS[0])
-  const [editDate, setEditDate] = useState('')
 
   const scrollRef = useRef<HTMLDivElement>(null)
 
@@ -49,15 +48,17 @@ const MobileCalendarPage: React.FC = () => {
     return map
   }, [events])
 
+  const activeMonthDate = isDiaryMode ? currentDiaryDate : currentDate
+
   const allHolidays = useMemo(() => {
-    const y = currentDate.getFullYear()
+    const y = activeMonthDate.getFullYear()
     return {
       ...calculateHolidays(y - 1),
       ...calculateHolidays(y),
       ...calculateHolidays(y + 1),
       ...mergedHolidays
     }
-  }, [currentDate, mergedHolidays])
+  }, [activeMonthDate, mergedHolidays])
 
   const adjustedMonthlyEvents = useMemo(() => {
     const adjusted = new Map<string, typeof monthlyEvents>()
@@ -96,8 +97,8 @@ const MobileCalendarPage: React.FC = () => {
       })
     }
 
-    const y = currentDate.getFullYear()
-    const m = currentDate.getMonth()
+    const y = activeMonthDate.getFullYear()
+    const m = activeMonthDate.getMonth()
 
     let prevY = y, prevM = m - 1
     if (prevM < 0) { prevM = 11; prevY-- }
@@ -110,11 +111,11 @@ const MobileCalendarPage: React.FC = () => {
     addForMonth(nextY, nextM)
 
     return adjusted
-  }, [monthlyEvents, currentDate, allHolidays])
+  }, [monthlyEvents, activeMonthDate, allHolidays])
 
   // Get calendar days for current month view
-  const monthStart = startOfMonth(currentDate)
-  const monthEnd = endOfMonth(currentDate)
+  const monthStart = startOfMonth(activeMonthDate)
+  const monthEnd = endOfMonth(activeMonthDate)
   const startDate = new Date(monthStart)
   startDate.setDate(startDate.getDate() - startDate.getDay()) // start on Sunday
   const endDate = new Date(monthEnd)
@@ -123,15 +124,21 @@ const MobileCalendarPage: React.FC = () => {
   }
   const days = eachDayOfInterval({ start: startDate, end: endDate })
 
-  const handlePrevMonth = () => setCurrentDate(subMonths(currentDate, 1))
-  const handleNextMonth = () => setCurrentDate(addMonths(currentDate, 1))
+  const handlePrevMonth = () => {
+    if (isDiaryMode) setCurrentDiaryDate(subMonths(currentDiaryDate, 1))
+    else setCurrentDate(subMonths(currentDate, 1))
+  }
+  const handleNextMonth = () => {
+    if (isDiaryMode) setCurrentDiaryDate(addMonths(currentDiaryDate, 1))
+    else setCurrentDate(addMonths(currentDate, 1))
+  }
 
   const handleDateClick = (d: Date) => {
     setSelectedDate(d)
     setEditingEventId(null)
     setIsAdding(false)
     setTimeout(() => {
-      scrollRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      scrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
     }, 100)
   }
 
@@ -175,16 +182,17 @@ const MobileCalendarPage: React.FC = () => {
   const { dayAnnivs: selectedAnnivs, dayMonthly: selectedMonthly } = getDayRoutines(selectedDate)
 
   // Add event
+  const [showTimePicker, setShowTimePicker] = useState(false)
+  const [isEditingTime, setIsEditingTime] = useState(false)
+
   const handleAddEventSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!newEventText.trim()) return
 
     const dStr = format(selectedDate, 'yyyy-MM-dd')
-    const finalDate = newEventTime ? `${dStr}T${newEventTime}:00` : dStr
 
-    addEvent(newEventText.trim(), finalDate, newEventColor)
+    addEvent(newEventText.trim(), dStr, newEventColor)
     setNewEventText('')
-    setNewEventTime('')
     setIsAdding(false)
   }
 
@@ -194,7 +202,6 @@ const MobileCalendarPage: React.FC = () => {
     if (!editingEventId || !editTitle.trim()) return
     updateEvent(editingEventId, {
       text: editTitle.trim(),
-      scheduledDate: editDate,
       color: editColor
     })
     setEditingEventId(null)
@@ -204,13 +211,24 @@ const MobileCalendarPage: React.FC = () => {
     <div className="flex flex-col h-full bg-white relative">
       {/* Calendar Header */}
       <div className="flex items-center justify-between px-4 py-3">
-        <button onClick={handlePrevMonth} className="p-2 text-yuri-400 hover:text-accent rounded-full hover:bg-yuri-50 transition-colors">
-          <span className="text-xl leading-none">◀</span>
-        </button>
-        <h2 className="text-lg font-bold text-yuri-900 flex items-center justify-center relative">
-          {format(currentDate, 'yyyy년 M월')}
-        </h2>
+        <div className="flex items-center gap-2">
+          <button onClick={handlePrevMonth} className="p-2 text-yuri-400 hover:text-accent rounded-full hover:bg-yuri-50 transition-colors">
+            <span className="text-xl leading-none">◀</span>
+          </button>
+          <h2 className="text-lg font-bold text-yuri-900 flex items-center justify-center relative">
+            {format(activeMonthDate, 'yyyy년 M월')}
+          </h2>
+          <button onClick={handleNextMonth} className="p-2 text-yuri-400 hover:text-accent rounded-full hover:bg-yuri-50 transition-colors">
+            <span className="text-xl leading-none">▶</span>
+          </button>
+        </div>
         <div className="flex items-center gap-1">
+          <button onClick={() => {
+            if (isDiaryMode) setCurrentDiaryDate(new Date())
+            else setCurrentDate(new Date())
+          }} className="px-3 py-1 text-xs font-bold text-yuri-500 hover:text-accent bg-yuri-50 rounded-full transition-colors mr-1">
+            오늘
+          </button>
           {isDiaryMode && (
             <button onClick={() => setIsSearchOpen(true)} className="p-2 text-yuri-400 hover:text-accent rounded-full hover:bg-yuri-50 transition-colors">
               <span className="text-xl leading-none">🔍</span>
@@ -243,7 +261,7 @@ const MobileCalendarPage: React.FC = () => {
           const isSunday = d.getDay() === 0
           const dayEvents = eventsByDate.get(dStr) || []
           const isSelected = isSameDay(d, selectedDate)
-          const isCurrentMonth = isSameMonth(d, currentDate)
+          const isCurrentMonth = isSameMonth(d, activeMonthDate)
           const isToday = isSameDay(d, new Date())
           const diaryEntry = diaries[dStr]
           const hasDiaryRecord = diaryEntry && ((diaryEntry.answers && diaryEntry.answers.length > 0) || (diaryEntry.memos && diaryEntry.memos.length > 0))
@@ -364,8 +382,10 @@ const MobileCalendarPage: React.FC = () => {
                     placeholder="일정 내용"
                     autoFocus
                   />
-                  <div className="flex items-center gap-2">
-                    <input type="datetime-local" value={editDate} onChange={e => setEditDate(e.target.value)} className="text-xs text-yuri-500 bg-yuri-50 px-2 py-1.5 rounded-lg border border-yuri-200" />
+                  <div className="flex items-center gap-2 mt-1">
+                    <button type="button" onClick={() => { setIsEditingTime(true); setShowTimePicker(true) }} className="text-xs font-semibold text-accent bg-accent/10 px-3 py-1.5 rounded-lg border border-accent/20">
+                      시간 추가
+                    </button>
                   </div>
                   <div className="flex items-center justify-between">
                     <div className="flex gap-2">
@@ -394,7 +414,6 @@ const MobileCalendarPage: React.FC = () => {
                   setEditingEventId(ev.id)
                   setEditTitle(ev.text)
                   setEditColor(ev.color || EVENT_COLORS[0])
-                  setEditDate(ev.scheduledDate ? new Date(ev.scheduledDate).toISOString().slice(0, 16) : format(selectedDate, 'yyyy-MM-dd') + 'T00:00')
                   setIsAdding(false)
                 }}
                 className="bg-white p-3 rounded-xl shadow-sm border border-yuri-100 flex items-start gap-3 active:scale-[0.98] transition-transform"
@@ -432,8 +451,10 @@ const MobileCalendarPage: React.FC = () => {
                 placeholder="새로운 일정"
                 autoFocus
               />
-              <div className="flex items-center gap-2">
-                <input type="time" value={newEventTime} onChange={e => setNewEventTime(e.target.value)} className="text-xs text-yuri-500 bg-yuri-50 px-2 py-1.5 rounded-lg border border-yuri-200" />
+              <div className="flex items-center gap-2 mt-1">
+                <button type="button" onClick={() => { setIsEditingTime(false); setShowTimePicker(true) }} className="text-xs font-semibold text-accent bg-accent/10 px-3 py-1.5 rounded-lg border border-accent/20">
+                  시간 추가
+                </button>
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex gap-2">
@@ -477,12 +498,61 @@ const MobileCalendarPage: React.FC = () => {
         <MobileDiarySearchModal 
           onClose={() => setIsSearchOpen(false)}
           onResultClick={(date) => {
-            setCurrentDate(date)
+            setCurrentDiaryDate(date)
             setSelectedDate(date)
             setIsSearchOpen(false)
           }}
         />
       )}
+
+      {showTimePicker && (
+        <TimePickerModal
+          onClose={() => setShowTimePicker(false)}
+          onSelect={(timeStr) => {
+            if (isEditingTime) {
+              setEditTitle(timeStr + ' ' + editTitle)
+            } else {
+              setNewEventText(timeStr + ' ' + newEventText)
+            }
+            setShowTimePicker(false)
+          }}
+        />
+      )}
+    </div>
+  )
+}
+
+const TimePickerModal: React.FC<{ onClose: () => void, onSelect: (timeStr: string) => void }> = ({ onClose, onSelect }) => {
+  const [ampm, setAmpm] = useState('오후')
+  const [hour, setHour] = useState('1')
+  const [minute, setMinute] = useState('00')
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
+      <div className="bg-white rounded-2xl w-full max-w-[280px] p-6 shadow-xl" onClick={e => e.stopPropagation()}>
+        <h3 className="text-lg font-bold text-yuri-900 mb-6 text-center">시간 설정</h3>
+        <div className="flex items-center justify-center gap-2 mb-8">
+          <select value={ampm} onChange={e => setAmpm(e.target.value)} className="text-base font-bold bg-yuri-50 border border-yuri-100 outline-none rounded-xl px-2 py-2.5 text-center text-yuri-900 appearance-none">
+            <option value="오전">오전</option>
+            <option value="오후">오후</option>
+          </select>
+          <select value={hour} onChange={e => setHour(e.target.value)} className="text-base font-bold bg-yuri-50 border border-yuri-100 outline-none rounded-xl px-3 py-2.5 text-center text-yuri-900 appearance-none">
+            {Array.from({length: 12}, (_, i) => i + 1).map(h => (
+              <option key={h} value={h}>{h}</option>
+            ))}
+          </select>
+          <span className="text-xl font-bold text-yuri-400 -mt-1">:</span>
+          <select value={minute} onChange={e => setMinute(e.target.value)} className="text-base font-bold bg-yuri-50 border border-yuri-100 outline-none rounded-xl px-3 py-2.5 text-center text-yuri-900 appearance-none">
+            {['00', '05', '10', '15', '20', '25', '30', '35', '40', '45', '50', '55'].map(m => (
+              <option key={m} value={m}>{m}</option>
+            ))}
+          </select>
+        </div>
+        <div className="flex gap-2">
+          <button onClick={onClose} className="flex-1 py-3 bg-yuri-100 text-yuri-600 font-bold rounded-xl active:bg-yuri-200 transition-colors">취소</button>
+          <button onClick={() => onSelect(`${ampm} ${hour}:${minute}`)} className="flex-1 py-3 bg-accent text-white font-bold rounded-xl active:bg-accent/90 transition-colors">확인</button>
+        </div>
+      </div>
     </div>
   )
 }
