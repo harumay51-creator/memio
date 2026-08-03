@@ -21,6 +21,7 @@ const MobileLedgerInputSheet: React.FC<MobileLedgerInputSheetProps> = ({ isOpen,
   const [paymentMethod, setPaymentMethod] = useState<'카드' | '계좌이체'>('카드')
   const [category, setCategory] = useState<string>('기타')
   const [memo, setMemo] = useState('')
+  const [showMemo, setShowMemo] = useState(false)
   const [isManualCategory, setIsManualCategory] = useState(false)
   const [isCategoryPickerOpen, setIsCategoryPickerOpen] = useState(false)
 
@@ -53,6 +54,9 @@ const MobileLedgerInputSheet: React.FC<MobileLedgerInputSheetProps> = ({ isOpen,
       setCategory(initialEntry.category)
       setMemo(initialEntry.memo || '')
       setIsManualCategory(true)
+      if (initialEntry.memo) {
+        setShowMemo(true)
+      }
       if (initialEntry.paymentMethod === '계좌이체') {
         setPaymentMethod('계좌이체')
       } else {
@@ -64,6 +68,7 @@ const MobileLedgerInputSheet: React.FC<MobileLedgerInputSheetProps> = ({ isOpen,
       setAmountStr('')
       setDescription('')
       setMemo('')
+      setShowMemo(false)
       setCategory('기타')
       setIsManualCategory(false)
       setPaymentMethod('카드')
@@ -134,13 +139,13 @@ const MobileLedgerInputSheet: React.FC<MobileLedgerInputSheetProps> = ({ isOpen,
       
       <div className="fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-3xl shadow-2xl flex flex-col max-h-[90dvh] animate-in slide-in-from-bottom-full duration-300">
         <div className="flex-1 overflow-y-auto overscroll-none pb-safe">
-          <div className="p-6 pb-2">
+          <div className="p-4 pb-2">
             {/* Header / Date / Payment Toggle */}
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between mb-3">
               <button 
                 type="button" 
                 onClick={() => setIsDatePickerOpen(true)}
-                className="flex items-center gap-2 px-3 py-1.5 bg-yuri-50 rounded-xl text-yuri-600 font-bold hover:bg-yuri-100 transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-yuri-50 rounded-xl text-sm text-yuri-600 font-bold hover:bg-yuri-100 transition-colors"
               >
                 📅 {format(date, 'M월 d일')}
               </button>
@@ -164,15 +169,15 @@ const MobileLedgerInputSheet: React.FC<MobileLedgerInputSheetProps> = ({ isOpen,
             </div>
 
             {/* Display Amount */}
-            <div className="text-right mb-6">
-              <span className="text-sm font-bold text-yuri-400 block mb-1">지출 금액</span>
-              <div className="text-4xl font-bold text-yuri-900 break-all">
-                {displayAmount} <span className="text-2xl font-semibold text-yuri-500">원</span>
+            <div className="text-right mb-3">
+              <span className="text-xs font-bold text-yuri-400 block mb-0.5">지출 금액</span>
+              <div className="text-3xl font-bold text-yuri-900 break-all leading-none">
+                {displayAmount} <span className="text-xl font-semibold text-yuri-500">원</span>
               </div>
             </div>
 
             {/* Description & Category */}
-            <div className="flex items-center gap-3 mb-6">
+            <div className="flex items-center gap-2 mb-3">
               <button
                 type="button"
                 onClick={() => setIsCategoryPickerOpen(true)}
@@ -186,34 +191,46 @@ const MobileLedgerInputSheet: React.FC<MobileLedgerInputSheetProps> = ({ isOpen,
                 value={description}
                 onChange={e => setDescription(e.target.value)}
                 placeholder="어디에 쓰셨나요?"
-                className="flex-1 bg-yuri-50 border-none rounded-xl px-4 py-3 text-base text-yuri-900 outline-none focus:ring-2 focus:ring-accent/20"
+                className="flex-1 bg-yuri-50 border-none rounded-xl px-3 py-2 text-sm text-yuri-900 outline-none focus:ring-2 focus:ring-accent/20"
                 autoComplete="off"
                 spellCheck="false"
               />
             </div>
             
             {/* Memo */}
-            <div className="flex items-center gap-3 mb-6">
-              <span className="shrink-0 px-3 py-2 w-[54px] text-center text-sm">💬</span>
-              <input
-                type="text"
-                value={memo}
-                onChange={e => setMemo(e.target.value)}
-                placeholder="메모를 입력하세요"
-                className="flex-1 bg-yuri-50 border-none rounded-xl px-4 py-3 text-sm text-yuri-900 outline-none focus:ring-2 focus:ring-accent/20"
-                autoComplete="off"
-                spellCheck="false"
-              />
-            </div>
+            {showMemo ? (
+              <div className="flex items-center gap-2 mb-3">
+                <span className="shrink-0 px-2 py-2 w-[46px] text-center text-sm">💬</span>
+                <input
+                  type="text"
+                  value={memo}
+                  onChange={e => setMemo(e.target.value)}
+                  placeholder="메모를 입력하세요"
+                  className="flex-1 bg-yuri-50 border-none rounded-xl px-3 py-2 text-sm text-yuri-900 outline-none focus:ring-2 focus:ring-accent/20"
+                  autoComplete="off"
+                  spellCheck="false"
+                />
+              </div>
+            ) : (
+              <div className="flex justify-end mb-3">
+                <button
+                  type="button"
+                  onClick={() => setShowMemo(true)}
+                  className="text-xs font-bold text-yuri-400 hover:text-accent bg-yuri-50 px-2 py-1 rounded-lg transition-colors"
+                >
+                  + 메모 추가
+                </button>
+              </div>
+            )}
 
             {/* Custom Numpad */}
-            <div className="grid grid-cols-3 gap-2 mt-4">
+            <div className="grid grid-cols-3 gap-1.5 mt-2">
               {['1','2','3','4','5','6','7','8','9','00','0'].map(num => (
                 <button
                   key={num}
                   type="button"
                   onClick={() => handleNumClick(num)}
-                  className="bg-yuri-50 hover:bg-yuri-100 active:bg-yuri-200 py-4 rounded-2xl text-2xl font-medium text-yuri-900 transition-colors"
+                  className="bg-yuri-50 hover:bg-yuri-100 active:bg-yuri-200 py-3 rounded-2xl text-xl font-medium text-yuri-900 transition-colors"
                 >
                   {num}
                 </button>
@@ -221,7 +238,7 @@ const MobileLedgerInputSheet: React.FC<MobileLedgerInputSheetProps> = ({ isOpen,
               <button
                 type="button"
                 onClick={handleDelete}
-                className="bg-yuri-50 hover:bg-yuri-100 active:bg-yuri-200 py-4 rounded-2xl text-2xl font-medium text-yuri-900 transition-colors flex items-center justify-center"
+                className="bg-yuri-50 hover:bg-yuri-100 active:bg-yuri-200 py-3 rounded-2xl text-xl font-medium text-yuri-900 transition-colors flex items-center justify-center"
               >
                 ⌫
               </button>
@@ -230,12 +247,12 @@ const MobileLedgerInputSheet: React.FC<MobileLedgerInputSheetProps> = ({ isOpen,
         </div>
 
         {/* Save Button Fixed at Bottom */}
-        <div className="p-4 border-t border-yuri-100 bg-white shrink-0 pb-[max(1rem,env(safe-area-inset-bottom))]">
+        <div className="p-3 border-t border-yuri-100 bg-white shrink-0 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
           <button
             type="button"
             onClick={handleSave}
             disabled={!amountStr || parseInt(amountStr, 10) === 0}
-            className="w-full py-4 bg-accent text-white font-bold text-lg rounded-2xl shadow-md hover:bg-accent/90 active:bg-accent/80 disabled:opacity-50 disabled:shadow-none transition-all"
+            className="w-full py-3 bg-accent text-white font-bold text-base rounded-2xl shadow-md hover:bg-accent/90 active:bg-accent/80 disabled:opacity-50 disabled:shadow-none transition-all"
           >
             저장하기
           </button>
