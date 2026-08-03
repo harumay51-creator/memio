@@ -162,6 +162,8 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
   useEffect(() => {
     let isMounted = true
     async function loadData() {
+      console.time('[AppStore] 1. Total Initial Load Time')
+      console.time('[AppStore] 2. Settings Load Time')
       try {
         // Fetch from Firestore
         const fetchCol = async (colName: string) => {
@@ -188,7 +190,9 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
           setCategoryOrderState(data.categoryOrder || [])
           if (data.holidayConfig) setHolidayConfig(data.holidayConfig)
         }
+        console.timeEnd('[AppStore] 2. Settings Load Time')
         
+        console.time('[AppStore] 3. Essential 6 Collections Load Time')
         const [
           fetchedTasks,
           fetchedEvents,
@@ -252,9 +256,14 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
           setMonthlyEvents(fetchedMonthly as MonthlyEvent[])
           setAgendas(fetchedAgendas as AgendaItem[])
           setRecurringInstances(fetchedRecurringInstances as RecurringInstance[])
+          
+          console.timeEnd('[AppStore] 3. Essential 6 Collections Load Time')
+          console.timeEnd('[AppStore] 1. Total Initial Load Time')
+          
           setIsLoading(false)
         }
 
+        console.time('[AppStore] 4. Background 6 Collections Load Time')
         // Background load for non-essential tabs
         Promise.all([
           fetchCol('ledger'),
@@ -345,6 +354,8 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
             }
           })
           setSalaryRecords(salaryMap)
+
+          console.timeEnd('[AppStore] 4. Background 6 Collections Load Time')
 
         }).catch(err => {
           console.error("Background load error:", err)
