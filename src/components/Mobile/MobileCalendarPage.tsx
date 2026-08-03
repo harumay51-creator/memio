@@ -199,6 +199,13 @@ const MobileCalendarPage: React.FC = () => {
     }, 100)
   }
 
+  const checkHasTime = (dStr: string | undefined) => {
+    if (!dStr) return false;
+    if (dStr.length <= 10) return false;
+    const d = new Date(dStr);
+    return d.getHours() !== 0 || d.getMinutes() !== 0;
+  }
+
   // Update event
   const handleUpdateEvent = (e: React.FormEvent) => {
     e.preventDefault()
@@ -427,16 +434,24 @@ const MobileCalendarPage: React.FC = () => {
                   setEditingEventId(ev.id)
                   setEditTitle(ev.text)
                   setEditColor(ev.color || EVENT_COLORS[0])
-                  setEditDate(ev.scheduledDate ? new Date(ev.scheduledDate).toISOString().slice(0, 16) : format(selectedDate, 'yyyy-MM-dd'))
+                  if (ev.scheduledDate) {
+                    if (checkHasTime(ev.scheduledDate)) {
+                      setEditDate(format(new Date(ev.scheduledDate), "yyyy-MM-dd'T'HH:mm"))
+                    } else {
+                      setEditDate(format(new Date(ev.scheduledDate), "yyyy-MM-dd"))
+                    }
+                  } else {
+                    setEditDate(format(selectedDate, 'yyyy-MM-dd'))
+                  }
                 }}
                 className="bg-white p-3 rounded-xl shadow-sm border border-yuri-100 flex items-start gap-3 active:scale-[0.98] transition-transform"
               >
                 <div className="w-1.5 h-10 rounded-full shrink-0" style={{ backgroundColor: ev.color || EVENT_COLORS[0] }} />
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-medium text-yuri-900 break-words leading-tight">{ev.text}</div>
-                  {ev.scheduledDate && ev.scheduledDate.length > 10 && (
+                  {checkHasTime(ev.scheduledDate) && (
                     <div className="text-[11px] text-yuri-500 mt-1 font-mono">
-                      {format(new Date(ev.scheduledDate), 'a h:mm', { locale: ko })}
+                      {format(new Date(ev.scheduledDate!), 'a h:mm', { locale: ko })}
                     </div>
                   )}
                 </div>
