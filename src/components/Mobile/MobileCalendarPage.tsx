@@ -2,16 +2,22 @@ import React, { useState, useMemo, useRef } from 'react'
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths } from 'date-fns'
 import { ko } from 'date-fns/locale'
 import { useAppStore } from '../../store/AppStore'
+import { useDiaryStore } from '../../store/DiaryStore'
 import { type ScheduleEvent } from '../../types'
 import { useMergedHolidays } from '../../hooks/useMergedHolidays'
 
 const EVENT_COLORS = ['#8B7CF8', '#EF6A7B', '#63D2B0', '#F4B73F']
 
+import { MobileDiaryView } from './MobileDiaryView'
+import { MobileDiarySearchModal } from './MobileDiarySearchModal'
+
 const MobileCalendarPage: React.FC = () => {
   const { events, addEvent, updateEvent, deleteEvent } = useAppStore()
+  const { isDiaryMode, setIsDiaryMode } = useDiaryStore()
   
   const [currentDate, setCurrentDate] = useState(new Date())
   const [selectedDate, setSelectedDate] = useState(new Date())
+  const [isSearchOpen, setIsSearchOpen] = useState(false)
   const mergedHolidays = useMergedHolidays(currentDate.getFullYear())
 
   // Editor (adding new event)
@@ -100,12 +106,22 @@ const MobileCalendarPage: React.FC = () => {
         <button onClick={handlePrevMonth} className="p-2 text-yuri-400 hover:text-accent rounded-full hover:bg-yuri-50 transition-colors">
           <span className="text-xl leading-none">◀</span>
         </button>
-        <h2 className="text-lg font-bold text-yuri-900">
+        <h2 className="text-lg font-bold text-yuri-900 flex items-center justify-center relative">
           {format(currentDate, 'yyyy년 M월')}
         </h2>
-        <button onClick={handleNextMonth} className="p-2 text-yuri-400 hover:text-accent rounded-full hover:bg-yuri-50 transition-colors">
-          <span className="text-xl leading-none">▶</span>
-        </button>
+        <div className="flex items-center gap-1">
+          {isDiaryMode && (
+            <button onClick={() => setIsSearchOpen(true)} className="p-2 text-yuri-400 hover:text-accent rounded-full hover:bg-yuri-50 transition-colors">
+              <span className="text-xl leading-none">🔍</span>
+            </button>
+          )}
+          <button onClick={() => setIsDiaryMode(!isDiaryMode)} className={`p-2 rounded-full transition-colors ${isDiaryMode ? 'text-accent bg-accent/10' : 'text-yuri-400 hover:text-accent hover:bg-yuri-50'}`}>
+            <span className="text-xl leading-none">{isDiaryMode ? '★' : '☆'}</span>
+          </button>
+          <button onClick={handleNextMonth} className="p-2 text-yuri-400 hover:text-accent rounded-full hover:bg-yuri-50 transition-colors">
+            <span className="text-xl leading-none">▶</span>
+          </button>
+        </div>
       </div>
 
       {/* Weekdays */}
@@ -157,8 +173,11 @@ const MobileCalendarPage: React.FC = () => {
         })}
       </div>
 
-      {/* Event List Section */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto bg-yuri-50 p-4">
+      {isDiaryMode ? (
+        <MobileDiaryView selectedDate={selectedDate} />
+      ) : (
+        /* Event List Section */
+        <div ref={scrollRef} className="flex-1 overflow-y-auto bg-yuri-50 p-4">
         <h3 className="text-sm font-bold text-yuri-700 mb-3 border-b border-yuri-200 pb-2 flex items-center gap-2">
           {format(selectedDate, 'M월 d일 (E)', { locale: ko })}
           {mergedHolidays[format(selectedDate, 'yyyy-MM-dd')] && (
@@ -278,6 +297,7 @@ const MobileCalendarPage: React.FC = () => {
           )}
         </div>
       </div>
+      )}
 
       {/* FAB */}
       {!isAdding && (
@@ -294,6 +314,17 @@ const MobileCalendarPage: React.FC = () => {
         >
           +
         </button>
+      )}
+
+      {isSearchOpen && (
+        <MobileDiarySearchModal 
+          onClose={() => setIsSearchOpen(false)}
+          onResultClick={(date) => {
+            setCurrentDate(date)
+            setSelectedDate(date)
+            setIsSearchOpen(false)
+          }}
+        />
       )}
     </div>
   )
