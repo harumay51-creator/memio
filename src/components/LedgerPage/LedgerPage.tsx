@@ -192,7 +192,7 @@ const LedgerPage: React.FC = () => {
             
             <div className="flex gap-4">
               <button 
-                onClick={() => setActiveTab('cash')}
+                onClick={() => { setActiveTab('cash'); setSearchQuery(''); }}
                 className={`pb-3 px-1 text-sm font-bold transition-colors border-b-2 ${
                   activeTab === 'cash' ? 'text-yuri-900 border-yuri-900' : 'text-yuri-400 border-transparent hover:text-yuri-600'
                 }`}
@@ -200,7 +200,7 @@ const LedgerPage: React.FC = () => {
                 현금/계좌
               </button>
               <button 
-                onClick={() => setActiveTab('card')}
+                onClick={() => { setActiveTab('card'); setSearchQuery(''); }}
                 className={`pb-3 px-1 text-sm font-bold transition-colors border-b-2 ${
                   activeTab === 'card' ? 'text-yuri-900 border-yuri-900' : 'text-yuri-400 border-transparent hover:text-yuri-600'
                 }`}
