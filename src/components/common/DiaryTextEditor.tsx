@@ -89,7 +89,7 @@ const DiaryTextEditor: React.FC<DiaryTextEditorProps> = ({
 
   useEffect(() => {
     if (autoFocus && editor && !editor.isFocused) {
-      editor.commands.focus('end');
+      editor.commands.focus('end', { scrollIntoView: false });
     }
   }, [editor, autoFocus]);
 

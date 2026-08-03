@@ -122,6 +122,17 @@ const MemoItem = ({ memo, deleteMemo, updateMemo }: { memo: DiaryMemo, deleteMem
 
   useEffect(() => {
     if (!isEditing) return;
+
+    setTimeout(() => {
+      if (editRef.current) {
+        const container = editRef.current.closest('.overflow-y-auto') as HTMLElement;
+        if (container) {
+          const top = editRef.current.offsetTop - container.offsetTop - 20;
+          container.scrollTo({ top, behavior: 'smooth' });
+        }
+      }
+    }, 50);
+
     const handleClickOutside = (e: MouseEvent) => {
       if (editRef.current && !editRef.current.contains(e.target as Node)) {
         updateMemo(memo.id, localText, localTags);
