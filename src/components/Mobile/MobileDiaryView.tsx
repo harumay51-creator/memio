@@ -398,7 +398,6 @@ export const MobileDiaryView = ({ selectedDate }: { selectedDate: Date }) => {
             {settings.questions.map((q: any) => {
               const answerObj = (dayDiary.answers || []).find((a: any) => a.questionId === q.id)
               const answer = answerObj ? answerObj.answer : ''
-              if (!answer && dayDiary.memos && dayDiary.memos.length > 0) return null;
               return (
                 <QuestionItem 
                   key={q.id}

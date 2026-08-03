@@ -5,6 +5,7 @@ import { useAppStore } from '../../store/AppStore'
 import { useDiaryStore } from '../../store/DiaryStore'
 import { type ScheduleEvent } from '../../types'
 import { useMergedHolidays } from '../../hooks/useMergedHolidays'
+import { calculateHolidays } from '../../utils/holidays'
 
 const EVENT_COLORS = ['#8B7CF8', '#EF6A7B', '#63D2B0', '#F4B73F']
 
@@ -13,7 +14,7 @@ import { MobileDiarySearchModal } from './MobileDiarySearchModal'
 import Emoji from '../common/Emoji'
 
 const MobileCalendarPage: React.FC = () => {
-  const { events, addEvent, updateEvent, deleteEvent } = useAppStore()
+  const { events, addEvent, updateEvent, deleteEvent, anniversaries, monthlyEvents, recurringInstances, deleteRecurringOccurrence } = useAppStore()
   const { isDiaryMode, setIsDiaryMode, diaries } = useDiaryStore()
   
   const [currentDate, setCurrentDate] = useState(new Date())
@@ -35,7 +36,6 @@ const MobileCalendarPage: React.FC = () => {
 
   const scrollRef = useRef<HTMLDivElement>(null)
 
-  // Map events to date string 'yyyy-MM-dd'
   const eventsByDate = useMemo(() => {
     const map = new Map<string, ScheduleEvent[]>()
     events.forEach(e => {
@@ -48,6 +48,69 @@ const MobileCalendarPage: React.FC = () => {
     })
     return map
   }, [events])
+
+  const allHolidays = useMemo(() => {
+    const y = currentDate.getFullYear()
+    return {
+      ...calculateHolidays(y - 1),
+      ...calculateHolidays(y),
+      ...calculateHolidays(y + 1),
+      ...mergedHolidays
+    }
+  }, [currentDate, mergedHolidays])
+
+  const adjustedMonthlyEvents = useMemo(() => {
+    const adjusted = new Map<string, typeof monthlyEvents>()
+    
+    const isWorkingDay = (dt: Date) => {
+      const w = dt.getDay()
+      if (w === 0 || w === 6) return false
+      const ds = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`
+      if (allHolidays[ds]?.isRedDay) return false
+      return true
+    }
+
+    const calcAdjusted = (y: number, m: number, ev: typeof monthlyEvents[0]) => {
+      const lastDate = new Date(y, m + 1, 0).getDate()
+      let target = Math.min(ev.day, lastDate)
+      let dt = new Date(y, m, target)
+      
+      let safety = 0
+      while (!isWorkingDay(dt) && safety < 30) {
+        if (ev.day === 1) {
+          dt.setDate(dt.getDate() + 1)
+        } else {
+          dt.setDate(dt.getDate() - 1)
+        }
+        safety++
+      }
+      return dt
+    }
+
+    const addForMonth = (y: number, m: number) => {
+      monthlyEvents.forEach(ev => {
+        const dt = calcAdjusted(y, m, ev)
+        const dtStr = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`
+        if (!adjusted.has(dtStr)) adjusted.set(dtStr, [])
+        adjusted.get(dtStr)!.push(ev)
+      })
+    }
+
+    const y = currentDate.getFullYear()
+    const m = currentDate.getMonth()
+
+    let prevY = y, prevM = m - 1
+    if (prevM < 0) { prevM = 11; prevY-- }
+    addForMonth(prevY, prevM)
+
+    addForMonth(y, m)
+
+    let nextY = y, nextM = m + 1
+    if (nextM > 11) { nextM = 0; nextY++ }
+    addForMonth(nextY, nextM)
+
+    return adjusted
+  }, [monthlyEvents, currentDate, allHolidays])
 
   // Get calendar days for current month view
   const monthStart = startOfMonth(currentDate)
@@ -72,7 +135,44 @@ const MobileCalendarPage: React.FC = () => {
     }, 100)
   }
 
+  const getDayRoutines = (d: Date) => {
+    const dStr = format(d, 'yyyy-MM-dd')
+    const dayAnnivs: { id: string, name: string, isVirtual?: boolean, instanceId?: string }[] = []
+    recurringInstances.filter(inst => inst.date === dStr && inst.sourceType === 'yearly' && inst.status === 'materialized').forEach(inst => {
+      dayAnnivs.push({ id: inst.sourceRuleId, name: inst.name, instanceId: inst.id })
+    })
+    anniversaries.forEach(a => {
+      if (a.month !== d.getMonth() + 1 || a.day !== d.getDate()) return
+      const createdTime = a.createdAt ? new Date(a.createdAt).getTime() : 0
+      const dEnd = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59).getTime()
+      if (dEnd >= createdTime) {
+        const existing = recurringInstances.find(inst => inst.sourceRuleId === a.id && inst.date === dStr)
+        if (!existing) {
+          dayAnnivs.push({ id: a.id, name: a.name, isVirtual: true })
+        }
+      }
+    })
+
+    const dayMonthly: { id: string, name: string, isVirtual?: boolean, instanceId?: string }[] = []
+    recurringInstances.filter(inst => inst.date === dStr && inst.sourceType === 'monthly' && inst.status === 'materialized').forEach(inst => {
+      dayMonthly.push({ id: inst.sourceRuleId, name: inst.name, instanceId: inst.id })
+    })
+    const rawMonthly = adjustedMonthlyEvents.get(dStr) || []
+    rawMonthly.forEach(m => {
+      const createdTime = m.createdAt ? new Date(m.createdAt).getTime() : 0
+      const dEnd = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59).getTime()
+      if (dEnd >= createdTime) {
+        const existing = recurringInstances.find(inst => inst.sourceRuleId === m.id && inst.date === dStr)
+        if (!existing) {
+          dayMonthly.push({ id: m.id, name: m.name, isVirtual: true })
+        }
+      }
+    })
+    return { dayAnnivs, dayMonthly }
+  }
+
   const selectedDayEvents = eventsByDate.get(format(selectedDate, 'yyyy-MM-dd')) || []
+  const { dayAnnivs: selectedAnnivs, dayMonthly: selectedMonthly } = getDayRoutines(selectedDate)
 
   // Add event
   const handleAddEventSubmit = (e: React.FormEvent) => {
@@ -148,11 +248,15 @@ const MobileCalendarPage: React.FC = () => {
           const diaryEntry = diaries[dStr]
           const hasDiaryRecord = diaryEntry && ((diaryEntry.answers && diaryEntry.answers.length > 0) || (diaryEntry.memos && diaryEntry.memos.length > 0))
 
+          const { dayAnnivs, dayMonthly } = getDayRoutines(d)
+
+          const totalEventsAndRoutinesCount = dayEvents.length + dayAnnivs.length + dayMonthly.length
+
           return (
             <button
               key={d.toISOString()}
               onClick={() => handleDateClick(d)}
-              className={`flex flex-col items-center justify-start border border-transparent ${isDiaryMode ? 'py-1 h-12' : 'aspect-square p-1'} ${
+              className={`flex flex-col items-center justify-start border border-transparent ${isDiaryMode ? 'py-0.5 h-11' : 'aspect-square p-1'} ${
                 isSelected ? 'bg-accent/10 rounded-xl' : ''
               } ${!isCurrentMonth ? 'opacity-30' : ''}`}
             >
@@ -164,21 +268,27 @@ const MobileCalendarPage: React.FC = () => {
               
               {/* Event Dots or Emojis */}
               {isDiaryMode ? (
-                <div className="flex flex-nowrap items-center justify-center gap-0.5 w-full overflow-hidden mt-1 px-1 h-4">
+                <div className="flex flex-nowrap items-center justify-center gap-0.5 w-full overflow-hidden mt-0.5 px-0.5 h-3.5">
                   {(diaryEntry?.emojis || []).length > 0 ? (
                     diaryEntry!.emojis!.map((emoji: string, idx: number) => (
-                      <Emoji key={idx} emoji={emoji} className="w-3.5 h-3.5 shrink-0" />
+                      <Emoji key={idx} emoji={emoji} className="w-3 h-3 shrink-0" />
                     ))
                   ) : hasDiaryRecord ? (
-                    <span className="text-[12px] leading-none opacity-70">📝</span>
+                    <span className="text-[10px] leading-none opacity-70">📝</span>
                   ) : null}
                 </div>
               ) : (
                 <div className="flex gap-0.5 mt-1 flex-wrap justify-center w-full px-1">
-                  {dayEvents.slice(0, 3).map((ev, i) => (
-                    <span key={i} className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: ev.color || EVENT_COLORS[0] }} />
+                  {dayAnnivs.slice(0, 3).map((_, i) => (
+                    <span key={`a-${i}`} className="w-1.5 h-1.5 rounded-full bg-[#B4629C]" />
                   ))}
-                  {dayEvents.length > 3 && (
+                  {dayMonthly.slice(0, Math.max(0, 3 - dayAnnivs.length)).map((_, i) => (
+                    <span key={`m-${i}`} className="w-1.5 h-1.5 rounded-full bg-[#3A4B8C]" />
+                  ))}
+                  {dayEvents.slice(0, Math.max(0, 3 - dayAnnivs.length - dayMonthly.length)).map((ev, i) => (
+                    <span key={`e-${i}`} className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: ev.color || EVENT_COLORS[0] }} />
+                  ))}
+                  {totalEventsAndRoutinesCount > 3 && (
                     <span className="w-1.5 h-1.5 rounded-full bg-yuri-300" />
                   )}
                 </div>
@@ -209,6 +319,38 @@ const MobileCalendarPage: React.FC = () => {
         )}
 
         <div className="flex flex-col gap-2 pb-24">
+          {selectedAnnivs.map(a => (
+            <div key={`a-${a.id}`} className="bg-white p-4 rounded-xl border border-yuri-100 shadow-sm flex items-start gap-3 relative">
+              <span className="text-sm font-bold text-[#B4629C] shrink-0 mt-0.5">↻</span>
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] font-bold text-[#B4629C] mb-0.5">매년 반복</p>
+                <p className="text-sm font-semibold text-yuri-900 leading-tight whitespace-pre-wrap">{a.name}</p>
+              </div>
+              <button onClick={() => {
+                const dStr = format(selectedDate, 'yyyy-MM-dd')
+                deleteRecurringOccurrence(a.id, 'yearly', a.name, dStr, a.instanceId)
+              }} className="text-yuri-400 hover:text-[#EF6A7B] p-1 -mr-2 -mt-2">
+                ✕
+              </button>
+            </div>
+          ))}
+
+          {selectedMonthly.map(m => (
+            <div key={`m-${m.id}`} className="bg-white p-4 rounded-xl border border-yuri-100 shadow-sm flex items-start gap-3 relative">
+              <span className="text-sm font-bold text-[#3A4B8C] shrink-0 mt-0.5">↻</span>
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] font-bold text-[#3A4B8C] mb-0.5">매월 반복</p>
+                <p className="text-sm font-semibold text-yuri-900 leading-tight whitespace-pre-wrap">{m.name}</p>
+              </div>
+              <button onClick={() => {
+                const dStr = format(selectedDate, 'yyyy-MM-dd')
+                deleteRecurringOccurrence(m.id, 'monthly', m.name, dStr, m.instanceId)
+              }} className="text-yuri-400 hover:text-[#EF6A7B] p-1 -mr-2 -mt-2">
+                ✕
+              </button>
+            </div>
+          ))}
+
           {selectedDayEvents.map(ev => {
             const isEditing = editingEventId === ev.id
             if (isEditing) {
