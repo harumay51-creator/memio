@@ -5,6 +5,7 @@ import MobileLedgerInputSheet from './MobileLedgerInputSheet'
 import MobileCardTab from './MobileCardTab'
 import MobileCashTab from './MobileCashTab'
 import MobileLedgerSearchTab from './MobileLedgerSearchTab'
+import MobileJournalPage from './MobileJournalPage'
 
 interface MobileAppProps {
   activePage: PageId
@@ -210,6 +211,8 @@ const MobileApp: React.FC<MobileAppProps> = ({ activePage, onNavigate }) => {
           </div>
         )
       }
+      case 'journal':
+        return <MobileJournalPage />
       default:
         return (
           <div className="flex-1 flex flex-col h-full items-center justify-center text-yuri-400 p-6 text-center">
@@ -222,7 +225,7 @@ const MobileApp: React.FC<MobileAppProps> = ({ activePage, onNavigate }) => {
 
   return (
     <div className="fixed inset-0 flex flex-col bg-yuri-50 font-sans text-yuri-900 selection:bg-accent/20 overflow-hidden w-full h-full">
-      {activePage !== 'calendar' && activePage !== 'ledger' && (
+      {activePage !== 'calendar' && activePage !== 'ledger' && activePage !== 'journal' && (
         <header className="shrink-0 h-14 flex items-center justify-center border-b border-yuri-100 bg-white sticky top-0 z-10 shadow-sm transition-all">
           <h1 className="text-lg font-bold text-yuri-900">{getPageTitle(activePage)}</h1>
         </header>
