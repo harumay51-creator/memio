@@ -103,12 +103,12 @@ export const RoutineGroupUI: React.FC<Props> = ({
                     }
                   }}
                   onBlur={handleRenameSubmit}
-                  className="flex-1 bg-white border border-[#E5E5EA] rounded px-2 py-0.5 text-[13px] outline-none focus:border-[#8B7CF8] text-[#3D3833] font-bold"
+                  className="flex-1 bg-white border border-[#E5E5EA] rounded px-2 py-0.5 text-[16px] font-diary outline-none focus:border-[#8B7CF8] text-[#3D3833] font-bold"
                 />
               ) : (
-                <span className="text-[13px] font-bold text-[#3D3833] flex items-center gap-2">
+                <span className="text-[16px] font-diary font-bold text-[#3D3833] flex items-center gap-2">
                   {group.name} 
-                  <span className="text-[#A0AABF] font-normal text-xs">({checkedItems}/{totalItems})</span>
+                  <span className="text-[#A0AABF] font-normal font-sans text-xs">({checkedItems}/{totalItems})</span>
                 </span>
               )}
             </div>
@@ -183,7 +183,7 @@ export const RoutineGroupUI: React.FC<Props> = ({
                         setNewItemText('')
                       }}
                       placeholder="항목 이름..."
-                      className="flex-1 bg-white border border-[#E5E5EA] rounded px-2 py-1.5 text-[13px] outline-none focus:border-[#8B7CF8] text-[#3D3833]"
+                      className="flex-1 bg-white border border-[#E5E5EA] rounded px-2 py-1.5 text-[15px] font-diary outline-none focus:border-[#8B7CF8] text-[#3D3833]"
                     />
                   </div>
                 ) : (

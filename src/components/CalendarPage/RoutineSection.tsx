@@ -190,7 +190,7 @@ export const RoutineSection: React.FC<Props> = ({ dateKey }) => {
                 setNewGroupName('')
               }}
               placeholder="새 그룹 이름..."
-              className="flex-1 bg-white border border-[#E5E5EA] rounded px-3 py-2 text-[13px] outline-none focus:border-[#8B7CF8] text-[#3D3833]"
+              className="flex-1 bg-white border border-[#E5E5EA] rounded px-3 py-2 text-[16px] font-diary outline-none focus:border-[#8B7CF8] text-[#3D3833]"
             />
           </div>
         ) : (
