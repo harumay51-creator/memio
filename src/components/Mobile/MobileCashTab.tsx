@@ -27,6 +27,7 @@ export default function MobileCashTab({ year, month, searchQuery = '' }: MobileC
     cardBillingEndDay,
     salaryRecords,
     updateSalaryRecord,
+    deleteLedgerEntry,
     cardBills
   } = useAppStore()
 
@@ -270,6 +271,15 @@ export default function MobileCashTab({ year, month, searchQuery = '' }: MobileC
                       <span className="text-base font-black text-yuri-900">
                         {fmtAmt(item.amount)}원
                       </span>
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          if (confirm('삭제하시겠습니까?')) deleteLedgerEntry(item.id)
+                        }}
+                        className="p-1 -mr-2 text-yuri-300 hover:text-red-500"
+                      >
+                        ✕
+                      </button>
                     </div>
                   </div>
                 )
