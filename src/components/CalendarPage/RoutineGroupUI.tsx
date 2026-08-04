@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { RoutineGroup as RoutineGroupType, useDiaryStore } from '../../store/DiaryStore'
+import { RoutineGroup as RoutineGroupType } from '../../store/DiaryStore'
 import { ChevronDown, ChevronRight, Plus, Trash2, GripVertical } from 'lucide-react'
 import { SortableItem } from '../common/SortableItem'
 import { RoutineItem } from './RoutineItem'

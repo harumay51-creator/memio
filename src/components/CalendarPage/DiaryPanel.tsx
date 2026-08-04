@@ -1045,7 +1045,7 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
 
               {/* 4. Routine Section */}
               <section className="flex-1">
-                <RoutineSection dateKey={dateKey} isY2K={isY2K} isAurora={isAurora} />
+                <RoutineSection dateKey={dateKey} />
               </section>
             </div>
 
