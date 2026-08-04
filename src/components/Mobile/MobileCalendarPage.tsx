@@ -128,6 +128,17 @@ const MobileCalendarPage: React.FC = () => {
   }
   const days = eachDayOfInterval({ start: startDate, end: endDate })
 
+  const [isDiaryOpen, setIsDiaryOpen] = useState(false)
+
+  useEffect(() => {
+    if (isDiaryOpen) {
+      window.history.pushState({ modal: 'mobileDiary' }, '')
+      const handlePopState = () => setIsDiaryOpen(false)
+      window.addEventListener('popstate', handlePopState)
+      return () => window.removeEventListener('popstate', handlePopState)
+    }
+  }, [isDiaryOpen])
+
   const handlePrevMonth = () => {
     if (isDiaryMode) setCurrentDiaryDate(subMonths(currentDiaryDate, 1))
     else setCurrentDate(subMonths(currentDate, 1))
@@ -139,10 +150,14 @@ const MobileCalendarPage: React.FC = () => {
 
   const handleDateClick = (d: Date) => {
     setSelectedDate(d)
-    setEditingEventId(null)
-    setTimeout(() => {
-      scrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
-    }, 100)
+    if (isDiaryMode) {
+      setIsDiaryOpen(true)
+    } else {
+      setEditingEventId(null)
+      setTimeout(() => {
+        scrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
+      }, 100)
+    }
   }
 
   const getDayRoutines = (d: Date) => {
@@ -333,9 +348,18 @@ const MobileCalendarPage: React.FC = () => {
         })}
       </div>
 
-      {isDiaryMode ? (
-        <MobileDiaryView selectedDate={selectedDate} />
-      ) : (
+      {isDiaryMode && isDiaryOpen && (
+        <div className="fixed inset-0 z-50 bg-white flex flex-col overflow-hidden">
+          <MobileDiaryView selectedDate={selectedDate} onClose={() => {
+            if (window.history.state?.modal === 'mobileDiary') window.history.back()
+            setIsDiaryOpen(false)
+          }} />
+        </div>
+      )}
+
+      {isDiaryMode && !isDiaryOpen ? (
+        <div className="flex-1 bg-white"></div>
+      ) : !isDiaryMode ? (
         /* Event List Section */
         <div ref={scrollRef} className="flex-1 overflow-y-auto bg-yuri-50 p-4">
         <h3 className="text-sm font-bold text-yuri-700 mb-3 border-b border-yuri-200 pb-2 flex items-center gap-2">

@@ -318,7 +318,10 @@ const MemoItem = ({ memo, deleteMemo, updateMemo }: { memo: DiaryMemo, deleteMem
   )
 }
 
-export const MobileDiaryView = ({ selectedDate }: { selectedDate: Date }) => {
+import { ChevronLeft } from 'lucide-react'
+import { RoutineSection } from '../CalendarPage/RoutineSection'
+
+export const MobileDiaryView = ({ selectedDate, onClose }: { selectedDate: Date, onClose?: () => void }) => {
   const { 
     diaries, settings,
     saveDayDiaryEmojis, saveDayDiaryAnswer, deleteDayDiaryAnswer,
@@ -376,13 +379,22 @@ export const MobileDiaryView = ({ selectedDate }: { selectedDate: Date }) => {
   }
 
   return (
-    <div className="flex-1 overflow-y-auto bg-white p-4">
-      {/* Date Header */}
-      <h3 className="text-sm font-bold text-[#2D334A] mb-4 border-b border-[#E5E5EA] pb-2 flex items-center justify-between">
-        {format(selectedDate, 'M월 d일 (E)', { locale: ko })}
-      </h3>
+    <div className="flex flex-col h-full bg-white relative w-full h-full">
+      {/* Top Header */}
+      <div className="flex items-center gap-2 p-3 border-b border-[#E5E5EA] bg-white shrink-0 shadow-sm z-10">
+        <button 
+          onClick={onClose}
+          className="p-1 -ml-1 text-[#717A8C] active:bg-[#F0F0F5] rounded-full transition-colors"
+        >
+          <ChevronLeft size={24} />
+        </button>
+        <h2 className="text-[16px] font-bold text-[#3D3833]">
+          {format(selectedDate, 'M월 d일 (E)', { locale: ko })}
+        </h2>
+      </div>
 
-      <div className="flex flex-col gap-6 pb-24">
+      <div className="flex-1 overflow-y-auto bg-white p-4">
+        <div className="flex flex-col gap-6 pb-24">
         {/* Emoji Section */}
         <section className="bg-[#FBFBFC] rounded-xl p-3 border border-[#F1F0F5]" ref={emojiPickerRef}>
           <div className="flex justify-between items-center mb-2">
@@ -480,6 +492,11 @@ export const MobileDiaryView = ({ selectedDate }: { selectedDate: Date }) => {
             })}
           </section>
         )}
+
+        {/* Routine Section */}
+        <section className="flex flex-col">
+          <RoutineSection dateKey={dateStr} />
+        </section>
 
         {/* Memos Section */}
         <section className="flex flex-col gap-2">
