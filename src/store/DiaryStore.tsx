@@ -258,17 +258,19 @@ export const DiaryStoreProvider: React.FC<{ children: React.ReactNode, uid: stri
   const saveRoutineItemState = async (dateKey: string, itemId: string, checked: boolean, memo?: string) => {
     if (!uid) return
     const ref = doc(db, `users/${uid}/diaries`, dateKey)
-    const snap = await getDoc(ref)
     const nowStr = new Date().toISOString()
-    const stateObj = { checked, memo, updatedAt: nowStr }
-    if (snap.exists()) {
-      const data = snap.data() as DayDiary
-      const routineStates = data.routineStates || {}
-      routineStates[itemId] = stateObj
-      await updateDoc(ref, { routineStates })
-    } else {
-      await setDoc(ref, { dateKey, emojis: [], answers: [], memos: [], routineStates: { [itemId]: stateObj } })
+    const stateObj: any = { checked, updatedAt: nowStr }
+    if (memo !== undefined) {
+      stateObj.memo = memo
     }
+    
+    // Use setDoc with merge: true for atomic update and auto-creation if not exists
+    await setDoc(ref, {
+      dateKey,
+      routineStates: {
+        [itemId]: stateObj
+      }
+    }, { merge: true })
   }
 
   return (

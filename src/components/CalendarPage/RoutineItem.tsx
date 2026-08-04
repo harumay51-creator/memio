@@ -72,6 +72,7 @@ export const RoutineItem: React.FC<Props> = ({ item, checked, memo, isEditMode, 
               </button>
             )}
             <button
+              type="button"
               onClick={handleToggleClick}
               className={`w-5 h-5 rounded flex items-center justify-center shrink-0 border transition-all ${
                 checked 
