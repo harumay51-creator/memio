@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { RoutineGroup as RoutineGroupType, useDiaryStore } from '../../store/DiaryStore'
 import { RoutineGroupUI } from './RoutineGroupUI'
-import { Plus } from 'lucide-react'
+import { Plus, Settings } from 'lucide-react'
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core'
 import { SortableContext, arrayMove, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable'
 
@@ -15,6 +15,7 @@ export const RoutineSection: React.FC<Props> = ({ dateKey }) => {
   const groups = settings.routineGroups || []
   const routineStates = diaries[dateKey]?.routineStates || {}
 
+  const [isEditMode, setIsEditMode] = useState(false)
   const [isAddingGroup, setIsAddingGroup] = useState(false)
   const [newGroupName, setNewGroupName] = useState('')
 
@@ -24,6 +25,7 @@ export const RoutineSection: React.FC<Props> = ({ dateKey }) => {
   )
 
   const handleDragEnd = (event: DragEndEvent) => {
+    if (!isEditMode) return
     const { active, over } = event
     if (!over) return
 
@@ -31,18 +33,15 @@ export const RoutineSection: React.FC<Props> = ({ dateKey }) => {
     const overId = over.id as string
     if (activeId === overId) return
 
-    // Find if we are dragging a group or an item
     const activeGroupIdx = groups.findIndex(g => g.id === activeId)
     const overGroupIdx = groups.findIndex(g => g.id === overId)
 
     if (activeGroupIdx !== -1 && overGroupIdx !== -1) {
-      // Reordering groups
       const newGroups = arrayMove(groups, activeGroupIdx, overGroupIdx)
       saveRoutineGroups(newGroups)
       return
     }
 
-    // Otherwise, we might be reordering items within the same group
     const groupWithActiveItem = groups.find(g => g.items.some(i => i.id === activeId))
     const groupWithOverItem = groups.find(g => g.items.some(i => i.id === overId))
 
@@ -107,10 +106,44 @@ export const RoutineSection: React.FC<Props> = ({ dateKey }) => {
     setNewGroupName('')
   }
 
+  const handleRenameGroup = (groupId: string, newName: string) => {
+    const newGroups = groups.map(g => {
+      if (g.id === groupId) {
+        return { ...g, name: newName }
+      }
+      return g
+    })
+    saveRoutineGroups(newGroups)
+  }
+
+  const handleRenameItem = (groupId: string, itemId: string, newName: string) => {
+    const newGroups = groups.map(g => {
+      if (g.id === groupId) {
+        return {
+          ...g,
+          items: g.items.map(i => i.id === itemId ? { ...i, text: newName } : i)
+        }
+      }
+      return g
+    })
+    saveRoutineGroups(newGroups)
+  }
+
   return (
     <div className="flex flex-col h-full bg-white/30 rounded-2xl border border-white/20">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-[13px] font-bold text-[#717A8C] tracking-[0.2em] uppercase ml-2 mt-2">ROUTINE</h2>
+        <button 
+          onClick={() => setIsEditMode(!isEditMode)}
+          className={`mr-2 mt-2 p-1.5 rounded-full transition-colors ${
+            isEditMode 
+              ? 'bg-[#8B7CF8] text-white shadow-sm' 
+              : 'text-[#A0AABF] hover:bg-white/50 hover:text-[#717A8C]'
+          }`}
+          title="루틴 관리"
+        >
+          <Settings size={14} />
+        </button>
       </div>
 
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
@@ -120,50 +153,55 @@ export const RoutineSection: React.FC<Props> = ({ dateKey }) => {
               <RoutineGroupUI
                 key={group.id}
                 group={group}
+                isEditMode={isEditMode}
                 routineStates={routineStates}
                 onToggleItem={handleToggleItem}
                 onUpdateItemMemo={handleUpdateItemMemo}
                 onDeleteItem={(itemId) => handleDeleteItem(group.id, itemId)}
                 onAddItem={(text) => handleAddItem(group.id, text)}
                 onDeleteGroup={() => handleDeleteGroup(group.id)}
+                onRenameGroup={(newName) => handleRenameGroup(group.id, newName)}
+                onRenameItem={(itemId, newName) => handleRenameItem(group.id, itemId, newName)}
               />
             ))}
           </SortableContext>
         </div>
       </DndContext>
 
-      {isAddingGroup ? (
-        <div className="flex items-center gap-2 mt-2">
-          <input
-            autoFocus
-            type="text"
-            value={newGroupName}
-            onChange={(e) => setNewGroupName(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && newGroupName.trim()) {
-                handleAddGroup()
-              } else if (e.key === 'Escape') {
+      {isEditMode && (
+        isAddingGroup ? (
+          <div className="flex items-center gap-2 mt-2">
+            <input
+              autoFocus
+              type="text"
+              value={newGroupName}
+              onChange={(e) => setNewGroupName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && newGroupName.trim()) {
+                  handleAddGroup()
+                } else if (e.key === 'Escape') {
+                  setIsAddingGroup(false)
+                  setNewGroupName('')
+                }
+              }}
+              onBlur={() => {
+                if (newGroupName.trim()) handleAddGroup()
                 setIsAddingGroup(false)
                 setNewGroupName('')
-              }
-            }}
-            onBlur={() => {
-              if (newGroupName.trim()) handleAddGroup()
-              setIsAddingGroup(false)
-              setNewGroupName('')
-            }}
-            placeholder="새 그룹 이름..."
-            className="flex-1 bg-white border border-[#E5E5EA] rounded px-3 py-2 text-[13px] outline-none focus:border-[#8B7CF8] text-[#3D3833]"
-          />
-        </div>
-      ) : (
-        <button
-          onClick={() => setIsAddingGroup(true)}
-          className="flex items-center justify-center gap-1 text-[12px] font-bold text-[#A0AABF] hover:text-[#717A8C] py-3 border-2 border-dashed border-[#E5E5EA] rounded-xl hover:bg-white/50 transition-colors mt-2"
-        >
-          <Plus size={16} strokeWidth={3} />
-          그룹 추가
-        </button>
+              }}
+              placeholder="새 그룹 이름..."
+              className="flex-1 bg-white border border-[#E5E5EA] rounded px-3 py-2 text-[13px] outline-none focus:border-[#8B7CF8] text-[#3D3833]"
+            />
+          </div>
+        ) : (
+          <button
+            onClick={() => setIsAddingGroup(true)}
+            className="flex items-center justify-center gap-1 text-[12px] font-bold text-[#A0AABF] hover:text-[#717A8C] py-3 border-2 border-dashed border-[#E5E5EA] rounded-xl hover:bg-white/50 transition-colors mt-2"
+          >
+            <Plus size={16} strokeWidth={3} />
+            그룹 추가
+          </button>
+        )
       )}
     </div>
   )
