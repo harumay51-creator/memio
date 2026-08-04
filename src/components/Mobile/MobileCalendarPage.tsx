@@ -530,7 +530,7 @@ const MobileCalendarPage: React.FC = () => {
           </form>
         </div>
       </div>
-      )}
+      ) : null}
 
       {isSearchOpen && (
         <MobileDiarySearchModal 

@@ -518,5 +518,6 @@ export const MobileDiaryView = ({ selectedDate, onClose }: { selectedDate: Date,
         </section>
       </div>
     </div>
+    </div>
   )
 }
