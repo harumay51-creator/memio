@@ -68,3 +68,31 @@ export function getSearchPreview(fullText: string, query: string, fallbackText?:
   
   return result
 }
+
+export function repairCorruptedHtml(text: string): string {
+  if (!text) return text;
+  if (text.includes('\n')) return text;
+  
+  if (text.startsWith('<')) {
+    const blockTags = ['</p>', '</h1>', '</h2>', '</h3>', '</div>', '</ul>', '</ol>'];
+    let firstTagIndex = -1;
+    for (const tag of blockTags) {
+      const idx = text.indexOf(tag);
+      if (idx !== -1 && (firstTagIndex === -1 || idx < firstTagIndex)) {
+        firstTagIndex = idx + tag.length;
+      }
+    }
+    
+    if (firstTagIndex !== -1) {
+      const firstBlock = text.substring(0, firstTagIndex);
+      const rest = text.substring(firstTagIndex);
+      
+      const title = decodeHtmlEntities(firstBlock.replace(/<[^>]*>?/gm, '')).trim();
+      
+      if (title) {
+        return title + '\n' + rest;
+      }
+    }
+  }
+  return text;
+}

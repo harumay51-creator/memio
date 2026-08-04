@@ -3,6 +3,7 @@ import { useJournalStore } from '../../store/JournalStore'
 import { useAppStore } from '../../store/AppStore'
 import RichTextEditor from '../common/RichTextEditor'
 import { HighlightText } from '../common/HighlightText'
+import { DebouncedInput } from '../common/DebouncedInput'
 import { Lock, Plus, Trash2, ChevronLeft } from 'lucide-react'
 import { isSearchMatch, getSearchPreview, decodeHtmlEntities } from '../../utils/textUtils'
 import PinScreen from '../JournalPage/PinScreen'
@@ -234,15 +235,45 @@ export default function MobileJournalPage() {
                 <div className="animate-pulse text-yuri-300 font-medium">로딩 중...</div>
               </div>
             ) : (
-              <RichTextEditor
-                initialContent={loadedContents[selectedNote.id] || selectedNote.text || ''}
-                onChange={(html) => {
-                  setLoadedContents(prev => ({ ...prev, [selectedNote.id]: html }))
-                  updateJournal(selectedNote.id, html)
-                }}
-                placeholder="내용을 입력하세요..."
-                className="flex-1 h-full w-full"
-              />
+              <>
+                <DebouncedInput spellCheck={false}
+                  type="text"
+                  value={(selectedNote.hasContentDoc ? (loadedContents[selectedNote.id] || selectedNote.text) : selectedNote.text).split('\n')[0] || ''}
+                  onChangeValue={(val) => {
+                    const fullText = selectedNote.hasContentDoc ? (loadedContents[selectedNote.id] || selectedNote.text) : selectedNote.text
+                    const lines = fullText.split('\n')
+                    lines[0] = val
+                    const newText = lines.join('\n')
+                    if (selectedNote.hasContentDoc) {
+                      setLoadedContents(prev => ({ ...prev, [selectedNote.id]: newText }))
+                    }
+                    updateJournal(selectedNote.id, newText)
+                  }}
+                  className="text-xl font-bold bg-transparent outline-none text-yuri-900 placeholder:text-yuri-300 w-full px-1 mb-2"
+                  placeholder="제목"
+                />
+                <div className="flex-1 overflow-hidden relative">
+                  <RichTextEditor
+                    key={selectedNote.id}
+                    initialContent={(() => {
+                      const fullText = selectedNote.hasContentDoc ? (loadedContents[selectedNote.id] || selectedNote.text) : selectedNote.text;
+                      return fullText.split('\n').length > 1 ? fullText.split('\n').slice(1).join('\n') : '';
+                    })()}
+                    onChange={(html) => {
+                      const fullText = selectedNote.hasContentDoc ? (loadedContents[selectedNote.id] || selectedNote.text) : selectedNote.text
+                      const lines = fullText.split('\n')
+                      const firstLine = lines[0] || ''
+                      const newText = firstLine + '\n' + html
+                      if (selectedNote.hasContentDoc) {
+                        setLoadedContents(prev => ({ ...prev, [selectedNote.id]: newText }))
+                      }
+                      updateJournal(selectedNote.id, newText)
+                    }}
+                    placeholder="내용을 입력하세요..."
+                    className="flex-1 h-full w-full"
+                  />
+                </div>
+              </>
             )}
           </div>
         </div>

@@ -796,7 +796,9 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
     try {
       const snap = await getDoc(doc(db, 'users', uid, 'note_contents', id))
       if (snap.exists() && snap.data().text !== undefined) {
-        return snap.data().text as string
+        const text = snap.data().text as string
+        const { repairCorruptedHtml } = await import('../utils/textUtils')
+        return repairCorruptedHtml(text)
       }
       return null
     } catch (e) {
