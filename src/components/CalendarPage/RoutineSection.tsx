@@ -4,15 +4,12 @@ import { RoutineGroupUI } from './RoutineGroupUI'
 import { Plus } from 'lucide-react'
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core'
 import { SortableContext, arrayMove, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable'
-import { restrictToVerticalAxis } from '@dnd-kit/modifiers'
 
 interface Props {
   dateKey: string
-  isY2K?: boolean
-  isAurora?: boolean
 }
 
-export const RoutineSection: React.FC<Props> = ({ dateKey, isY2K, isAurora }) => {
+export const RoutineSection: React.FC<Props> = ({ dateKey }) => {
   const { settings, diaries, saveRoutineGroups, saveRoutineItemState } = useDiaryStore()
   
   const groups = settings.routineGroups || []
@@ -116,14 +113,13 @@ export const RoutineSection: React.FC<Props> = ({ dateKey, isY2K, isAurora }) =>
         <h2 className="text-[13px] font-bold text-[#717A8C] tracking-[0.2em] uppercase ml-2 mt-2">ROUTINE</h2>
       </div>
 
-      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd} modifiers={[restrictToVerticalAxis]}>
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <div className="flex flex-col">
           <SortableContext items={groups.map(g => g.id)} strategy={verticalListSortingStrategy}>
             {groups.map(group => (
               <RoutineGroupUI
                 key={group.id}
                 group={group}
-                dateKey={dateKey}
                 routineStates={routineStates}
                 onToggleItem={handleToggleItem}
                 onUpdateItemMemo={handleUpdateItemMemo}

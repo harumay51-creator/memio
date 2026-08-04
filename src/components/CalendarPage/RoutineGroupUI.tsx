@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react'
-import { RoutineGroup as RoutineGroupType } from '../../store/DiaryStore'
-import { ChevronDown, ChevronRight, Plus, Trash2, GripVertical, Check } from 'lucide-react'
+import { RoutineGroup as RoutineGroupType, useDiaryStore } from '../../store/DiaryStore'
+import { ChevronDown, ChevronRight, Plus, Trash2, GripVertical } from 'lucide-react'
 import { SortableItem } from '../common/SortableItem'
 import { RoutineItem } from './RoutineItem'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 
 interface Props {
   group: RoutineGroupType
-  dateKey: string
   routineStates: Record<string, { checked: boolean, memo?: string }>
   onToggleItem: (itemId: string, checked: boolean) => void
   onUpdateItemMemo: (itemId: string, memo: string) => void
@@ -18,7 +17,6 @@ interface Props {
 
 export const RoutineGroupUI: React.FC<Props> = ({ 
   group, 
-  dateKey, 
   routineStates, 
   onToggleItem, 
   onUpdateItemMemo, 
