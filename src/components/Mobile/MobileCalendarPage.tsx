@@ -306,11 +306,11 @@ const MobileCalendarPage: React.FC = () => {
             <button
               key={d.toISOString()}
               onClick={() => handleDateClick(d)}
-              className={`flex flex-col items-center justify-start border border-transparent ${isDiaryMode ? 'py-0.5 h-11' : 'aspect-square p-1'} ${
+              className={`flex flex-col items-center justify-start border border-transparent ${isDiaryMode ? 'py-2 h-16 sm:h-[10vh] min-h-[72px]' : 'aspect-square p-1'} ${
                 isSelected ? 'bg-accent/10 rounded-xl' : ''
               } ${!isCurrentMonth ? 'opacity-30' : ''}`}
             >
-              <span className={`text-sm font-semibold w-7 h-7 flex items-center justify-center rounded-full ${
+              <span className={`${isDiaryMode ? 'text-[15px] w-8 h-8' : 'text-sm w-7 h-7'} font-semibold flex items-center justify-center rounded-full ${
                 isToday ? 'bg-accent text-white' : (isSelected ? 'text-accent' : ((isHoliday && holidayInfo.isRedDay) || isSunday ? 'text-red-500' : 'text-yuri-900'))
               }`}>
                 {format(d, 'd')}
@@ -349,7 +349,7 @@ const MobileCalendarPage: React.FC = () => {
       </div>
 
       {isDiaryMode && isDiaryOpen && (
-        <div className="fixed inset-0 z-50 bg-white flex flex-col overflow-hidden">
+        <div className="absolute inset-0 z-50 bg-white flex flex-col overflow-hidden animate-in slide-in-from-right-full duration-300">
           <MobileDiaryView selectedDate={selectedDate} onClose={() => {
             if (window.history.state?.modal === 'mobileDiary') window.history.back()
             setIsDiaryOpen(false)
