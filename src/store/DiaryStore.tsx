@@ -20,6 +20,7 @@ export interface DayDiary {
   emojis: string[] // up to 3
   answers: DiaryQuestionAnswer[]
   memos: DiaryMemo[]
+  routineStates?: Record<string, { checked: boolean, memo?: string, updatedAt?: string }>
 }
 
 export interface MonthlyDiary {
@@ -27,9 +28,21 @@ export interface MonthlyDiary {
   text: string
 }
 
+export interface RoutineItem {
+  id: string
+  text: string
+}
+
+export interface RoutineGroup {
+  id: string
+  name: string
+  items: RoutineItem[]
+}
+
 export interface DiarySettings {
   questions: { id: string, text: string }[]
   theme?: 'default' | 'aurora' | 'y2k'
+  routineGroups?: RoutineGroup[]
 }
 
 interface DiaryStoreValue {
@@ -52,6 +65,8 @@ interface DiaryStoreValue {
   updateDayDiaryMemo: (dateKey: string, memoId: string, text: string, tags?: string[]) => Promise<void>
   deleteDayDiaryMemo: (dateKey: string, memoId: string) => Promise<void>
   saveMonthlyDiary: (monthKey: string, text: string) => Promise<void>
+  saveRoutineGroups: (groups: RoutineGroup[]) => Promise<void>
+  saveRoutineItemState: (dateKey: string, itemId: string, checked: boolean, memo?: string) => Promise<void>
 }
 
 const DiaryContext = createContext<DiaryStoreValue | null>(null)
@@ -229,11 +244,39 @@ export const DiaryStoreProvider: React.FC<{ children: React.ReactNode, uid: stri
     }
   }
 
+  const saveRoutineGroups = async (groups: RoutineGroup[]) => {
+    if (!uid) return
+    const ref = doc(db, `users/${uid}/settings`, 'diary')
+    const snap = await getDoc(ref)
+    if (snap.exists()) {
+      await updateDoc(ref, { routineGroups: groups })
+    } else {
+      await setDoc(ref, { questions: [], theme: 'default', routineGroups: groups })
+    }
+  }
+
+  const saveRoutineItemState = async (dateKey: string, itemId: string, checked: boolean, memo?: string) => {
+    if (!uid) return
+    const ref = doc(db, `users/${uid}/diaries`, dateKey)
+    const snap = await getDoc(ref)
+    const nowStr = new Date().toISOString()
+    const stateObj = { checked, memo, updatedAt: nowStr }
+    if (snap.exists()) {
+      const data = snap.data() as DayDiary
+      const routineStates = data.routineStates || {}
+      routineStates[itemId] = stateObj
+      await updateDoc(ref, { routineStates })
+    } else {
+      await setDoc(ref, { dateKey, emojis: [], answers: [], memos: [], routineStates: { [itemId]: stateObj } })
+    }
+  }
+
   return (
     <DiaryContext.Provider value={{
       diaries, monthlyDiaries, settings, isLoading, isDiaryMode, setIsDiaryMode,
         initialize: () => {}, addQuestion, deleteQuestion, updateQuestion, updateTheme,
-        saveDayDiaryEmojis, saveDayDiaryAnswer, deleteDayDiaryAnswer, addDayDiaryMemo, updateDayDiaryMemo, deleteDayDiaryMemo, saveMonthlyDiary
+        saveDayDiaryEmojis, saveDayDiaryAnswer, deleteDayDiaryAnswer, addDayDiaryMemo, updateDayDiaryMemo, deleteDayDiaryMemo, saveMonthlyDiary,
+        saveRoutineGroups, saveRoutineItemState
     }}>
       {children}
     </DiaryContext.Provider>

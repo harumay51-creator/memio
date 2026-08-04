@@ -3,6 +3,7 @@ import { useDiaryStore, DiaryMemo } from '../../store/DiaryStore'
 import { RetroWindow } from '../common/Y2KTheme'
 import Emoji from '../common/Emoji'
 import DiaryTextEditor from '../common/DiaryTextEditor'
+import { RoutineSection } from './RoutineSection'
 
 export const DIARY_TAGS = [
   { name: '뿌듯', color: '#CFE8DC' },
@@ -984,61 +985,69 @@ const DiaryPanel: React.FC<DiaryPanelProps> = ({ mode, selDay, year, month }) =>
               )}
             </section>
 
-            {/* 2. Questions Snapshot */}
-            <section className="p-2 flex flex-col gap-4">
-              <div className="relative inline-block w-max">
-                <h2 className="text-[13px] font-bold text-[#717A8C] tracking-[0.2em] uppercase">Q&A</h2>
-                <div className="opacity-40">
-                  <UnderlineDoodle isY2K={isY2K} />
-                </div>
-              </div>
-              
-              <div className={`flex ${(!isY2K && !isAurora) ? 'flex-col gap-0' : 'flex-row flex-wrap gap-2.5 items-start'}`}>
-                {settings.questions.map((q, idx) => {
-                  const answerObj = (dayDiary.answers || []).find(a => a.questionId === q.id)
-                  const answerText = answerObj ? answerObj.answer : ''
-                  return (
-                    <QuestionItem 
-                      key={`${q.id}-${dateKey}`} 
-                      q={q} 
-                      initialAnswer={answerText} 
-                      saveAnswer={(val) => saveDayDiaryAnswer(dateKey, q.id, q.text, val)} 
-                      deleteAnswer={() => deleteDayDiaryAnswer(dateKey, q.id)}
-                      index={idx}
-                      dateSeed={dateKey}
-                      isY2K={isY2K}
-                      isAurora={isAurora}
-                    />
-                  )
-                })}
-                
-                {/* Display snapshot answers that are no longer in settings.questions */}
-                {(dayDiary.answers || []).filter(a => !settings.questions.some(q => q.id === a.questionId)).map((a, idx) => (
-                  <div key={a.questionId} className={`group relative transition-all duration-300 flex flex-col shrink-0 ${
-                    (!isY2K && !isAurora) ? 'w-full min-h-0 py-4 px-2' : 'hover:scale-[1.02] z-0 hover:z-10 p-4 w-36 min-h-[9rem] h-auto'
-                  }`} style={getPostItStyle(a.questionId, idx + settings.questions.length, dateKey, isY2K, isAurora)}>
-                    <CornerDoodle idString={a.questionId} isY2K={isY2K} isAurora={isAurora} />
-                    <div className="flex justify-between items-start mb-1 gap-2">
-                      <div>
-                        <div className="text-[11px] font-bold font-diary opacity-70" style={{ color: 'inherit' }}>{a.question} (과거 질문)</div>
-                      </div>
-                      <button 
-                        onClick={() => deleteDayDiaryAnswer(dateKey, a.questionId)}
-                        className="w-5 h-5 flex items-center justify-center rounded hover:opacity-50 opacity-30 group-hover:opacity-100 transition-opacity text-[10px] shrink-0"
-                        style={{ color: 'inherit' }}
-                      >
-                        ✕
-                      </button>
-                    </div>
-                    <div className="text-[15px] whitespace-pre-wrap font-diary leading-relaxed" style={{ color: 'inherit' }}>{a.answer}</div>
+            {/* Middle Row: Q&A and Routine */}
+            <div className="flex gap-4 px-2 mt-4 items-start">
+              {/* 2. Questions Snapshot */}
+              <section className="flex-1 flex flex-col gap-4 bg-white/30 rounded-2xl border border-white/20 pb-4">
+                <div className="relative inline-block w-max mt-2 ml-2">
+                  <h2 className="text-[13px] font-bold text-[#717A8C] tracking-[0.2em] uppercase">Q&A</h2>
+                  <div className="opacity-40">
+                    <UnderlineDoodle isY2K={isY2K} />
                   </div>
-                ))}
-              </div>
+                </div>
+                
+                <div className={`flex px-2 ${(!isY2K && !isAurora) ? 'flex-col gap-0' : 'flex-row flex-wrap gap-2.5 items-start'}`}>
+                  {settings.questions.map((q, idx) => {
+                    const answerObj = (dayDiary.answers || []).find(a => a.questionId === q.id)
+                    const answerText = answerObj ? answerObj.answer : ''
+                    return (
+                      <QuestionItem 
+                        key={`${q.id}-${dateKey}`} 
+                        q={q} 
+                        initialAnswer={answerText} 
+                        saveAnswer={(val) => saveDayDiaryAnswer(dateKey, q.id, q.text, val)} 
+                        deleteAnswer={() => deleteDayDiaryAnswer(dateKey, q.id)}
+                        index={idx}
+                        dateSeed={dateKey}
+                        isY2K={isY2K}
+                        isAurora={isAurora}
+                      />
+                    )
+                  })}
+                  
+                  {/* Display snapshot answers that are no longer in settings.questions */}
+                  {(dayDiary.answers || []).filter(a => !settings.questions.some(q => q.id === a.questionId)).map((a, idx) => (
+                    <div key={a.questionId} className={`group relative transition-all duration-300 flex flex-col shrink-0 ${
+                      (!isY2K && !isAurora) ? 'w-full min-h-0 py-4 px-2' : 'hover:scale-[1.02] z-0 hover:z-10 p-4 w-36 min-h-[9rem] h-auto'
+                    }`} style={getPostItStyle(a.questionId, idx + settings.questions.length, dateKey, isY2K, isAurora)}>
+                      <CornerDoodle idString={a.questionId} isY2K={isY2K} isAurora={isAurora} />
+                      <div className="flex justify-between items-start mb-1 gap-2">
+                        <div>
+                          <div className="text-[11px] font-bold font-diary opacity-70" style={{ color: 'inherit' }}>{a.question} (과거 질문)</div>
+                        </div>
+                        <button 
+                          onClick={() => deleteDayDiaryAnswer(dateKey, a.questionId)}
+                          className="w-5 h-5 flex items-center justify-center rounded hover:opacity-50 opacity-30 group-hover:opacity-100 transition-opacity text-[10px] shrink-0"
+                          style={{ color: 'inherit' }}
+                        >
+                          ✕
+                        </button>
+                      </div>
+                      <div className="text-[15px] whitespace-pre-wrap font-diary leading-relaxed" style={{ color: 'inherit' }}>{a.answer}</div>
+                    </div>
+                  ))}
+                </div>
 
-              {settings.questions.length === 0 && (dayDiary.answers || []).length === 0 && (
-                <div className="text-xs text-[#A0AABF]">설정에서 다이어리 질문을 추가해보세요.</div>
-              )}
-            </section>
+                {settings.questions.length === 0 && (dayDiary.answers || []).length === 0 && (
+                  <div className="text-xs text-[#A0AABF] px-2">설정에서 다이어리 질문을 추가해보세요.</div>
+                )}
+              </section>
+
+              {/* 4. Routine Section */}
+              <section className="flex-1">
+                <RoutineSection dateKey={dateKey} isY2K={isY2K} isAurora={isAurora} />
+              </section>
+            </div>
 
             {/* 3. Free Memos */}
             <section className="p-2 flex flex-col gap-4 mb-8">
