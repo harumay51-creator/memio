@@ -90,10 +90,10 @@ export const DiaryStoreProvider: React.FC<{ children: React.ReactNode, uid: stri
       if (docSnap.exists()) {
         const data = docSnap.data() as Partial<DiarySettings>
         console.log('[DEBUG DiaryStore] settings onSnapshot exists. data:', data)
-        setSettings({ questions: data.questions || [], theme: data.theme || 'default' })
+        setSettings({ questions: data.questions || [], theme: data.theme || 'default', routineGroups: data.routineGroups || [] })
       } else {
         console.log('[DEBUG DiaryStore] settings onSnapshot does NOT exist.')
-        setSettings({ questions: [], theme: 'default' })
+        setSettings({ questions: [], theme: 'default', routineGroups: [] })
       }
     })
 
