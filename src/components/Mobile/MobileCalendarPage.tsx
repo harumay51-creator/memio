@@ -285,7 +285,7 @@ const MobileCalendarPage: React.FC = () => {
       </div>
 
       {/* Calendar Grid */}
-      <div className={`grid grid-cols-7 border-b border-yuri-100 pb-2 ${isDiaryMode ? 'flex-1' : ''}`} style={isDiaryMode ? { gridTemplateRows: 'repeat(auto-fit, minmax(0, 1fr))' } : undefined}>
+      <div className={`grid grid-cols-7 border-b border-yuri-100 pb-2 ${isDiaryMode ? 'flex-1' : ''}`} style={isDiaryMode ? { gridTemplateRows: `repeat(${days.length / 7}, minmax(0, 1fr))` } : undefined}>
         {days.map((d: Date) => {
           const dStr = format(d, 'yyyy-MM-dd')
           const holidayInfo = mergedHolidays[dStr]
@@ -304,11 +304,11 @@ const MobileCalendarPage: React.FC = () => {
             <button
               key={d.toISOString()}
               onClick={() => handleDateClick(d)}
-              className={`flex flex-col items-center justify-start border border-transparent ${isDiaryMode ? 'py-2 h-full' : 'aspect-square p-1'} ${
+              className={`flex flex-col items-center justify-start border border-transparent ${isDiaryMode ? 'py-2 h-full min-h-[72px]' : 'py-1 h-[72px] sm:h-[80px]'} ${
                 isSelected ? 'bg-accent/10 rounded-xl' : ''
               } ${!isCurrentMonth ? 'opacity-30' : ''}`}
             >
-              <span className={`${isDiaryMode ? 'text-[15px] w-8 h-8' : 'text-sm w-7 h-7'} font-semibold flex items-center justify-center rounded-full ${
+              <span className={`${isDiaryMode ? 'text-[15px] w-8 h-8 shrink-0' : 'text-sm w-6 h-6 shrink-0'} font-semibold flex items-center justify-center rounded-full ${
                 isToday ? 'bg-accent text-white' : (isSelected ? 'text-accent' : ((isHoliday && holidayInfo.isRedDay) || isSunday ? 'text-red-500' : 'text-yuri-900'))
               }`}>
                 {format(d, 'd')}
@@ -316,17 +316,17 @@ const MobileCalendarPage: React.FC = () => {
               
               {/* Event Dots or Emojis */}
               {isDiaryMode ? (
-                <div className="flex flex-nowrap items-center justify-center gap-0.5 w-full overflow-hidden mt-0.5 px-0.5 h-3.5">
+                <div className="flex flex-nowrap items-center justify-center gap-0.5 w-full overflow-hidden mt-0.5 px-0.5 flex-1 min-h-[14px]">
                   {(diaryEntry?.emojis || []).length > 0 ? (
                     diaryEntry!.emojis!.map((emoji: string, idx: number) => (
                       <Emoji key={idx} emoji={emoji} className="w-3 h-3 shrink-0" />
                     ))
                   ) : hasDiaryRecord ? (
-                    <span className="text-[10px] leading-none opacity-70">📝</span>
+                    <span className="text-[10px] leading-none opacity-70 shrink-0">📝</span>
                   ) : null}
                 </div>
               ) : (
-                <div className="flex flex-col gap-[1px] mt-0.5 w-full px-0.5 overflow-hidden flex-1">
+                <div className="flex flex-col gap-[2px] mt-[2px] w-full px-0.5 overflow-hidden flex-1 justify-start">
                   {(() => {
                     const badgeItems: { name: string; type: 'holiday' | 'routine' | 'event'; isRedDay?: boolean; color?: string }[] = []
                     if (holidayInfo) {
@@ -341,13 +341,13 @@ const MobileCalendarPage: React.FC = () => {
                         {badgeItems.slice(0, 2).map((item, i) => {
                           if (item.type === 'holiday') {
                             return (
-                              <div key={`b-${i}`} className={`text-[9px] px-1 py-[1.5px] w-full truncate rounded-[3px] font-bold ${item.isRedDay ? 'bg-red-50 text-red-500' : 'bg-gray-100 text-gray-500'}`}>
+                              <div key={`b-${i}`} className={`text-[9px] px-[3px] py-[2px] w-full truncate rounded-[4px] font-bold shrink-0 leading-none ${item.isRedDay ? 'bg-red-50 text-red-500' : 'bg-gray-100 text-gray-500'}`}>
                                 {item.name}
                               </div>
                             )
                           }
                           return (
-                            <div key={`b-${i}`} className="text-[9px] px-1 py-[1.5px] w-full truncate rounded-[3px] text-white font-bold" style={{ backgroundColor: item.color }}>
+                            <div key={`b-${i}`} className="text-[9px] px-[3px] py-[2px] w-full truncate rounded-[4px] text-white font-bold shrink-0 leading-none" style={{ backgroundColor: item.color }}>
                               {item.name}
                             </div>
                           )
