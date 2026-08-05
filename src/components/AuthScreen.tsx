@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { auth } from '../config/firebase'
-import { signInWithEmailAndPassword, setPersistence, browserSessionPersistence, sendPasswordResetEmail } from 'firebase/auth'
+import { signInWithEmailAndPassword, setPersistence, browserLocalPersistence, sendPasswordResetEmail } from 'firebase/auth'
 
 function getDeviceBrowserInfo(): string {
   const ua = navigator.userAgent;
@@ -62,7 +62,7 @@ const AuthScreen: React.FC = () => {
     setLoading(true)
 
     try {
-      await setPersistence(auth, browserSessionPersistence)
+      await setPersistence(auth, browserLocalPersistence)
       const userCredential = await signInWithEmailAndPassword(auth, email, password)
       
       const deviceInfo = getDeviceBrowserInfo()
