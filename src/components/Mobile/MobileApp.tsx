@@ -13,6 +13,9 @@ import SettingsPage from '../SettingsPage/SettingsPage'
 import LoginHistorySection from '../SettingsPage/LoginHistorySection'
 import { ChevronLeft } from 'lucide-react'
 
+import { useAppStore } from '../../store/AppStore'
+import MobileAppPinScreen from './MobileAppPinScreen'
+
 interface MobileAppProps {
   activePage: PageId
   onNavigate: (page: PageId, itemId?: string) => void
@@ -20,6 +23,43 @@ interface MobileAppProps {
 }
 
 const MobileApp: React.FC<MobileAppProps> = ({ activePage, onNavigate, onLogout }) => {
+  const { hasAppPin, isAppUnlocked, unlockApp, setAppPin } = useAppStore()
+  
+  const uid = auth.currentUser?.uid || ''
+  const skipSetupKey = `skipAppPinSetup_${uid}`
+  const [showSetupPrompt, setShowSetupPrompt] = useState(() => {
+    return !hasAppPin && localStorage.getItem(skipSetupKey) !== 'true'
+  })
+  const [unlockError, setUnlockError] = useState('')
+
+  useEffect(() => {
+    if (hasAppPin) setShowSetupPrompt(false)
+  }, [hasAppPin])
+
+  const handleForgotPin = async () => {
+    if (window.confirm("PIN을 분실하여 로그아웃합니다.\n이메일과 비밀번호로 다시 로그인하시면 PIN을 새로 설정할 수 있습니다.")) {
+      await auth.signOut()
+      onLogout()
+    }
+  }
+
+  const handleUnlockComplete = async (pin: string) => {
+    const success = await unlockApp(pin)
+    if (!success) {
+      setUnlockError('PIN이 일치하지 않습니다. 다시 시도해주세요.')
+      setTimeout(() => setUnlockError(''), 1000)
+    }
+  }
+
+  const handleSetupComplete = async (pin: string) => {
+    await setAppPin(pin)
+    setShowSetupPrompt(false)
+  }
+
+  const handleSetupSkip = () => {
+    localStorage.setItem(skipSetupKey, 'true')
+    setShowSetupPrompt(false)
+  }
   const getPageTitle = (page: PageId) => {
     switch (page) {
       case 'calendar': return '달력'
@@ -95,6 +135,30 @@ const MobileApp: React.FC<MobileAppProps> = ({ activePage, onNavigate, onLogout 
       window.history.back()
     }
     setIsLedgerSearchOpen(false)
+  }
+
+  // Intercept render if PIN screen should be shown
+  if (hasAppPin && !isAppUnlocked) {
+    return (
+      <MobileAppPinScreen 
+        mode="unlock"
+        onComplete={handleUnlockComplete}
+        onForgot={handleForgotPin}
+        errorMsg={unlockError}
+      />
+    )
+  }
+
+  if (showSetupPrompt) {
+    return (
+      <div className="relative h-[100dvh] bg-white">
+        <MobileAppPinScreen 
+          mode="setup"
+          onComplete={handleSetupComplete}
+          onSkip={handleSetupSkip}
+        />
+      </div>
+    )
   }
 
   const renderPage = () => {

@@ -117,6 +117,12 @@ interface StoreValue {
   setPrivatePin: (newPin: string) => Promise<void>
   lockPrivate: () => void
   resetPrivatePin: () => Promise<void>
+
+  hasAppPin: boolean
+  isAppUnlocked: boolean
+  unlockApp: (pin: string) => Promise<boolean>
+  setAppPin: (newPin: string) => Promise<void>
+  removeAppPin: () => Promise<void>
 }
 
 const StoreCtx = createContext<StoreValue | null>(null)
@@ -155,6 +161,12 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
   const [pinHash, setPinHash] = useState<string | null>(null)
   const hasPin = pinHash !== null
 
+  const [appPinHash, setAppPinHash] = useState<string | null>(null)
+  const hasAppPin = appPinHash !== null
+  const [isAppUnlocked, setIsAppUnlocked] = useState(() => {
+    return sessionStorage.getItem('yuri-app-unlocked') === 'true'
+  })
+
   const [navDate, setNavDate] = useState<Date | null>(null)
 
   const { showToast } = useToast()
@@ -188,6 +200,7 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
           setCardBillingEndDay(data.cardBillingEndDay || 27)
           setPaydayState(data.payday || 25)
           setCategoryOrderState(data.categoryOrder || [])
+          setAppPinHash(data.appPinHash || null)
           if (data.holidayConfig) setHolidayConfig(data.holidayConfig)
         }
         console.timeEnd('[AppStore] 2. Settings Load Time')
@@ -1138,6 +1151,32 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
     await setDoc(doc(db, `users/${uid}/journal_settings/config`), { pinHash: null }, { merge: true })
   }, [uid])
 
+  const unlockApp = async (pin: string) => {
+    if (!appPinHash) return false
+    const inputHash = await hashPin(pin)
+    if (inputHash === appPinHash) {
+      setIsAppUnlocked(true)
+      sessionStorage.setItem('yuri-app-unlocked', 'true')
+      return true
+    }
+    return false
+  }
+
+  const setAppPin = async (newPin: string) => {
+    const hash = await hashPin(newPin)
+    await setDoc(doc(db, `users/${uid}/settings/config`), { appPinHash: hash }, { merge: true })
+    setAppPinHash(hash)
+    setIsAppUnlocked(true)
+    sessionStorage.setItem('yuri-app-unlocked', 'true')
+  }
+
+  const removeAppPin = useCallback(async () => {
+    setAppPinHash(null)
+    setIsAppUnlocked(false)
+    sessionStorage.removeItem('yuri-app-unlocked')
+    await setDoc(doc(db, `users/${uid}/settings/config`), { appPinHash: null }, { merge: true })
+  }, [uid])
+
   const updateHolidayConfig = useCallback(async (updater: (prev: HolidayConfig) => HolidayConfig) => {
     try {
       const nextConfig = updater(holidayConfig)
@@ -1289,6 +1328,7 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
       addMonthlyEvent, deleteMonthlyEvent,
       deleteRecurringOccurrence,
       hasPin, isPrivateUnlocked, unlockPrivate, setPrivatePin, lockPrivate, resetPrivatePin,
+      hasAppPin, isAppUnlocked, unlockApp, setAppPin, removeAppPin,
       cardPaymentDay, setCardPaymentDay,
       cardBillingStartDay, cardBillingEndDay, setCardBillingDays,
       payday, setPayday, 
