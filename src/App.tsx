@@ -149,36 +149,43 @@ export default function App() {
     
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       if (currentUser) {
-        const now = Date.now();
-        let loginTime = sessionStorage.getItem('yuri-login-time');
-        if (!loginTime) {
-          loginTime = now.toString();
-          sessionStorage.setItem('yuri-login-time', loginTime);
-        }
-        
-        // 3 hours = 3 * 60 * 60 * 1000 = 10800000 ms
-        const LOGOUT_TIME_MS = 3 * 60 * 60 * 1000; 
-        const elapsed = now - parseInt(loginTime, 10);
-        const remaining = LOGOUT_TIME_MS - elapsed;
-        
-        if (remaining <= 0) {
-          signOut(auth);
-          sessionStorage.removeItem('yuri-login-time');
-          sessionStorage.removeItem('yuri-private-unlocked');
-          setUser(null);
-          console.timeEnd('[App] 1. Auth Initialization Time')
-          setIsAuthLoading(false);
-        } else {
-          setUser(currentUser);
-          console.timeEnd('[App] 1. Auth Initialization Time')
-          setIsAuthLoading(false);
+        if (!isMobile) {
+          const now = Date.now();
+          let loginTime = sessionStorage.getItem('yuri-login-time');
+          if (!loginTime) {
+            loginTime = now.toString();
+            sessionStorage.setItem('yuri-login-time', loginTime);
+          }
           
-          if (timerId) clearTimeout(timerId);
-          timerId = setTimeout(() => {
+          // 3 hours = 3 * 60 * 60 * 1000 = 10800000 ms
+          const LOGOUT_TIME_MS = 3 * 60 * 60 * 1000; 
+          const elapsed = now - parseInt(loginTime, 10);
+          const remaining = LOGOUT_TIME_MS - elapsed;
+          
+          if (remaining <= 0) {
             signOut(auth);
             sessionStorage.removeItem('yuri-login-time');
             sessionStorage.removeItem('yuri-private-unlocked');
-          }, remaining);
+            setUser(null);
+            console.timeEnd('[App] 1. Auth Initialization Time')
+            setIsAuthLoading(false);
+          } else {
+            setUser(currentUser);
+            console.timeEnd('[App] 1. Auth Initialization Time')
+            setIsAuthLoading(false);
+            
+            if (timerId) clearTimeout(timerId);
+            timerId = setTimeout(() => {
+              signOut(auth);
+              sessionStorage.removeItem('yuri-login-time');
+              sessionStorage.removeItem('yuri-private-unlocked');
+            }, remaining);
+          }
+        } else {
+          // Mobile: No 3-hour auto logout, persistence is LOCAL, lock handled by PIN
+          setUser(currentUser);
+          console.timeEnd('[App] 1. Auth Initialization Time')
+          setIsAuthLoading(false);
         }
       } else {
         if (timerId) clearTimeout(timerId);
