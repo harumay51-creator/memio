@@ -19,7 +19,7 @@ const MobileCalendarPage: React.FC = () => {
   
   const [currentDate, setCurrentDate] = useState(new Date())
   const [currentDiaryDate, setCurrentDiaryDate] = useState(new Date())
-  const [selectedDate, setSelectedDate] = useState(new Date())
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const mergedHolidays = useMergedHolidays(currentDate.getFullYear())
 
@@ -196,8 +196,8 @@ const MobileCalendarPage: React.FC = () => {
     return { dayAnnivs, dayMonthly }
   }
 
-  const selectedDayEvents = eventsByDate.get(format(selectedDate, 'yyyy-MM-dd')) || []
-  const { dayAnnivs: selectedAnnivs, dayMonthly: selectedMonthly } = getDayRoutines(selectedDate)
+  const selectedDayEvents = selectedDate ? (eventsByDate.get(format(selectedDate, 'yyyy-MM-dd')) || []) : []
+  const { dayAnnivs: selectedAnnivs, dayMonthly: selectedMonthly } = selectedDate ? getDayRoutines(selectedDate) : { dayAnnivs: [], dayMonthly: [] }
 
   // Add event
   const [showTimePicker, setShowTimePicker] = useState(false)
@@ -205,7 +205,7 @@ const MobileCalendarPage: React.FC = () => {
 
   const handleAddEventSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!newEventText.trim()) return
+    if (!newEventText.trim() || !selectedDate) return
 
     const dStr = format(selectedDate, 'yyyy-MM-dd')
     const finalDate = newEventTime ? `${dStr}T${newEventTime}:00` : dStr
@@ -292,7 +292,7 @@ const MobileCalendarPage: React.FC = () => {
           const isHoliday = !!holidayInfo
           const isSunday = d.getDay() === 0
           const dayEvents = eventsByDate.get(dStr) || []
-          const isSelected = isSameDay(d, selectedDate)
+          const isSelected = selectedDate ? isSameDay(d, selectedDate) : false
           const isCurrentMonth = isSameMonth(d, activeMonthDate)
           const isToday = isSameDay(d, new Date())
           const diaryEntry = diaries[dStr]
@@ -326,7 +326,7 @@ const MobileCalendarPage: React.FC = () => {
                   ) : null}
                 </div>
               ) : (
-                <div className="flex flex-col gap-[2px] mt-[2px] w-full px-0.5 overflow-hidden flex-1 justify-start">
+                <div className="flex flex-col gap-0.5 mt-1 w-full px-0.5 overflow-hidden flex-1 justify-start">
                   {(() => {
                     const badgeItems: { name: string; type: 'holiday' | 'routine' | 'event'; isRedDay?: boolean; color?: string }[] = []
                     if (holidayInfo) {
@@ -376,7 +376,7 @@ const MobileCalendarPage: React.FC = () => {
         </div>
       )}
 
-      {isDiaryMode && !isDiaryOpen ? null : !isDiaryMode ? (
+      {isDiaryMode && !isDiaryOpen ? null : !isDiaryMode && selectedDate ? (
         /* Event List Section */
         <div ref={scrollRef} className="flex-1 overflow-y-auto bg-yuri-50 p-4">
         <h3 className="text-sm font-bold text-yuri-700 mb-3 border-b border-yuri-200 pb-2 flex items-center gap-2">
