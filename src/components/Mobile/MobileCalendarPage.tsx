@@ -300,8 +300,6 @@ const MobileCalendarPage: React.FC = () => {
 
           const { dayAnnivs, dayMonthly } = getDayRoutines(d)
 
-          const totalEventsAndRoutinesCount = dayEvents.length + dayAnnivs.length + dayMonthly.length
-
           return (
             <button
               key={d.toISOString()}
@@ -330,7 +328,7 @@ const MobileCalendarPage: React.FC = () => {
               ) : (
                 <div className="flex flex-col gap-[1px] mt-0.5 w-full px-0.5 overflow-hidden flex-1">
                   {(() => {
-                    const badgeItems = []
+                    const badgeItems: { name: string; type: 'holiday' | 'routine' | 'event'; isRedDay?: boolean; color?: string }[] = []
                     if (holidayInfo) {
                       badgeItems.push({ name: holidayInfo.name, type: 'holiday', isRedDay: holidayInfo.isRedDay })
                     }
