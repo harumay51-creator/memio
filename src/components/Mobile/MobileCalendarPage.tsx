@@ -369,7 +369,7 @@ const MobileCalendarPage: React.FC = () => {
 
       {isDiaryMode && isDiaryOpen && (
         <div className="absolute inset-0 z-50 bg-white flex flex-col overflow-hidden animate-in slide-in-from-right-full duration-300">
-          <MobileDiaryView selectedDate={selectedDate} onClose={() => {
+          <MobileDiaryView selectedDate={selectedDate!} onClose={() => {
             if (window.history.state?.modal === 'mobileDiary') window.history.back()
             setIsDiaryOpen(false)
           }} />
@@ -565,7 +565,7 @@ const MobileCalendarPage: React.FC = () => {
           onClose={() => setShowTimePicker(false)}
           onSelect={(timeStr) => {
             if (isEditingTime) {
-              const d = editDate.split('T')[0] || format(selectedDate, 'yyyy-MM-dd')
+              const d = editDate.split('T')[0] || format(selectedDate || new Date(), 'yyyy-MM-dd')
               setEditDate(`${d}T${timeStr}`)
             } else {
               setNewEventTime(timeStr)
