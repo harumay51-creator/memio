@@ -141,6 +141,7 @@ console.time('[App] 0. Script Load to App Render')
 export default function App() {
   const [user, setUser] = useState<User | null>(null)
   const [isAuthLoading, setIsAuthLoading] = useState(true)
+  const isMobile = useIsMobile(768)
 
   useEffect(() => {
     console.timeEnd('[App] 0. Script Load to App Render')
