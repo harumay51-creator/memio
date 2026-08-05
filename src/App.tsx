@@ -151,16 +151,20 @@ export default function App() {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       if (currentUser) {
         if (!isMobile) {
-          const now = Date.now();
-          let loginTime = sessionStorage.getItem('yuri-login-time');
-          if (!loginTime) {
-            loginTime = now.toString();
-            sessionStorage.setItem('yuri-login-time', loginTime);
-          }
-          
           // 3 hours = 3 * 60 * 60 * 1000 = 10800000 ms
           const LOGOUT_TIME_MS = 3 * 60 * 60 * 1000; 
-          const elapsed = now - parseInt(loginTime, 10);
+          
+          const now = Date.now();
+          let loginTimeStr = sessionStorage.getItem('yuri-login-time');
+          let parsedLoginTime = loginTimeStr ? parseInt(loginTimeStr, 10) : NaN;
+          
+          // If no login time, or invalid, or in the future, or somehow already older than 3 hours upon init, reset it
+          if (!loginTimeStr || isNaN(parsedLoginTime) || parsedLoginTime > now) {
+            parsedLoginTime = now;
+            sessionStorage.setItem('yuri-login-time', parsedLoginTime.toString());
+          }
+          
+          const elapsed = now - parsedLoginTime;
           const remaining = LOGOUT_TIME_MS - elapsed;
           
           if (remaining <= 0) {
