@@ -285,7 +285,7 @@ const MobileCalendarPage: React.FC = () => {
       </div>
 
       {/* Calendar Grid */}
-      <div className="grid grid-cols-7 border-b border-yuri-100 pb-2">
+      <div className={`grid grid-cols-7 border-b border-yuri-100 pb-2 ${isDiaryMode ? 'flex-1' : ''}`} style={isDiaryMode ? { gridTemplateRows: 'repeat(auto-fit, minmax(0, 1fr))' } : undefined}>
         {days.map((d: Date) => {
           const dStr = format(d, 'yyyy-MM-dd')
           const holidayInfo = mergedHolidays[dStr]
@@ -306,7 +306,7 @@ const MobileCalendarPage: React.FC = () => {
             <button
               key={d.toISOString()}
               onClick={() => handleDateClick(d)}
-              className={`flex flex-col items-center justify-start border border-transparent ${isDiaryMode ? 'py-2 h-16 sm:h-[10vh] min-h-[72px]' : 'aspect-square p-1'} ${
+              className={`flex flex-col items-center justify-start border border-transparent ${isDiaryMode ? 'py-2 h-full' : 'aspect-square p-1'} ${
                 isSelected ? 'bg-accent/10 rounded-xl' : ''
               } ${!isCurrentMonth ? 'opacity-30' : ''}`}
             >
@@ -328,19 +328,40 @@ const MobileCalendarPage: React.FC = () => {
                   ) : null}
                 </div>
               ) : (
-                <div className="flex gap-0.5 mt-1 flex-wrap justify-center w-full px-1">
-                  {dayAnnivs.slice(0, 3).map((_, i) => (
-                    <span key={`a-${i}`} className="w-1.5 h-1.5 rounded-full bg-[#B4629C]" />
-                  ))}
-                  {dayMonthly.slice(0, Math.max(0, 3 - dayAnnivs.length)).map((_, i) => (
-                    <span key={`m-${i}`} className="w-1.5 h-1.5 rounded-full bg-[#3A4B8C]" />
-                  ))}
-                  {dayEvents.slice(0, Math.max(0, 3 - dayAnnivs.length - dayMonthly.length)).map((ev, i) => (
-                    <span key={`e-${i}`} className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: ev.color || EVENT_COLORS[0] }} />
-                  ))}
-                  {totalEventsAndRoutinesCount > 3 && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-yuri-300" />
-                  )}
+                <div className="flex flex-col gap-[1px] mt-0.5 w-full px-0.5 overflow-hidden flex-1">
+                  {(() => {
+                    const badgeItems = []
+                    if (holidayInfo) {
+                      badgeItems.push({ name: holidayInfo.name, type: 'holiday', isRedDay: holidayInfo.isRedDay })
+                    }
+                    dayAnnivs.forEach(a => badgeItems.push({ name: a.name, color: '#B4629C', type: 'routine' }))
+                    dayMonthly.forEach(m => badgeItems.push({ name: m.name, color: '#3A4B8C', type: 'routine' }))
+                    dayEvents.forEach(e => badgeItems.push({ name: e.text, color: e.color || EVENT_COLORS[0], type: 'event' }))
+                    
+                    return (
+                      <>
+                        {badgeItems.slice(0, 2).map((item, i) => {
+                          if (item.type === 'holiday') {
+                            return (
+                              <div key={`b-${i}`} className={`text-[9px] px-1 py-[1.5px] w-full truncate rounded-[3px] font-bold ${item.isRedDay ? 'bg-red-50 text-red-500' : 'bg-gray-100 text-gray-500'}`}>
+                                {item.name}
+                              </div>
+                            )
+                          }
+                          return (
+                            <div key={`b-${i}`} className="text-[9px] px-1 py-[1.5px] w-full truncate rounded-[3px] text-white font-bold" style={{ backgroundColor: item.color }}>
+                              {item.name}
+                            </div>
+                          )
+                        })}
+                        {badgeItems.length > 2 && (
+                          <div className="text-[9px] text-yuri-400 font-bold text-center mt-[1px]">
+                            +{badgeItems.length - 2}개
+                          </div>
+                        )}
+                      </>
+                    )
+                  })()}
                 </div>
               )}
             </button>
@@ -357,9 +378,7 @@ const MobileCalendarPage: React.FC = () => {
         </div>
       )}
 
-      {isDiaryMode && !isDiaryOpen ? (
-        <div className="flex-1 bg-white"></div>
-      ) : !isDiaryMode ? (
+      {isDiaryMode && !isDiaryOpen ? null : !isDiaryMode ? (
         /* Event List Section */
         <div ref={scrollRef} className="flex-1 overflow-y-auto bg-yuri-50 p-4">
         <h3 className="text-sm font-bold text-yuri-700 mb-3 border-b border-yuri-200 pb-2 flex items-center gap-2">
