@@ -149,6 +149,11 @@ const MobileCalendarPage: React.FC = () => {
   }
 
   const handleDateClick = (d: Date) => {
+    if (!isDiaryMode && selectedDate && isSameDay(d, selectedDate)) {
+      setSelectedDate(null)
+      return
+    }
+    
     setSelectedDate(d)
     if (isDiaryMode) {
       setIsDiaryOpen(true)
@@ -285,7 +290,7 @@ const MobileCalendarPage: React.FC = () => {
       </div>
 
       {/* Calendar Grid */}
-      <div className={`grid grid-cols-7 border-b border-yuri-100 pb-2 ${isDiaryMode ? 'flex-1' : ''}`} style={isDiaryMode ? { gridTemplateRows: `repeat(${days.length / 7}, minmax(0, 1fr))` } : undefined}>
+      <div className={`grid grid-cols-7 border-b border-yuri-100 pb-2 transition-all duration-300 ease-in-out ${isDiaryMode || !selectedDate ? 'flex-1' : ''}`} style={isDiaryMode || !selectedDate ? { gridTemplateRows: `repeat(${days.length / 7}, minmax(0, 1fr))` } : undefined}>
         {days.map((d: Date) => {
           const dStr = format(d, 'yyyy-MM-dd')
           const holidayInfo = mergedHolidays[dStr]
@@ -304,7 +309,9 @@ const MobileCalendarPage: React.FC = () => {
             <button
               key={d.toISOString()}
               onClick={() => handleDateClick(d)}
-              className={`flex flex-col items-center justify-start border border-transparent ${isDiaryMode ? 'py-2 h-full min-h-[72px]' : 'py-1 h-[72px] sm:h-[80px]'} ${
+              className={`flex flex-col items-center justify-start border border-transparent transition-all duration-300 ease-in-out ${
+                isDiaryMode || !selectedDate ? 'py-2 h-full min-h-[72px]' : 'py-1 h-[72px] sm:h-[80px]'
+              } ${
                 isSelected ? 'bg-accent/10 rounded-xl' : ''
               } ${!isCurrentMonth ? 'opacity-30' : ''}`}
             >
