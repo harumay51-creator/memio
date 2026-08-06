@@ -70,16 +70,15 @@ const AuthScreen: React.FC = () => {
       const userCredential = await signInWithEmailAndPassword(auth, email, password)
       
       const deviceInfo = getDeviceBrowserInfo()
-      try {
-        const { collection, addDoc } = await import('firebase/firestore')
-        const { db } = await import('../config/firebase')
-        await addDoc(collection(db, 'users', userCredential.user.uid, 'loginHistory'), {
-          timestamp: new Date().toISOString(),
-          deviceInfo
+      // Non-blocking background save to prevent slowing down initial render
+      import('firebase/firestore').then(({ collection, addDoc }) => {
+        import('../config/firebase').then(({ db }) => {
+          addDoc(collection(db, 'users', userCredential.user.uid, 'loginHistory'), {
+            timestamp: new Date().toISOString(),
+            deviceInfo
+          }).catch(e => console.error('Failed to log login history', e))
         })
-      } catch (e) {
-        console.error('Failed to log login history', e)
-      }
+      }).catch(e => console.error('Failed to load firestore for history', e))
     } catch (err: any) {
       console.error(err)
       if (err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found') {

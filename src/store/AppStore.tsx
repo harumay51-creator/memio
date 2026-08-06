@@ -44,6 +44,7 @@ export interface TrashedItem {
   metadata?: any
 }
 interface StoreValue {
+  isSettingsLoading: boolean
   isLoading: boolean
   loadError: string | null
   tasks:  Task[]
@@ -129,6 +130,7 @@ const StoreCtx = createContext<StoreValue | null>(null)
 
 // ── Provider ──────────────────────────────────────────────────────────────────
 export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string }> = ({ children, uid }) => {
+  const [isSettingsLoading, setIsSettingsLoading] = useState(true)
   const [isLoading, setIsLoading] = useState(true)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [tasks,  setTasks]  = useState<Task[]>([])
@@ -207,6 +209,8 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
         }
         console.timeEnd('[AppStore] 2. Settings Load Time')
         
+        setIsSettingsLoading(false)
+
         console.time('[AppStore] 3. Essential 6 Collections Load Time')
         const [
           fetchedTasks,
@@ -1308,6 +1312,7 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
 
   return (
     <StoreCtx.Provider value={{
+      isSettingsLoading,
       isLoading, loadError,
       tasks, ledger, events, notes, fixedExpenses, expenseCategories, agendas, anniversaries, monthlyEvents, recurringInstances, trashedItems,
       holidayConfig, updateHolidayConfig,

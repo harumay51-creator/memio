@@ -17,7 +17,7 @@ import { ToastProvider } from './components/common/Toast'
 
 // ── Inner app (needs to be inside AppStoreProvider to access useAppStore) ─────
 const AppInner: React.FC = () => {
-  const { isLoading, loadError } = useAppStore()
+  const { isSettingsLoading, isLoading, hasAppPin, isAppUnlocked, loadError } = useAppStore()
   const { isDiaryMode, settings, setIsDiaryMode } = useDiaryStore()
   const [activePage,    setActivePage]    = useState<PageId>('calendar')
   const [activeItemId,  setActiveItemId]  = useState<string | null>(null)
@@ -47,14 +47,6 @@ const AppInner: React.FC = () => {
   const handleLogout = () => {
     sessionStorage.removeItem('yuri-private-unlocked')
     auth.signOut()
-  }
-
-  if (isLoading) {
-    return (
-      <div className="flex h-screen w-screen items-center justify-center bg-yuri-50">
-        <div className="animate-pulse text-accent font-medium text-lg">데이터를 불러오는 중...</div>
-      </div>
-    )
   }
 
   if (loadError) {
@@ -88,6 +80,26 @@ service cloud.firestore {
       </div>
     )
   }
+
+  if (isSettingsLoading) {
+    return (
+      <div className="flex h-screen w-screen items-center justify-center bg-yuri-50">
+        <div className="animate-pulse text-accent font-medium text-lg">설정을 불러오는 중...</div>
+      </div>
+    )
+  }
+
+  // If mobile and locked, we bypass the main data loading screen so MobileApp can render the PIN screen immediately!
+  const isLockedMobile = isMobile && hasAppPin && !isAppUnlocked;
+  
+  if (isLoading && !isLockedMobile) {
+    return (
+      <div className="flex h-screen w-screen items-center justify-center bg-yuri-50">
+        <div className="animate-pulse text-accent font-medium text-lg">데이터를 불러오는 중...</div>
+      </div>
+    )
+  }
+
 
   if (isMobile) {
     return (
