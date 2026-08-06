@@ -37,6 +37,7 @@ const MobileCalendarPage: React.FC = () => {
   const [editColor, setEditColor] = useState(EVENT_COLORS[0])
   const [editDate, setEditDate] = useState('')
 
+  const gridRef = useRef<HTMLDivElement>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const touchStartY = useRef<number>(0)
   const isAtTopOnTouchStart = useRef<boolean>(false)
@@ -44,54 +45,45 @@ const MobileCalendarPage: React.FC = () => {
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartY.current = e.touches[0].clientY
     isAtTopOnTouchStart.current = (scrollRef.current?.scrollTop || 0) <= 0
-    if (scrollRef.current && isAtTopOnTouchStart.current) {
-      scrollRef.current.style.transition = 'none'
+    if (isAtTopOnTouchStart.current) {
+      if (gridRef.current) gridRef.current.style.transition = 'none'
+      if (scrollRef.current) scrollRef.current.style.transition = 'none'
     }
   }
 
   const handleTouchMove = (e: React.TouchEvent) => {
     if (!isAtTopOnTouchStart.current) return
-    const currentY = e.touches[0].clientY
-    const deltaY = currentY - touchStartY.current
+    const deltaY = e.touches[0].clientY - touchStartY.current
     
-    if (deltaY > 0 && scrollRef.current) {
-      // Use direct DOM manipulation for 60fps performance (bypassing React state)
-      scrollRef.current.style.transform = `translateY(${deltaY}px)`
-      // Prevent pull-to-refresh is handled by CSS overscroll-none
+    if (deltaY > 0 && scrollRef.current && gridRef.current) {
+      // Direct DOM manipulation of flex properties for simultaneous 60fps tracking
+      gridRef.current.style.flex = `0 0 calc(45% + ${deltaY}px)`
+      scrollRef.current.style.flex = `0 0 calc(55% - ${deltaY}px)`
     }
   }
 
   const handleTouchEnd = (e: React.TouchEvent) => {
     if (!isAtTopOnTouchStart.current) return
     
-    const touchEndY = e.changedTouches[0].clientY
-    const deltaY = touchEndY - touchStartY.current
+    const deltaY = e.changedTouches[0].clientY - touchStartY.current
     
-    if (scrollRef.current) {
-      scrollRef.current.style.transition = 'transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)'
+    if (gridRef.current) gridRef.current.style.transition = 'all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)'
+    if (scrollRef.current) scrollRef.current.style.transition = 'all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)'
       
-      if (deltaY > 100) {
-        // Smoothly animate out
-        scrollRef.current.style.transform = `translateY(100vh)`
-        
-        setTimeout(() => {
-          if (window.history.state?.modal === 'mobileEventList') {
-            window.history.back()
-          } else {
-            setSelectedDate(null)
-          }
-          // Reset style after unmount (or before next mount)
-          if (scrollRef.current) {
-            scrollRef.current.style.transform = ''
-          }
-        }, 200)
+    if (deltaY > 100) {
+      // Clean up inline styles FIRST so React classes take over during transition
+      if (gridRef.current) gridRef.current.style.flex = ''
+      if (scrollRef.current) scrollRef.current.style.flex = ''
+      
+      if (window.history.state?.modal === 'mobileEventList') {
+        window.history.back()
       } else {
-        // Snap back to original position
-        scrollRef.current.style.transform = 'translateY(0)'
-        setTimeout(() => {
-          if (scrollRef.current) scrollRef.current.style.transform = ''
-        }, 300)
+        setSelectedDate(null)
       }
+    } else {
+      // Snap back to original position
+      if (gridRef.current) gridRef.current.style.flex = ''
+      if (scrollRef.current) scrollRef.current.style.flex = ''
     }
   }
   const eventsByDate = useMemo(() => {
@@ -364,7 +356,15 @@ const MobileCalendarPage: React.FC = () => {
       </div>
 
       {/* Calendar Grid */}
-      <div className={`grid grid-cols-7 border-b border-yuri-100 pb-2 transition-all duration-300 ease-in-out ${isDiaryMode || !selectedDate ? 'flex-1' : ''}`} style={isDiaryMode || !selectedDate ? { gridTemplateRows: `repeat(${days.length / 7}, minmax(0, 1fr))` } : undefined}>
+      <div 
+        ref={gridRef}
+        className={`grid grid-cols-7 border-b border-yuri-100 pb-2 transition-all duration-300 ease-in-out`} 
+        style={{ 
+          flex: isDiaryMode || !selectedDate ? '1 1 100%' : '0 0 45%',
+          minHeight: isDiaryMode || !selectedDate ? '0' : '280px',
+          gridTemplateRows: `repeat(${days.length / 7}, minmax(0, 1fr))` 
+        }}
+      >
         {days.map((d: Date) => {
           const dStr = format(d, 'yyyy-MM-dd')
           const holidayInfo = mergedHolidays[dStr]
@@ -383,8 +383,8 @@ const MobileCalendarPage: React.FC = () => {
             <button
               key={d.toISOString()}
               onClick={() => handleDateClick(d)}
-              className={`flex flex-col items-center justify-start border border-transparent transition-all duration-300 ease-in-out ${
-                isDiaryMode || !selectedDate ? 'py-2 h-full min-h-[72px]' : 'pt-1 pb-0.5 h-[48px] sm:h-[52px]'
+              className={`flex flex-col items-center justify-start border border-transparent transition-all duration-300 ease-in-out overflow-hidden w-full h-full ${
+                isDiaryMode || !selectedDate ? 'py-2' : 'pt-1 pb-0.5'
               } ${
                 isSelected ? 'bg-accent/10 rounded-xl' : ''
               } ${!isCurrentMonth ? 'opacity-30' : ''}`}
@@ -471,38 +471,46 @@ const MobileCalendarPage: React.FC = () => {
 
       {isDiaryMode && isDiaryOpen && (
         <div className="absolute inset-0 z-50 bg-white flex flex-col overflow-hidden animate-in slide-in-from-right-full duration-300">
-          <MobileDiaryView selectedDate={selectedDate!} onClose={() => {
+          <MobileDiaryView selectedDate={selectedDate || new Date()} onClose={() => {
             if (window.history.state?.modal === 'mobileDiary') window.history.back()
             setIsDiaryOpen(false)
           }} />
         </div>
       )}
 
-      {isDiaryMode && !isDiaryOpen ? null : !isDiaryMode && selectedDate ? (
-        /* Event List Section */
+      {/* Event List Section */}
+      {!isDiaryMode && (
         <div 
           ref={scrollRef} 
-          className="flex-1 overflow-y-auto overscroll-none bg-yuri-50 p-4 pt-2 will-change-transform"
+          className={`flex flex-col overflow-y-auto overscroll-none bg-yuri-50 transition-all duration-300 ease-in-out will-change-transform`}
+          style={{
+            flex: selectedDate ? '1 1 55%' : '0 0 0%',
+            opacity: selectedDate ? 1 : 0,
+            paddingTop: selectedDate ? '0.5rem' : '0',
+            paddingBottom: selectedDate ? '1rem' : '0',
+            paddingLeft: '1rem',
+            paddingRight: '1rem'
+          }}
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
         >
           {/* Swipe handle */}
-          <div className="w-full flex justify-center pb-3">
+          <div className="w-full flex justify-center pb-3 shrink-0">
             <div className="w-10 h-1.5 bg-gray-300 rounded-full" />
           </div>
 
-        <h3 className="text-sm font-bold text-yuri-700 mb-3 border-b border-yuri-200 pb-2 flex items-center gap-2">
-          {format(selectedDate, 'M월 d일 (E)', { locale: ko })}
-          {mergedHolidays[format(selectedDate, 'yyyy-MM-dd')] && (
-            <span className={`text-xs px-2 py-0.5 rounded-full ${mergedHolidays[format(selectedDate, 'yyyy-MM-dd')].isRedDay ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-600'}`}>
-              {mergedHolidays[format(selectedDate, 'yyyy-MM-dd')].name}
-            </span>
-          )}
-        </h3>
+          <h3 className="text-sm font-bold text-yuri-700 mb-3 border-b border-yuri-200 pb-2 flex items-center gap-2 shrink-0">
+            {format(selectedDate || new Date(), 'M월 d일 (E)', { locale: ko })}
+            {mergedHolidays[format(selectedDate || new Date(), 'yyyy-MM-dd')] && (
+              <span className={`text-xs px-2 py-0.5 rounded-full ${mergedHolidays[format(selectedDate || new Date(), 'yyyy-MM-dd')].isRedDay ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-600'}`}>
+                {mergedHolidays[format(selectedDate || new Date(), 'yyyy-MM-dd')].name}
+              </span>
+            )}
+          </h3>
 
-        {selectedDayEvents.length === 0 && (
-          <div className="text-center text-yuri-400 text-sm py-8">
+        {selectedDate && selectedDayEvents.length === 0 && selectedAnnivs.length === 0 && selectedMonthly.length === 0 && (
+          <div className="text-center text-yuri-400 text-sm py-8 transition-opacity duration-300">
             일정이 없습니다.
           </div>
         )}
@@ -659,9 +667,7 @@ const MobileCalendarPage: React.FC = () => {
             </div>
           </form>
         </div>
-      </div>
-      ) : null}
-
+      )}
       {isSearchOpen && (
         <MobileDiarySearchModal 
           onClose={() => setIsSearchOpen(false)}
