@@ -1,7 +1,6 @@
 import React, { useState } from 'react'
 import { auth } from '../config/firebase'
 import { signInWithEmailAndPassword, setPersistence, browserLocalPersistence, browserSessionPersistence, sendPasswordResetEmail } from 'firebase/auth'
-import { useIsMobile } from '../hooks/useIsMobile'
 
 import { isMobileDevice } from '../utils/isMobileDevice'
 
@@ -30,7 +29,6 @@ function getDeviceBrowserInfo(): string {
 }
 
 const AuthScreen: React.FC = () => {
-  const isMobile = useIsMobile(768)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
