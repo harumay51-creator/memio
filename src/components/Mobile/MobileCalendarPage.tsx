@@ -403,6 +403,14 @@ const MobileCalendarPage: React.FC = () => {
                               </div>
                             )
                           }
+                          if (item.type === 'routine') {
+                            return (
+                              <div key={`b-${i}`} className="text-[9px] px-[3px] py-[2px] w-full truncate rounded-[4px] font-bold shrink-0 leading-none flex items-center gap-[2px] bg-transparent" style={{ color: item.color }}>
+                                <span className="shrink-0 text-[8px] font-black mt-[0.5px]">↻</span>
+                                <span className="truncate">{item.name}</span>
+                              </div>
+                            )
+                          }
                           return (
                             <div key={`b-${i}`} className="text-[9px] px-[3px] py-[2px] w-full truncate rounded-[4px] text-white font-bold shrink-0 leading-none" style={{ backgroundColor: item.color }}>
                               {item.name}
