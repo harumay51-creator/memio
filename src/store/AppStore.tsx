@@ -163,7 +163,9 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
   const [pinHash, setPinHash] = useState<string | null>(null)
   const hasPin = pinHash !== null
 
-  const [appPinHash, setAppPinHash] = useState<string | null>(null)
+  const [appPinHash, setAppPinHash] = useState<string | null>(() => {
+    return localStorage.getItem(`yuri-appPinHash-${uid}`)
+  })
   const hasAppPin = appPinHash !== null
   const [isAppUnlocked, setIsAppUnlocked] = useState(() => {
     return sessionStorage.getItem('yuri-app-unlocked') === 'true'
@@ -205,6 +207,11 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
           setPaydayState(data.payday || 25)
           setCategoryOrderState(data.categoryOrder || [])
           setAppPinHash(data.appPinHash || null)
+          if (data.appPinHash) {
+            localStorage.setItem(`yuri-appPinHash-${uid}`, data.appPinHash)
+          } else {
+            localStorage.removeItem(`yuri-appPinHash-${uid}`)
+          }
           if (data.holidayConfig) setHolidayConfig(data.holidayConfig)
         }
         console.timeEnd('[AppStore] 2. Settings Load Time')
@@ -1172,12 +1179,14 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
     const hash = await hashPin(newPin)
     await setDoc(doc(db, `users/${uid}/settings/config`), { appPinHash: hash }, { merge: true })
     setAppPinHash(hash)
+    localStorage.setItem(`yuri-appPinHash-${uid}`, hash)
     setIsAppUnlocked(true)
     sessionStorage.setItem('yuri-app-unlocked', 'true')
   }
 
   const removeAppPin = useCallback(async () => {
     setAppPinHash(null)
+    localStorage.removeItem(`yuri-appPinHash-${uid}`)
     setIsAppUnlocked(false)
     sessionStorage.removeItem('yuri-app-unlocked')
     await setDoc(doc(db, `users/${uid}/settings/config`), { appPinHash: null }, { merge: true })
