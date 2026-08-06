@@ -242,6 +242,7 @@ export default function App() {
             onComplete={async (pin) => {
               const hash = await hashPin(pin);
               if (hash === cachedAppPin) {
+                performance.mark('auth-start');
                 sessionStorage.setItem('yuri-app-unlocked', 'true');
                 window.dispatchEvent(new Event('app-unlocked'));
                 setPendingPinUnlock(true);

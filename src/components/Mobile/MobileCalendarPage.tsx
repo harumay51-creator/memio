@@ -30,7 +30,8 @@ const PerfDebugPanel: React.FC = () => {
 
       let total = 0;
       try {
-        const start = performance.getEntriesByName('auth-start');
+        let start = performance.getEntriesByName('auth-start');
+        if (start.length === 0) start = performance.getEntriesByName('promise-all-start');
         const end = performance.getEntriesByName('react-render-end');
         if (start.length > 0 && end.length > 0) {
           total = Math.round(end[end.length - 1].startTime - start[start.length - 1].startTime);
@@ -61,19 +62,23 @@ const PerfDebugPanel: React.FC = () => {
   return (
     <div 
       onClick={() => setVisible(false)}
-      className="fixed bottom-20 right-4 bg-black/80 text-[#33FF33] p-3 rounded-lg text-[10px] font-mono z-[9999] whitespace-pre shadow-lg backdrop-blur-sm"
+      className="fixed bottom-20 right-4 bg-black/80 text-[#33FF33] p-3 rounded-lg text-[9px] leading-relaxed font-mono z-[9999] shadow-lg backdrop-blur-sm max-w-[200px] break-words"
       style={{ pointerEvents: 'auto' }}
     >
       <div className="font-bold text-white mb-1">성능 측정 결과 (터치 시 닫힘)</div>
-      Auth: {metrics.auth}
-      설정 로딩: {metrics.settings}
-      Promise.all 전체: {metrics.promiseAll}
-      events: {metrics.events} | tasks: {metrics.tasks}
-      annivs: {metrics.annivs} | monthly: {metrics.monthly}
-      agendas: {metrics.agendas} | recurring: {metrics.recurring}
-      React 렌더링: {metrics.reactRender}
-      ----------------------
-      총 소요 시간: {metrics.total}
+      <div>Auth: {metrics.auth}</div>
+      <div>설정 로딩: {metrics.settings}</div>
+      <div>events: {metrics.events}</div>
+      <div>tasks: {metrics.tasks}</div>
+      <div>annivs: {metrics.annivs}</div>
+      <div>monthly: {metrics.monthly}</div>
+      <div>agendas: {metrics.agendas}</div>
+      <div>recurring: {metrics.recurring}</div>
+      <div>Promise.all 전체: {metrics.promiseAll}</div>
+      <div>React 렌더링: {metrics.reactRender}</div>
+      <div className="border-t border-yuri-500/50 mt-1 pt-1 font-bold text-white">
+        총 소요 시간: {metrics.total}
+      </div>
     </div>
   );
 };
