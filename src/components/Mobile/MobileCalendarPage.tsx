@@ -41,9 +41,15 @@ const MobileCalendarPage: React.FC = () => {
   const scrollRef = useRef<HTMLDivElement>(null)
   const touchStartY = useRef<number>(0)
   const isAtTopOnTouchStart = useRef<boolean>(false)
+  const lastTouchY = useRef<number>(0)
+  const lastTouchTime = useRef<number>(0)
+  const rafRef = useRef<number | null>(null)
 
   const handleTouchStart = (e: React.TouchEvent) => {
-    touchStartY.current = e.touches[0].clientY
+    const y = e.touches[0].clientY
+    touchStartY.current = y
+    lastTouchY.current = y
+    lastTouchTime.current = performance.now()
     isAtTopOnTouchStart.current = (scrollRef.current?.scrollTop || 0) <= 0
     if (isAtTopOnTouchStart.current) {
       if (gridRef.current) gridRef.current.style.transition = 'none'
@@ -53,25 +59,37 @@ const MobileCalendarPage: React.FC = () => {
 
   const handleTouchMove = (e: React.TouchEvent) => {
     if (!isAtTopOnTouchStart.current) return
-    const deltaY = e.touches[0].clientY - touchStartY.current
+    const currentY = e.touches[0].clientY
+    const deltaY = currentY - touchStartY.current
     
     if (deltaY > 0 && scrollRef.current && gridRef.current) {
-      // Direct DOM manipulation of flex properties for simultaneous 60fps tracking
-      gridRef.current.style.flex = `0 0 calc(45% + ${deltaY}px)`
-      scrollRef.current.style.flex = `0 0 calc(55% - ${deltaY}px)`
+      lastTouchY.current = currentY
+      lastTouchTime.current = performance.now()
+
+      if (rafRef.current) cancelAnimationFrame(rafRef.current)
+      rafRef.current = requestAnimationFrame(() => {
+        if (gridRef.current && scrollRef.current) {
+          gridRef.current.style.flex = `0 0 calc(45% + ${deltaY}px)`
+          scrollRef.current.style.flex = `0 0 calc(55% - ${deltaY}px)`
+        }
+      })
     }
   }
 
   const handleTouchEnd = (e: React.TouchEvent) => {
     if (!isAtTopOnTouchStart.current) return
+    if (rafRef.current) cancelAnimationFrame(rafRef.current)
     
-    const deltaY = e.changedTouches[0].clientY - touchStartY.current
+    const currentY = e.changedTouches[0].clientY
+    const deltaY = currentY - touchStartY.current
+    const timeDelta = performance.now() - lastTouchTime.current
+    const velocity = timeDelta > 0 ? (currentY - lastTouchY.current) / timeDelta : 0
     
-    if (gridRef.current) gridRef.current.style.transition = 'all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)'
-    if (scrollRef.current) scrollRef.current.style.transition = 'all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)'
+    // Fallback to CSS classes for smooth exit/snap
+    if (gridRef.current) gridRef.current.style.transition = ''
+    if (scrollRef.current) scrollRef.current.style.transition = ''
       
-    if (deltaY > 100) {
-      // Clean up inline styles FIRST so React classes take over during transition
+    if (deltaY > 100 || velocity > 0.5) {
       if (gridRef.current) gridRef.current.style.flex = ''
       if (scrollRef.current) scrollRef.current.style.flex = ''
       
@@ -81,7 +99,6 @@ const MobileCalendarPage: React.FC = () => {
         setSelectedDate(null)
       }
     } else {
-      // Snap back to original position
       if (gridRef.current) gridRef.current.style.flex = ''
       if (scrollRef.current) scrollRef.current.style.flex = ''
     }
@@ -358,7 +375,7 @@ const MobileCalendarPage: React.FC = () => {
       {/* Calendar Grid */}
       <div 
         ref={gridRef}
-        className={`grid grid-cols-7 border-b border-yuri-100 pb-2 transition-all duration-300 ease-in-out`} 
+        className={`grid grid-cols-7 border-b border-yuri-100 pb-2 transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]`}
         style={{ 
           flex: isDiaryMode || !selectedDate ? '1 1 100%' : '0 0 45%',
           minHeight: isDiaryMode || !selectedDate ? '0' : '280px',
@@ -482,7 +499,7 @@ const MobileCalendarPage: React.FC = () => {
       {!isDiaryMode && (
         <div 
           ref={scrollRef} 
-          className={`flex flex-col overflow-y-auto overscroll-none bg-yuri-50 transition-all duration-300 ease-in-out will-change-transform`}
+          className={`flex flex-col overflow-y-auto overscroll-none bg-yuri-50 transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] will-change-transform`}
           style={{
             flex: selectedDate ? '1 1 55%' : '0 0 0%',
             opacity: selectedDate ? 1 : 0,
