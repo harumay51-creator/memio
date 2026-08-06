@@ -24,6 +24,11 @@ const MobileCalendarPage: React.FC = () => {
   const mergedHolidays = useMergedHolidays(currentDate.getFullYear())
 
   useEffect(() => {
+    performance.mark('react-render-end')
+    try {
+      performance.measure('React Render & Paint', 'react-render-start', 'react-render-end')
+    } catch(e) {}
+    console.timeEnd('[Perf] React Render & Paint')
     console.timeEnd('[MobileApp] Calendar UI Rendered')
   }, [])
 

@@ -62,12 +62,19 @@ const AuthScreen: React.FC = () => {
     e.preventDefault()
     setError(null)
     setLoading(true)
+    
+    console.time('[Perf] Auth API Call')
+    performance.mark('auth-start')
 
     try {
       const isMobileForAuth = isMobileDevice();
       const persistenceType = isMobileForAuth ? browserLocalPersistence : browserSessionPersistence
       await setPersistence(auth, persistenceType)
       const userCredential = await signInWithEmailAndPassword(auth, email, password)
+      
+      performance.mark('auth-end')
+      performance.measure('Auth Duration', 'auth-start', 'auth-end')
+      console.timeEnd('[Perf] Auth API Call')
       
       const deviceInfo = getDeviceBrowserInfo()
       // Non-blocking background save to prevent slowing down initial render
@@ -80,6 +87,9 @@ const AuthScreen: React.FC = () => {
         })
       }).catch(e => console.error('Failed to load firestore for history', e))
     } catch (err: any) {
+      performance.mark('auth-end')
+      performance.measure('Auth Duration (Error)', 'auth-start', 'auth-end')
+      console.timeEnd('[Perf] Auth API Call')
       console.error(err)
       if (err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found') {
         setError('이메일 또는 비밀번호가 올바르지 않습니다.')

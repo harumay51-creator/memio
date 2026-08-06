@@ -188,11 +188,27 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
       try {
         // Fetch from Firestore
         const fetchCol = async (colName: string) => {
+          console.time(`[Perf] Fetch ${colName}`)
+          performance.mark(`fetch-${colName}-start`)
           const snap = await getDocs(collection(db, 'users', uid, colName))
+          performance.mark(`fetch-${colName}-end`)
+          performance.measure(`Fetch Collection: ${colName}`, `fetch-${colName}-start`, `fetch-${colName}-end`)
+          console.timeEnd(`[Perf] Fetch ${colName}`)
           return snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as any))
         }
+
+        const fetchDocWithLog = async (docPath: string, name: string) => {
+          console.time(`[Perf] Fetch Doc ${name}`)
+          performance.mark(`fetch-doc-${name}-start`)
+          const snap = await getDoc(doc(db, docPath))
+          performance.mark(`fetch-doc-${name}-end`)
+          performance.measure(`Fetch Doc: ${name}`, `fetch-doc-${name}-start`, `fetch-doc-${name}-end`)
+          console.timeEnd(`[Perf] Fetch Doc ${name}`)
+          return snap
+        }
         
-        console.time('[AppStore] 2. Parallel Settings & 6 Collections Load Time')
+        console.time('[Perf] Total Promise.all Load Time')
+        performance.mark('promise-all-start')
         
         const [
           [settingsSnap, settingsDoc],
@@ -206,8 +222,8 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
           ]
         ] = await Promise.all([
           Promise.all([
-            getDoc(doc(db, `users/${uid}/journal_settings/config`)),
-            getDoc(doc(db, `users/${uid}/settings/config`))
+            fetchDocWithLog(`users/${uid}/journal_settings/config`, 'journal_settings'),
+            fetchDocWithLog(`users/${uid}/settings/config`, 'settings')
           ]),
           Promise.all([
             fetchCol('tasks'),
@@ -218,6 +234,10 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
             fetchCol('recurringInstances')
           ])
         ])
+
+        performance.mark('promise-all-end')
+        performance.measure('Total Promise.all Time', 'promise-all-start', 'promise-all-end')
+        console.timeEnd('[Perf] Total Promise.all Load Time')
 
         if (settingsSnap.exists()) {
           setPinHash(settingsSnap.data().pinHash || null)
@@ -295,6 +315,7 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
           console.timeEnd('[AppStore] 1. Total Initial Load Time')
           console.time('[MobileApp] Calendar UI Rendered')
           
+          performance.mark('react-render-start')
           setIsLoading(false)
         }
 
