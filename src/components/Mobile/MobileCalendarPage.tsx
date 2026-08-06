@@ -524,7 +524,7 @@ const MobileCalendarPage: React.FC = () => {
                 <p className="text-sm font-semibold text-yuri-900 leading-tight whitespace-pre-wrap">{a.name}</p>
               </div>
               <button onClick={() => {
-                const dStr = format(selectedDate, 'yyyy-MM-dd')
+                const dStr = format(selectedDate || new Date(), 'yyyy-MM-dd')
                 deleteRecurringOccurrence(a.id, 'yearly', a.name, dStr, a.instanceId)
               }} className="text-yuri-400 hover:text-[#EF6A7B] p-1 -mr-2 -mt-2">
                 ✕
@@ -540,7 +540,7 @@ const MobileCalendarPage: React.FC = () => {
                 <p className="text-sm font-semibold text-yuri-900 leading-tight whitespace-pre-wrap">{m.name}</p>
               </div>
               <button onClick={() => {
-                const dStr = format(selectedDate, 'yyyy-MM-dd')
+                const dStr = format(selectedDate || new Date(), 'yyyy-MM-dd')
                 deleteRecurringOccurrence(m.id, 'monthly', m.name, dStr, m.instanceId)
               }} className="text-yuri-400 hover:text-[#EF6A7B] p-1 -mr-2 -mt-2">
                 ✕
@@ -607,7 +607,7 @@ const MobileCalendarPage: React.FC = () => {
                       setEditDate(format(new Date(ev.scheduledDate), "yyyy-MM-dd"))
                     }
                   } else {
-                    setEditDate(format(selectedDate, 'yyyy-MM-dd'))
+                    setEditDate(format(selectedDate || new Date(), 'yyyy-MM-dd'))
                   }
                 }}
                 className="bg-white p-3 rounded-xl shadow-sm border border-yuri-100 flex items-start gap-3 active:scale-[0.98] transition-transform"
