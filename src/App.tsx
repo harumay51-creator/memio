@@ -87,18 +87,10 @@ service cloud.firestore {
   // If mobile and locked (we know this instantly from localStorage cache), bypass all loading screens so MobileApp can render the PIN screen immediately!
   const isLockedMobile = isMobile && hasAppPin && !isAppUnlocked;
 
-  if (isSettingsLoading && !isLockedMobile) {
+  if ((isSettingsLoading || isLoading) && !isLockedMobile) {
     return (
       <div className="flex h-screen w-screen items-center justify-center bg-yuri-50">
-        <div className="animate-pulse text-accent font-medium text-lg">설정을 불러오는 중...</div>
-      </div>
-    )
-  }
-  
-  if (isLoading && !isLockedMobile) {
-    return (
-      <div className="flex h-screen w-screen items-center justify-center bg-yuri-50">
-        <div className="animate-pulse text-accent font-medium text-lg">데이터를 불러오는 중...</div>
+        <div className="animate-pulse text-accent font-medium text-lg">불러오는 중...</div>
       </div>
     )
   }

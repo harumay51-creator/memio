@@ -192,11 +192,31 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
           return snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as any))
         }
         
-        console.time('[AppStore] 2. Settings Load Time')
+        console.time('[AppStore] 2. Parallel Settings & 6 Collections Load Time')
         
-        const [settingsSnap, settingsDoc] = await Promise.all([
-          getDoc(doc(db, `users/${uid}/journal_settings/config`)),
-          getDoc(doc(db, `users/${uid}/settings/config`))
+        const [
+          [settingsSnap, settingsDoc],
+          [
+            fetchedTasks,
+            fetchedEvents,
+            fetchedAnnivs,
+            fetchedMonthly,
+            fetchedAgendas,
+            fetchedRecurringInstances
+          ]
+        ] = await Promise.all([
+          Promise.all([
+            getDoc(doc(db, `users/${uid}/journal_settings/config`)),
+            getDoc(doc(db, `users/${uid}/settings/config`))
+          ]),
+          Promise.all([
+            fetchCol('tasks'),
+            fetchCol('events'),
+            fetchCol('anniversaries'),
+            fetchCol('monthlyEvents'),
+            fetchCol('agendas'),
+            fetchCol('recurringInstances')
+          ])
         ])
 
         if (settingsSnap.exists()) {
@@ -220,26 +240,8 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
           }
           if (data.holidayConfig) setHolidayConfig(data.holidayConfig)
         }
-        console.timeEnd('[AppStore] 2. Settings Load Time')
         
         setIsSettingsLoading(false)
-
-        console.time('[AppStore] 3. Essential 6 Collections Load Time')
-        const [
-          fetchedTasks,
-          fetchedEvents,
-          fetchedAnnivs,
-          fetchedMonthly,
-          fetchedAgendas,
-          fetchedRecurringInstances
-        ] = await Promise.all([
-          fetchCol('tasks'),
-          fetchCol('events'),
-          fetchCol('anniversaries'),
-          fetchCol('monthlyEvents'),
-          fetchCol('agendas'),
-          fetchCol('recurringInstances')
-        ])
 
         const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
         const nowMs = Date.now();
