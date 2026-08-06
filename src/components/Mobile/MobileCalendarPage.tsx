@@ -38,7 +38,25 @@ const MobileCalendarPage: React.FC = () => {
   const [editDate, setEditDate] = useState('')
 
   const scrollRef = useRef<HTMLDivElement>(null)
+  const touchStartY = useRef<number>(0)
+  const isAtTopOnTouchStart = useRef<boolean>(false)
 
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartY.current = e.touches[0].clientY
+    isAtTopOnTouchStart.current = (scrollRef.current?.scrollTop || 0) <= 0
+  }
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    const touchEndY = e.changedTouches[0].clientY
+    const deltaY = touchEndY - touchStartY.current
+    if (deltaY > 50 && isAtTopOnTouchStart.current) {
+      if (window.history.state?.modal === 'mobileEventList') {
+        window.history.back()
+      } else {
+        setSelectedDate(null)
+      }
+    }
+  }
   const eventsByDate = useMemo(() => {
     const map = new Map<string, ScheduleEvent[]>()
     events.forEach(e => {
@@ -148,10 +166,29 @@ const MobileCalendarPage: React.FC = () => {
     else setCurrentDate(addMonths(currentDate, 1))
   }
 
+  // Handle back button for event list
+  useEffect(() => {
+    const handlePopState = () => {
+      if (!isDiaryMode && selectedDate) {
+        setSelectedDate(null)
+      }
+    }
+    window.addEventListener('popstate', handlePopState)
+    return () => window.removeEventListener('popstate', handlePopState)
+  }, [isDiaryMode, selectedDate])
+
   const handleDateClick = (d: Date) => {
     if (!isDiaryMode && selectedDate && isSameDay(d, selectedDate)) {
-      setSelectedDate(null)
+      if (window.history.state?.modal === 'mobileEventList') {
+        window.history.back()
+      } else {
+        setSelectedDate(null)
+      }
       return
+    }
+    
+    if (!isDiaryMode && !selectedDate) {
+      window.history.pushState({ modal: 'mobileEventList' }, '')
     }
     
     setSelectedDate(d)
@@ -398,7 +435,17 @@ const MobileCalendarPage: React.FC = () => {
 
       {isDiaryMode && !isDiaryOpen ? null : !isDiaryMode && selectedDate ? (
         /* Event List Section */
-        <div ref={scrollRef} className="flex-1 overflow-y-auto bg-yuri-50 p-4">
+        <div 
+          ref={scrollRef} 
+          className="flex-1 overflow-y-auto bg-yuri-50 p-4 pt-2"
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+        >
+          {/* Swipe handle */}
+          <div className="w-full flex justify-center pb-3">
+            <div className="w-10 h-1.5 bg-gray-300 rounded-full" />
+          </div>
+
         <h3 className="text-sm font-bold text-yuri-700 mb-3 border-b border-yuri-200 pb-2 flex items-center gap-2">
           {format(selectedDate, 'M월 d일 (E)', { locale: ko })}
           {mergedHolidays[format(selectedDate, 'yyyy-MM-dd')] && (
