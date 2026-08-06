@@ -44,16 +44,53 @@ const MobileCalendarPage: React.FC = () => {
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartY.current = e.touches[0].clientY
     isAtTopOnTouchStart.current = (scrollRef.current?.scrollTop || 0) <= 0
+    if (scrollRef.current && isAtTopOnTouchStart.current) {
+      scrollRef.current.style.transition = 'none'
+    }
+  }
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isAtTopOnTouchStart.current) return
+    const currentY = e.touches[0].clientY
+    const deltaY = currentY - touchStartY.current
+    
+    if (deltaY > 0 && scrollRef.current) {
+      // Use direct DOM manipulation for 60fps performance (bypassing React state)
+      scrollRef.current.style.transform = `translateY(${deltaY}px)`
+      // Prevent pull-to-refresh is handled by CSS overscroll-none
+    }
   }
 
   const handleTouchEnd = (e: React.TouchEvent) => {
+    if (!isAtTopOnTouchStart.current) return
+    
     const touchEndY = e.changedTouches[0].clientY
     const deltaY = touchEndY - touchStartY.current
-    if (deltaY > 50 && isAtTopOnTouchStart.current) {
-      if (window.history.state?.modal === 'mobileEventList') {
-        window.history.back()
+    
+    if (scrollRef.current) {
+      scrollRef.current.style.transition = 'transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)'
+      
+      if (deltaY > 100) {
+        // Smoothly animate out
+        scrollRef.current.style.transform = `translateY(100vh)`
+        
+        setTimeout(() => {
+          if (window.history.state?.modal === 'mobileEventList') {
+            window.history.back()
+          } else {
+            setSelectedDate(null)
+          }
+          // Reset style after unmount (or before next mount)
+          if (scrollRef.current) {
+            scrollRef.current.style.transform = ''
+          }
+        }, 200)
       } else {
-        setSelectedDate(null)
+        // Snap back to original position
+        scrollRef.current.style.transform = 'translateY(0)'
+        setTimeout(() => {
+          if (scrollRef.current) scrollRef.current.style.transform = ''
+        }, 300)
       }
     }
   }
@@ -445,8 +482,9 @@ const MobileCalendarPage: React.FC = () => {
         /* Event List Section */
         <div 
           ref={scrollRef} 
-          className="flex-1 overflow-y-auto bg-yuri-50 p-4 pt-2"
+          className="flex-1 overflow-y-auto overscroll-none bg-yuri-50 p-4 pt-2 will-change-transform"
           onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
         >
           {/* Swipe handle */}
