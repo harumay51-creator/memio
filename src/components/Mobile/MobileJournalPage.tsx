@@ -1,9 +1,10 @@
-import React, { useState, useMemo, useEffect } from 'react'
+import React, { useState, useMemo, useEffect, Suspense, lazy } from 'react'
 import { useJournalStore } from '../../store/JournalStore'
 import { useAppStore } from '../../store/AppStore'
-import RichTextEditor from '../common/RichTextEditor'
 import { HighlightText } from '../common/HighlightText'
 import { DebouncedInput } from '../common/DebouncedInput'
+
+const RichTextEditor = lazy(() => import('../common/RichTextEditor'))
 import { Lock, Plus, Trash2, ChevronLeft } from 'lucide-react'
 import { isSearchMatch, getSearchPreview, decodeHtmlEntities } from '../../utils/textUtils'
 import PinScreen from '../JournalPage/PinScreen'
@@ -253,25 +254,27 @@ export default function MobileJournalPage() {
                   placeholder="제목"
                 />
                 <div className="flex-1 overflow-hidden relative">
-                  <RichTextEditor
-                    key={selectedNote.id}
-                    initialContent={(() => {
-                      const fullText = selectedNote.hasContentDoc ? (loadedContents[selectedNote.id] || selectedNote.text) : selectedNote.text;
-                      return fullText.split('\n').length > 1 ? fullText.split('\n').slice(1).join('\n') : '';
-                    })()}
-                    onChange={(html) => {
-                      const fullText = selectedNote.hasContentDoc ? (loadedContents[selectedNote.id] || selectedNote.text) : selectedNote.text
-                      const lines = fullText.split('\n')
-                      const firstLine = lines[0] || ''
-                      const newText = firstLine + '\n' + html
-                      if (selectedNote.hasContentDoc) {
-                        setLoadedContents(prev => ({ ...prev, [selectedNote.id]: newText }))
-                      }
-                      updateJournal(selectedNote.id, newText)
-                    }}
-                    placeholder="내용을 입력하세요..."
-                    className="flex-1 h-full w-full"
-                  />
+                  <Suspense fallback={<div className="w-full h-full animate-pulse bg-yuri-50 rounded-xl" />}>
+                    <RichTextEditor
+                      key={selectedNote.id}
+                      initialContent={(() => {
+                        const fullText = selectedNote.hasContentDoc ? (loadedContents[selectedNote.id] || selectedNote.text) : selectedNote.text;
+                        return fullText.split('\n').length > 1 ? fullText.split('\n').slice(1).join('\n') : '';
+                      })()}
+                      onChange={(html) => {
+                        const fullText = selectedNote.hasContentDoc ? (loadedContents[selectedNote.id] || selectedNote.text) : selectedNote.text
+                        const lines = fullText.split('\n')
+                        const firstLine = lines[0] || ''
+                        const newText = firstLine + '\n' + html
+                        if (selectedNote.hasContentDoc) {
+                          setLoadedContents(prev => ({ ...prev, [selectedNote.id]: newText }))
+                        }
+                        updateJournal(selectedNote.id, newText)
+                      }}
+                      placeholder="내용을 입력하세요..."
+                      className="h-full bg-transparent overflow-y-auto"
+                    />
+                  </Suspense>
                 </div>
               </>
             )}

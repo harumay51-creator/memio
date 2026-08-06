@@ -1,9 +1,10 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, Suspense, lazy } from 'react'
 import { format } from 'date-fns'
 import { ko } from 'date-fns/locale'
 import { useDiaryStore, DiaryMemo } from '../../store/DiaryStore'
 import Emoji from '../common/Emoji'
-import DiaryTextEditor from '../common/DiaryTextEditor'
+
+const DiaryTextEditor = lazy(() => import('../common/DiaryTextEditor'))
 
 const DIARY_TAGS = [
   { name: '뿌듯', color: '#CFE8DC' }, { name: '설렘', color: '#DCCFF3' }, { name: '기쁨', color: '#E2D8EF' },
@@ -221,13 +222,15 @@ const MemoItem = ({ memo, deleteMemo, updateMemo }: { memo: DiaryMemo, deleteMem
         </div>
 
         <div className="flex-1 min-h-[60px] cursor-text">
-          <DiaryTextEditor
-            initialContent={localText}
-            onChange={(html) => setLocalText(html)}
-            placeholder="기록을 남겨보세요..."
-            autoFocus
-            className="bg-transparent outline-none leading-relaxed transition-all font-diary"
-          />
+          <Suspense fallback={<div className="h-[100px] w-full animate-pulse bg-yuri-50 rounded-lg" />}>
+            <DiaryTextEditor
+              initialContent={localText}
+              onChange={(html) => setLocalText(html)}
+              placeholder="기록을 남겨보세요..."
+              autoFocus
+              className="bg-transparent outline-none leading-relaxed transition-all font-diary"
+            />
+          </Suspense>
         </div>
 
         <div className="flex justify-end gap-2 mt-2">
