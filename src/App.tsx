@@ -11,7 +11,8 @@ import MobileApp    from './components/Mobile/MobileApp'
 import { Y2KBackground } from './components/common/Y2KTheme'
 import { useIsMobile } from './hooks/useIsMobile'
 import { auth }     from './config/firebase'
-import { onAuthStateChanged, User, signOut } from 'firebase/auth'
+import { onAuthStateChanged, User, signOut, setPersistence, browserSessionPersistence } from 'firebase/auth'
+import { isMobileDevice } from './utils/isMobileDevice'
 import { ToastProvider } from './components/common/Toast'
 
 // ── Inner app (needs to be inside AppStoreProvider to access useAppStore) ─────
@@ -150,7 +151,14 @@ export default function App() {
     
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       if (currentUser) {
-        if (!isMobile) {
+        // Use user-agent based check for security rules, not window width
+        const isMobileForAuth = isMobileDevice();
+        
+        if (!isMobileForAuth) {
+          // Enforce session persistence on PC. This cleans up any lingering IndexedDB tokens 
+          // from previous bugs, ensuring the session actually dies when the browser closes.
+          setPersistence(auth, browserSessionPersistence).catch(console.error);
+
           // 3 hours = 3 * 60 * 60 * 1000 = 10800000 ms
           const LOGOUT_TIME_MS = 3 * 60 * 60 * 1000; 
           

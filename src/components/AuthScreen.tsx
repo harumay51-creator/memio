@@ -3,6 +3,8 @@ import { auth } from '../config/firebase'
 import { signInWithEmailAndPassword, setPersistence, browserLocalPersistence, browserSessionPersistence, sendPasswordResetEmail } from 'firebase/auth'
 import { useIsMobile } from '../hooks/useIsMobile'
 
+import { isMobileDevice } from '../utils/isMobileDevice'
+
 function getDeviceBrowserInfo(): string {
   const ua = navigator.userAgent;
   let browser = "알 수 없는 브라우저";
@@ -64,7 +66,8 @@ const AuthScreen: React.FC = () => {
     setLoading(true)
 
     try {
-      const persistenceType = isMobile ? browserLocalPersistence : browserSessionPersistence
+      const isMobileForAuth = isMobileDevice();
+      const persistenceType = isMobileForAuth ? browserLocalPersistence : browserSessionPersistence
       await setPersistence(auth, persistenceType)
       const userCredential = await signInWithEmailAndPassword(auth, email, password)
       
