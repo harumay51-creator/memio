@@ -410,7 +410,7 @@ const MobileCalendarPage: React.FC = () => {
                 <div className={
                   selectedDate
                     ? "flex flex-row flex-wrap justify-center items-start gap-[3px] mt-0.5 w-full px-2 overflow-hidden flex-1"
-                    : "flex flex-col gap-0.5 mt-1 w-full px-0.5 overflow-hidden flex-1 justify-start"
+                    : "flex flex-col gap-[3px] mt-[5px] w-full px-0.5 overflow-hidden flex-1 justify-start"
                 }>
                   {(() => {
                     const badgeItems: { name: string; type: 'holiday' | 'routine' | 'event'; isRedDay?: boolean; color?: string }[] = []
@@ -435,21 +435,21 @@ const MobileCalendarPage: React.FC = () => {
                         {badgeItems.slice(0, 2).map((item, i) => {
                           if (item.type === 'holiday') {
                             return (
-                              <div key={`b-${i}`} className={`text-[9px] px-[3px] py-[2px] w-full truncate rounded-[4px] font-bold shrink-0 leading-none ${item.isRedDay ? 'bg-red-50 text-red-500' : 'bg-gray-100 text-gray-500'}`}>
+                              <div key={`b-${i}`} className={`text-[9px] px-[4px] py-[1.5px] w-full truncate rounded-[2px] font-bold shrink-0 leading-none ${item.isRedDay ? 'bg-red-50 text-red-500' : 'bg-gray-100 text-gray-500'}`}>
                                 {item.name}
                               </div>
                             )
                           }
                           if (item.type === 'routine') {
                             return (
-                              <div key={`b-${i}`} className="text-[9px] px-[3px] py-[2px] w-full truncate rounded-[4px] font-bold shrink-0 leading-none flex items-center gap-[2px] bg-transparent" style={{ color: item.color }}>
+                              <div key={`b-${i}`} className="text-[9px] px-[4px] py-[1.5px] w-full truncate rounded-[2px] font-bold shrink-0 leading-none flex items-center gap-[2px] bg-transparent" style={{ color: item.color }}>
                                 <span className="shrink-0 text-[8px] font-black mt-[0.5px]">↻</span>
                                 <span className="truncate">{item.name}</span>
                               </div>
                             )
                           }
                           return (
-                            <div key={`b-${i}`} className="text-[9px] px-[3px] py-[2px] w-full truncate rounded-[4px] text-white font-bold shrink-0 leading-none" style={{ backgroundColor: item.color }}>
+                            <div key={`b-${i}`} className="text-[9px] px-[4px] py-[1.5px] w-full truncate rounded-[2px] font-bold shrink-0 leading-none" style={{ backgroundColor: item.color + '26', color: item.color }}>
                               {item.name}
                             </div>
                           )
