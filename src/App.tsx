@@ -137,8 +137,6 @@ service cloud.firestore {
 }
 
 // ── Root app ──────────────────────────────────────────────────────────────────
-console.time('[App] 0. Script Load to App Render')
-
 export default function App() {
   const [user, setUser] = useState<User | null>(null)
   const [isAuthLoading, setIsAuthLoading] = useState(true)

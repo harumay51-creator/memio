@@ -175,7 +175,6 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
     let isMounted = true
     async function loadData() {
       console.time('[AppStore] 1. Total Initial Load Time')
-      console.time('[AppStore] 2. Settings Load Time')
       try {
         // Fetch from Firestore
         const fetchCol = async (colName: string) => {
@@ -183,16 +182,19 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
           return snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as any))
         }
         
-        // Load PIN settings
-        const settingsDocRef = doc(db, `users/${uid}/journal_settings/config`)
-        const settingsSnap = await getDoc(settingsDocRef)
+        console.time('[AppStore] 2. Settings Load Time')
+        
+        const [settingsSnap, settingsDoc] = await Promise.all([
+          getDoc(doc(db, `users/${uid}/journal_settings/config`)),
+          getDoc(doc(db, `users/${uid}/settings/config`))
+        ])
+
         if (settingsSnap.exists()) {
           setPinHash(settingsSnap.data().pinHash || null)
         } else {
           setPinHash(null)
         }
         
-        const settingsDoc = await getDoc(doc(db, `users/${uid}/settings/config`))
         if (settingsDoc.exists()) {
           const data = settingsDoc.data()
           setCardPaymentDayState(data.cardPaymentDay || 14)
