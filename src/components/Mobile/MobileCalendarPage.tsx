@@ -62,15 +62,15 @@ const MobileCalendarPage: React.FC = () => {
     const currentY = e.touches[0].clientY
     const deltaY = currentY - touchStartY.current
     
-    if (deltaY > 0 && scrollRef.current && gridRef.current) {
+    if (deltaY > 0 && scrollRef.current) {
       lastTouchY.current = currentY
       lastTouchTime.current = performance.now()
 
       if (rafRef.current) cancelAnimationFrame(rafRef.current)
       rafRef.current = requestAnimationFrame(() => {
-        if (gridRef.current && scrollRef.current) {
-          gridRef.current.style.flex = `0 0 calc(45% + ${deltaY}px)`
-          scrollRef.current.style.flex = `0 0 calc(55% - ${deltaY}px)`
+        if (scrollRef.current) {
+          // Direct transform for perfect 1:1 hardware accelerated drag. No layout reflows!
+          scrollRef.current.style.transform = `translateY(${deltaY}px)`
         }
       })
     }
@@ -84,14 +84,23 @@ const MobileCalendarPage: React.FC = () => {
     const deltaY = currentY - touchStartY.current
     const timeDelta = performance.now() - lastTouchTime.current
     const velocity = timeDelta > 0 ? (currentY - lastTouchY.current) / timeDelta : 0
-    
-    // Fallback to CSS classes for smooth exit/snap
-    if (gridRef.current) gridRef.current.style.transition = ''
-    if (scrollRef.current) scrollRef.current.style.transition = ''
       
     if (deltaY > 100 || velocity > 0.5) {
-      if (gridRef.current) gridRef.current.style.flex = ''
-      if (scrollRef.current) scrollRef.current.style.flex = ''
+      // 1. Transfer current visual transform into layout flex-basis instantly to prevent jump
+      if (gridRef.current && scrollRef.current) {
+        gridRef.current.style.flex = `0 0 calc(45% + ${deltaY}px)`
+        scrollRef.current.style.flex = `0 0 calc(55% - ${deltaY}px)`
+        scrollRef.current.style.transform = ''
+        
+        // 2. Force layout flush
+        void gridRef.current.offsetHeight
+        
+        // 3. Clean up inline styles so React classes take over
+        gridRef.current.style.transition = ''
+        scrollRef.current.style.transition = ''
+        gridRef.current.style.flex = ''
+        scrollRef.current.style.flex = ''
+      }
       
       if (window.history.state?.modal === 'mobileEventList') {
         window.history.back()
@@ -99,8 +108,19 @@ const MobileCalendarPage: React.FC = () => {
         setSelectedDate(null)
       }
     } else {
-      if (gridRef.current) gridRef.current.style.flex = ''
-      if (scrollRef.current) scrollRef.current.style.flex = ''
+      // Snap back smoothly without bounce
+      if (scrollRef.current) {
+        scrollRef.current.style.transition = 'transform 0.3s cubic-bezier(0, 0, 0.2, 1)'
+        scrollRef.current.style.transform = 'translateY(0)'
+        
+        setTimeout(() => {
+          if (scrollRef.current) {
+            scrollRef.current.style.transition = ''
+            scrollRef.current.style.transform = ''
+          }
+        }, 300)
+      }
+      if (gridRef.current) gridRef.current.style.transition = ''
     }
   }
   const eventsByDate = useMemo(() => {
