@@ -310,7 +310,7 @@ const MobileCalendarPage: React.FC = () => {
               key={d.toISOString()}
               onClick={() => handleDateClick(d)}
               className={`flex flex-col items-center justify-start border border-transparent transition-all duration-300 ease-in-out ${
-                isDiaryMode || !selectedDate ? 'py-2 h-full min-h-[72px]' : 'py-1 h-[72px] sm:h-[80px]'
+                isDiaryMode || !selectedDate ? 'py-2 h-full min-h-[72px]' : 'pt-1 pb-0.5 h-[48px] sm:h-[52px]'
               } ${
                 isSelected ? 'bg-accent/10 rounded-xl' : ''
               } ${!isCurrentMonth ? 'opacity-30' : ''}`}
@@ -333,16 +333,29 @@ const MobileCalendarPage: React.FC = () => {
                   ) : null}
                 </div>
               ) : (
-                <div className="flex flex-col gap-0.5 mt-1 w-full px-0.5 overflow-hidden flex-1 justify-start">
+                <div className={
+                  selectedDate
+                    ? "flex flex-row flex-wrap justify-center items-start gap-[3px] mt-0.5 w-full px-2 overflow-hidden flex-1"
+                    : "flex flex-col gap-0.5 mt-1 w-full px-0.5 overflow-hidden flex-1 justify-start"
+                }>
                   {(() => {
                     const badgeItems: { name: string; type: 'holiday' | 'routine' | 'event'; isRedDay?: boolean; color?: string }[] = []
                     if (holidayInfo) {
-                      badgeItems.push({ name: holidayInfo.name, type: 'holiday', isRedDay: holidayInfo.isRedDay })
+                       // Give holidays a dot color mapping
+                      badgeItems.push({ name: holidayInfo.name, type: 'holiday', isRedDay: holidayInfo.isRedDay, color: holidayInfo.isRedDay ? '#EF4444' : '#6B7280' })
                     }
                     dayAnnivs.forEach(a => badgeItems.push({ name: a.name, color: '#B4629C', type: 'routine' }))
                     dayMonthly.forEach(m => badgeItems.push({ name: m.name, color: '#3A4B8C', type: 'routine' }))
                     dayEvents.forEach(e => badgeItems.push({ name: e.text, color: e.color || EVENT_COLORS[0], type: 'event' }))
                     
+                    if (selectedDate) {
+                      // DOT MODE
+                      return badgeItems.map((item, i) => (
+                        <div key={`d-${i}`} className="w-[5px] h-[5px] rounded-full shrink-0" style={{ backgroundColor: item.color }} />
+                      ))
+                    }
+
+                    // BADGE MODE
                     return (
                       <>
                         {badgeItems.slice(0, 2).map((item, i) => {
