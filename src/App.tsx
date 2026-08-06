@@ -1,10 +1,7 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, Suspense, lazy } from 'react'
 import type { PageId } from './types'
 import { useAppStore, AppStoreProvider } from './store/AppStore'
 import { useDiaryStore, DiaryStoreProvider } from './store/DiaryStore'
-import Sidebar      from './components/Sidebar/Sidebar'
-import QuickCapture from './components/QuickCapture'
-import Router       from './router/Router'
 import auroraBg from './assets/aurora.jpg'
 import AuthScreen   from './components/AuthScreen'
 import MobileApp    from './components/Mobile/MobileApp'
@@ -12,6 +9,10 @@ import MobileAppPinScreen from './components/Mobile/MobileAppPinScreen'
 import { hashPin } from './store/AppStore'
 import { Y2KBackground } from './components/common/Y2KTheme'
 import { useIsMobile } from './hooks/useIsMobile'
+
+const Sidebar = lazy(() => import('./components/Sidebar/Sidebar'))
+const QuickCapture = lazy(() => import('./components/QuickCapture'))
+const Router = lazy(() => import('./router/Router'))
 import { auth }     from './config/firebase'
 import { onAuthStateChanged, User, signOut, setPersistence, browserSessionPersistence } from 'firebase/auth'
 import { isMobileDevice } from './utils/isMobileDevice'
@@ -127,22 +128,29 @@ service cloud.firestore {
         </>
       )}
       {showY2KBg && <Y2KBackground />}
-      <Sidebar
-        activePage={activePage}
-        onNavigate={navigate}
-        onLogout={handleLogout}
-        isAuroraBg={showAuroraBg}
-        isY2KBg={showY2KBg}
-      />
+      
+      <Suspense fallback={<div className="w-64 h-full bg-white/50 border-r border-yuri-200 animate-pulse shrink-0" />}>
+        <Sidebar
+          activePage={activePage}
+          onNavigate={navigate}
+          onLogout={handleLogout}
+          isAuroraBg={showAuroraBg}
+          isY2KBg={showY2KBg}
+        />
+      </Suspense>
       
       <main className="flex-1 flex flex-col relative h-full min-w-0 z-10 bg-transparent">
         <div className="flex-1 overflow-y-auto w-full relative min-h-0">
-          <Router page={activePage} activeItemId={activeItemId} />
+          <Suspense fallback={<div className="w-full h-full flex items-center justify-center"><div className="animate-pulse text-yuri-400">화면을 불러오는 중...</div></div>}>
+            <Router page={activePage} activeItemId={activeItemId} />
+          </Suspense>
         </div>
         
         {activePage === 'ledger' && (
           <div className="shrink-0 pb-6 pt-2 px-6 border-t border-yuri-100 bg-yuri-50/50">
-            <QuickCapture />
+            <Suspense fallback={<div className="h-[72px] w-full animate-pulse bg-white/60 rounded-xl" />}>
+              <QuickCapture />
+            </Suspense>
           </div>
         )}
       </main>
