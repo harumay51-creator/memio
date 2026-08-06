@@ -15,7 +15,7 @@ function genId(): string {
   return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
 }
 
-async function hashPin(pin: string): Promise<string> {
+export async function hashPin(pin: string): Promise<string> {
   const encoder = new TextEncoder();
   const data = encoder.encode(pin);
   const hashBuffer = await crypto.subtle.digest('SHA-256', data);
@@ -170,6 +170,12 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
   const [isAppUnlocked, setIsAppUnlocked] = useState(() => {
     return sessionStorage.getItem('yuri-app-unlocked') === 'true'
   })
+
+  useEffect(() => {
+    const handleUnlock = () => setIsAppUnlocked(true);
+    window.addEventListener('app-unlocked', handleUnlock);
+    return () => window.removeEventListener('app-unlocked', handleUnlock);
+  }, []);
 
   const [navDate, setNavDate] = useState<Date | null>(null)
 

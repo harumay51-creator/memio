@@ -8,6 +8,8 @@ import Router       from './router/Router'
 import auroraBg from './assets/aurora.jpg'
 import AuthScreen   from './components/AuthScreen'
 import MobileApp    from './components/Mobile/MobileApp'
+import MobileAppPinScreen from './components/Mobile/MobileAppPinScreen'
+import { hashPin } from './store/AppStore'
 import { Y2KBackground } from './components/common/Y2KTheme'
 import { useIsMobile } from './hooks/useIsMobile'
 import { auth }     from './config/firebase'
@@ -152,6 +154,8 @@ service cloud.firestore {
 export default function App() {
   const [user, setUser] = useState<User | null>(null)
   const [isAuthLoading, setIsAuthLoading] = useState(true)
+  const [pendingPinUnlock, setPendingPinUnlock] = useState(false)
+  const [earlyPinError, setEarlyPinError] = useState('')
 
   useEffect(() => {
     console.timeEnd('[App] 0. Script Load to App Render')
@@ -160,22 +164,18 @@ export default function App() {
     
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       if (currentUser) {
-        // Use user-agent based check for security rules, not window width
         const isMobileForAuth = isMobileDevice();
+        localStorage.setItem('yuri-last-uid', currentUser.uid);
         
         if (!isMobileForAuth) {
-          // Enforce session persistence on PC. This cleans up any lingering IndexedDB tokens 
-          // from previous bugs, ensuring the session actually dies when the browser closes.
           setPersistence(auth, browserSessionPersistence).catch(console.error);
 
-          // 3 hours = 3 * 60 * 60 * 1000 = 10800000 ms
           const LOGOUT_TIME_MS = 3 * 60 * 60 * 1000; 
           
           const now = Date.now();
           let loginTimeStr = sessionStorage.getItem('yuri-login-time');
           let parsedLoginTime = loginTimeStr ? parseInt(loginTimeStr, 10) : NaN;
           
-          // If no login time, or invalid, or in the future, or somehow already older than 3 hours upon init, reset it
           if (!loginTimeStr || isNaN(parsedLoginTime) || parsedLoginTime > now) {
             parsedLoginTime = now;
             sessionStorage.setItem('yuri-login-time', parsedLoginTime.toString());
@@ -188,6 +188,7 @@ export default function App() {
             signOut(auth);
             sessionStorage.removeItem('yuri-login-time');
             sessionStorage.removeItem('yuri-private-unlocked');
+            localStorage.removeItem('yuri-last-uid');
             setUser(null);
             console.timeEnd('[App] 1. Auth Initialization Time')
             setIsAuthLoading(false);
@@ -201,10 +202,10 @@ export default function App() {
               signOut(auth);
               sessionStorage.removeItem('yuri-login-time');
               sessionStorage.removeItem('yuri-private-unlocked');
+              localStorage.removeItem('yuri-last-uid');
             }, remaining);
           }
         } else {
-          // Mobile: No 3-hour auto logout, persistence is LOCAL, lock handled by PIN
           setUser(currentUser);
           console.timeEnd('[App] 1. Auth Initialization Time')
           setIsAuthLoading(false);
@@ -216,6 +217,7 @@ export default function App() {
         setIsAuthLoading(false);
         sessionStorage.removeItem('yuri-login-time');
         sessionStorage.removeItem('yuri-private-unlocked');
+        localStorage.removeItem('yuri-last-uid');
       }
     })
     return () => {
@@ -224,7 +226,35 @@ export default function App() {
     }
   }, [])
 
+  const isMobileForAuth = isMobileDevice();
+  const lastUid = localStorage.getItem('yuri-last-uid');
+  const cachedAppPin = lastUid ? localStorage.getItem(`yuri-appPinHash-${lastUid}`) : null;
+  const isAppUnlocked = sessionStorage.getItem('yuri-app-unlocked') === 'true';
+  const showEarlyPinScreen = isMobileForAuth && cachedAppPin && !isAppUnlocked && !pendingPinUnlock;
+
   if (isAuthLoading) {
+    if (showEarlyPinScreen) {
+      return (
+        <div className="relative h-[100dvh] w-screen bg-white">
+          <MobileAppPinScreen
+            mode="unlock"
+            errorMsg={earlyPinError}
+            onComplete={async (pin) => {
+              const hash = await hashPin(pin);
+              if (hash === cachedAppPin) {
+                sessionStorage.setItem('yuri-app-unlocked', 'true');
+                window.dispatchEvent(new Event('app-unlocked'));
+                setPendingPinUnlock(true);
+              } else {
+                setEarlyPinError('PIN이 일치하지 않습니다.');
+                setTimeout(() => setEarlyPinError(''), 2000);
+              }
+            }}
+          />
+        </div>
+      )
+    }
+
     return (
       <div className="flex h-screen w-screen items-center justify-center bg-yuri-50">
         <div className="animate-pulse text-accent font-medium text-lg">인증 확인 중...</div>
