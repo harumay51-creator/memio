@@ -172,21 +172,27 @@ export default function App() {
 
           const LOGOUT_TIME_MS = 3 * 60 * 60 * 1000; 
           
-          const now = Date.now();
-          let loginTimeStr = sessionStorage.getItem('yuri-login-time');
-          let parsedLoginTime = loginTimeStr ? parseInt(loginTimeStr, 10) : NaN;
-          
-          if (!loginTimeStr || isNaN(parsedLoginTime) || parsedLoginTime > now) {
-            parsedLoginTime = now;
-            sessionStorage.setItem('yuri-login-time', parsedLoginTime.toString());
-          }
-          
-          const elapsed = now - parsedLoginTime;
+          const resetTimer = () => {
+            sessionStorage.setItem('yuri-last-activity', Date.now().toString());
+            if (timerId) clearTimeout(timerId);
+            timerId = setTimeout(() => {
+              signOut(auth);
+              sessionStorage.removeItem('yuri-login-time');
+              sessionStorage.removeItem('yuri-last-activity');
+              sessionStorage.removeItem('yuri-private-unlocked');
+              localStorage.removeItem('yuri-last-uid');
+            }, LOGOUT_TIME_MS);
+          };
+
+          const lastActivityStr = sessionStorage.getItem('yuri-last-activity');
+          const lastActivity = lastActivityStr ? parseInt(lastActivityStr, 10) : Date.now();
+          const elapsed = Date.now() - lastActivity;
           const remaining = LOGOUT_TIME_MS - elapsed;
           
           if (remaining <= 0) {
             signOut(auth);
             sessionStorage.removeItem('yuri-login-time');
+            sessionStorage.removeItem('yuri-last-activity');
             sessionStorage.removeItem('yuri-private-unlocked');
             localStorage.removeItem('yuri-last-uid');
             setUser(null);
@@ -197,13 +203,16 @@ export default function App() {
             console.timeEnd('[App] 1. Auth Initialization Time')
             setIsAuthLoading(false);
             
-            if (timerId) clearTimeout(timerId);
-            timerId = setTimeout(() => {
-              signOut(auth);
-              sessionStorage.removeItem('yuri-login-time');
-              sessionStorage.removeItem('yuri-private-unlocked');
-              localStorage.removeItem('yuri-last-uid');
-            }, remaining);
+            resetTimer();
+            // Optional: Listen to global events to reset timer, but since this is App.tsx, we can just attach it to window
+            const activityEvents = ['mousedown', 'keydown', 'touchstart', 'scroll'];
+            const handleActivity = () => resetTimer();
+            activityEvents.forEach(e => window.addEventListener(e, handleActivity, { passive: true }));
+            
+            // Clean up event listeners when auth state changes
+            const cleanupEvents = () => activityEvents.forEach(e => window.removeEventListener(e, handleActivity));
+            // We'll stash this in a ref or just rely on the component unmount, but since this is inside onAuthStateChanged, we should clean it up when user signs out.
+            window['yuriCleanupActivity'] = cleanupEvents;
           }
         } else {
           setUser(currentUser);
@@ -222,6 +231,7 @@ export default function App() {
     })
     return () => {
       if (timerId) clearTimeout(timerId);
+      if ((window as any)['yuriCleanupActivity']) (window as any)['yuriCleanupActivity']();
       unsubscribe();
     }
   }, [])

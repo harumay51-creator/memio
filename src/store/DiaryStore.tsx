@@ -153,84 +153,99 @@ export const DiaryStoreProvider: React.FC<{ children: React.ReactNode, uid: stri
   const saveDayDiaryEmojis = async (dateKey: string, emojis: string[]) => {
     if (!uid) return
     const ref = doc(db, `users/${uid}/diaries`, dateKey)
-    const snap = await getDoc(ref)
-    if (snap.exists()) {
-      await updateDoc(ref, { emojis })
-    } else {
-      await setDoc(ref, { dateKey, emojis, answers: [], memos: [] })
-    }
+    await setDoc(ref, { emojis }, { merge: true })
   }
 
   const saveDayDiaryAnswer = async (dateKey: string, questionId: string, question: string, answer: string) => {
     if (!uid) return
     const ref = doc(db, `users/${uid}/diaries`, dateKey)
-    const snap = await getDoc(ref)
     
-    if (snap.exists()) {
-      const data = snap.data() as DayDiary
-      const answers = data.answers || []
-      const existingIdx = answers.findIndex(a => a.questionId === questionId)
-      if (existingIdx >= 0) {
-        answers[existingIdx] = { questionId, question, answer }
+    // Import runTransaction from firebase/firestore at the top if needed (assuming it's available)
+    // Actually, I should use runTransaction, let me make sure it's imported. I will use the simpler way if it's not imported:
+    // Wait, let's just use runTransaction!
+    const { runTransaction } = await import('firebase/firestore');
+    await runTransaction(db, async (transaction) => {
+      const snap = await transaction.get(ref);
+      if (!snap.exists()) {
+        transaction.set(ref, { dateKey, emojis: [], answers: [{ questionId, question, answer }], memos: [] })
       } else {
-        answers.push({ questionId, question, answer })
+        const data = snap.data() as DayDiary
+        const answers = data.answers || []
+        const existingIdx = answers.findIndex(a => a.questionId === questionId)
+        if (existingIdx >= 0) {
+          answers[existingIdx] = { questionId, question, answer }
+        } else {
+          answers.push({ questionId, question, answer })
+        }
+        transaction.update(ref, { answers })
       }
-      await updateDoc(ref, { answers })
-    } else {
-      await setDoc(ref, { dateKey, emojis: [], answers: [{ questionId, question, answer }], memos: [] })
-    }
+    });
   }
 
   const deleteDayDiaryAnswer = async (dateKey: string, questionId: string) => {
     if (!uid) return
     const ref = doc(db, `users/${uid}/diaries`, dateKey)
-    const snap = await getDoc(ref)
-    if (snap.exists()) {
-      const data = snap.data() as DayDiary
-      const answers = (data.answers || []).filter(a => a.questionId !== questionId)
-      await updateDoc(ref, { answers })
-    }
+    const { runTransaction } = await import('firebase/firestore');
+    await runTransaction(db, async (transaction) => {
+      const snap = await transaction.get(ref);
+      if (snap.exists()) {
+        const data = snap.data() as DayDiary
+        const answers = (data.answers || []).filter(a => a.questionId !== questionId)
+        transaction.update(ref, { answers })
+      }
+    });
   }
 
   const addDayDiaryMemo = async (dateKey: string, text: string, tags?: string[]) => {
     if (!uid) return
     const ref = doc(db, `users/${uid}/diaries`, dateKey)
-    const snap = await getDoc(ref)
     const newMemo: DiaryMemo = { id: Date.now().toString(), text, tags, createdAt: Date.now() }
+    const { runTransaction } = await import('firebase/firestore');
     
-    if (snap.exists()) {
-      const data = snap.data() as DayDiary
-      const memos = data.memos || []
-      await updateDoc(ref, { memos: [...memos, newMemo] })
-    } else {
-      await setDoc(ref, { dateKey, emojis: [], answers: [], memos: [newMemo] })
-    }
+    await runTransaction(db, async (transaction) => {
+      const snap = await transaction.get(ref);
+      if (snap.exists()) {
+        const data = snap.data() as DayDiary
+        const memos = data.memos || []
+        transaction.update(ref, { memos: [...memos, newMemo] })
+      } else {
+        transaction.set(ref, { dateKey, emojis: [], answers: [], memos: [newMemo] })
+      }
+    });
   }
 
   const updateDayDiaryMemo = async (dateKey: string, memoId: string, text: string, tags?: string[]) => {
     if (!uid) return
     const ref = doc(db, `users/${uid}/diaries`, dateKey)
-    const snap = await getDoc(ref)
-    if (snap.exists()) {
-      const data = snap.data() as DayDiary
-      const memos = data.memos || []
-      const memoIdx = memos.findIndex(m => m.id === memoId)
-      if (memoIdx >= 0) {
-        memos[memoIdx] = { ...memos[memoIdx], text, tags }
-        await updateDoc(ref, { memos })
+    const { runTransaction } = await import('firebase/firestore');
+    
+    await runTransaction(db, async (transaction) => {
+      const snap = await transaction.get(ref);
+      if (snap.exists()) {
+        const data = snap.data() as DayDiary
+        const memos = data.memos || []
+        const memoIdx = memos.findIndex(m => m.id === memoId)
+        if (memoIdx >= 0) {
+          memos[memoIdx] = { ...memos[memoIdx], text, tags }
+          transaction.update(ref, { memos })
+        }
       }
-    }
+    });
   }
 
   const deleteDayDiaryMemo = async (dateKey: string, memoId: string) => {
     if (!uid) return
     const ref = doc(db, `users/${uid}/diaries`, dateKey)
-    const snap = await getDoc(ref)
-    if (snap.exists()) {
-      const data = snap.data() as DayDiary
-      const memos = (data.memos || []).filter(m => m.id !== memoId)
-      await updateDoc(ref, { memos })
-    }
+    const { runTransaction } = await import('firebase/firestore');
+    
+    await runTransaction(db, async (transaction) => {
+      const snap = await transaction.get(ref);
+      if (snap.exists()) {
+        const data = snap.data() as DayDiary
+        const memos = (data.memos || []).filter(m => m.id !== memoId)
+        transaction.update(ref, { memos })
+      }
+    });
   }
 
   const saveMonthlyDiary = async (monthKey: string, text: string) => {

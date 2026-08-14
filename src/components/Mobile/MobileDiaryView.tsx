@@ -38,6 +38,25 @@ const QuestionItem = ({ q, initialAnswer, saveAnswer, deleteAnswer }: { q: any, 
     setLocalVal(initialAnswer);
   }, [initialAnswer]);
 
+  const isEditingRef = useRef(isEditing);
+  const localValRef = useRef(localVal);
+  const initialAnswerRef = useRef(initialAnswer);
+  const saveAnswerRef = useRef(saveAnswer);
+
+  useEffect(() => { isEditingRef.current = isEditing; }, [isEditing]);
+  useEffect(() => { localValRef.current = localVal; }, [localVal]);
+  useEffect(() => { initialAnswerRef.current = initialAnswer; }, [initialAnswer]);
+  useEffect(() => { saveAnswerRef.current = saveAnswer; }, [saveAnswer]);
+
+  useEffect(() => {
+    return () => {
+      // Unmount safety: If unmounted while editing, save the dirty value
+      if (isEditingRef.current && localValRef.current !== initialAnswerRef.current) {
+        saveAnswerRef.current(localValRef.current);
+      }
+    };
+  }, []);
+
   useEffect(() => {
     if (!isEditing) return;
 
@@ -169,6 +188,31 @@ const MemoItem = ({ memo, deleteMemo, updateMemo }: { memo: DiaryMemo, deleteMem
   const [localTags, setLocalTags] = useState<string[]>(memo.tags || []);
   const [isTagPickerOpen, setIsTagPickerOpen] = useState(false);
   const editRef = useRef<HTMLDivElement>(null);
+
+  const isEditingRef = useRef(isEditing);
+  const localTextRef = useRef(localText);
+  const localTagsRef = useRef(localTags);
+  const memoTextRef = useRef(memo.text);
+  const memoTagsRef = useRef(memo.tags);
+  const updateMemoRef = useRef(updateMemo);
+  const memoIdRef = useRef(memo.id);
+
+  useEffect(() => { isEditingRef.current = isEditing; }, [isEditing]);
+  useEffect(() => { localTextRef.current = localText; }, [localText]);
+  useEffect(() => { localTagsRef.current = localTags; }, [localTags]);
+  useEffect(() => { memoTextRef.current = memo.text; }, [memo.text]);
+  useEffect(() => { memoTagsRef.current = memo.tags; }, [memo.tags]);
+  useEffect(() => { updateMemoRef.current = updateMemo; }, [updateMemo]);
+  useEffect(() => { memoIdRef.current = memo.id; }, [memo.id]);
+
+  useEffect(() => {
+    return () => {
+      // Unmount safety: If unmounted while editing, save the dirty value
+      if (isEditingRef.current && (localTextRef.current !== memoTextRef.current || JSON.stringify(localTagsRef.current) !== JSON.stringify(memoTagsRef.current || []))) {
+        updateMemoRef.current(memoIdRef.current, localTextRef.current, localTagsRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (!isEditing) return;
