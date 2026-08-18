@@ -349,34 +349,41 @@ export default function MobileCardTab({ year, month, searchQuery = '' }: MobileC
                 <div 
                   key={item.id} 
                   onClick={() => setEditingEntry(item)}
-                  className="flex justify-between items-center px-4 py-4 active:bg-yuri-50 transition-colors cursor-pointer"
+                  className="flex flex-col px-4 py-4 active:bg-yuri-50 transition-colors cursor-pointer"
                 >
-                  <div className="flex items-center gap-3 overflow-hidden">
-                    <span className="text-xs font-bold text-yuri-400 w-8 shrink-0">{dStr}</span>
-                    <span 
-                      className="text-[10px] font-extrabold text-[#333] px-2 py-1 rounded shrink-0 shadow-sm"
-                      style={{ backgroundColor: getCategoryColor(item.category || '기타', expenseCategories) }}
-                    >
-                      {item.category || '기타'}
-                    </span>
-                    <span className="text-sm font-semibold text-yuri-900 truncate">
-                      {highlightText(item.label)}
-                    </span>
-                    {item.memo && <MessageSquare size={12} className="text-yuri-300 shrink-0" />}
+                  <div className="flex justify-between items-center w-full">
+                    <div className="flex items-center gap-3 overflow-hidden">
+                      <span className="text-xs font-bold text-yuri-400 w-8 shrink-0">{dStr}</span>
+                      <span 
+                        className="text-[10px] font-extrabold text-[#333] px-2 py-1 rounded shrink-0 shadow-sm"
+                        style={{ backgroundColor: getCategoryColor(item.category || '기타', expenseCategories) }}
+                      >
+                        {item.category || '기타'}
+                      </span>
+                      <span className="text-sm font-semibold text-yuri-900 truncate">
+                        {highlightText(item.label)}
+                      </span>
+                      {item.memo && <MessageSquare size={12} className="text-yuri-300 shrink-0" />}
+                    </div>
+                    <div className="flex items-center gap-3 shrink-0 ml-2">
+                      <span className="text-base font-black text-yuri-900">
+                        {item.amount.toLocaleString()}원
+                      </span>
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          if (confirm('삭제하시겠습니까?')) deleteLedgerEntry(item.id)
+                        }}
+                        className="p-1 -mr-2 text-yuri-300 hover:text-red-500"
+                      >
+                        ✕
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-3 shrink-0 ml-2">
-                    <span className="text-base font-black text-yuri-900">
-                      {item.amount.toLocaleString()}원
-                    </span>
-                    <button 
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        if (confirm('삭제하시겠습니까?')) deleteLedgerEntry(item.id)
-                      }}
-                      className="p-1 -mr-2 text-yuri-300 hover:text-red-500"
-                    >
-                      ✕
-                    </button>
+                  <div className="mt-2 p-2 bg-gray-100 rounded text-[9px] text-gray-600 break-all" onClick={(e) => { e.stopPropagation() }}>
+                    <div>[DEBUG]</div>
+                    <div>sched: {String(item.scheduledDate)} ({typeof item.scheduledDate}) | isNaN: {isNaN(new Date(item.scheduledDate as any).getTime()) ? 'YES' : 'NO'}</div>
+                    <div>creat: {String(item.createdAt)} ({typeof item.createdAt}) | isNaN: {isNaN(new Date(item.createdAt as any).getTime()) ? 'YES' : 'NO'}</div>
                   </div>
                 </div>
               )
