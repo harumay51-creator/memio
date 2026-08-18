@@ -43,12 +43,22 @@ export default function MobileLedgerSearchTab({ searchQuery }: MobileLedgerSearc
     })
 
     results.sort((a, b) => {
-      const dateA = a.type === 'ledger' ? new Date(a.item.scheduledDate || a.item.createdAt).getTime() : 0
-      const dateB = b.type === 'ledger' ? new Date(b.item.scheduledDate || b.item.createdAt).getTime() : 0
-      if (dateA !== dateB) return dateB - dateA;
-      const ca = a.item.createdAt ? new Date(a.item.createdAt).getTime() : 0;
-      const cb = b.item.createdAt ? new Date(b.item.createdAt).getTime() : 0;
-      return cb - ca;
+      const safeGetTime = (val?: string) => {
+        if (!val) return 0;
+        const t = new Date(val).getTime();
+        return isNaN(t) ? 0 : t;
+      };
+
+      const dateA = a.type === 'ledger' ? safeGetTime(a.item.scheduledDate || a.item.createdAt) : 0;
+      const dateB = b.type === 'ledger' ? safeGetTime(b.item.scheduledDate || b.item.createdAt) : 0;
+      
+      if (dateA !== dateB) {
+        return dateB - dateA; // dateB(최신)가 크면 양수 반환 -> b가 위로(내림차순)
+      }
+      
+      const ca = a.type === 'ledger' ? safeGetTime(a.item.createdAt) : 0;
+      const cb = b.type === 'ledger' ? safeGetTime(b.item.createdAt) : 0;
+      return cb - ca; // cb(최신)가 크면 양수 반환 -> b가 위로(내림차순)
     })
 
     return results

@@ -133,12 +133,21 @@ export default function MobileCashTab({ year, month, searchQuery = '' }: MobileC
       })
     }
     all.sort((a, b) => {
-      const ta = new Date(a.scheduledDate || a.createdAt).getTime()
-      const tb = new Date(b.scheduledDate || b.createdAt).getTime()
-      if (ta !== tb) return tb - ta;
-      const ca = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-      const cb = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-      return cb - ca;
+      const safeGetTime = (val?: string) => {
+        if (!val) return 0;
+        const t = new Date(val).getTime();
+        return isNaN(t) ? 0 : t;
+      };
+
+      const ta = safeGetTime(a.scheduledDate || a.createdAt);
+      const tb = safeGetTime(b.scheduledDate || b.createdAt);
+      if (ta !== tb) {
+        return tb - ta; // tb(최신)가 크면 양수 반환 -> b가 위로(내림차순)
+      }
+      
+      const ca = safeGetTime(a.createdAt);
+      const cb = safeGetTime(b.createdAt);
+      return cb - ca; // cb(최신)가 크면 양수 반환 -> b가 위로(내림차순)
     })
     return all
   }, [cashEntries, activeCategory, searchQuery])
