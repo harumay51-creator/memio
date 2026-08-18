@@ -186,7 +186,48 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
     async function loadData() {
       console.time('[AppStore] 1. Total Initial Load Time')
       try {
-        // Fetch from Firestore
+        const CACHE_KEY = `yuri-calendar-cache-${uid}`
+        try {
+          const cachedStr = localStorage.getItem(CACHE_KEY)
+          if (cachedStr) {
+            const cached = JSON.parse(cachedStr)
+            
+            // 1. Settings
+            if (cached.journal_settings) {
+              setPinHash(cached.journal_settings.pinHash || null)
+            } else {
+              setPinHash(null)
+            }
+            if (cached.settings) {
+              const data = cached.settings
+              setCardPaymentDayState(data.cardPaymentDay || 14)
+              setCardBillingStartDay(data.cardBillingStartDay || 28)
+              setCardBillingEndDay(data.cardBillingEndDay || 27)
+              setPaydayState(data.payday || 25)
+              setCategoryOrderState(data.categoryOrder || [])
+              setAppPinHash(data.appPinHash || null)
+              if (data.appPinHash) localStorage.setItem(`yuri-appPinHash-${uid}`, data.appPinHash)
+              else localStorage.removeItem(`yuri-appPinHash-${uid}`)
+              if (data.holidayConfig) setHolidayConfig(data.holidayConfig)
+            }
+            setIsSettingsLoading(false)
+
+            // 2. Calendar Collections (assume cached tasks are already filtered)
+            if (cached.tasks) setTasks(cached.tasks)
+            if (cached.events) setEvents(cached.events)
+            if (cached.anniversaries) setAnniversaries(cached.anniversaries)
+            if (cached.monthlyEvents) setMonthlyEvents(cached.monthlyEvents)
+            if (cached.agendas) setAgendas(cached.agendas)
+            if (cached.recurringInstances) setRecurringInstances(cached.recurringInstances)
+            
+            setIsLoading(false)
+            console.log('[AppStore] Loaded from LocalStorage cache')
+          }
+        } catch (e) {
+          console.warn('Failed to parse cache', e)
+        }
+
+        // Fetch from Firestore (Background Update)
         const fetchCol = async (colName: string) => {
           console.time(`[Perf] Fetch ${colName}`)
           performance.mark(`fetch-${colName}-start`)
@@ -304,12 +345,32 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
         }
 
         if (isMounted) {
-          setTasks((tasksData.active as Task[]).sort((a, b) => (a.order || 0) - (b.order || 0)))
-          setEvents((fetchedEvents as ScheduleEvent[]).sort((a, b) => (a.order || 0) - (b.order || 0)))
+          const finalTasks = (tasksData.active as Task[]).sort((a, b) => (a.order || 0) - (b.order || 0))
+          const finalEvents = (fetchedEvents as ScheduleEvent[]).sort((a, b) => (a.order || 0) - (b.order || 0))
+          
+          setTasks(finalTasks)
+          setEvents(finalEvents)
           setAnniversaries(fetchedAnnivs as Anniversary[])
           setMonthlyEvents(fetchedMonthly as MonthlyEvent[])
           setAgendas(fetchedAgendas as AgendaItem[])
           setRecurringInstances(fetchedRecurringInstances as RecurringInstance[])
+          
+          try {
+            const cacheData = {
+              journal_settings: settingsSnap.exists() ? settingsSnap.data() : null,
+              settings: settingsDoc.exists() ? settingsDoc.data() : null,
+              tasks: finalTasks,
+              events: finalEvents,
+              anniversaries: fetchedAnnivs,
+              monthlyEvents: fetchedMonthly,
+              agendas: fetchedAgendas,
+              recurringInstances: fetchedRecurringInstances
+            }
+            localStorage.setItem(`yuri-calendar-cache-${uid}`, JSON.stringify(cacheData))
+            console.log('[AppStore] Saved to LocalStorage cache')
+          } catch (e) {
+            console.warn('Failed to save cache', e)
+          }
           
           console.timeEnd('[AppStore] 3. Essential 6 Collections Load Time')
           console.timeEnd('[AppStore] 1. Total Initial Load Time')
