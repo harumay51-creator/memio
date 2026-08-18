@@ -135,7 +135,10 @@ export default function MobileCashTab({ year, month, searchQuery = '' }: MobileC
     all.sort((a, b) => {
       const ta = new Date(a.scheduledDate || a.createdAt).getTime()
       const tb = new Date(b.scheduledDate || b.createdAt).getTime()
-      return tb - ta
+      if (ta !== tb) return tb - ta;
+      const ca = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const cb = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return cb - ca;
     })
     return all
   }, [cashEntries, activeCategory, searchQuery])

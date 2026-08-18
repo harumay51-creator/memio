@@ -191,7 +191,14 @@ export default function MobileCardTab({ year, month, searchQuery = '' }: MobileC
   }, [activeEntries, activeCategory, searchQuery])
 
   const sortedListEntries = useMemo(() => {
-    return [...filteredEntries].sort((a, b) => new Date(b.scheduledDate || b.createdAt).getTime() - new Date(a.scheduledDate || a.createdAt).getTime())
+    return [...filteredEntries].sort((a, b) => {
+      const ta = new Date(a.scheduledDate || a.createdAt).getTime()
+      const tb = new Date(b.scheduledDate || b.createdAt).getTime()
+      if (ta !== tb) return tb - ta;
+      const ca = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const cb = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return cb - ca;
+    })
   }, [filteredEntries])
   
   const listTotal = useMemo(() => filteredEntries.reduce((s, e) => s + e.amount, 0), [filteredEntries])

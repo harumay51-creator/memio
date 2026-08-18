@@ -45,7 +45,10 @@ export default function MobileLedgerSearchTab({ searchQuery }: MobileLedgerSearc
     results.sort((a, b) => {
       const dateA = a.type === 'ledger' ? new Date(a.item.scheduledDate || a.item.createdAt).getTime() : 0
       const dateB = b.type === 'ledger' ? new Date(b.item.scheduledDate || b.item.createdAt).getTime() : 0
-      return dateB - dateA
+      if (dateA !== dateB) return dateB - dateA;
+      const ca = a.item.createdAt ? new Date(a.item.createdAt).getTime() : 0;
+      const cb = b.item.createdAt ? new Date(b.item.createdAt).getTime() : 0;
+      return cb - ca;
     })
 
     return results
