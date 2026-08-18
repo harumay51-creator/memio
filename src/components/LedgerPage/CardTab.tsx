@@ -201,22 +201,29 @@ export default function CardTab({ year, month }: { year: number, month: number }
       <div 
         key={item.id} 
         onClick={() => setEditingRowId(item.id)}
-        className="flex justify-between items-center px-4 py-3 hover:bg-gray-50 bg-white border-b border-gray-100 last:border-b-0 cursor-pointer group transition-colors"
+        className="flex flex-col px-4 py-3 hover:bg-gray-50 bg-white border-b border-gray-100 last:border-b-0 cursor-pointer group transition-colors"
       >
-        <div className="flex items-center gap-3 overflow-hidden">
-          <span className="text-xs font-semibold text-gray-400 w-10 shrink-0">{dStr}</span>
-          <span 
-            className="text-[11px] font-bold text-[#374151] px-2 py-0.5 rounded shrink-0"
-            style={{ backgroundColor: getCategoryColor(item.category || '기타', expenseCategories) }}
-          >
-            {item.category || '기타'}
+        <div className="flex justify-between items-center w-full">
+          <div className="flex items-center gap-3 overflow-hidden">
+            <span className="text-xs font-semibold text-gray-400 w-10 shrink-0">{dStr}</span>
+            <span 
+              className="text-[11px] font-bold text-[#374151] px-2 py-0.5 rounded shrink-0"
+              style={{ backgroundColor: getCategoryColor(item.category || '기타', expenseCategories) }}
+            >
+              {item.category || '기타'}
+            </span>
+            <span className="text-sm font-medium text-gray-800 truncate">{item.label}</span>
+            {item.memo && <MessageSquare size={12} className="text-gray-400 shrink-0" />}
+          </div>
+          <span className="text-[15px] font-bold text-gray-900 shrink-0 ml-4 group-hover:text-black transition-colors">
+            {item.amount.toLocaleString()}원
           </span>
-          <span className="text-sm font-medium text-gray-800 truncate">{item.label}</span>
-          {item.memo && <MessageSquare size={12} className="text-gray-400 shrink-0" />}
         </div>
-        <span className="text-[15px] font-bold text-gray-900 shrink-0 ml-4 group-hover:text-black transition-colors">
-          {item.amount.toLocaleString()}원
-        </span>
+        <div className="mt-2 p-2 bg-gray-100 rounded text-[10px] text-gray-600 break-all" onClick={(e) => { e.stopPropagation() }}>
+          <div>[DEBUG PC]</div>
+          <div>sched: {String(item.scheduledDate)} ({typeof item.scheduledDate}) | isNaN: {isNaN(new Date(item.scheduledDate as any).getTime()) ? 'YES' : 'NO'}</div>
+          <div>creat: {String(item.createdAt)} ({typeof item.createdAt}) | isNaN: {isNaN(new Date(item.createdAt as any).getTime()) ? 'YES' : 'NO'}</div>
+        </div>
       </div>
     )
   }
