@@ -376,11 +376,6 @@ export default function MobileCardTab({ year, month, searchQuery = '' }: MobileC
                       </button>
                     </div>
                   </div>
-                  <div className="mt-2 p-2 bg-gray-100 rounded text-[9px] text-gray-600 break-all" onClick={(e) => { e.stopPropagation() }}>
-                    <div>[DEBUG]</div>
-                    <div>sched: {String(item.scheduledDate)} ({typeof item.scheduledDate}) | isNaN: {isNaN(new Date(item.scheduledDate as any).getTime()) ? 'YES' : 'NO'}</div>
-                    <div>creat: {String(item.createdAt)} ({typeof item.createdAt}) | isNaN: {isNaN(new Date(item.createdAt as any).getTime()) ? 'YES' : 'NO'}</div>
-                  </div>
                 </div>
               )
             })
