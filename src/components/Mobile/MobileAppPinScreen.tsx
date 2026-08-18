@@ -26,17 +26,18 @@ const MobileAppPinScreen: React.FC<MobileAppPinScreenProps> = ({ mode, onComplet
   const handleNum = (n: string) => {
     if (localError) setLocalError('')
     if (step === 'input') {
-      if (pin.length < 4) {
-        const next = pin + n
-        setPin(next)
+      setPin(prev => {
+        if (prev.length >= 4) return prev
+        const next = prev + n
         if (next.length === 4) {
           setTimeout(() => setStep('confirm'), 200)
         }
-      }
+        return next
+      })
     } else {
-      if (confirmPin.length < 4) {
-        const next = confirmPin + n
-        setConfirmPin(next)
+      setConfirmPin(prev => {
+        if (prev.length >= 4) return prev
+        const next = prev + n
         if (next.length === 4) {
           if (mode === 'setup') {
             if (pin === next) {
@@ -55,7 +56,8 @@ const MobileAppPinScreen: React.FC<MobileAppPinScreenProps> = ({ mode, onComplet
             onComplete(next)
           }
         }
-      }
+        return next
+      })
     }
   }
 

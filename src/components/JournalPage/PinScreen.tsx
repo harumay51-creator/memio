@@ -18,56 +18,56 @@ const PinScreen: React.FC = () => {
   // Reset password state
   const [password, setPassword] = useState('')
 
-  const handleNumClick = async (num: string) => {
-    if (pin.length < 4) {
-      const newPin = pin + num
-      setPinInput(newPin)
-      setError('')
-      
-      if (newPin.length === 4) {
-        if (mode === 'UNLOCK') {
+  const handlePinComplete = async (newPin: string) => {
+    if (mode === 'UNLOCK') {
+      const success = await unlockPrivate(newPin)
+      if (!success) {
+        setError('PIN 번호가 일치하지 않습니다.')
+        setPinInput('')
+      }
+    } else if (mode === 'SETUP' || mode === 'CHANGE') {
+      if (step === 1) {
+        if (mode === 'CHANGE' && hasPin) {
           const success = await unlockPrivate(newPin)
-          if (!success) {
-            setError('PIN 번호가 일치하지 않습니다.')
+          if (success) {
+            setStep(2)
+            setPinInput('')
+          } else {
+            setError('기존 PIN 번호가 일치하지 않습니다.')
             setPinInput('')
           }
-        } else if (mode === 'SETUP' || mode === 'CHANGE') {
-          if (step === 1) {
-            if (mode === 'CHANGE' && hasPin) {
-              // verify current pin first
-              const success = await unlockPrivate(newPin)
-              if (success) {
-                setStep(2)
-                setPinInput('')
-              } else {
-                setError('기존 PIN 번호가 일치하지 않습니다.')
-                setPinInput('')
-              }
-            } else if (mode === 'SETUP') {
-              // Skip confirm step for SETUP, just save it directly
-              await setPrivatePin(newPin)
-            } else {
-              setConfirmPin(newPin)
-              setPinInput('')
-              setStep(2)
-            }
-          } else if (step === 2 && mode === 'CHANGE' && hasPin) {
-             setConfirmPin(newPin)
-             setPinInput('')
-             setStep(3)
-          } else {
-            // step 2 for SETUP, step 3 for CHANGE
-            if (newPin === confirmPin) {
-              await setPrivatePin(newPin)
-              // success!
-            } else {
-              setError('PIN 번호가 일치하지 않습니다.')
-              setPinInput('')
-            }
-          }
+        } else if (mode === 'SETUP') {
+          await setPrivatePin(newPin)
+        } else {
+          setConfirmPin(newPin)
+          setPinInput('')
+          setStep(2)
+        }
+      } else if (step === 2 && mode === 'CHANGE' && hasPin) {
+         setConfirmPin(newPin)
+         setPinInput('')
+         setStep(3)
+      } else {
+        if (newPin === confirmPin) {
+          await setPrivatePin(newPin)
+        } else {
+          setError('PIN 번호가 일치하지 않습니다.')
+          setPinInput('')
         }
       }
     }
+  }
+
+  const handleNumClick = (num: string) => {
+    setError('')
+    setPinInput(prev => {
+      if (prev.length >= 4) return prev
+      const newPin = prev + num
+      if (newPin.length === 4) {
+        setTimeout(() => handlePinComplete(newPin), 0)
+      }
+      return newPin
+    })
   }
 
   const handleDelete = () => {
