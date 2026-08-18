@@ -8,9 +8,11 @@ interface MobileAppPinScreenProps {
   errorMsg?: string
 }
 
+let transientUnlockPin = ''
+
 const MobileAppPinScreen: React.FC<MobileAppPinScreenProps> = ({ mode, onComplete, onSkip, onForgot, errorMsg: externalErrorMsg }) => {
   const [pin, setPin] = useState('')
-  const [confirmPin, setConfirmPin] = useState('')
+  const [confirmPin, setConfirmPin] = useState(mode === 'unlock' ? transientUnlockPin : '')
   const [step, setStep] = useState<'input' | 'confirm'>(mode === 'setup' ? 'input' : 'confirm')
   const [localError, setLocalError] = useState('')
 
@@ -19,6 +21,7 @@ const MobileAppPinScreen: React.FC<MobileAppPinScreenProps> = ({ mode, onComplet
       setLocalError(externalErrorMsg)
       setPin('')
       setConfirmPin('')
+      if (mode === 'unlock') transientUnlockPin = ''
       setStep(mode === 'setup' ? 'input' : 'confirm')
     }
   }, [externalErrorMsg, mode])
@@ -38,6 +41,7 @@ const MobileAppPinScreen: React.FC<MobileAppPinScreenProps> = ({ mode, onComplet
       setConfirmPin(prev => {
         if (prev.length >= 4) return prev
         const next = prev + n
+        if (mode === 'unlock') transientUnlockPin = next
         if (next.length === 4) {
           if (mode === 'setup') {
             if (pin === next) {
@@ -54,6 +58,7 @@ const MobileAppPinScreen: React.FC<MobileAppPinScreenProps> = ({ mode, onComplet
           } else {
             // Unlock mode
             onComplete(next)
+            transientUnlockPin = '' // Clear it after submission
           }
         }
         return next
@@ -66,7 +71,11 @@ const MobileAppPinScreen: React.FC<MobileAppPinScreenProps> = ({ mode, onComplet
     if (step === 'input') {
       setPin(p => p.slice(0, -1))
     } else {
-      setConfirmPin(p => p.slice(0, -1))
+      setConfirmPin(p => {
+        const next = p.slice(0, -1)
+        if (mode === 'unlock') transientUnlockPin = next
+        return next
+      })
     }
   }
 
