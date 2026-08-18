@@ -192,21 +192,17 @@ export default function MobileCardTab({ year, month, searchQuery = '' }: MobileC
 
   const sortedListEntries = useMemo(() => {
     return [...filteredEntries].sort((a, b) => {
-      const safeGetTime = (val?: string) => {
-        if (!val) return 0;
-        const t = new Date(val).getTime();
-        return isNaN(t) ? 0 : t;
-      };
-
-      const ta = safeGetTime(a.scheduledDate || a.createdAt);
-      const tb = safeGetTime(b.scheduledDate || b.createdAt);
-      if (ta !== tb) {
-        return tb - ta; // tb(최신)가 크면 양수 반환 -> b가 위로(내림차순)
+      const getStr = (val: any) => (typeof val === 'string' ? val : val ? new Date(val.seconds ? val.seconds * 1000 : val).toISOString() : '');
+      const dateA = getStr(a.scheduledDate || a.createdAt);
+      const dateB = getStr(b.scheduledDate || b.createdAt);
+      
+      if (dateA !== dateB) {
+        return dateB.localeCompare(dateA);
       }
       
-      const ca = safeGetTime(a.createdAt);
-      const cb = safeGetTime(b.createdAt);
-      return cb - ca; // cb(최신)가 크면 양수 반환 -> b가 위로(내림차순)
+      const ca = getStr(a.createdAt);
+      const cb = getStr(b.createdAt);
+      return cb.localeCompare(ca);
     })
   }, [filteredEntries])
   

@@ -59,11 +59,18 @@ export const LedgerSearchTab: React.FC<LedgerSearchTabProps> = ({
       }
     })
 
-    // Sort by date (descending) if possible
     results.sort((a, b) => {
-      const dateA = a.type === 'ledger' ? new Date(a.item.scheduledDate || 0).getTime() : 0
-      const dateB = b.type === 'ledger' ? new Date(b.item.scheduledDate || 0).getTime() : 0
-      return dateB - dateA // fixed expenses will stay at the bottom, which is fine
+      const getStr = (val: any) => (typeof val === 'string' ? val : val ? new Date(val.seconds ? val.seconds * 1000 : val).toISOString() : '');
+      const dateA = a.type === 'ledger' ? getStr(a.item.scheduledDate || a.item.createdAt) : '';
+      const dateB = b.type === 'ledger' ? getStr(b.item.scheduledDate || b.item.createdAt) : '';
+      
+      if (dateA !== dateB) {
+        return dateB.localeCompare(dateA);
+      }
+      
+      const ca = a.type === 'ledger' ? getStr(a.item.createdAt) : '';
+      const cb = b.type === 'ledger' ? getStr(b.item.createdAt) : '';
+      return cb.localeCompare(ca);
     })
 
     return results

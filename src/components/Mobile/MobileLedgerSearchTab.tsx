@@ -43,22 +43,17 @@ export default function MobileLedgerSearchTab({ searchQuery }: MobileLedgerSearc
     })
 
     results.sort((a, b) => {
-      const safeGetTime = (val?: string) => {
-        if (!val) return 0;
-        const t = new Date(val).getTime();
-        return isNaN(t) ? 0 : t;
-      };
-
-      const dateA = a.type === 'ledger' ? safeGetTime(a.item.scheduledDate || a.item.createdAt) : 0;
-      const dateB = b.type === 'ledger' ? safeGetTime(b.item.scheduledDate || b.item.createdAt) : 0;
+      const getStr = (val: any) => (typeof val === 'string' ? val : val ? new Date(val.seconds ? val.seconds * 1000 : val).toISOString() : '');
+      const dateA = a.type === 'ledger' ? getStr(a.item.scheduledDate || a.item.createdAt) : '';
+      const dateB = b.type === 'ledger' ? getStr(b.item.scheduledDate || b.item.createdAt) : '';
       
       if (dateA !== dateB) {
-        return dateB - dateA; // dateB(최신)가 크면 양수 반환 -> b가 위로(내림차순)
+        return dateB.localeCompare(dateA);
       }
       
-      const ca = a.type === 'ledger' ? safeGetTime(a.item.createdAt) : 0;
-      const cb = b.type === 'ledger' ? safeGetTime(b.item.createdAt) : 0;
-      return cb - ca; // cb(최신)가 크면 양수 반환 -> b가 위로(내림차순)
+      const ca = a.type === 'ledger' ? getStr(a.item.createdAt) : '';
+      const cb = b.type === 'ledger' ? getStr(b.item.createdAt) : '';
+      return cb.localeCompare(ca);
     })
 
     return results

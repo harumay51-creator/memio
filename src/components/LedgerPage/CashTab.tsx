@@ -125,9 +125,17 @@ export default function CashTab({ year, month, onOpenFixedExpense }: { year: num
       all = all.filter(e => (e.category || '기타') === activeCategory)
     }
     all.sort((a, b) => {
-      const ta = new Date(a.scheduledDate || a.createdAt).getTime()
-      const tb = new Date(b.scheduledDate || b.createdAt).getTime()
-      return tb - ta // Newest first
+      const getStr = (val: any) => (typeof val === 'string' ? val : val ? new Date(val.seconds ? val.seconds * 1000 : val).toISOString() : '');
+      const dateA = getStr(a.scheduledDate || a.createdAt);
+      const dateB = getStr(b.scheduledDate || b.createdAt);
+      
+      if (dateA !== dateB) {
+        return dateB.localeCompare(dateA);
+      }
+      
+      const ca = getStr(a.createdAt);
+      const cb = getStr(b.createdAt);
+      return cb.localeCompare(ca);
     })
     return all
   }, [cashEntries, activeCategory])
