@@ -120,6 +120,10 @@ const MobileCalendarPage: React.FC = () => {
   const lastTouchTime = useRef<number>(0)
   const rafRef = useRef<number | null>(null)
 
+  const gridTouchStartX = useRef<number>(0)
+  const gridTouchStartY = useRef<number>(0)
+  const gridIsSwiping = useRef<boolean>(false)
+
   const handleTouchStart = (e: React.TouchEvent) => {
     const y = e.touches[0].clientY
     touchStartY.current = y
@@ -307,6 +311,41 @@ const MobileCalendarPage: React.FC = () => {
     else setCurrentDate(addMonths(currentDate, 1))
   }
 
+  const handleGridTouchStart = (e: React.TouchEvent) => {
+    gridTouchStartX.current = e.touches[0].clientX
+    gridTouchStartY.current = e.touches[0].clientY
+    gridIsSwiping.current = false
+  }
+
+  const handleGridTouchMove = (e: React.TouchEvent) => {
+    const currentX = e.touches[0].clientX
+    const currentY = e.touches[0].clientY
+    const deltaX = currentX - gridTouchStartX.current
+    const deltaY = currentY - gridTouchStartY.current
+
+    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 10) {
+      gridIsSwiping.current = true
+    }
+  }
+
+  const handleGridTouchEnd = (e: React.TouchEvent) => {
+    const currentX = e.changedTouches[0].clientX
+    const deltaX = currentX - gridTouchStartX.current
+    
+    if (gridIsSwiping.current) {
+      if (Math.abs(deltaX) > 50) {
+        if (deltaX > 0) {
+          handlePrevMonth()
+        } else {
+          handleNextMonth()
+        }
+      }
+      setTimeout(() => {
+        gridIsSwiping.current = false
+      }, 50)
+    }
+  }
+
   // Handle back button for event list
   useEffect(() => {
     const handlePopState = () => {
@@ -319,6 +358,7 @@ const MobileCalendarPage: React.FC = () => {
   }, [isDiaryMode, selectedDate])
 
   const handleDateClick = (d: Date) => {
+    if (gridIsSwiping.current) return;
     if (!isDiaryMode && selectedDate && isSameDay(d, selectedDate)) {
       if (window.history.state?.modal === 'mobileEventList') {
         window.history.back()
@@ -476,6 +516,9 @@ const MobileCalendarPage: React.FC = () => {
           minHeight: isDiaryMode || !selectedDate ? '0' : '280px',
           gridTemplateRows: `repeat(${days.length / 7}, minmax(0, 1fr))` 
         }}
+        onTouchStart={handleGridTouchStart}
+        onTouchMove={handleGridTouchMove}
+        onTouchEnd={handleGridTouchEnd}
       >
         {days.map((d: Date) => {
           const dStr = format(d, 'yyyy-MM-dd')
