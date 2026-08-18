@@ -13,76 +13,6 @@ import { MobileDiaryView } from './MobileDiaryView'
 import { MobileDiarySearchModal } from './MobileDiarySearchModal'
 import Emoji from '../common/Emoji'
 
-const PerfDebugPanel: React.FC = () => {
-  const [visible, setVisible] = useState(true);
-  const [metrics, setMetrics] = useState<any>({});
-
-  useEffect(() => {
-    // Wait a brief moment to ensure all marks are registered
-    const timer = setTimeout(() => {
-      const getVal = (name: string) => {
-        try {
-          const entries = performance.getEntriesByName(name);
-          if (entries.length > 0) return Math.round(entries[entries.length - 1].duration) + 'ms';
-        } catch(e) {}
-        return 'N/A';
-      };
-
-      let total = 0;
-      try {
-        let start = performance.getEntriesByName('auth-start');
-        if (start.length === 0) start = performance.getEntriesByName('promise-all-start');
-        const end = performance.getEntriesByName('react-render-end');
-        if (start.length > 0 && end.length > 0) {
-          total = Math.round(end[end.length - 1].startTime - start[start.length - 1].startTime);
-        }
-      } catch(e) {}
-
-      setMetrics({
-        auth: getVal('Auth Duration') !== 'N/A' ? getVal('Auth Duration') : getVal('Auth Duration (Error)'),
-        settings: getVal('Fetch Doc: settings'),
-        events: getVal('Fetch Collection: events'),
-        tasks: getVal('Fetch Collection: tasks'),
-        annivs: getVal('Fetch Collection: anniversaries'),
-        monthly: getVal('Fetch Collection: monthlyEvents'),
-        agendas: getVal('Fetch Collection: agendas'),
-        recurring: getVal('Fetch Collection: recurringInstances'),
-        promiseAll: getVal('Total Promise.all Time'),
-        reactRender: getVal('React Render & Paint'),
-        total: total > 0 ? total + 'ms' : 'N/A'
-      });
-    }, 500);
-
-    const hideTimer = setTimeout(() => setVisible(false), 5000); // Wait 5 seconds to disappear
-    return () => { clearTimeout(timer); clearTimeout(hideTimer); };
-  }, []);
-
-  if (!visible) return null;
-
-  return (
-    <div 
-      onClick={() => setVisible(false)}
-      className="fixed bottom-20 right-4 bg-black/80 text-[#33FF33] p-3 rounded-lg text-[9px] leading-relaxed font-mono z-[9999] shadow-lg backdrop-blur-sm max-w-[200px] break-words"
-      style={{ pointerEvents: 'auto' }}
-    >
-      <div className="font-bold text-white mb-1">성능 측정 결과 (터치 시 닫힘)</div>
-      <div>Auth: {metrics.auth}</div>
-      <div>설정 로딩: {metrics.settings}</div>
-      <div>events: {metrics.events}</div>
-      <div>tasks: {metrics.tasks}</div>
-      <div>annivs: {metrics.annivs}</div>
-      <div>monthly: {metrics.monthly}</div>
-      <div>agendas: {metrics.agendas}</div>
-      <div>recurring: {metrics.recurring}</div>
-      <div>Promise.all 전체: {metrics.promiseAll}</div>
-      <div>React 렌더링: {metrics.reactRender}</div>
-      <div className="border-t border-yuri-500/50 mt-1 pt-1 font-bold text-white">
-        총 소요 시간: {metrics.total}
-      </div>
-    </div>
-  );
-};
-
 const MobileCalendarPage: React.FC = () => {
   const { events, addEvent, updateEvent, deleteEvent, anniversaries, monthlyEvents, recurringInstances, deleteRecurringOccurrence } = useAppStore()
   const { isDiaryMode, setIsDiaryMode, diaries } = useDiaryStore()
@@ -92,15 +22,6 @@ const MobileCalendarPage: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const mergedHolidays = useMergedHolidays(currentDate.getFullYear())
-
-  useEffect(() => {
-    performance.mark('react-render-end')
-    try {
-      performance.measure('React Render & Paint', 'react-render-start', 'react-render-end')
-    } catch(e) {}
-    console.timeEnd('[Perf] React Render & Paint')
-    console.timeEnd('[MobileApp] Calendar UI Rendered')
-  }, [])
 
   const [newEventText, setNewEventText] = useState('')
   const [newEventColor, setNewEventColor] = useState(EVENT_COLORS[0])
@@ -849,7 +770,6 @@ const MobileCalendarPage: React.FC = () => {
           }}
         />
       )}
-      <PerfDebugPanel />
     </div>
   )
 }
