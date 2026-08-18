@@ -212,7 +212,7 @@ export default function App() {
             // Clean up event listeners when auth state changes
             const cleanupEvents = () => activityEvents.forEach(e => window.removeEventListener(e, handleActivity));
             // We'll stash this in a ref or just rely on the component unmount, but since this is inside onAuthStateChanged, we should clean it up when user signs out.
-            window['yuriCleanupActivity'] = cleanupEvents;
+            (window as any)['yuriCleanupActivity'] = cleanupEvents;
           }
         } else {
           setUser(currentUser);
