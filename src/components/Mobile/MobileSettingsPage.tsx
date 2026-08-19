@@ -49,7 +49,7 @@ export default function MobileSettingsPage({ onNavigate, onLogout }: MobileSetti
 
   if (pinMode !== 'none') {
     return (
-      <div className="fixed inset-0 z-[100] bg-white flex flex-col overflow-hidden animate-in slide-in-from-right-full duration-300">
+      <div className="fixed inset-0 z-[100] bg-white flex flex-col overflow-hidden animate-in fade-in duration-150">
         <div className="flex items-center gap-2 p-3 border-b border-[#E5E5EA] bg-white shrink-0 shadow-sm z-10">
           <button 
             onClick={() => { setPinMode('none'); setPinError(''); }}

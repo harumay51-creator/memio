@@ -215,7 +215,7 @@ export default function MobileJournalPage() {
 
       {/* Full Screen Editor overlay */}
       {selNoteId && selectedNote && (
-        <div className="absolute inset-0 z-50 flex flex-col bg-white animate-in slide-in-from-right-full duration-300">
+        <div className="absolute inset-0 z-50 flex flex-col bg-white animate-in fade-in duration-150">
           <header className="shrink-0 h-14 flex items-center justify-between px-2 border-b border-yuri-100 bg-white shadow-sm">
             <button 
               onClick={closeEditor}

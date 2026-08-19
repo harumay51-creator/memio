@@ -549,7 +549,7 @@ const MobileCalendarPage: React.FC = () => {
       </div>
 
       {isDiaryMode && isDiaryOpen && (
-        <div className="absolute inset-0 z-50 bg-white flex flex-col overflow-hidden animate-in slide-in-from-right-full duration-300">
+        <div className="absolute inset-0 z-50 bg-white flex flex-col overflow-hidden animate-in fade-in duration-150">
           <MobileDiaryView selectedDate={selectedDate || new Date()} onClose={() => {
             if (window.history.state?.modal === 'mobileDiary') window.history.back()
             setIsDiaryOpen(false)

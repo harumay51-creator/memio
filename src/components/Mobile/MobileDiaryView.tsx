@@ -73,7 +73,7 @@ const QuestionItem = ({ q, initialAnswer, saveAnswer, deleteAnswer }: { q: any, 
 
   if (isEditing) {
     return (
-      <div ref={editRef} className="group relative transition-all duration-300 flex flex-col shrink-0 z-20 w-full min-h-0 py-4 px-2 bg-transparent text-[#3D3833] border-b border-[#EDE6D6]">
+      <div ref={editRef} className="group relative transition-colors duration-150 flex flex-col shrink-0 z-20 w-full min-h-0 py-4 px-2 bg-transparent text-[#3D3833] border-b border-[#EDE6D6]">
         <div className="flex justify-between items-start mb-1 gap-2">
           <div className="text-[11px] font-bold font-diary opacity-70">{q.text}</div>
         </div>
@@ -114,7 +114,7 @@ const QuestionItem = ({ q, initialAnswer, saveAnswer, deleteAnswer }: { q: any, 
 
   return (
     <div 
-      className="group relative transition-all duration-300 flex flex-col shrink-0 cursor-pointer w-full min-h-0 py-4 px-2 bg-transparent text-[#3D3833] border-b border-[#E5E5EA]/50 hover:bg-black/5 rounded-lg"
+      className="group relative transition-colors duration-150 flex flex-col shrink-0 cursor-pointer w-full min-h-0 py-4 px-2 bg-transparent text-[#3D3833] border-b border-[#E5E5EA]/50 hover:bg-black/5 rounded-lg"
       onClick={() => setIsEditing(true)}
     >
       <div className="flex justify-between items-start mb-2 gap-2">
@@ -230,7 +230,7 @@ const MemoItem = ({ memo, deleteMemo, updateMemo }: { memo: DiaryMemo, deleteMem
 
   if (isEditing) {
     return (
-      <div ref={editRef} className="group relative transition-all duration-300 flex flex-col shrink-0 z-20 w-full min-h-0 py-4 px-2 bg-transparent text-[#3D3833] border-b border-[#EDE6D6]">
+      <div ref={editRef} className="group relative transition-colors duration-150 flex flex-col shrink-0 z-20 w-full min-h-0 py-4 px-2 bg-transparent text-[#3D3833] border-b border-[#EDE6D6]">
         <div className="flex gap-1.5 mb-2 flex-wrap items-center">
           <div className="relative">
             <button 
@@ -307,7 +307,7 @@ const MemoItem = ({ memo, deleteMemo, updateMemo }: { memo: DiaryMemo, deleteMem
 
   return (
     <div 
-      className="group relative transition-all duration-300 flex flex-col shrink-0 cursor-pointer w-full min-h-0 py-2.5 px-2 border-b border-[#E5E5EA]/50 hover:bg-black/5 rounded-lg" 
+      className="group relative transition-colors duration-150 flex flex-col shrink-0 cursor-pointer w-full min-h-0 py-2.5 px-2 border-b border-[#E5E5EA]/50 hover:bg-black/5 rounded-lg" 
       onClick={() => setIsEditing(true)}
     >
       <div className="flex justify-between items-start gap-3">
