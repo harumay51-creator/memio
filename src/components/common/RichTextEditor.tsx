@@ -60,10 +60,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ initialContent, onChang
         const ctx = canvas.getContext('2d');
         ctx?.drawImage(img, 0, 0, width, height);
         canvas.toBlob((blob) => {
-          if (blob) {
-            alert(`[이미지 압축 결과]\n- 가로 크기: ${width}px\n- 실제 용량: ${Math.round(blob.size / 1024)} KB\n- 품질 설정: 60%`);
-            resolve(blob);
-          }
+          if (blob) resolve(blob);
           else reject(new Error('Canvas toBlob failed'));
         }, 'image/webp', 0.6);
       };
