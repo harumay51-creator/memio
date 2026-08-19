@@ -9,6 +9,7 @@ import MobileAppPinScreen from './components/Mobile/MobileAppPinScreen'
 import { hashPin } from './store/AppStore'
 import { Y2KBackground } from './components/common/Y2KTheme'
 import { useIsMobile } from './hooks/useIsMobile'
+import { LoadingState } from './components/common/LoadingState'
 
 const Sidebar = lazy(() => import('./components/Sidebar/Sidebar'))
 const QuickCapture = lazy(() => import('./components/QuickCapture'))
@@ -89,11 +90,7 @@ service cloud.firestore {
   const isLockedMobile = isMobile && hasAppPin && !isAppUnlocked;
 
   if ((isSettingsLoading || isLoading) && !isLockedMobile) {
-    return (
-      <div className="flex h-screen w-screen items-center justify-center bg-yuri-50">
-        <div className="animate-pulse text-accent font-medium text-lg">불러오는 중...</div>
-      </div>
-    )
+    return <LoadingState type="full" />
   }
 
 
@@ -122,7 +119,7 @@ service cloud.firestore {
       )}
       {showY2KBg && <Y2KBackground />}
       
-      <Suspense fallback={<div className="w-64 h-full bg-white/50 border-r border-yuri-200 animate-pulse shrink-0" />}>
+      <Suspense fallback={<div className="w-64 h-full bg-white/50 border-r border-yuri-200 shrink-0"><LoadingState type="content" /></div>}>
         <Sidebar
           activePage={activePage}
           onNavigate={navigate}
@@ -134,14 +131,14 @@ service cloud.firestore {
       
       <main className="flex-1 flex flex-col relative h-full min-w-0 z-10 bg-transparent">
         <div className="flex-1 overflow-y-auto w-full relative min-h-0">
-          <Suspense fallback={<div className="w-full h-full flex items-center justify-center"><div className="animate-pulse text-yuri-400">화면을 불러오는 중...</div></div>}>
+          <Suspense fallback={<LoadingState type="content" />}>
             <Router page={activePage} activeItemId={activeItemId} />
           </Suspense>
         </div>
         
         {activePage === 'ledger' && (
           <div className="shrink-0 pb-6 pt-2 px-6 border-t border-yuri-100 bg-yuri-50/50">
-            <Suspense fallback={<div className="h-[72px] w-full animate-pulse bg-white/60 rounded-xl" />}>
+            <Suspense fallback={<div className="h-[72px] w-full bg-white/60 rounded-xl flex items-center"><LoadingState type="content" /></div>}>
               <QuickCapture />
             </Suspense>
           </div>
@@ -267,11 +264,7 @@ export default function App() {
       )
     }
 
-    return (
-      <div className="flex h-screen w-screen items-center justify-center bg-yuri-50">
-        <div className="animate-pulse text-accent font-medium text-lg">인증 확인 중...</div>
-      </div>
-    )
+    return <LoadingState type="full" />
   }
 
   if (!user) {

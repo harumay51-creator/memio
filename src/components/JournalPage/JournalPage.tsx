@@ -8,6 +8,7 @@ import { DebouncedInput } from '../common/DebouncedInput'
 import { Lock } from 'lucide-react'
 import { isSearchMatch, getSearchPreview, decodeHtmlEntities } from '../../utils/textUtils'
 import PinScreen from './PinScreen'
+import { LoadingState } from '../common/LoadingState'
 import { Virtuoso } from 'react-virtuoso'
 
 const JournalPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId }) => {
@@ -91,7 +92,7 @@ const JournalPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId 
   if (isLoading) {
     return (
       <div className="flex h-full w-full bg-yuri-50 items-center justify-center">
-        <div className="animate-pulse text-accent font-medium">로딩 중...</div>
+        <LoadingState type="content" />
       </div>
     )
   }
@@ -210,9 +211,7 @@ const JournalPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId 
             
             <div className="flex-1 overflow-hidden flex flex-col px-8 pb-8 gap-4 mt-2">
               {(isContentLoading || (selectedNote.hasContentDoc && loadedContents[selectedNote.id] === undefined && !selectedNote.isFullyLoaded)) ? (
-                <div className="flex-1 flex items-center justify-center">
-                  <div className="w-8 h-8 border-4 border-yuri-200 border-t-accent rounded-full animate-spin"></div>
-                </div>
+                <LoadingState type="content" />
               ) : (
                 <>
                   <DebouncedInput spellCheck={false}

@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect, Suspense, lazy } from 'react'
 import { useJournalStore } from '../../store/JournalStore'
 import { useAppStore } from '../../store/AppStore'
 import { HighlightText } from '../common/HighlightText'
+import { LoadingState } from '../common/LoadingState'
 import { EmptyState } from '../common/EmptyState'
 import { DebouncedInput } from '../common/DebouncedInput'
 
@@ -107,8 +108,8 @@ export default function MobileJournalPage() {
 
   if (isLoading) {
     return (
-      <div className="flex h-full w-full bg-yuri-50 items-center justify-center">
-        <div className="animate-pulse text-accent font-medium">로딩 중...</div>
+      <div className="flex-1 flex flex-col h-full bg-[#f8f9fa] relative overflow-hidden">
+        <LoadingState type="content" />
       </div>
     )
   }

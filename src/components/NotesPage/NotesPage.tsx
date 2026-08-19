@@ -4,6 +4,7 @@ import { useAppStore } from '../../store/AppStore'
 import RichTextEditor from '../common/RichTextEditor'
 import { HighlightText } from '../common/HighlightText'
 import { EmptyState } from '../common/EmptyState'
+import { LoadingState } from '../common/LoadingState'
 import { DebouncedInput } from '../common/DebouncedInput'
 import { Virtuoso } from 'react-virtuoso'
 
@@ -201,9 +202,7 @@ const NotesPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId })
             
             <div className="flex-1 overflow-hidden flex flex-col px-8 pb-8 gap-4 mt-2">
               {(isContentLoading || (selectedNote.hasContentDoc && loadedContents[selectedNote.id] === undefined && !selectedNote.isFullyLoaded)) ? (
-                <div className="flex-1 flex items-center justify-center">
-                  <div className="w-8 h-8 border-4 border-yuri-200 border-t-accent rounded-full animate-spin"></div>
-                </div>
+                <LoadingState type="content" />
               ) : (
                 <>
                   <DebouncedInput spellCheck={false}
