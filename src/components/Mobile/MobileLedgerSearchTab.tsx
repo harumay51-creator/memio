@@ -3,7 +3,7 @@ import { useAppStore } from '../../store/AppStore'
 import { getCategoryColor } from '../../utils/parser'
 import MobileLedgerInputSheet from './MobileLedgerInputSheet'
 import { EmptyState } from '../common/EmptyState'
-import { MessageSquare, SearchX } from 'lucide-react'
+import { MessageSquare } from 'lucide-react'
 import type { LedgerEntry, FixedExpense } from '../../types'
 import { extractSearchText } from '../../utils/textUtils'
 

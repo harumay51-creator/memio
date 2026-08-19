@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react'
-import { useToast } from '../common/Toast'
 import { EmptyState } from '../common/EmptyState'
 import { useAppStore } from '../../store/AppStore'
 import { calculatePaydayCycle } from '../../utils/ledgerCycle'

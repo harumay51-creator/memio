@@ -4,7 +4,7 @@ import { isSearchMatch } from '../../utils/textUtils'
 import { HighlightText } from '../common/HighlightText'
 import { EditRow } from './EditRow'
 import { getCategoryColor } from '../../utils/parser'
-import { SearchX, CalendarClock, CreditCard, Banknote } from 'lucide-react'
+import { CalendarClock, CreditCard, Banknote } from 'lucide-react'
 import { EmptyState } from '../common/EmptyState'
 
 type SearchItem =

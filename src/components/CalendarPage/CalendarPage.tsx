@@ -9,7 +9,7 @@ import DiarySearchPanel from './DiarySearchPanel'
 import MonthNavigationBar from '../common/MonthNavigationBar'
 import { RetroWindow } from '../common/Y2KTheme'
 import { SortableItem } from '../common/SortableItem'
-import { DndContext, DragOverlay, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragStartEvent, DragEndEvent } from '@dnd-kit/core';
+import { DndContext, DragOverlay, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, defaultDropAnimationSideEffects } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { EmptyState } from '../common/EmptyState'
 
