@@ -49,7 +49,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ initialContent, onChang
         URL.revokeObjectURL(url);
         let width = img.width;
         let height = img.height;
-        const MAX_WIDTH = 1200;
+        const MAX_WIDTH = 800;
         if (width > MAX_WIDTH) {
           height = Math.round((height * MAX_WIDTH) / width);
           width = MAX_WIDTH;
@@ -62,7 +62,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ initialContent, onChang
         canvas.toBlob((blob) => {
           if (blob) resolve(blob);
           else reject(new Error('Canvas toBlob failed'));
-        }, 'image/webp', 0.8);
+        }, 'image/webp', 0.6);
       };
       img.onerror = () => reject(new Error('Image load failed'));
       img.src = url;
