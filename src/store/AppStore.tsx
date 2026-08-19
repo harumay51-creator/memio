@@ -180,8 +180,6 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
 
   const [navDate, setNavDate] = useState<Date | null>(null)
 
-  const { showToast } = useToast()
-
   useEffect(() => {
     let isMounted = true
     async function loadData() {

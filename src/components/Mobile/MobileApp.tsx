@@ -15,6 +15,7 @@ import { ChevronLeft } from 'lucide-react'
 
 import { useAppStore } from '../../store/AppStore'
 import MobileAppPinScreen from './MobileAppPinScreen'
+import { useConfirm } from '../common/ConfirmModal'
 
 interface MobileAppProps {
   activePage: PageId

@@ -27,6 +27,7 @@ export default function MobileCardTab({ year, month, searchQuery = '' }: MobileC
     cardBills,
     updateCardBill
   } = useAppStore()
+  const { confirm } = useConfirm()
 
   // Billed cycle for the viewed month
   const cycle = useMemo(() => {
