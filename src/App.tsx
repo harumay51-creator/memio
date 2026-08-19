@@ -17,6 +17,7 @@ import { auth }     from './config/firebase'
 import { onAuthStateChanged, User, signOut, setPersistence, browserSessionPersistence } from 'firebase/auth'
 import { isMobileDevice } from './utils/isMobileDevice'
 import { ToastProvider } from './components/common/Toast'
+import { ConfirmProvider } from './components/common/ConfirmModal'
 
 // ── Inner app (needs to be inside AppStoreProvider to access useAppStore) ─────
 const AppInner: React.FC = () => {
@@ -279,11 +280,13 @@ export default function App() {
 
   return (
     <ToastProvider>
-      <AppStoreProvider uid={user.uid}>
-        <DiaryStoreProvider uid={user.uid}>
-          <AppInner />
-        </DiaryStoreProvider>
-      </AppStoreProvider>
+      <ConfirmProvider>
+        <AppStoreProvider uid={user.uid}>
+          <DiaryStoreProvider uid={user.uid}>
+            <AppInner />
+          </DiaryStoreProvider>
+        </AppStoreProvider>
+      </ConfirmProvider>
     </ToastProvider>
   )
 }

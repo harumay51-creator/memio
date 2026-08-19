@@ -7,10 +7,14 @@ import HolidaySection from './HolidaySection'
 import LoginHistorySection from './LoginHistorySection'
 import { useDiaryStore } from '../../store/DiaryStore'
 import { CATEGORY_COLORS, DEFAULT_CATEGORY_COLOR, getCategoryColor } from '../../utils/parser'
+import { useToast } from '../common/Toast'
+import { useConfirm } from '../common/ConfirmModal'
 
 type TabType = 'ledger' | 'security' | 'anniversaries' | 'monthly' | 'holidays' | 'trash' | 'usage' | 'diary' | 'loginHistory'
 
 const SettingsPage: React.FC = () => {
+  const { showToast } = useToast()
+  const { confirm } = useConfirm()
   const { 
     expenseCategories, addCategoryKeyword, removeCategoryKeyword, addCategory, updateCategory, deleteCategory,
     anniversaries, addAnniversary, deleteAnniversary,
@@ -95,7 +99,7 @@ const SettingsPage: React.FC = () => {
     const newName = editCatName.trim()
     if (!newName) return
     if (newName !== oldName && expenseCategories.some(c => c.name === newName)) {
-      alert('이미 존재하는 카테고리 이름입니다.')
+      showToast('이미 존재하는 카테고리 이름입니다.', 'warning')
       return
     }
     await updateCategory(oldName, newName, editCatColor)
@@ -480,8 +484,12 @@ const SettingsPage: React.FC = () => {
                               수정
                             </button>
                             <button
-                              onClick={() => {
-                                if (confirm(`정말 '${cat.name}' 카테고리를 삭제하시겠어요?\n이미 저장된 거래는 유지되지만, 앞으로 이 카테고리는 선택할 수 없습니다.`)) {
+                              onClick={async () => {
+                                if (await confirm({
+                                  message: `정말 '${cat.name}' 카테고리를 삭제하시겠어요?\n이미 저장된 거래는 유지되지만, 앞으로 이 카테고리는 선택할 수 없습니다.`,
+                                  variant: 'danger',
+                                  confirmText: '삭제'
+                                })) {
                                   deleteCategory(cat.name)
                                 }
                               }}
@@ -598,8 +606,12 @@ const SettingsPage: React.FC = () => {
                     (메모, 할 일, 일정, 개인 기록은 유지됩니다.)
                   </p>
                   <button
-                    onClick={() => {
-                      if (window.confirm('정말로 가계부 데이터를 초기화하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
+                    onClick={async () => {
+                      if (await confirm({
+                        message: '정말로 가계부 데이터를 초기화하시겠습니까? 이 작업은 되돌릴 수 없습니다.',
+                        variant: 'danger',
+                        confirmText: '초기화'
+                      })) {
                         resetLedgerData();
                       }
                     }}

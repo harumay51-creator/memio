@@ -6,6 +6,7 @@ import MobileLedgerInputSheet from './MobileLedgerInputSheet'
 import { MessageSquare } from 'lucide-react'
 import type { LedgerEntry } from '../../types'
 import { extractSearchText } from '../../utils/textUtils'
+import { useConfirm } from '../common/ConfirmModal'
 
 interface MobileCashTabProps {
   year: number
@@ -28,8 +29,9 @@ export default function MobileCashTab({ year, month, searchQuery = '' }: MobileC
     salaryRecords,
     updateSalaryRecord,
     deleteLedgerEntry,
-    cardBills
+    cardBills, updateCardBill
   } = useAppStore()
+  const { confirm } = useConfirm()
 
   const [editingRowId, setEditingRowId] = useState<string | null>(null)
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
@@ -280,9 +282,9 @@ export default function MobileCashTab({ year, month, searchQuery = '' }: MobileC
                         {fmtAmt(item.amount)}원
                       </span>
                       <button 
-                        onClick={(e) => {
+                        onClick={async (e) => {
                           e.stopPropagation()
-                          if (confirm('삭제하시겠습니까?')) deleteLedgerEntry(item.id)
+                          if (await confirm({ message: '삭제하시겠습니까?', variant: 'danger', confirmText: '삭제' })) deleteLedgerEntry(item.id)
                         }}
                         className="p-1 -mr-2 text-yuri-300 hover:text-red-500"
                       >

@@ -4,6 +4,7 @@ import MiniCalendarPicker from './MiniCalendarPicker'
 import { classifyLedgerCategory, getCategoryColor } from '../../utils/parser'
 import { useAppStore } from '../../store/AppStore'
 import type { LedgerEntry } from '../../types'
+import { useToast } from '../common/Toast'
 
 interface MobileLedgerInputSheetProps {
   isOpen: boolean
@@ -13,6 +14,7 @@ interface MobileLedgerInputSheetProps {
 
 const MobileLedgerInputSheet: React.FC<MobileLedgerInputSheetProps> = ({ isOpen, onClose, initialEntry }) => {
   const { addLedgerEntry, updateLedgerEntry, expenseCategories } = useAppStore()
+  const { showToast } = useToast()
   
   const [date, setDate] = useState<Date>(new Date())
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false)
@@ -101,7 +103,7 @@ const MobileLedgerInputSheet: React.FC<MobileLedgerInputSheetProps> = ({ isOpen,
 
   const handleSave = () => {
     if (!amountStr || parseInt(amountStr, 10) === 0) {
-      alert('금액을 입력해주세요.')
+      showToast('금액을 입력해주세요.', 'warning')
       return
     }
     

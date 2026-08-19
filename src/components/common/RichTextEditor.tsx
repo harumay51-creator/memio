@@ -14,6 +14,7 @@ import {
   Bold, Italic, Strikethrough, Heading2, Heading3, 
   List, Minus, Smile, Link as LinkIcon, Image as ImageIcon
 } from 'lucide-react';
+import { useToast } from './Toast';
 
 const COLORS = ['#5B4FCF', '#D45D6E', '#C96A95', '#3F9E7A'];
 
@@ -28,6 +29,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ initialContent, onChang
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const emojiRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { showToast } = useToast();
   const [saveToast, setSaveToast] = useState(false);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -80,7 +82,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ initialContent, onChang
     const htmlContent = editor?.getHTML() || '';
     const imgCount = (htmlContent.match(/<img/g) || []).length;
     if (imgCount >= 5) {
-      alert('이미지는 메모당 최대 5장까지 첨부할 수 있어요');
+      showToast('이미지는 메모당 최대 5장까지 첨부할 수 있어요', 'warning');
       if (fileInputRef.current) fileInputRef.current.value = '';
       return;
     }
@@ -185,7 +187,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ initialContent, onChang
               const htmlContent = editor?.getHTML() || '';
               const imgCount = (htmlContent.match(/<img/g) || []).length;
               if (imgCount >= 5) {
-                alert('이미지는 메모당 최대 5장까지 첨부할 수 있어요');
+                showToast('이미지는 메모당 최대 5장까지 첨부할 수 있어요', 'warning');
                 return true;
               }
 

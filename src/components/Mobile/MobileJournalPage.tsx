@@ -10,10 +10,12 @@ import { isSearchMatch, getSearchPreview, decodeHtmlEntities } from '../../utils
 import PinScreen from '../JournalPage/PinScreen'
 import { Virtuoso } from 'react-virtuoso'
 import type { Note } from '../../types'
+import { useConfirm } from '../common/ConfirmModal'
 
 export default function MobileJournalPage() {
   const { journals, addJournal, updateJournal, deleteJournal, isLoading, loadJournalContent } = useJournalStore()
   const { isPrivateUnlocked, lockPrivate } = useAppStore()
+  const { confirm } = useConfirm()
   
   const [selNoteId, setSelNoteId] = useState<string | null>(null)
   const [loadedContents, setLoadedContents] = useState<Record<string, string>>({})
@@ -48,9 +50,9 @@ export default function MobileJournalPage() {
     }
   }, [selectedNote?.id, selectedNote?.hasContentDoc, selectedNote?.isFullyLoaded, loadJournalContent, loadedContents])
 
-  const handleDelete = (id: string, e?: React.MouseEvent) => {
+  const handleDelete = async (id: string, e?: React.MouseEvent) => {
     if (e) e.stopPropagation()
-    if (confirm('정말 삭제하시겠습니까?')) {
+    if (await confirm({ message: '정말 삭제하시겠습니까?', variant: 'danger', confirmText: '삭제' })) {
       deleteJournal(id)
       if (selNoteId === id) {
         if (window.history.state?.modal === 'journalEditor') window.history.back()

@@ -1,8 +1,10 @@
 import React from 'react'
 import { useAppStore } from '../../store/AppStore'
+import { useConfirm } from '../common/ConfirmModal'
 
 const TrashSection: React.FC = () => {
   const { trashedItems, restoreItem, hardDeleteItem } = useAppStore()
+  const { confirm } = useConfirm()
 
   const getTypeStyle = (type: string) => {
     switch (type) {
@@ -19,8 +21,8 @@ const TrashSection: React.FC = () => {
     }
   }
 
-  const handleHardDelete = (type: 'note'|'task'|'ledger'|'fixedExpense', id: string) => {
-    if (window.confirm('정말 영구 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
+  const handleHardDelete = async (type: 'note'|'task'|'ledger'|'fixedExpense', id: string) => {
+    if (await confirm({ message: '정말 영구 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.', variant: 'danger', confirmText: '영구 삭제' })) {
       hardDeleteItem(type, id)
     }
   }

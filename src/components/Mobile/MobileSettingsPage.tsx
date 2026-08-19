@@ -3,6 +3,8 @@ import type { PageId } from '../../types'
 import { Lock, LogOut, Settings, History, Key } from 'lucide-react'
 import { useAppStore } from '../../store/AppStore'
 import MobileAppPinScreen from './MobileAppPinScreen'
+import { useToast } from '../common/Toast'
+import { useConfirm } from '../common/ConfirmModal'
 
 interface MobileSettingsPageProps {
   onNavigate: (page: PageId) => void
@@ -11,6 +13,8 @@ interface MobileSettingsPageProps {
 
 export default function MobileSettingsPage({ onNavigate, onLogout }: MobileSettingsPageProps) {
   const { hasAppPin, setAppPin, removeAppPin, unlockApp } = useAppStore()
+  const { showToast } = useToast()
+  const { confirm } = useConfirm()
   
   const [pinMode, setPinMode] = useState<'none' | 'setup' | 'verify_for_change' | 'verify_for_remove' | 'change_new'>('none')
   const [pinError, setPinError] = useState('')
@@ -18,7 +22,7 @@ export default function MobileSettingsPage({ onNavigate, onLogout }: MobileSetti
   const handlePinAction = async (pin: string) => {
     if (pinMode === 'setup' || pinMode === 'change_new') {
       await setAppPin(pin)
-      alert('PIN이 설정되었습니다.')
+      showToast('PIN이 설정되었습니다.', 'success')
       setPinMode('none')
     } else if (pinMode === 'verify_for_change') {
       const isValid = await unlockApp(pin)
@@ -33,7 +37,7 @@ export default function MobileSettingsPage({ onNavigate, onLogout }: MobileSetti
       const isValid = await unlockApp(pin)
       if (isValid) {
         await removeAppPin()
-        alert('PIN 잠금이 해제되었습니다.')
+        showToast('PIN 잠금이 해제되었습니다.', 'success')
         setPinMode('none')
         setPinError('')
       } else {
@@ -152,8 +156,8 @@ export default function MobileSettingsPage({ onNavigate, onLogout }: MobileSetti
           {/* 로그아웃 (선택) */}
           {onLogout && (
             <button
-              onClick={() => {
-                if (confirm('로그아웃 하시겠습니까?')) {
+              onClick={async () => {
+                if (await confirm({ message: '로그아웃 하시겠습니까?', confirmText: '로그아웃' })) {
                   onLogout()
                 }
               }}

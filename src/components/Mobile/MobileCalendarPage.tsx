@@ -6,6 +6,7 @@ import { useDiaryStore } from '../../store/DiaryStore'
 import { type ScheduleEvent } from '../../types'
 import { useMergedHolidays } from '../../hooks/useMergedHolidays'
 import { calculateHolidays } from '../../utils/holidays'
+import { useConfirm } from '../common/ConfirmModal'
 
 const EVENT_COLORS = ['#8B7CF8', '#EF6A7B', '#63D2B0', '#F4B73F']
 
@@ -16,6 +17,7 @@ import Emoji from '../common/Emoji'
 const MobileCalendarPage: React.FC = () => {
   const { events, addEvent, updateEvent, deleteEvent, anniversaries, monthlyEvents, recurringInstances, deleteRecurringOccurrence } = useAppStore()
   const { isDiaryMode, setIsDiaryMode, diaries } = useDiaryStore()
+  const { confirm } = useConfirm()
   
   const [currentDate, setCurrentDate] = useState(new Date())
   const [currentDiaryDate, setCurrentDiaryDate] = useState(new Date())
@@ -698,9 +700,9 @@ const MobileCalendarPage: React.FC = () => {
                   )}
                 </div>
                 <button
-                  onClick={(e) => {
+                  onClick={async (e) => {
                     e.stopPropagation()
-                    if (confirm('일정을 삭제하시겠습니까?')) deleteEvent(ev.id)
+                    if (await confirm({ message: '일정을 삭제하시겠습니까?', variant: 'danger', confirmText: '삭제' })) deleteEvent(ev.id)
                   }}
                   className="p-2 -mr-2 text-yuri-300 hover:text-red-500 transition-colors shrink-0"
                 >

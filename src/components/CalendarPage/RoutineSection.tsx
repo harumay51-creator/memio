@@ -4,6 +4,7 @@ import { RoutineGroupUI } from './RoutineGroupUI'
 import { Plus, Settings } from 'lucide-react'
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core'
 import { SortableContext, arrayMove, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable'
+import { useConfirm } from '../common/ConfirmModal'
 
 interface Props {
   dateKey: string
@@ -11,6 +12,7 @@ interface Props {
 
 export const RoutineSection: React.FC<Props> = ({ dateKey }) => {
   const { settings, diaries, saveRoutineGroups, saveRoutineItemState } = useDiaryStore()
+  const { confirm } = useConfirm()
   
   const groups = settings.routineGroups || []
   const routineStates = diaries[dateKey]?.routineStates || {}
@@ -86,8 +88,8 @@ export const RoutineSection: React.FC<Props> = ({ dateKey }) => {
     saveRoutineGroups(newGroups)
   }
 
-  const handleDeleteGroup = (groupId: string) => {
-    if (window.confirm('그룹과 모든 항목이 삭제됩니다. 계속하시겠습니까?')) {
+  const handleDeleteGroup = async (groupId: string) => {
+    if (await confirm({ message: '그룹과 모든 항목이 삭제됩니다. 계속하시겠습니까?', variant: 'danger', confirmText: '삭제' })) {
       const newGroups = groups.filter(g => g.id !== groupId)
       saveRoutineGroups(newGroups)
     }

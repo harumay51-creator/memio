@@ -24,6 +24,7 @@ interface MobileAppProps {
 
 const MobileApp: React.FC<MobileAppProps> = ({ activePage, onNavigate, onLogout }) => {
   const { hasAppPin, isAppUnlocked, unlockApp, setAppPin } = useAppStore()
+  const { confirm } = useConfirm()
   
   const uid = auth.currentUser?.uid || ''
   const skipSetupKey = `skipAppPinSetup_${uid}`
@@ -37,7 +38,7 @@ const MobileApp: React.FC<MobileAppProps> = ({ activePage, onNavigate, onLogout 
   }, [hasAppPin])
 
   const handleForgotPin = async () => {
-    if (window.confirm("PIN을 분실하여 로그아웃합니다.\n이메일과 비밀번호로 다시 로그인하시면 PIN을 새로 설정할 수 있습니다.")) {
+    if (await confirm({ message: "PIN을 분실하여 로그아웃합니다.\n이메일과 비밀번호로 다시 로그인하시면 PIN을 새로 설정할 수 있습니다.", variant: 'danger', confirmText: '로그아웃' })) {
       await auth.signOut()
       onLogout()
     }

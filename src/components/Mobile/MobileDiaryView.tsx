@@ -3,6 +3,7 @@ import { format } from 'date-fns'
 import { ko } from 'date-fns/locale'
 import { useDiaryStore, DiaryMemo } from '../../store/DiaryStore'
 import Emoji from '../common/Emoji'
+import { useConfirm } from '../common/ConfirmModal'
 
 const DiaryTextEditor = lazy(() => import('../common/DiaryTextEditor'))
 
@@ -182,7 +183,7 @@ const TagPicker = ({ selectedTags, onToggleTag, onClose }: { selectedTags: strin
   )
 }
 
-const MemoItem = ({ memo, deleteMemo, updateMemo }: { memo: DiaryMemo, deleteMemo: (id: string) => void, updateMemo: (id: string, text: string, tags?: string[]) => void }) => {
+const MemoItem = ({ memo, deleteMemo, updateMemo }: { memo: DiaryMemo, deleteMemo: (id: string) => Promise<void>, updateMemo: (id: string, text: string, tags?: string[]) => void }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [localText, setLocalText] = useState(memo.text);
   const [localTags, setLocalTags] = useState<string[]>(memo.tags || []);
@@ -319,9 +320,9 @@ const MemoItem = ({ memo, deleteMemo, updateMemo }: { memo: DiaryMemo, deleteMem
           <div className="text-[14px] leading-relaxed font-diary flex-1 prose-p:my-0 prose-p:leading-relaxed" dangerouslySetInnerHTML={{ __html: memo.text }} />
         </div>
         <button 
-          onClick={(e) => {
+          onClick={async (e) => {
             e.stopPropagation();
-            deleteMemo(memo.id);
+            await deleteMemo(memo.id);
           }}
           className="w-6 h-6 flex items-center justify-center rounded text-[#A0AABF] hover:bg-[#F5F5F7] hover:text-[#EF6A7B] opacity-30 group-hover:opacity-100 transition-all text-[11px] shrink-0"
         >
@@ -354,6 +355,7 @@ export const MobileDiaryView = ({ selectedDate, onClose }: { selectedDate: Date,
     saveDayDiaryEmojis, saveDayDiaryAnswer, deleteDayDiaryAnswer,
     addDayDiaryMemo, updateDayDiaryMemo, deleteDayDiaryMemo 
   } = useDiaryStore()
+  const { confirm } = useConfirm()
   
   const dateStr = format(selectedDate, 'yyyy-MM-dd')
   const dayDiary = diaries[dateStr] || {}
@@ -400,8 +402,8 @@ export const MobileDiaryView = ({ selectedDate, onClose }: { selectedDate: Date,
     updateDayDiaryMemo(dateStr, id, text, tags)
   }
 
-  const deleteMemo = (id: string) => {
-    if (!confirm('메모를 삭제하시겠습니까?')) return
+  const deleteMemo = async (id: string) => {
+    if (!await confirm({ message: '메모를 삭제하시겠습니까?', variant: 'danger', confirmText: '삭제' })) return
     deleteDayDiaryMemo(dateStr, id)
   }
 

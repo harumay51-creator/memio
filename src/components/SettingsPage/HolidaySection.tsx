@@ -1,9 +1,11 @@
 import React, { useState } from 'react'
 import { useAppStore } from '../../store/AppStore'
 import { useMergedHolidays } from '../../hooks/useMergedHolidays'
+import { useConfirm } from '../common/ConfirmModal'
 
 const HolidaySection: React.FC = () => {
   const { updateHolidayConfig } = useAppStore()
+  const { confirm } = useConfirm()
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear())
   
   // Custom Holiday Form
@@ -35,24 +37,24 @@ const HolidaySection: React.FC = () => {
     setIsRedDay(true)
   }
 
-  const handleDeleteCustom = (id: string) => {
-    if (!confirm('직접 추가한 공휴일을 삭제하시겠습니까?')) return
+  const handleDeleteCustom = async (id: string) => {
+    if (!await confirm({ message: '직접 추가한 공휴일을 삭제하시겠습니까?', variant: 'danger', confirmText: '삭제' })) return
     updateHolidayConfig(prev => ({
       ...prev,
       customHolidays: prev.customHolidays.filter(c => c.id !== id)
     }))
   }
 
-  const handleHideRule = (ruleName: string) => {
-    if (!confirm(`'${ruleName}' 공휴일을 앞으로 영구히 표시하지 않겠습니까?`)) return
+  const handleHideRule = async (ruleName: string) => {
+    if (!await confirm({ message: `'${ruleName}' 공휴일을 앞으로 영구히 표시하지 않겠습니까?`, variant: 'danger', confirmText: '숨김' })) return
     updateHolidayConfig(prev => ({
       ...prev,
       hiddenRules: [...prev.hiddenRules, ruleName]
     }))
   }
 
-  const handleHideDate = (date: string, name: string) => {
-    if (!confirm(`${selectedYear}년의 '${name}' 공휴일을 삭제하시겠습니까?`)) return
+  const handleHideDate = async (date: string, name: string) => {
+    if (!await confirm({ message: `${selectedYear}년의 '${name}' 공휴일을 삭제하시겠습니까?`, variant: 'danger', confirmText: '삭제' })) return
     updateHolidayConfig(prev => ({
       ...prev,
       hiddenDates: [...prev.hiddenDates, date]

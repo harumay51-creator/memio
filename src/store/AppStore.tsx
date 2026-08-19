@@ -130,6 +130,7 @@ const StoreCtx = createContext<StoreValue | null>(null)
 
 // ── Provider ──────────────────────────────────────────────────────────────────
 export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string }> = ({ children, uid }) => {
+  const { showToast } = useToast()
   const [isSettingsLoading, setIsSettingsLoading] = useState(true)
   const [isLoading, setIsLoading] = useState(true)
   const [loadError, setLoadError] = useState<string | null>(null)
@@ -1402,12 +1403,12 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
       setCardBillingEndDay(27);
       setPaydayState(25);
       
-      alert('가계부 데이터가 성공적으로 초기화되었습니다.');
-    } catch (e) {
+      showToast('가계부 데이터가 초기화되었습니다.', 'success');
+    } catch (e: any) {
       console.error(e);
-      alert('데이터 초기화 실패: ' + e);
+      showToast('데이터 초기화 실패: ' + e.message, 'error');
     }
-  }, [uid]);
+  }, [uid, showToast]);
 
   return (
     <StoreCtx.Provider value={{
