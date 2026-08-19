@@ -47,15 +47,16 @@ export const ConfirmProvider: React.FC<{ children: ReactNode }> = ({ children })
   }, [])
 
   const handleClose = useCallback((result: boolean) => {
+    if (isClosing) return;
+    if (modalState?.resolve) {
+      modalState.resolve(result)
+    }
     setIsClosing(true)
     setTimeout(() => {
-      if (modalState?.resolve) {
-        modalState.resolve(result)
-      }
       setModalState(null)
       setIsClosing(false)
     }, 150)
-  }, [modalState])
+  }, [modalState, isClosing])
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -76,7 +77,8 @@ export const ConfirmProvider: React.FC<{ children: ReactNode }> = ({ children })
           onClick={() => handleClose(false)}
         >
           <div 
-            className={`bg-white rounded-2xl w-full max-w-[320px] shadow-2xl overflow-hidden flex flex-col transition-all duration-150 ${isClosing ? 'opacity-0 scale-[0.98]' : 'opacity-100 scale-100'}`}
+            className={`bg-white rounded-2xl w-full max-w-[320px] shadow-2xl overflow-hidden flex flex-col duration-150 ${isClosing ? 'opacity-0 scale-[0.98]' : 'opacity-100 scale-100'}`}
+            style={{ transitionProperty: 'opacity, transform' }}
             onClick={e => e.stopPropagation()}
           >
             <div className="p-6 pb-5">
