@@ -175,7 +175,7 @@ export default function MobileJournalPage() {
       <div className="flex-1 overflow-hidden">
         {filteredNotes.length === 0 ? (
           <div className="flex flex-col h-full items-center justify-center text-yuri-400">
-            <EmptyState message={searchQuery ? '검색 결과가 없습니다.' : '첫 번째 기록을 작성해보세요.'} />
+            <EmptyState message={searchQuery ? '검색 결과가 없습니다.' : '작성된 기록이 없습니다.'} />
           </div>
         ) : (
           <Virtuoso
