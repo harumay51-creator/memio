@@ -9,6 +9,7 @@ import { isSearchMatch, decodeHtmlEntities } from '../../utils/textUtils'
 import type { Task } from '../../types'
 import { Virtuoso } from 'react-virtuoso'
 import { SortableItem } from '../common/SortableItem'
+import { useToast } from '../common/Toast'
 import {
   DndContext,
   closestCenter,
@@ -28,8 +29,8 @@ import {
 
 const TasksPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId }) => {
   const { tasks, addTask, toggleTask, updateTaskNote, updateTaskText, deleteTask, updateItemOrders } = useAppStore()
+  const { showToast } = useToast()
   const [selTaskId, setSelTaskId] = useState<string | null>(activeItemId || null)
-  const [toastMsg, setToastMsg] = useState('')
 
   // Auto-select when activeItemId changes
   useEffect(() => {
@@ -72,11 +73,6 @@ const TasksPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId })
 
   const selectedTask = useMemo(() => tasks.find(t => t.id === selTaskId) || null, [tasks, selTaskId])
 
-  const showToast = (msg: string) => {
-    setToastMsg(msg)
-    setTimeout(() => setToastMsg(''), 2000)
-  }
-
   const submitNewTask = () => {
     if (inputText.trim()) {
       addTask(inputText.trim())
@@ -92,7 +88,7 @@ const TasksPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId })
     if (e) e.stopPropagation()
     deleteTask(id)
     if (selTaskId === id) setSelTaskId(null)
-    showToast('삭제되었습니다')
+    showToast('삭제되었습니다', 'success')
   }
 
   const sensors = useSensors(
@@ -308,13 +304,6 @@ const TasksPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId })
           </div>
         )}
       </main>
-
-      {/* Toast Notification */}
-      {toastMsg && (
-        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-gray-800 text-white px-4 py-2 rounded-lg text-sm shadow-lg z-50 animate-in fade-in slide-in-from-bottom-2">
-          {toastMsg}
-        </div>
-      )}
     </div>
   )
 }

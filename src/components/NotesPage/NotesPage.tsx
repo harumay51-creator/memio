@@ -7,15 +7,16 @@ import { EmptyState } from '../common/EmptyState'
 import { LoadingState } from '../common/LoadingState'
 import { DebouncedInput } from '../common/DebouncedInput'
 import { Virtuoso } from 'react-virtuoso'
+import { useToast } from '../common/Toast'
 
 const NotesPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId }) => {
   const { notes, addNote, updateNote, deleteNote, loadNoteContent } = useAppStore()
+  const { showToast } = useToast()
   const [selNoteId, setSelNoteId] = useState<string | null>(activeItemId || null)
   const [loadedContents, setLoadedContents] = useState<Record<string, string>>({})
   const [isContentLoading, setIsContentLoading] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [inputText, setInputText] = useState('')
-  const [toastMsg, setToastMsg] = useState('')
 
   // Auto-select when activeItemId changes
   useEffect(() => {
@@ -39,16 +40,11 @@ const NotesPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId })
     }
   }, [selectedNote?.id, selectedNote?.hasContentDoc, loadNoteContent, loadedContents])
 
-  const showToast = (msg: string) => {
-    setToastMsg(msg)
-    setTimeout(() => setToastMsg(''), 2000)
-  }
-
   const handleDelete = (id: string, e?: React.MouseEvent) => {
     if (e) e.stopPropagation()
     deleteNote(id)
     if (selNoteId === id) setSelNoteId(null)
-    showToast('삭제되었습니다')
+    showToast('삭제되었습니다', 'success')
   }
 
   const handleAdd = async (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -257,13 +253,6 @@ const NotesPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId })
           </div>
         )}
       </main>
-
-      {/* Toast Notification */}
-      {toastMsg && (
-        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-gray-800 text-white px-4 py-2 rounded-lg text-sm shadow-lg z-50 animate-in fade-in slide-in-from-bottom-2">
-          {toastMsg}
-        </div>
-      )}
     </div>
   )
 }
