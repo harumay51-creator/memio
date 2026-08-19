@@ -28,7 +28,8 @@ export default function MobileCashTab({ year, month, searchQuery = '' }: MobileC
     cardBillingEndDay,
     salaryRecords,
     updateSalaryRecord,
-    deleteLedgerEntry
+    deleteLedgerEntry,
+    cardBills
   } = useAppStore()
   const { confirm } = useConfirm()
 
