@@ -100,7 +100,7 @@ const AuthScreen: React.FC = () => {
       } else if (err.code === 'auth/invalid-email') {
         setError('유효하지 않은 이메일 형식입니다.')
       } else {
-        setError(err.message || '인증 중 오류가 발생했습니다.')
+        setError('인증 중 오류가 발생했습니다. 다시 시도해주세요.')
       }
     } finally {
       setLoading(false)

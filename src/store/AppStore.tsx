@@ -1424,7 +1424,7 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
       showToast('가계부 데이터가 초기화되었습니다.', 'success');
     } catch (e: any) {
       console.error(e);
-      showToast('데이터 초기화 실패: ' + e.message, 'error');
+      showToast('데이터 초기화에 실패했습니다.', 'error');
     }
   }, [uid, showToast]);
 

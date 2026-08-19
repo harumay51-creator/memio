@@ -93,7 +93,7 @@ const MobileAppPinScreen: React.FC<MobileAppPinScreenProps> = ({ mode, onComplet
         </h1>
         <p className="text-sm text-yuri-500 mb-10 text-center h-10 flex items-center justify-center">
           {displayError ? (
-            <span className="text-red-500 font-bold">{displayError}</span>
+            <span className="text-xs text-red-500 font-medium">{displayError}</span>
           ) : mode === 'setup' ? (
             step === 'input' 
               ? '빠른 잠금 해제를 위한 4자리 PIN을 설정하시겠습니까?' 

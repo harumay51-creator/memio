@@ -187,7 +187,7 @@ const PinScreen: React.FC = () => {
         )}
 
         <div className="h-4 mt-4 text-center">
-          {error && <span className="text-xs text-red-500">{error}</span>}
+          {error && <span className="text-xs text-red-500 font-medium">{error}</span>}
         </div>
       </div>
 
