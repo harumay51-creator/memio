@@ -589,7 +589,7 @@ const MobileCalendarPage: React.FC = () => {
           </h3>
 
         {selectedDate && selectedDayEvents.length === 0 && selectedAnnivs.length === 0 && selectedMonthly.length === 0 && (
-          <EmptyState message="일정이 없습니다." />
+          <EmptyState type="compact" message="일정이 없습니다." />
         )}
 
         <div className="flex flex-col gap-2 pb-24">

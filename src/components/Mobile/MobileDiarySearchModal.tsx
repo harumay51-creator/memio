@@ -80,36 +80,36 @@ export const MobileDiarySearchModal: React.FC<MobileDiarySearchModalProps> = ({ 
 
       {/* Results */}
       <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3 bg-[#F9FAFB]">
-        {query.trim() && results.length === 0 && (
-          <EmptyState message="검색 결과가 없습니다." />
+        {query.trim() && results.length === 0 ? (
+          <EmptyState type="compact" message="검색 결과가 없습니다." />
+        ) : (
+          results.map(res => {
+            const m = res.dateObj.getMonth() + 1
+            const d = res.dateObj.getDate()
+            const wd = WEEKDAYS[res.dateObj.getDay()]
+            
+            return (
+              <button
+                key={res.dateKey}
+                onClick={() => onResultClick(res.dateObj)}
+                className="text-left bg-white p-3 rounded-xl border border-[#E5E5EA] shadow-sm hover:border-[#8B7CF8] transition-colors group"
+              >
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-xs font-bold text-[#8B7CF8]">
+                    {res.dateObj.getFullYear()}년 {m}월 {d}일 ({wd})
+                  </span>
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  {res.snippets.map((snippet, idx) => (
+                    <div key={idx} className="text-sm text-[#3D3833] line-clamp-2 leading-relaxed">
+                      <HighlightText text={getPreview(snippet, query)} highlight={query} />
+                    </div>
+                  ))}
+                </div>
+              </button>
+            )
+          })
         )}
-        
-        {results.map(res => {
-          const m = res.dateObj.getMonth() + 1
-          const d = res.dateObj.getDate()
-          const wd = WEEKDAYS[res.dateObj.getDay()]
-          
-          return (
-            <button
-              key={res.dateKey}
-              onClick={() => onResultClick(res.dateObj)}
-              className="text-left bg-white p-3 rounded-xl border border-[#E5E5EA] shadow-sm hover:border-[#8B7CF8] transition-colors group"
-            >
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-xs font-bold text-[#8B7CF8]">
-                  {res.dateObj.getFullYear()}년 {m}월 {d}일 ({wd})
-                </span>
-              </div>
-              <div className="flex flex-col gap-1.5">
-                {res.snippets.map((snippet, idx) => (
-                  <div key={idx} className="text-sm text-[#3D3833] line-clamp-2 leading-relaxed">
-                    <HighlightText text={getPreview(snippet, query)} highlight={query} />
-                  </div>
-                ))}
-              </div>
-            </button>
-          )
-        })}
       </div>
     </div>
   )
