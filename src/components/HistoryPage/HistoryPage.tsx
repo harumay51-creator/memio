@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react'
 import { useAppStore } from '../../store/AppStore'
+import { EmptyState } from '../common/EmptyState'
 
 type HistoryItem = {
   id: string
@@ -108,7 +109,7 @@ const HistoryPage: React.FC = () => {
 
         <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-1">
           {monthGroups.length === 0 ? (
-            <p className="text-sm text-yuri-400 p-4 text-center">기록이 없습니다.</p>
+            <EmptyState message="기록이 없습니다." />
           ) : (
             monthGroups.map(([key, group]) => {
               const isSelected = selMonthKey === key
@@ -140,8 +141,7 @@ const HistoryPage: React.FC = () => {
         <div className="max-w-3xl w-full mx-auto p-10 pb-32">
           {dayGroups.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-64 text-yuri-400">
-              <span className="text-3xl mb-4">📭</span>
-              <p>이 달에는 남겨진 기록이 없습니다.</p>
+              <EmptyState message="이번 달 기록이 없습니다." />
             </div>
           ) : (
             <div className="flex flex-col gap-12">

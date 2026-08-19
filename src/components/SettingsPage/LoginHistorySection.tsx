@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { auth, db } from '../../config/firebase'
 import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore'
+import { EmptyState } from '../common/EmptyState'
 
 interface LoginHistoryItem {
   id: string
@@ -57,9 +58,7 @@ const LoginHistorySection: React.FC = () => {
                   <div className="w-8 h-8 border-4 border-[#F0F0F2] border-t-accent rounded-full animate-spin"></div>
                 </div>
               ) : history.length === 0 ? (
-                <div className="py-12 text-center text-[#A0AABF]">
-                  접속 기록이 없습니다.
-                </div>
+                <EmptyState type="compact" message="접속 기록이 없습니다." />
               ) : (
                 <div className="space-y-4">
                   {history.map(item => (

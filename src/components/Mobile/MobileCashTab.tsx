@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { useAppStore } from '../../store/AppStore'
 import { calculatePaydayCycle } from '../../utils/ledgerCycle'
 import { getCategoryColor } from '../../utils/parser'
+import { EmptyState } from '../common/EmptyState'
 import MobileLedgerInputSheet from './MobileLedgerInputSheet'
 import { MessageSquare } from 'lucide-react'
 import type { LedgerEntry } from '../../types'
@@ -245,10 +246,7 @@ export default function MobileCashTab({ year, month, searchQuery = '' }: MobileC
 
         <div>
           {displayList.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 gap-3 text-yuri-300">
-              <span className="text-4xl opacity-50">📝</span>
-              <p className="text-sm font-bold text-yuri-400">지출 내역이 없습니다.</p>
-            </div>
+            <EmptyState message="지출 내역이 없습니다." />
           ) : (
             <div className="flex flex-col">
               {displayList.map(item => {
@@ -339,7 +337,7 @@ export default function MobileCashTab({ year, month, searchQuery = '' }: MobileC
               )
             })}
             {consumptionCats.length === 0 && (
-              <span className="text-[11px] font-bold text-yuri-400">소비 내역이 없습니다.</span>
+              <EmptyState type="compact" message="소비 내역이 없습니다." />
             )}
           </div>
         </div>

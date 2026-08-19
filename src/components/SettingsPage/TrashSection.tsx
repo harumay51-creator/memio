@@ -1,6 +1,7 @@
 import React from 'react'
 import { useAppStore } from '../../store/AppStore'
 import { useConfirm } from '../common/ConfirmModal'
+import { EmptyState } from '../common/EmptyState'
 
 const TrashSection: React.FC = () => {
   const { trashedItems, restoreItem, hardDeleteItem } = useAppStore()
@@ -48,9 +49,7 @@ const TrashSection: React.FC = () => {
       
       <div className="p-0">
         {trashedItems.length === 0 ? (
-          <div className="p-8 text-center text-yuri-400 text-sm font-medium">
-            휴지통이 비어 있습니다.
-          </div>
+          <EmptyState message="삭제된 항목이 없습니다." />
         ) : (
           <ul className="divide-y divide-yuri-100 max-h-[400px] overflow-y-auto">
             {trashedItems.map(item => {

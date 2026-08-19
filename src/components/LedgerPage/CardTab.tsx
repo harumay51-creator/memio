@@ -3,6 +3,7 @@ import { useAppStore } from '../../store/AppStore'
 import { calculatePaydayCycle } from '../../utils/ledgerCycle'
 import { MessageSquare } from 'lucide-react'
 import { getCategoryColor } from '../../utils/parser'
+import { EmptyState } from '../common/EmptyState'
 import { EditRow } from './EditRow'
 
 export default function CardTab({ year, month }: { year: number, month: number }) {
@@ -353,8 +354,8 @@ export default function CardTab({ year, month }: { year: number, month: number }
           {/* Entries List */}
           <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden flex flex-col min-h-[300px]">
             {sortedListEntries.length === 0 ? (
-              <div className="flex flex-col items-center justify-center flex-1 py-12">
-                <p className="text-gray-400 font-bold">이 기간에 등록된 카드 지출이 없습니다.</p>
+              <div className="flex-1 py-12">
+                <EmptyState message="이 기간에 등록된 카드 지출이 없습니다." />
               </div>
             ) : (
               <div className="flex flex-col">

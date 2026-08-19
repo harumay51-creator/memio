@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react'
 import { useAppStore } from '../../store/AppStore'
 import { Trash2 } from 'lucide-react'
 import RichTextEditor from '../common/RichTextEditor'
+import { EmptyState } from '../common/EmptyState'
 import { HighlightText } from '../common/HighlightText'
 import { DebouncedInput } from '../common/DebouncedInput'
 import { isSearchMatch, decodeHtmlEntities } from '../../utils/textUtils'
@@ -179,11 +180,7 @@ const TasksPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId })
                 <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
                   <div className="flex-1 overflow-y-auto flex flex-col gap-1 pr-1">
                     {pendingTasks.length === 0 ? (
-                      <div className="flex flex-col items-center justify-center h-full text-yuri-400 p-6 text-center">
-                        <p className="text-sm whitespace-pre-wrap">
-                          {searchQuery.trim() ? '검색 결과가 없습니다.' : '진행 중인 업무가 없습니다.\n위 입력창에서 바로 추가해보세요!'}
-                        </p>
-                      </div>
+                      <EmptyState message={searchQuery.trim() ? '검색 결과가 없습니다.' : '진행 중인 업무가 없습니다.'} />
                     ) : (
                       <SortableContext items={pendingTasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
                         {pendingTasks.map(t => (
@@ -231,9 +228,7 @@ const TasksPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId })
               <section className="flex-1 flex flex-col min-h-0 overflow-hidden">
                 <div className="flex-1 overflow-hidden p-1">
                   {completedTasks.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-full text-yuri-400 p-2 text-center">
-                      <p className="text-xs">{searchQuery.trim() ? '검색 결과가 없습니다.' : '완료된 업무가 없습니다.'}</p>
-                    </div>
+                    <EmptyState message={searchQuery.trim() ? '검색 결과가 없습니다.' : '완료된 업무가 없습니다.'} />
                   ) : (
                     <Virtuoso
                       data={completedTasks}

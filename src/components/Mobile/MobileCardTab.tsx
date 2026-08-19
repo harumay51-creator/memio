@@ -3,6 +3,7 @@ import { useAppStore } from '../../store/AppStore'
 import { calculatePaydayCycle } from '../../utils/ledgerCycle'
 import { getCategoryColor } from '../../utils/parser'
 import MobileLedgerInputSheet from './MobileLedgerInputSheet'
+import { EmptyState } from '../common/EmptyState'
 import { MessageSquare } from 'lucide-react'
 import type { LedgerEntry } from '../../types'
 import { extractSearchText } from '../../utils/textUtils'
@@ -335,9 +336,7 @@ export default function MobileCardTab({ year, month, searchQuery = '' }: MobileC
         {/* List */}
         <div className="bg-white rounded-2xl shadow-sm border border-yuri-100 overflow-hidden divide-y divide-yuri-50 mb-6">
           {sortedListEntries.length === 0 ? (
-            <div className="py-12 text-center text-yuri-400 text-sm font-medium">
-              내역이 없습니다.
-            </div>
+            <EmptyState message="내역이 없습니다." />
           ) : (
             sortedListEntries.map(item => {
               const d = new Date(item.scheduledDate || item.createdAt)

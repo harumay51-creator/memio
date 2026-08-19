@@ -3,7 +3,8 @@ import type { FixedExpense, CategoryConfig } from '../../types'
 import { useAppStore } from '../../store/AppStore'
 import { classifyLedgerCategory, getCategoryColor } from '../../utils/parser'
 import PinScreen from '../JournalPage/PinScreen'
-import { Lock, X, Search } from 'lucide-react'
+import { X, Search } from 'lucide-react'
+import { EmptyState } from '../common/EmptyState'
 import MonthNavigationBar from '../common/MonthNavigationBar'
 import CardTab from './CardTab'
 import CashTab from './CashTab'
@@ -421,7 +422,7 @@ const LedgerPage: React.FC = () => {
                   </div>
                 ))}
                 {fixedExpenses.length === 0 && (
-                  <p className="text-sm text-yuri-400 text-center py-8">등록된 고정 지출이 없습니다.</p>
+                  <EmptyState message="등록된 고정 지출이 없습니다." />
                 )}
               </div>
             </div>

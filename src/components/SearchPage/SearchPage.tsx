@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect, useRef } from 'react'
 import { useAppStore } from '../../store/AppStore'
 import RichTextEditor from '../common/RichTextEditor'
 import { HighlightText } from '../common/HighlightText'
+import { EmptyState } from '../common/EmptyState'
 import { DebouncedInput } from '../common/DebouncedInput'
 import { isSearchMatch, getSearchPreview, decodeHtmlEntities } from '../../utils/textUtils'
 
@@ -152,8 +153,7 @@ const SearchPage: React.FC = () => {
             </div>
           ) : dayGroups.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-yuri-400 p-6 text-center">
-              <span className="text-3xl mb-4 opacity-80">🤔</span>
-              <p className="text-sm">'{query}'에 대한<br />검색 결과가 없습니다.</p>
+              <EmptyState message={<>'{query}'에 대한<br />검색 결과가 없습니다.</>} />
             </div>
           ) : (
             <div className="flex flex-col gap-6 pb-20">

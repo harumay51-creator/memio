@@ -9,22 +9,9 @@ import DiarySearchPanel from './DiarySearchPanel'
 import MonthNavigationBar from '../common/MonthNavigationBar'
 import { RetroWindow } from '../common/Y2KTheme'
 import { SortableItem } from '../common/SortableItem'
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  DragOverlay,
-  defaultDropAnimationSideEffects,
-} from '@dnd-kit/core';
-import {
-  arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
+import { DndContext, DragOverlay, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragStartEvent, DragEndEvent } from '@dnd-kit/core';
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { EmptyState } from '../common/EmptyState'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'] as const
@@ -794,7 +781,7 @@ const CalendarPage: React.FC = () => {
             )}
               </ul>
             ) : (
-              <p className="text-xs text-[#A0AABF] py-2 relative z-10">이 날짜의 일정이 없습니다.</p>
+              <EmptyState type="compact" message="이 날짜의 일정이 없습니다." />
             )}
           </div>
         </section>
@@ -878,7 +865,7 @@ const CalendarPage: React.FC = () => {
                   </li>
                 ))}
                 {monthAgendas.length === 0 && (
-                  <p className="text-[11px] text-[#A0AABF] py-2">등록된 이달 목표가 없습니다.</p>
+                  <EmptyState type="compact" message="이번 달 목표가 없습니다." />
                 )}
               </ul>
               

@@ -1,4 +1,6 @@
 import { useMemo, useState } from 'react'
+import { useToast } from '../common/Toast'
+import { EmptyState } from '../common/EmptyState'
 import { useAppStore } from '../../store/AppStore'
 import { calculatePaydayCycle } from '../../utils/ledgerCycle'
 import { getCategoryColor } from '../../utils/parser'
@@ -236,9 +238,8 @@ export default function CashTab({ year, month, onOpenFixedExpense }: { year: num
             </div>
 
             {displayList.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-20 gap-4 text-yuri-300">
-                <span className="text-4xl opacity-50">📝</span>
-                <p className="text-sm font-bold text-yuri-400">이번 사이클 현금 지출이 없습니다.</p>
+              <div className="py-20">
+                <EmptyState message="이번 사이클 현금 지출이 없습니다." />
               </div>
             ) : (
               <div className="flex flex-col bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
@@ -375,7 +376,7 @@ export default function CashTab({ year, month, onOpenFixedExpense }: { year: num
                 )
               })}
               {consumptionCats.length === 0 && (
-                <span className="text-[11px] font-bold text-gray-400">소비 내역이 없습니다.</span>
+                <EmptyState type="compact" message="소비 내역이 없습니다." />
               )}
             </div>
           </div>

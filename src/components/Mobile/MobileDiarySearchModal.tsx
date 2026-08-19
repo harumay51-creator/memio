@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react'
 import { useDiaryStore } from '../../store/DiaryStore'
+import { EmptyState } from '../common/EmptyState'
 import { HighlightText } from '../common/HighlightText'
 import { isSearchMatch, getSearchPreview } from '../../utils/textUtils'
 
@@ -80,9 +81,7 @@ export const MobileDiarySearchModal: React.FC<MobileDiarySearchModalProps> = ({ 
       {/* Results */}
       <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3 bg-[#F9FAFB]">
         {query.trim() && results.length === 0 && (
-          <div className="text-center py-10 text-sm text-[#717A8C]">
-            검색 결과가 없습니다.
-          </div>
+          <EmptyState message="검색 결과가 없습니다." />
         )}
         
         {results.map(res => {

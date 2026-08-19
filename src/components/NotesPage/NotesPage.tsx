@@ -3,6 +3,7 @@ import { isSearchMatch, getSearchPreview, decodeHtmlEntities } from '../../utils
 import { useAppStore } from '../../store/AppStore'
 import RichTextEditor from '../common/RichTextEditor'
 import { HighlightText } from '../common/HighlightText'
+import { EmptyState } from '../common/EmptyState'
 import { DebouncedInput } from '../common/DebouncedInput'
 import { Virtuoso } from 'react-virtuoso'
 
@@ -111,15 +112,9 @@ const NotesPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId })
 
         <div className="flex-1 overflow-hidden p-4 flex flex-col gap-2">
           {filteredNotes.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-yuri-400 p-6 text-center">
-              <p className="text-sm">
-                {notes.length === 0 ? (
-                  <>작성된 메모가 없습니다.<br />아래 입력창에서 바로 기록해보세요!</>
-                ) : (
-                  <>검색 결과가 없습니다.</>
-                )}
-              </p>
-            </div>
+            <EmptyState 
+              message={notes.length === 0 ? "작성된 메모가 없습니다." : "검색 결과가 없습니다."} 
+            />
           ) : (
             <Virtuoso
               data={filteredNotes}

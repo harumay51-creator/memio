@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect, Suspense, lazy } from 'react'
 import { useJournalStore } from '../../store/JournalStore'
 import { useAppStore } from '../../store/AppStore'
 import { HighlightText } from '../common/HighlightText'
+import { EmptyState } from '../common/EmptyState'
 import { DebouncedInput } from '../common/DebouncedInput'
 
 const RichTextEditor = lazy(() => import('../common/RichTextEditor'))
@@ -174,8 +175,7 @@ export default function MobileJournalPage() {
       <div className="flex-1 overflow-hidden">
         {filteredNotes.length === 0 ? (
           <div className="flex flex-col h-full items-center justify-center text-yuri-400">
-            <span className="text-4xl mb-4 opacity-50">📝</span>
-            <p className="text-sm font-medium">{searchQuery ? '검색 결과가 없습니다.' : '첫 번째 기록을 작성해보세요.'}</p>
+            <EmptyState message={searchQuery ? '검색 결과가 없습니다.' : '첫 번째 기록을 작성해보세요.'} />
           </div>
         ) : (
           <Virtuoso

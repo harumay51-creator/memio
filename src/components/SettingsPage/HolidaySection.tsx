@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { useAppStore } from '../../store/AppStore'
+import { EmptyState } from '../common/EmptyState'
 import { useMergedHolidays } from '../../hooks/useMergedHolidays'
 import { useConfirm } from '../common/ConfirmModal'
 
@@ -129,7 +130,7 @@ const HolidaySection: React.FC = () => {
         
         <div className="flex flex-col gap-2">
           {sortedDates.length === 0 && (
-            <p className="text-center text-sm text-yuri-400 py-4">표시할 공휴일이 없습니다.</p>
+            <EmptyState type="compact" message="등록된 공휴일이 없습니다." />
           )}
           {sortedDates.map(date => {
             const h = mergedHolidays[date]

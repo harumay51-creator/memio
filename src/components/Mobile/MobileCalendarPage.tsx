@@ -5,6 +5,8 @@ import { useAppStore } from '../../store/AppStore'
 import { useDiaryStore } from '../../store/DiaryStore'
 import { type ScheduleEvent } from '../../types'
 import { useMergedHolidays } from '../../hooks/useMergedHolidays'
+import { getCategoryColor } from '../../utils/parser'
+import { EmptyState } from '../common/EmptyState'
 import { calculateHolidays } from '../../utils/holidays'
 import { useConfirm } from '../common/ConfirmModal'
 
@@ -588,9 +590,7 @@ const MobileCalendarPage: React.FC = () => {
           </h3>
 
         {selectedDate && selectedDayEvents.length === 0 && selectedAnnivs.length === 0 && selectedMonthly.length === 0 && (
-          <div className="text-center text-yuri-400 text-sm py-8 transition-opacity duration-300">
-            일정이 없습니다.
-          </div>
+          <EmptyState message="일정이 없습니다." />
         )}
 
         <div className="flex flex-col gap-2 pb-24">

@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { useAppStore } from '../../store/AppStore'
 import { getCategoryColor } from '../../utils/parser'
 import MobileLedgerInputSheet from './MobileLedgerInputSheet'
+import { EmptyState } from '../common/EmptyState'
 import { MessageSquare, SearchX } from 'lucide-react'
 import type { LedgerEntry, FixedExpense } from '../../types'
 import { extractSearchText } from '../../utils/textUtils'
@@ -86,10 +87,8 @@ export default function MobileLedgerSearchTab({ searchQuery }: MobileLedgerSearc
 
   if (searchResults.length === 0) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center p-8 bg-yuri-50 h-full">
-        <SearchX size={48} className="text-yuri-200 mb-4" />
-        <p className="text-sm font-bold text-yuri-400">"{searchQuery}" 검색 결과가 없습니다.</p>
-        <p className="text-xs text-yuri-300 mt-1">다른 검색어로 다시 시도해보세요.</p>
+      <div className="flex-1 p-8 h-full">
+        <EmptyState message={`"${searchQuery}" 검색 결과가 없습니다.`} />
       </div>
     )
   }

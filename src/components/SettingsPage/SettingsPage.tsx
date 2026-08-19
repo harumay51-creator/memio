@@ -9,6 +9,7 @@ import { useDiaryStore } from '../../store/DiaryStore'
 import { CATEGORY_COLORS, DEFAULT_CATEGORY_COLOR, getCategoryColor } from '../../utils/parser'
 import { useToast } from '../common/Toast'
 import { useConfirm } from '../common/ConfirmModal'
+import { EmptyState } from '../common/EmptyState'
 
 type TabType = 'ledger' | 'security' | 'anniversaries' | 'monthly' | 'holidays' | 'trash' | 'usage' | 'diary' | 'loginHistory'
 
@@ -511,7 +512,7 @@ const SettingsPage: React.FC = () => {
                         <div className="p-5 flex flex-col gap-4">
                         <div className="flex flex-wrap gap-2">
                           {cat.keywords.length === 0 ? (
-                            <span className="text-xs text-yuri-400 py-1">등록된 키워드가 없습니다.</span>
+                            <EmptyState type="compact" message="등록된 키워드가 없습니다." />
                           ) : (
                             cat.keywords.map(kw => (
                               <span 
@@ -662,7 +663,7 @@ const SettingsPage: React.FC = () => {
 
                 <div className="flex flex-col gap-3">
                   {anniversaries.length === 0 ? (
-                    <div className="text-center py-8 text-yuri-400 text-sm">등록된 기념일이 없습니다.</div>
+                    <EmptyState type="compact" message="등록된 기념일이 없습니다." />
                   ) : (
                     anniversaries.map(a => (
                       <div key={a.id} className="flex items-center justify-between px-5 py-4 bg-yuri-50 border border-yuri-200 rounded-xl">
@@ -710,7 +711,7 @@ const SettingsPage: React.FC = () => {
 
                 <div className="flex flex-col gap-3">
                   {monthlyEvents.length === 0 ? (
-                    <div className="text-center py-8 text-yuri-400 text-sm">등록된 반복 일정이 없습니다.</div>
+                    <EmptyState type="compact" message="등록된 반복 일정이 없습니다." />
                   ) : (
                     monthlyEvents.map(m => (
                       <div key={m.id} className="flex items-center justify-between px-5 py-4 bg-yuri-50 border border-yuri-200 rounded-xl">
@@ -765,7 +766,7 @@ const SettingsPage: React.FC = () => {
                       </div>
                     ))}
                     {diarySettings.questions.length === 0 && (
-                      <div className="text-center py-8 text-yuri-400 text-sm">등록된 질문이 없습니다.</div>
+                      <EmptyState type="compact" message="등록된 질문이 없습니다." />
                     )}
                   </div>
                 </section>
