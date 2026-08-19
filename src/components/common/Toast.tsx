@@ -22,13 +22,26 @@ export const useToast = () => {
 
 export const ToastProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [toasts, setToasts] = useState<ToastMessage[]>([])
+  const [closingIds, setClosingIds] = useState<Set<string>>(new Set())
 
   const showToast = useCallback((message: string, type: ToastType = 'info') => {
     const id = Math.random().toString(36).substring(2, 9)
     setToasts(prev => [...prev, { id, message, type }])
     
     setTimeout(() => {
-      setToasts(prev => prev.filter(t => t.id !== id))
+      setClosingIds(prev => {
+        const next = new Set(prev)
+        next.add(id)
+        return next
+      })
+      setTimeout(() => {
+        setToasts(prev => prev.filter(t => t.id !== id))
+        setClosingIds(prev => {
+          const next = new Set(prev)
+          next.delete(id)
+          return next
+        })
+      }, 150)
     }, 3000)
   }, [])
 
@@ -41,7 +54,8 @@ export const ToastProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             key={t.id} 
             className={`
               px-4 py-2.5 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.1)] text-sm font-medium text-white
-              flex items-center gap-2 animate-fade-in pointer-events-auto transition-all
+              flex items-center gap-2 pointer-events-auto transition-opacity duration-150
+              ${closingIds.has(t.id) ? 'opacity-0' : 'animate-fade-in opacity-100'}
               ${t.type === 'success' ? 'bg-[#63D2B0]' : t.type === 'error' ? 'bg-[#EF6A7B]' : t.type === 'warning' ? 'bg-[#F4B73F]' : 'bg-[#2D334A]'}
             `}
           >

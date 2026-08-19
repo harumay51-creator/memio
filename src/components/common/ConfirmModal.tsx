@@ -26,6 +26,7 @@ export const ConfirmProvider: React.FC<{ children: ReactNode }> = ({ children })
     options: ConfirmOptions
     resolve: (value: boolean) => void
   } | null>(null)
+  const [isClosing, setIsClosing] = useState(false)
 
   const confirm = useCallback((options: ConfirmOptions | string) => {
     return new Promise<boolean>((resolve) => {
@@ -41,14 +42,19 @@ export const ConfirmProvider: React.FC<{ children: ReactNode }> = ({ children })
         },
         resolve
       })
+      setIsClosing(false)
     })
   }, [])
 
   const handleClose = useCallback((result: boolean) => {
-    if (modalState?.resolve) {
-      modalState.resolve(result)
-    }
-    setModalState(null)
+    setIsClosing(true)
+    setTimeout(() => {
+      if (modalState?.resolve) {
+        modalState.resolve(result)
+      }
+      setModalState(null)
+      setIsClosing(false)
+    }, 150)
   }, [modalState])
 
   useEffect(() => {
@@ -66,13 +72,12 @@ export const ConfirmProvider: React.FC<{ children: ReactNode }> = ({ children })
       {children}
       {modalState?.isOpen && (
         <div 
-          className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/40 transition-opacity"
+          className={`fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/40 transition-opacity duration-150 ${isClosing ? 'opacity-0' : 'opacity-100'}`}
           onClick={() => handleClose(false)}
         >
           <div 
-            className="bg-white rounded-2xl w-full max-w-[320px] shadow-2xl overflow-hidden flex flex-col transition-transform"
+            className={`bg-white rounded-2xl w-full max-w-[320px] shadow-2xl overflow-hidden flex flex-col transition-all duration-150 ${isClosing ? 'opacity-0 scale-[0.98]' : 'opacity-100 scale-100'}`}
             onClick={e => e.stopPropagation()}
-            style={{ animation: 'modalSlideUp 0.2s ease-out' }}
           >
             <div className="p-6 pb-5">
               {modalState.options.title && (

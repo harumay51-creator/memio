@@ -268,7 +268,7 @@ const TasksPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId })
               <div className="flex items-center gap-4 flex-1 min-w-0">
                 <button 
                   onClick={() => toggleTask(selectedTask.id)}
-                  className={`w-6 h-6 flex items-center justify-center rounded-md border shrink-0 transition-colors ${selectedTask.done ? 'bg-accent border-accent text-white' : 'border-yuri-300 text-transparent hover:border-accent/50 hover:bg-accent/5'}`}
+                  className={`w-6 h-6 flex items-center justify-center rounded-md border shrink-0 transition-all duration-150 active:scale-95 ${selectedTask.done ? 'bg-accent border-accent text-white' : 'border-yuri-300 text-transparent hover:border-accent/50 hover:bg-accent/5'}`}
                 >
                   ✓
                 </button>
@@ -367,7 +367,7 @@ const TaskListItem: React.FC<TaskListItemProps> = ({ task, isSelected, onSelect,
       )}
       <div 
         onClick={onToggle}
-        className={`w-5 h-5 rounded flex items-center justify-center shrink-0 mt-0.5 border transition-all ${
+        className={`w-5 h-5 rounded flex items-center justify-center shrink-0 mt-0.5 border transition-all duration-150 active:scale-95 ${
           task.done ? 'bg-yuri-400 border-yuri-400 text-white' : 'border-yuri-300 text-transparent hover:border-accent/50'
         }`}
       >
