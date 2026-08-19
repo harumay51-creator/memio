@@ -434,7 +434,7 @@ const MobileCalendarPage: React.FC = () => {
       {/* Calendar Grid */}
       <div 
         ref={gridRef}
-        className={`grid grid-cols-7 border-b border-yuri-100 pb-2 transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]`}
+        className={`grid grid-cols-7 border-b border-yuri-100 pb-2 transition-[flex,min-height] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]`}
         style={{ 
           flex: isDiaryMode || !selectedDate ? '1 1 100%' : '0 0 45%',
           minHeight: isDiaryMode || !selectedDate ? '0' : '280px',
@@ -561,7 +561,7 @@ const MobileCalendarPage: React.FC = () => {
       {!isDiaryMode && (
         <div 
           ref={scrollRef} 
-          className={`flex flex-col overflow-y-auto overscroll-none bg-yuri-50 transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] will-change-transform`}
+          className={`flex flex-col overflow-y-auto overscroll-none bg-yuri-50 transition-[flex,opacity,padding] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] will-change-transform`}
           style={{
             flex: selectedDate ? '1 1 55%' : '0 0 0%',
             opacity: selectedDate ? 1 : 0,
