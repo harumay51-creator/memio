@@ -679,13 +679,20 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
     const { extractSearchText } = await import('../utils/textUtils')
     const minOrder = tasks.length > 0 ? Math.min(...tasks.map(t => t.order ?? Date.now())) : Date.now()
     const newItem: Task = { id: genId(), text, searchText: extractSearchText(text), done: false, createdAt: now, updatedAt: now, order: minOrder - 1 }
+    
+    // Optimistic Update
+    setTasks(prev => [newItem, ...prev])
+    showToast('업무가 추가되었습니다.', 'success')
+
     try {
       await setDoc(doc(db, 'users', uid, 'tasks', newItem.id), newItem)
-      setTasks(prev => [newItem, ...prev])
-      showToast('업무가 추가되었습니다.', 'success')
     } catch (err) {
       console.error(err)
-      showToast('저장에 실패했습니다.', 'error')
+      showToast('저장에 실패했습니다. 다시 시도해주세요.', 'error', 4000)
+      setTasks(prev => prev.map(t => t.id === newItem.id ? { ...t, _isRollback: true } : t))
+      setTimeout(() => {
+        setTasks(prev => prev.filter(t => t.id !== newItem.id))
+      }, 500)
     }
   }, [tasks, uid, showToast])
 
@@ -766,15 +773,18 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
 
     // Optimistic Update
     setLedger(prev => [...prev, newEntry as LedgerEntry])
+    showToast('가계부 내역이 추가되었습니다.', 'success')
 
     try {
       await setDoc(doc(db, 'users', uid, 'ledger', id), newEntry)
-      showToast('가계부 내역이 추가되었습니다.', 'success')
     } catch (err) {
       console.error(err)
-      showToast('저장에 실패했습니다.', 'error')
-      // Rollback
-      setLedger(prev => prev.filter(l => l.id !== id))
+      showToast('저장에 실패했습니다. 다시 시도해주세요.', 'error', 4000)
+      // Rollback with visual cue
+      setLedger(prev => prev.map(l => l.id === id ? { ...l, _isRollback: true } : l))
+      setTimeout(() => {
+        setLedger(prev => prev.filter(l => l.id !== id))
+      }, 500)
     }
   }, [uid, showToast])
 
@@ -840,14 +850,20 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
     const newItem: any = { id: genId(), text, createdAt: new Date().toISOString(), order: events.length }
     if (scheduledDate) newItem.scheduledDate = scheduledDate
     if (color) newItem.color = color
+    
+    // Optimistic Update
     setEvents(prev => [newItem as ScheduleEvent, ...prev])
+    showToast('일정이 추가되었습니다.', 'success')
+
     try {
       await setDoc(doc(db, 'users', uid, 'events', newItem.id), newItem)
-      showToast('일정이 추가되었습니다.', 'success')
     } catch (err) {
       console.error(err)
-      setEvents(prev => prev.filter(e => e.id !== newItem.id))
-      showToast('저장에 실패했습니다.', 'error')
+      showToast('저장에 실패했습니다. 다시 시도해주세요.', 'error', 4000)
+      setEvents(prev => prev.map(e => e.id === newItem.id ? { ...e, _isRollback: true } : e))
+      setTimeout(() => {
+        setEvents(prev => prev.filter(e => e.id !== newItem.id))
+      }, 500)
       throw err
     }
   }, [events.length, uid, showToast])
@@ -870,20 +886,24 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
     
     // Note list item (lightweight)
     const newItem: Note = { id: genId(), text: '', textPreview, searchText, hasContentDoc: true, createdAt: now, updatedAt: now }
+    
+    // Optimistic Update
+    setNotes(prev => [{...newItem, text, isFullyLoaded: true}, ...prev])
+    showToast('메모가 추가되었습니다.', 'success')
+
     try {
       await Promise.all([
         setDoc(doc(db, 'users', uid, 'notes', newItem.id), newItem),
         setDoc(doc(db, 'users', uid, 'note_contents', newItem.id), { text })
       ])
-      // In local state, we can keep the full text so it feels instantaneous if viewed right away, 
-      // but to be safe and consistent with the list, we can just store the full text in state too!
-      // Wait, if list renders from AppStore, and detailed view reads from AppStore if it exists, it's better to store text locally.
-      setNotes(prev => [{...newItem, text, isFullyLoaded: true}, ...prev])
-      showToast('메모가 추가되었습니다.', 'success')
       return newItem.id
     } catch (err) {
       console.error(err)
-      showToast('저장에 실패했습니다.', 'error')
+      showToast('저장에 실패했습니다. 다시 시도해주세요.', 'error', 4000)
+      setNotes(prev => prev.map(n => n.id === newItem.id ? { ...n, _isRollback: true } : n))
+      setTimeout(() => {
+        setNotes(prev => prev.filter(n => n.id !== newItem.id))
+      }, 500)
       return null
     }
   }, [uid, showToast])

@@ -355,6 +355,7 @@ const TaskListItem: React.FC<TaskListItemProps> = ({ task, isSelected, onSelect,
         group flex items-start gap-3 p-3 rounded-xl cursor-pointer border transition-all duration-150 relative
         ${isSelected ? 'bg-white border-yuri-300 shadow-sm' : 'bg-transparent border-transparent hover:bg-yuri-100/50 hover:border-yuri-200'}
         ${isDragging ? 'shadow-card bg-white z-50 opacity-90' : ''}
+        ${task._isRollback ? 'opacity-40 bg-red-50/50 grayscale' : ''}
       `}
     >
       {dragHandleProps && (

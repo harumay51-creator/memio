@@ -688,7 +688,7 @@ const MobileCalendarPage: React.FC = () => {
                     setEditDate(format(selectedDate || new Date(), 'yyyy-MM-dd'))
                   }
                 }}
-                className="bg-white p-3 rounded-xl shadow-sm border border-yuri-100 flex items-start gap-3 active:scale-[0.98] transition-transform"
+                className={`bg-white p-3 rounded-xl shadow-sm border border-yuri-100 flex items-start gap-3 transition-all duration-150 active:scale-[0.98] ${ev._isRollback ? 'opacity-40 bg-red-50/50 grayscale' : ''}`}
               >
                 <div className="w-1.5 h-10 rounded-full shrink-0" style={{ backgroundColor: ev.color || EVENT_COLORS[0] }} />
                 <div className="flex-1 min-w-0">

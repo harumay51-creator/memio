@@ -266,7 +266,7 @@ export default function CashTab({ year, month, onOpenFixedExpense }: { year: num
                     <div 
                       key={e.id} 
                       onClick={() => setEditingRowId(e.id)}
-                      className="flex justify-between items-center px-4 py-3 hover:bg-gray-50 bg-white border-b border-gray-100 last:border-b-0 cursor-pointer group transition-colors"
+                      className={`flex justify-between items-center px-4 py-3 hover:bg-gray-50 bg-white border-b border-gray-100 last:border-b-0 cursor-pointer group transition-all duration-150 ${e._isRollback ? 'opacity-40 bg-red-50/50 grayscale' : ''}`}
                     >
                       <div className="flex items-center gap-3 overflow-hidden flex-1">
                         <span className="text-xs font-semibold text-gray-400 w-10 shrink-0">{dStr}</span>

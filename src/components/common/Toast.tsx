@@ -9,7 +9,7 @@ interface ToastMessage {
 }
 
 interface ToastContextValue {
-  showToast: (message: string, type?: ToastType) => void
+  showToast: (message: string, type?: ToastType, duration?: number) => void
 }
 
 const ToastContext = createContext<ToastContextValue | null>(null)
@@ -24,7 +24,7 @@ export const ToastProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const [toasts, setToasts] = useState<ToastMessage[]>([])
   const [closingIds, setClosingIds] = useState<Set<string>>(new Set())
 
-  const showToast = useCallback((message: string, type: ToastType = 'info') => {
+  const showToast = useCallback((message: string, type: ToastType = 'info', duration: number = 3000) => {
     const id = Math.random().toString(36).substring(2, 9)
     setToasts(prev => [...prev, { id, message, type }])
     
@@ -42,7 +42,7 @@ export const ToastProvider: React.FC<{ children: ReactNode }> = ({ children }) =
           return next
         })
       }, 150)
-    }, 3000)
+    }, duration)
   }, [])
 
   return (

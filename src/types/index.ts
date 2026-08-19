@@ -31,6 +31,7 @@ export interface Task {
   order?: number     // sorting order
   isDeleted?: boolean
   deletedAt?: number
+  _isRollback?: boolean // Transient local state for rollback visual cue
 }
 
 // ─── Notes (Memos) ────────────────────────────────────────────────────────────
@@ -45,6 +46,7 @@ export interface Note {
   updatedAt?: string
   isDeleted?: boolean
   deletedAt?: number
+  _isRollback?: boolean // Transient local state for rollback visual cue
 }
 
 // ─── Ledger ───────────────────────────────────────────────────────────────────
@@ -61,6 +63,7 @@ export interface LedgerEntry {
   createdAt: string
   isDeleted?: boolean
   deletedAt?: number
+  _isRollback?: boolean // Transient local state for rollback visual cue
 }
 
 export interface FixedExpense {
@@ -91,6 +94,7 @@ export interface ScheduleEvent {
   createdAt:      string   // UTC ISO — when the entry was saved
   order?:         number   // sorting order
   color?:         string
+  _isRollback?: boolean // Transient local state for rollback visual cue
 }
 
 export interface AgendaItem {

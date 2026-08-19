@@ -142,6 +142,7 @@ const NotesPage: React.FC<{ activeItemId?: string | null }> = ({ activeItemId })
                     className={`
                       group p-3 rounded-xl cursor-pointer border transition-all duration-150 relative flex items-start gap-2 mb-2
                       ${isSelected ? 'bg-[#F3F0FF] border-[#F3F0FF] shadow-sm' : 'bg-transparent border-transparent hover:bg-yuri-100/50 hover:border-yuri-200'}
+                      ${note._isRollback ? 'opacity-40 bg-red-50/50 grayscale' : ''}
                     `}
                   >
                     <div className="flex-1 min-w-0">
