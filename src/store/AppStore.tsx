@@ -94,7 +94,7 @@ interface StoreValue {
   toggleAgenda: (id: string) => void
   deleteAgenda: (id: string) => void
   updateItemOrders: (updates: { id: string, type: 'task' | 'event', order: number }[]) => void
-  addAnniversary: (name: string, month: number, day: number) => void
+  addAnniversary: (name: string, month: number, day: number, isLunar?: boolean, isLeapMonth?: boolean) => void
   deleteAnniversary: (id: string) => void
   addMonthlyEvent: (name: string, day: number) => void
   deleteMonthlyEvent: (id: string) => void
@@ -1138,14 +1138,21 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
     }
   }, [uid])
 
-  const addAnniversary = useCallback((name: string, month: number, day: number) => {
-    const newItem: Anniversary = { id: genId(), name, month, day, createdAt: new Date().toISOString() }
+  const addAnniversary = useCallback((name: string, month: number, day: number, isLunar?: boolean, isLeapMonth?: boolean) => {
+    const newItem: Anniversary = { id: genId(), name, month, day, isLunar, isLeapMonth, createdAt: new Date().toISOString() }
     setAnniversaries(prev => [...prev, newItem])
     setDoc(doc(db, 'users', uid, 'anniversaries', newItem.id), newItem).catch(console.error)
 
     const now = new Date()
-    if (now.getMonth() + 1 === month && now.getDate() === day) {
-      const dtStr = `${now.getFullYear()}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+    let checkM = month
+    let checkD = day
+    if (isLunar) {
+      // For lunar, we skip immediate materialization to keep it simple. It will render as virtual.
+      checkM = -1 
+    }
+    
+    if (now.getMonth() + 1 === checkM && now.getDate() === checkD) {
+      const dtStr = `${now.getFullYear()}-${String(checkM).padStart(2, '0')}-${String(checkD).padStart(2, '0')}`
       const newInst: RecurringInstance = {
         id: genId(),
         sourceRuleId: newItem.id,

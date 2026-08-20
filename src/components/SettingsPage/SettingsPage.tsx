@@ -55,6 +55,8 @@ const SettingsPage: React.FC = () => {
   const [annivName, setAnnivName] = useState('')
   const [annivMonth, setAnnivMonth] = useState('')
   const [annivDay, setAnnivDay] = useState('')
+  const [isLunarAnniv, setIsLunarAnniv] = useState(false)
+  const [isLeapMonthAnniv, setIsLeapMonthAnniv] = useState(false)
 
   const [monthlyName, setMonthlyName] = useState('')
   const [monthlyDay, setMonthlyDay] = useState('')
@@ -174,10 +176,12 @@ const SettingsPage: React.FC = () => {
     const m = parseInt(annivMonth, 10)
     const d = parseInt(annivDay, 10)
     if (!annivName.trim() || isNaN(m) || isNaN(d)) return
-    addAnniversary(annivName.trim(), m, d)
+    addAnniversary(annivName.trim(), m, d, isLunarAnniv, isLeapMonthAnniv)
     setAnnivName('')
     setAnnivMonth('')
     setAnnivDay('')
+    setIsLunarAnniv(false)
+    setIsLeapMonthAnniv(false)
   }
 
   // ── Monthly Event Handlers ──
@@ -629,36 +633,60 @@ const SettingsPage: React.FC = () => {
                 <h3 className="text-lg font-bold text-yuri-900 mb-2">기념일 관리</h3>
                 <p className="text-sm text-yuri-500 mb-6">매년 반복되는 기념일을 추가하면 달력에 자동으로 표시됩니다.</p>
 
-                <form onSubmit={handleAddAnniv} className="flex gap-3 mb-8">
-                  <input spellCheck={false}
-                    type="text"
-                    placeholder="이름 (예: 엄마 생일)"
-                    value={annivName}
-                    onChange={e => setAnnivName(e.target.value)}
-                    className="flex-1 px-4 py-3 bg-yuri-50 border border-yuri-200 rounded-lg text-sm outline-none focus:border-accent focus:bg-white transition-colors"
-                    required
-                  />
-                  <input spellCheck={false}
-                    type="number"
-                    min="1" max="12"
-                    placeholder="월 (1-12)"
-                    value={annivMonth}
-                    onChange={e => setAnnivMonth(e.target.value)}
-                    className="w-24 px-4 py-3 bg-yuri-50 border border-yuri-200 rounded-lg text-sm outline-none focus:border-accent focus:bg-white transition-colors"
-                    required
-                  />
-                  <input spellCheck={false}
-                    type="number"
-                    min="1" max="31"
-                    placeholder="일 (1-31)"
-                    value={annivDay}
-                    onChange={e => setAnnivDay(e.target.value)}
-                    className="w-24 px-4 py-3 bg-yuri-50 border border-yuri-200 rounded-lg text-sm outline-none focus:border-accent focus:bg-white transition-colors"
-                    required
-                  />
-                  <button type="submit" className="px-6 py-3 bg-yuri-900 text-white font-bold rounded-lg hover:bg-yuri-800 transition-colors">
-                    추가
-                  </button>
+                <form onSubmit={handleAddAnniv} className="flex flex-col gap-3 mb-8">
+                  <div className="flex gap-3">
+                    <input spellCheck={false}
+                      type="text"
+                      placeholder="이름 (예: 엄마 생일)"
+                      value={annivName}
+                      onChange={e => setAnnivName(e.target.value)}
+                      className="flex-1 px-4 py-3 bg-yuri-50 border border-yuri-200 rounded-lg text-sm outline-none focus:border-accent focus:bg-white transition-colors"
+                      required
+                    />
+                    <input spellCheck={false}
+                      type="number"
+                      min="1" max="12"
+                      placeholder="월 (1-12)"
+                      value={annivMonth}
+                      onChange={e => setAnnivMonth(e.target.value)}
+                      className="w-24 px-4 py-3 bg-yuri-50 border border-yuri-200 rounded-lg text-sm outline-none focus:border-accent focus:bg-white transition-colors"
+                      required
+                    />
+                    <input spellCheck={false}
+                      type="number"
+                      min="1" max="31"
+                      placeholder="일 (1-31)"
+                      value={annivDay}
+                      onChange={e => setAnnivDay(e.target.value)}
+                      className="w-24 px-4 py-3 bg-yuri-50 border border-yuri-200 rounded-lg text-sm outline-none focus:border-accent focus:bg-white transition-colors"
+                      required
+                    />
+                    <button type="submit" className="px-6 py-3 bg-yuri-900 text-white font-bold rounded-lg hover:bg-yuri-800 transition-colors whitespace-nowrap">
+                      추가
+                    </button>
+                  </div>
+                  <div className="flex gap-4 items-center pl-1">
+                    <label className="flex items-center gap-2 cursor-pointer text-sm text-yuri-700">
+                      <input
+                        type="checkbox"
+                        checked={isLunarAnniv}
+                        onChange={(e) => setIsLunarAnniv(e.target.checked)}
+                        className="w-4 h-4 text-accent border-yuri-300 rounded focus:ring-accent"
+                      />
+                      <span>음력</span>
+                    </label>
+                    {isLunarAnniv && (
+                      <label className="flex items-center gap-2 cursor-pointer text-sm text-yuri-700">
+                        <input
+                          type="checkbox"
+                          checked={isLeapMonthAnniv}
+                          onChange={(e) => setIsLeapMonthAnniv(e.target.checked)}
+                          className="w-4 h-4 text-accent border-yuri-300 rounded focus:ring-accent"
+                        />
+                        <span>윤달</span>
+                      </label>
+                    )}
+                  </div>
                 </form>
 
                 <div className="flex flex-col gap-3">
@@ -669,7 +697,7 @@ const SettingsPage: React.FC = () => {
                       <div key={a.id} className="flex items-center justify-between px-5 py-4 bg-yuri-50 border border-yuri-200 rounded-xl">
                         <div className="flex items-center gap-4">
                           <span className="text-yuri-900 font-bold">{a.name}</span>
-                          <span className="text-yuri-500 text-sm">{a.month}월 {a.day}일</span>
+                          <span className="text-yuri-500 text-sm">{a.isLunar ? (a.isLeapMonth ? '윤 ' : '음 ') : ''}{a.month}월 {a.day}일</span>
                         </div>
                         <button onClick={() => deleteAnniversary(a.id)} className="text-red-500 hover:text-red-600 text-sm font-bold px-3 py-1 bg-white border border-red-100 rounded hover:bg-red-50">
                           삭제

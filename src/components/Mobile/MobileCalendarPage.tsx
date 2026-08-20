@@ -6,7 +6,7 @@ import { useDiaryStore } from '../../store/DiaryStore'
 import { type ScheduleEvent } from '../../types'
 import { useMergedHolidays } from '../../hooks/useMergedHolidays'
 import { EmptyState } from '../common/EmptyState'
-import { calculateHolidays } from '../../utils/holidays'
+import { calculateHolidays, getSolarFromLunar } from '../../utils/holidays'
 import { useConfirm } from '../common/ConfirmModal'
 
 const EVENT_COLORS = ['#8B7CF8', '#EF6A7B', '#63D2B0', '#F4B73F']
@@ -314,7 +314,14 @@ const MobileCalendarPage: React.FC = () => {
       dayAnnivs.push({ id: inst.sourceRuleId, name: inst.name, instanceId: inst.id })
     })
     anniversaries.forEach(a => {
-      if (a.month !== d.getMonth() + 1 || a.day !== d.getDate()) return
+      let m = a.month
+      let dDay = a.day
+      if (a.isLunar) {
+        const solarDate = getSolarFromLunar(d.getFullYear(), a.month, a.day, a.isLeapMonth)
+        m = solarDate.getMonth() + 1
+        dDay = solarDate.getDate()
+      }
+      if (m !== d.getMonth() + 1 || dDay !== d.getDate()) return
       const createdTime = a.createdAt ? new Date(a.createdAt).getTime() : 0
       const dEnd = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59).getTime()
       if (dEnd >= createdTime) {

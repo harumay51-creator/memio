@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react'
 import { useAppStore } from '../../store/AppStore'
 import { useDiaryStore } from '../../store/DiaryStore'
 import { useMergedHolidays } from '../../hooks/useMergedHolidays'
-import { calculateHolidays } from '../../utils/holidays'
+import { calculateHolidays, getSolarFromLunar } from '../../utils/holidays'
 import Emoji from '../common/Emoji'
 import DiaryPanel from './DiaryPanel'
 import DiarySearchPanel from './DiarySearchPanel'
@@ -257,7 +257,14 @@ const CalendarPage: React.FC = () => {
       dayAnnivs.push({ id: inst.sourceRuleId, name: inst.name, instanceId: inst.id })
     })
     anniversaries.forEach(a => {
-      if (a.month !== d.getMonth() + 1 || a.day !== d.getDate()) return
+      let m = a.month
+      let dDay = a.day
+      if (a.isLunar) {
+        const solarDate = getSolarFromLunar(d.getFullYear(), a.month, a.day, a.isLeapMonth)
+        m = solarDate.getMonth() + 1
+        dDay = solarDate.getDate()
+      }
+      if (m !== d.getMonth() + 1 || dDay !== d.getDate()) return
       const createdTime = a.createdAt ? new Date(a.createdAt).getTime() : 0
       const dEnd = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59).getTime()
       if (dEnd >= createdTime) {

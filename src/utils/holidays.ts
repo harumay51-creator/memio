@@ -7,9 +7,12 @@ export interface HolidayInfo {
   isRedDay: boolean
 }
 
-function getSolarFromLunar(year: number, month: number, day: number, isLeapMonth = false): Date {
+export function getSolarFromLunar(year: number, month: number, day: number, isLeapMonth = false): Date {
   const calendar = new KoreanLunarCalendar()
-  calendar.setLunarDate(year, month, day, isLeapMonth)
+  const ok = calendar.setLunarDate(year, month, day, isLeapMonth)
+  if (!ok && isLeapMonth) {
+    calendar.setLunarDate(year, month, day, false)
+  }
   const solar = calendar.getSolarCalendar()
   return new Date(solar.year, solar.month - 1, solar.day)
 }

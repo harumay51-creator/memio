@@ -110,6 +110,8 @@ export interface Anniversary {
   name: string
   month: number // 1-12
   day: number   // 1-31
+  isLunar?: boolean
+  isLeapMonth?: boolean
   createdAt: string
 }
 
