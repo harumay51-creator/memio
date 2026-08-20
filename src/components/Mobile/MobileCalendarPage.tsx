@@ -571,8 +571,13 @@ const MobileCalendarPage: React.FC = () => {
         <div 
           ref={scrollRef} 
           onTransitionEnd={(e) => {
-            if (e.target === scrollRef.current && !isPanelOpen && selectedDate) {
-              setSelectedDate(null)
+            // 2. 자식 요소에서 발생한 이벤트 무시 (버블링 방지)
+            if (e.target !== e.currentTarget) return;
+            // 1. 레이아웃(flex) 트랜지션 완료 시점에만 동작 (여러 속성 트랜지션 방어)
+            if (e.propertyName !== 'flex-basis' && e.propertyName !== 'flex') return;
+            // 3. 패널이 완전히 닫힌 상태인지 확인 (닫히는 도중 재선택 방어)
+            if (!isPanelOpen && selectedDate) {
+              setSelectedDate(null);
             }
           }}
           className={`flex flex-col overflow-y-auto overscroll-none bg-yuri-50 transition-[flex] duration-[300ms] ease-[cubic-bezier(0.4,0,0.2,1)] will-change-[flex]`}
