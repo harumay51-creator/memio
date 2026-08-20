@@ -115,8 +115,8 @@ const HolidaySection: React.FC = () => {
           onChange={(e) => setSelectedYear(parseInt(e.target.value, 10))}
           className="bg-white border border-yuri-200 rounded-lg px-3 py-1.5 text-sm font-bold text-yuri-900 outline-none focus:border-accent"
         >
-          {Array.from({ length: 10 }).map((_, i) => {
-            const y = new Date().getFullYear() - 2 + i
+          {Array.from({ length: 50 }).map((_, i) => {
+            const y = new Date().getFullYear() - 5 + i
             return <option key={y} value={y}>{y}년</option>
           })}
         </select>
