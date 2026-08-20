@@ -432,7 +432,7 @@ const MobileCalendarPage: React.FC = () => {
       {/* Weekdays */}
       <div className="grid grid-cols-7 border-b border-yuri-100">
         {['일', '월', '화', '수', '목', '금', '토'].map(d => (
-          <div key={d} className="text-center py-2 text-xs font-semibold text-yuri-400">
+          <div key={d} className="text-center py-2 text-xs font-normal text-gray-400">
             {d}
           </div>
         ))}
@@ -441,7 +441,7 @@ const MobileCalendarPage: React.FC = () => {
       {/* Calendar Grid */}
       <div 
         ref={gridRef}
-        className={`grid grid-cols-7 border-b border-yuri-100 pb-2 transition-[flex,min-height] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]`}
+        className={`grid grid-cols-7 pb-2 transition-[flex,min-height] duration-[300ms] ease-[cubic-bezier(0.4,0,0.2,1)]`}
         style={{ 
           flex: isDiaryMode || !selectedDate ? '1 1 100%' : '0 0 45%',
           minHeight: isDiaryMode || !selectedDate ? '0' : '280px',
@@ -469,14 +469,14 @@ const MobileCalendarPage: React.FC = () => {
             <button
               key={d.toISOString()}
               onClick={() => handleDateClick(d)}
-              className={`flex flex-col items-center justify-start border border-transparent transition-all duration-300 ease-in-out overflow-hidden w-full h-full ${
+              className={`flex flex-col items-center justify-start border-b border-gray-100 transition-colors overflow-hidden w-full h-full ${
                 isDiaryMode || !selectedDate ? 'py-2' : 'pt-1 pb-0.5'
               } ${
                 isSelected ? 'bg-accent/10 rounded-xl' : ''
               } ${!isCurrentMonth ? 'opacity-30' : ''}`}
             >
-              <span className={`${isDiaryMode ? 'text-[15px] w-8 h-8 shrink-0' : 'text-sm w-6 h-6 shrink-0'} font-semibold flex items-center justify-center rounded-full ${
-                isToday ? 'bg-accent text-white' : (isSelected ? 'text-accent' : ((isHoliday && holidayInfo.isRedDay) || isSunday ? 'text-red-500' : 'text-yuri-900'))
+              <span className={`${isDiaryMode ? 'text-[15px] w-8 h-8 shrink-0' : 'text-sm w-6 h-6 shrink-0'} font-normal flex items-center justify-center rounded-full ${
+                isToday ? 'bg-accent text-white font-medium' : (isSelected ? 'text-accent font-medium' : ((isHoliday && holidayInfo.isRedDay) || isSunday ? 'text-red-500' : 'text-yuri-900'))
               }`}>
                 {format(d, 'd')}
               </span>
@@ -495,8 +495,8 @@ const MobileCalendarPage: React.FC = () => {
               ) : (
                 <div className={
                   selectedDate
-                    ? "flex flex-row flex-wrap justify-center items-start gap-[3px] mt-0.5 w-full px-2 overflow-hidden flex-1"
-                    : "flex flex-col gap-[3px] mt-[5px] w-full px-0.5 overflow-hidden flex-1 justify-start"
+                    ? "flex flex-row flex-wrap justify-center items-start gap-[3px] mt-1 w-full px-2 overflow-hidden flex-1"
+                    : "flex flex-col gap-[2px] mt-1.5 w-full px-0.5 overflow-hidden flex-1 justify-start"
                 }>
                   {(() => {
                     const badgeItems: { name: string; type: 'holiday' | 'routine' | 'event'; isRedDay?: boolean; color?: string }[] = []
@@ -521,27 +521,27 @@ const MobileCalendarPage: React.FC = () => {
                         {badgeItems.slice(0, 2).map((item, i) => {
                           if (item.type === 'holiday') {
                             return (
-                              <div key={`b-${i}`} className={`text-[9px] px-[4px] py-[1.5px] w-full truncate rounded-[2px] font-bold shrink-0 leading-none ${item.isRedDay ? 'bg-red-50 text-red-500' : 'bg-gray-100 text-gray-500'}`}>
+                              <div key={`b-${i}`} className={`text-[9px] px-[2px] py-[0px] w-full truncate rounded-[1px] font-normal shrink-0 leading-none ${item.isRedDay ? 'bg-red-50 text-red-500' : 'bg-gray-50 text-gray-400'}`}>
                                 {item.name}
                               </div>
                             )
                           }
                           if (item.type === 'routine') {
                             return (
-                              <div key={`b-${i}`} className="text-[9px] px-[4px] py-[1.5px] w-full truncate rounded-[2px] font-bold shrink-0 leading-none flex items-center gap-[2px] bg-transparent" style={{ color: item.color }}>
+                              <div key={`b-${i}`} className="text-[9px] px-[2px] py-[0px] w-full truncate rounded-[1px] font-normal shrink-0 leading-none flex items-center gap-[2px] bg-transparent" style={{ color: item.color }}>
                                 <span className="shrink-0 text-[8px] font-black mt-[0.5px]">↻</span>
                                 <span className="truncate">{item.name}</span>
                               </div>
                             )
                           }
                           return (
-                            <div key={`b-${i}`} className="text-[9px] px-[4px] py-[1.5px] w-full truncate rounded-[2px] font-bold shrink-0 leading-none" style={{ backgroundColor: item.color + '26', color: item.color }}>
+                            <div key={`b-${i}`} className="text-[9px] px-[2px] py-[0px] w-full truncate rounded-[1px] font-normal shrink-0 leading-none" style={{ backgroundColor: item.color + '14', color: item.color }}>
                               {item.name}
                             </div>
                           )
                         })}
                         {badgeItems.length > 2 && (
-                          <div className="text-[9px] text-yuri-400 font-bold text-center mt-[1px]">
+                          <div className="text-[8px] text-gray-400 font-normal text-center mt-[2px]">
                             +{badgeItems.length - 2}개
                           </div>
                         )}
@@ -568,36 +568,33 @@ const MobileCalendarPage: React.FC = () => {
       {!isDiaryMode && (
         <div 
           ref={scrollRef} 
-          className={`flex flex-col overflow-y-auto overscroll-none bg-yuri-50 transition-[flex,opacity,padding] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] will-change-transform`}
+          className={`flex flex-col overflow-y-auto overscroll-none bg-yuri-50 transition-[flex] duration-[300ms] ease-[cubic-bezier(0.4,0,0.2,1)] will-change-[flex]`}
           style={{
-            flex: selectedDate ? '1 1 55%' : '0 0 0%',
-            opacity: selectedDate ? 1 : 0,
-            paddingTop: selectedDate ? '0.5rem' : '0',
-            paddingBottom: selectedDate ? '1rem' : '0',
-            paddingLeft: '1rem',
-            paddingRight: '1rem'
+            flex: selectedDate ? '1 1 55%' : '0 0 0%'
           }}
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
         >
-          {/* Swipe handle */}
-          <div className="w-full flex justify-center pb-3 shrink-0">
-            <div className="w-10 h-1.5 bg-gray-300 rounded-full" />
-          </div>
+          {/* Inner content wrapper with padding so layout doesn't shift during height transition */}
+          <div className="flex flex-col px-4 pt-2 pb-4">
+            {/* Swipe handle */}
+            <div className="w-full flex justify-center pb-3 shrink-0">
+              <div className="w-10 h-1.5 bg-gray-300 rounded-full" />
+            </div>
 
-          <h3 className="text-sm font-bold text-yuri-700 mb-3 border-b border-yuri-200 pb-2 flex items-center gap-2 shrink-0">
-            {format(selectedDate || new Date(), 'M월 d일 (E)', { locale: ko })}
-            {mergedHolidays[format(selectedDate || new Date(), 'yyyy-MM-dd')] && (
-              <span className={`text-xs px-2 py-0.5 rounded-full ${mergedHolidays[format(selectedDate || new Date(), 'yyyy-MM-dd')].isRedDay ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-600'}`}>
-                {mergedHolidays[format(selectedDate || new Date(), 'yyyy-MM-dd')].name}
-              </span>
-            )}
-          </h3>
+            <h3 className="text-sm font-bold text-yuri-700 mb-3 border-b border-yuri-200 pb-2 flex items-center gap-2 shrink-0">
+              {format(selectedDate || new Date(), 'M월 d일 (E)', { locale: ko })}
+              {mergedHolidays[format(selectedDate || new Date(), 'yyyy-MM-dd')] && (
+                <span className={`text-xs px-2 py-0.5 rounded-full ${mergedHolidays[format(selectedDate || new Date(), 'yyyy-MM-dd')].isRedDay ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-600'}`}>
+                  {mergedHolidays[format(selectedDate || new Date(), 'yyyy-MM-dd')].name}
+                </span>
+              )}
+            </h3>
 
-        {selectedDate && selectedDayEvents.length === 0 && selectedAnnivs.length === 0 && selectedMonthly.length === 0 && (
-          <EmptyState type="compact" message="일정이 없습니다." />
-        )}
+          {selectedDate && selectedDayEvents.length === 0 && selectedAnnivs.length === 0 && selectedMonthly.length === 0 && (
+            <EmptyState type="compact" message="일정이 없습니다." />
+          )}
 
         <div className="flex flex-col gap-2 pb-24">
           {selectedAnnivs.map(a => (
@@ -751,7 +748,8 @@ const MobileCalendarPage: React.FC = () => {
             </div>
           </form>
         </div>
-      </div>
+          </div>
+        </div>
       )}
       {isSearchOpen && (
         <MobileDiarySearchModal 
