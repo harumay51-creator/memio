@@ -23,6 +23,7 @@ const MobileCalendarPage: React.FC = () => {
   const [currentDate, setCurrentDate] = useState(new Date())
   const [currentDiaryDate, setCurrentDiaryDate] = useState(new Date())
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
+  const [isPanelOpen, setIsPanelOpen] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const mergedHolidays = useMergedHolidays(currentDate.getFullYear())
 
@@ -108,7 +109,7 @@ const MobileCalendarPage: React.FC = () => {
       if (window.history.state?.modal === 'mobileEventList') {
         window.history.back()
       } else {
-        setSelectedDate(null)
+        setIsPanelOpen(false)
       }
     } else {
       // Snap back smoothly without bounce
@@ -273,13 +274,13 @@ const MobileCalendarPage: React.FC = () => {
   // Handle back button for event list
   useEffect(() => {
     const handlePopState = () => {
-      if (!isDiaryMode && selectedDate) {
-        setSelectedDate(null)
+      if (!isDiaryMode && isPanelOpen) {
+        setIsPanelOpen(false)
       }
     }
     window.addEventListener('popstate', handlePopState)
     return () => window.removeEventListener('popstate', handlePopState)
-  }, [isDiaryMode, selectedDate])
+  }, [isDiaryMode, isPanelOpen])
 
   const handleDateClick = (d: Date) => {
     if (gridIsSwiping.current) return;
@@ -287,12 +288,12 @@ const MobileCalendarPage: React.FC = () => {
       if (window.history.state?.modal === 'mobileEventList') {
         window.history.back()
       } else {
-        setSelectedDate(null)
+        setIsPanelOpen(false)
       }
       return
     }
     
-    if (!isDiaryMode && !selectedDate) {
+    if (!isDiaryMode && !isPanelOpen) {
       window.history.pushState({ modal: 'mobileEventList' }, '')
     }
     
@@ -300,6 +301,7 @@ const MobileCalendarPage: React.FC = () => {
     if (isDiaryMode) {
       setIsDiaryOpen(true)
     } else {
+      setIsPanelOpen(true)
       setEditingEventId(null)
       setTimeout(() => {
         scrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
@@ -443,8 +445,8 @@ const MobileCalendarPage: React.FC = () => {
         ref={gridRef}
         className={`grid grid-cols-7 pb-2 transition-[flex,min-height] duration-[300ms] ease-[cubic-bezier(0.4,0,0.2,1)]`}
         style={{ 
-          flex: isDiaryMode || !selectedDate ? '1 1 100%' : '0 0 45%',
-          minHeight: isDiaryMode || !selectedDate ? '0' : '280px',
+          flex: isDiaryMode || !isPanelOpen ? '1 1 100%' : '0 0 45%',
+          minHeight: isDiaryMode || !isPanelOpen ? '0' : '280px',
           gridTemplateRows: `repeat(${days.length / 7}, minmax(0, 1fr))` 
         }}
         onTouchStart={handleGridTouchStart}
@@ -568,9 +570,14 @@ const MobileCalendarPage: React.FC = () => {
       {!isDiaryMode && (
         <div 
           ref={scrollRef} 
+          onTransitionEnd={(e) => {
+            if (e.target === scrollRef.current && !isPanelOpen && selectedDate) {
+              setSelectedDate(null)
+            }
+          }}
           className={`flex flex-col overflow-y-auto overscroll-none bg-yuri-50 transition-[flex] duration-[300ms] ease-[cubic-bezier(0.4,0,0.2,1)] will-change-[flex]`}
           style={{
-            flex: selectedDate ? '1 1 55%' : '0 0 0%'
+            flex: isPanelOpen ? '1 1 55%' : '0 0 0%'
           }}
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
