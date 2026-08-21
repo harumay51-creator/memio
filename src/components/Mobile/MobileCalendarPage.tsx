@@ -477,7 +477,7 @@ const MobileCalendarPage: React.FC = () => {
             <button
               key={d.toISOString()}
               onClick={() => handleDateClick(d)}
-              className={`flex flex-col items-center justify-start border-b border-gray-100 transition-colors overflow-hidden w-full h-full ${
+              className={`flex flex-col items-center justify-start border-b border-gray-100 transition-[padding,background-color] duration-150 overflow-hidden w-full h-full min-h-0 ${
                 isDiaryMode || !selectedDate ? 'py-2' : 'pt-1 pb-0.5'
               } ${
                 isSelected ? 'bg-accent/10 rounded-xl' : ''
@@ -503,8 +503,8 @@ const MobileCalendarPage: React.FC = () => {
               ) : (
                 <div className={
                   selectedDate
-                    ? "flex flex-row flex-wrap justify-center items-start gap-[3px] mt-1 w-full px-2 overflow-hidden flex-1"
-                    : "flex flex-col gap-[2px] mt-1.5 w-full px-0.5 overflow-hidden flex-1 justify-start"
+                    ? "flex flex-row flex-wrap justify-center items-start gap-[3px] mt-1 w-full px-2 overflow-hidden flex-1 min-h-0"
+                    : "flex flex-col gap-[2px] mt-1.5 w-full px-0.5 overflow-hidden flex-1 justify-start min-h-0"
                 }>
                   {(() => {
                     const badgeItems: { name: string; type: 'holiday' | 'routine' | 'event'; isRedDay?: boolean; color?: string }[] = []
@@ -586,7 +586,9 @@ const MobileCalendarPage: React.FC = () => {
               setSelectedDate(null);
             }
           }}
-          className={`flex flex-col overflow-y-auto overscroll-none bg-yuri-50 transition-[flex] duration-[300ms] ease-[cubic-bezier(0.4,0,0.2,1)] will-change-[flex]`}
+          className={`flex flex-col overflow-y-auto overscroll-none bg-yuri-50 transition-[flex,opacity] duration-[300ms] ease-[cubic-bezier(0.4,0,0.2,1)] will-change-[flex] ${
+            isPanelOpen ? 'opacity-100' : 'opacity-0'
+          }`}
           style={{
             flex: isPanelOpen ? '1 1 55%' : '0 0 0%'
           }}
