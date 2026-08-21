@@ -14,7 +14,7 @@ const EVENT_COLORS = ['#8B7CF8', '#EF6A7B', '#63D2B0', '#F4B73F']
 import { MobileDiaryView } from './MobileDiaryView'
 import { MobileDiarySearchModal } from './MobileDiarySearchModal'
 import Emoji from '../common/Emoji'
-import { Menu } from 'lucide-react'
+import { Menu, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react'
 
 interface MobileCalendarPageProps {
   onOpenDrawer?: () => void
@@ -30,6 +30,10 @@ const MobileCalendarPage: React.FC<MobileCalendarPageProps> = ({ onOpenDrawer })
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [isPanelOpen, setIsPanelOpen] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
+  
+  const [isMonthPickerOpen, setIsMonthPickerOpen] = useState(false)
+  const [monthPickerYear, setMonthPickerYear] = useState(() => new Date().getFullYear())
+
   const mergedHolidays = useMergedHolidays(currentDate.getFullYear())
 
   const [newEventText, setNewEventText] = useState('')
@@ -266,6 +270,21 @@ const MobileCalendarPage: React.FC<MobileCalendarPageProps> = ({ onOpenDrawer })
     else setCurrentDate(addMonths(currentDate, 1))
   }
 
+  const handleMonthSelect = (y: number, m: number) => {
+    if (isDiaryMode) setCurrentDiaryDate(new Date(y, m, 1))
+    else setCurrentDate(new Date(y, m, 1))
+    
+    if (isPanelOpen) {
+      closePanel()
+      if (window.history.state?.modal === 'mobileEventList') {
+        window.history.back()
+      }
+    } else {
+      setSelectedDate(null)
+    }
+    setIsMonthPickerOpen(false)
+  }
+
   const handleGridTouchStart = (e: React.TouchEvent) => {
     gridTouchStartX.current = e.touches[0].clientX
     gridTouchStartY.current = e.touches[0].clientY
@@ -430,21 +449,18 @@ const MobileCalendarPage: React.FC<MobileCalendarPageProps> = ({ onOpenDrawer })
   return (
     <div className="flex flex-col h-full bg-white relative overflow-hidden">
       {/* Calendar Header */}
-      <div className="flex items-center justify-between px-4 py-3">
-        <div className="flex items-center gap-2">
+      <div className="flex items-center justify-between px-4 py-3 shrink-0">
+        <div className="flex items-center gap-1">
           {onOpenDrawer && (
             <button onClick={onOpenDrawer} className="p-2 -ml-2 text-yuri-400 hover:text-accent rounded-full hover:bg-yuri-50 transition-colors">
               <Menu size={20} />
             </button>
           )}
-          <button onClick={handlePrevMonth} className="p-2 text-yuri-400 hover:text-accent rounded-full hover:bg-yuri-50 transition-colors">
-            <span className="text-xl leading-none">◀</span>
-          </button>
-          <h2 className="text-lg font-bold text-yuri-900 flex items-center justify-center relative">
-            {format(activeMonthDate, 'yyyy년 M월')}
-          </h2>
-          <button onClick={handleNextMonth} className="p-2 text-yuri-400 hover:text-accent rounded-full hover:bg-yuri-50 transition-colors">
-            <span className="text-xl leading-none">▶</span>
+          <button 
+            onClick={() => { setMonthPickerYear(activeMonthDate.getFullYear()); setIsMonthPickerOpen(true); }}
+            className="flex items-center gap-1 px-2 py-1.5 -ml-1 text-lg font-bold text-yuri-900 rounded-xl hover:bg-yuri-50 transition-colors"
+          >
+            {format(activeMonthDate, 'yyyy년 M월')} <ChevronDown size={18} className="text-yuri-400" />
           </button>
         </div>
         <div className="flex items-center gap-1">
@@ -453,7 +469,7 @@ const MobileCalendarPage: React.FC<MobileCalendarPageProps> = ({ onOpenDrawer })
             if (isDiaryMode) setCurrentDiaryDate(today)
             else setCurrentDate(today)
             setSelectedDate(today)
-          }} className="px-3 py-1 text-xs font-bold text-yuri-500 hover:text-accent bg-yuri-50 rounded-full transition-colors mr-1">
+          }} className="px-3 py-1.5 text-xs font-bold text-yuri-500 hover:text-accent bg-yuri-50 rounded-full transition-colors mr-1">
             오늘
           </button>
           {isDiaryMode && (
@@ -461,11 +477,10 @@ const MobileCalendarPage: React.FC<MobileCalendarPageProps> = ({ onOpenDrawer })
               <span className="text-xl leading-none">🔍</span>
             </button>
           )}
-          <button onClick={() => setIsDiaryMode(!isDiaryMode)} className={`p-2 rounded-full transition-colors ${isDiaryMode ? 'text-accent bg-accent/10' : 'text-yuri-400 hover:text-accent hover:bg-yuri-50'}`}>
+          <button onClick={() => {
+            setIsDiaryMode(!isDiaryMode)
+          }} className={`p-2 -mr-1 rounded-full transition-colors ${isDiaryMode ? 'text-accent bg-accent/10' : 'text-yuri-400 hover:bg-yuri-50'}`}>
             <span className="text-xl leading-none">{isDiaryMode ? '★' : '☆'}</span>
-          </button>
-          <button onClick={handleNextMonth} className="p-2 text-yuri-400 hover:text-accent rounded-full hover:bg-yuri-50 transition-colors">
-            <span className="text-xl leading-none">▶</span>
           </button>
         </div>
       </div>
@@ -805,7 +820,7 @@ const MobileCalendarPage: React.FC<MobileCalendarPageProps> = ({ onOpenDrawer })
         </div>
       )}
       {isSearchOpen && (
-        <MobileDiarySearchModal 
+        <MobileDiarySearchModal
           onClose={() => setIsSearchOpen(false)}
           onResultClick={(date) => {
             setCurrentDiaryDate(date)
@@ -828,6 +843,51 @@ const MobileCalendarPage: React.FC<MobileCalendarPageProps> = ({ onOpenDrawer })
             setShowTimePicker(false)
           }}
         />
+      )}
+
+      {/* Month Picker Bottom Sheet */}
+      {isMonthPickerOpen && (
+        <>
+          <div 
+            className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm transition-opacity animate-in fade-in duration-200" 
+            onClick={() => setIsMonthPickerOpen(false)} 
+          />
+          <div className="fixed inset-x-0 bottom-0 z-50 bg-white rounded-t-2xl shadow-2xl flex flex-col animate-in slide-in-from-bottom duration-200 pb-[env(safe-area-inset-bottom)]">
+            <div className="flex flex-col p-4 pt-2">
+              <div className="flex justify-center mb-2">
+                <div className="w-10 h-1 bg-gray-200 rounded-full" />
+              </div>
+              <div className="flex items-center justify-between mb-4 px-2">
+                <button onClick={() => setMonthPickerYear(y => y - 1)} className="p-2 text-yuri-400 hover:text-yuri-600 rounded-full hover:bg-yuri-50 transition-colors">
+                  <ChevronLeft size={24} />
+                </button>
+                <span className="font-bold text-lg text-yuri-900">{monthPickerYear}년</span>
+                <button onClick={() => setMonthPickerYear(y => y + 1)} className="p-2 text-yuri-400 hover:text-yuri-600 rounded-full hover:bg-yuri-50 transition-colors">
+                  <ChevronRight size={24} />
+                </button>
+              </div>
+              
+              <div className="grid grid-cols-3 gap-2">
+                {Array.from({ length: 12 }, (_, i) => {
+                  const isCurrent = monthPickerYear === activeMonthDate.getFullYear() && i === activeMonthDate.getMonth()
+                  return (
+                    <button
+                      key={i}
+                      onClick={() => handleMonthSelect(monthPickerYear, i)}
+                      className={`py-3 rounded-xl font-medium transition-colors ${
+                        isCurrent 
+                          ? 'bg-accent/10 text-accent font-bold'
+                          : 'text-yuri-700 hover:bg-yuri-50'
+                      }`}
+                    >
+                      {i + 1}월
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          </div>
+        </>
       )}
     </div>
   )
