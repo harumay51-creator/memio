@@ -250,20 +250,65 @@ export const DiaryStoreProvider: React.FC<{ children: React.ReactNode, uid: stri
   const updateDayDiaryMemo = async (dateKey: string, memoId: string, text: string, tags?: string[]) => {
     if (!uid) return
     const ref = doc(db, `users/${uid}/diaries`, dateKey)
-    const { runTransaction } = await import('firebase/firestore');
     
-    await runTransaction(db, async (transaction) => {
-      const snap = await transaction.get(ref);
-      if (snap.exists()) {
-        const data = snap.data() as DayDiary
-        const memos = data.memos || []
-        const memoIdx = memos.findIndex(m => m.id === memoId)
-        if (memoIdx >= 0) {
-          memos[memoIdx] = { ...memos[memoIdx], text, tags }
-          transaction.update(ref, { memos })
+    // Save original content for rollback
+    let originalMemo: DiaryMemo | undefined;
+
+    // Optimistic Update
+    setDiaries(prev => {
+      const currentDay = prev[dateKey]
+      if (!currentDay) return prev
+      const memos = currentDay.memos || []
+      originalMemo = memos.find(m => m.id === memoId)
+      
+      return {
+        ...prev,
+        [dateKey]: {
+          ...currentDay,
+          memos: memos.map(m => m.id === memoId ? { ...m, text, tags } : m)
         }
       }
-    });
+    })
+
+    const { runTransaction } = await import('firebase/firestore');
+    
+    try {
+      await runTransaction(db, async (transaction) => {
+        const snap = await transaction.get(ref);
+        if (snap.exists()) {
+          const data = snap.data() as DayDiary
+          const memos = data.memos || []
+          const memoIdx = memos.findIndex(m => m.id === memoId)
+          if (memoIdx >= 0) {
+            memos[memoIdx] = { ...memos[memoIdx], text, tags }
+            transaction.update(ref, { memos })
+          }
+        }
+      });
+    } catch (error) {
+      console.error("Failed to update memo:", error)
+      if (originalMemo) {
+        setDiaries(prev => {
+          const currentDay = prev[dateKey]
+          if (!currentDay) return prev
+          const memos = currentDay.memos || []
+          const currentMemo = memos.find(m => m.id === memoId)
+          
+          // Stale rollback prevention: Only rollback if the content hasn't been changed again
+          if (currentMemo && currentMemo.text === text && JSON.stringify(currentMemo.tags || []) === JSON.stringify(tags || [])) {
+            return {
+              ...prev,
+              [dateKey]: {
+                ...currentDay,
+                memos: memos.map(m => m.id === memoId ? originalMemo! : m)
+              }
+            }
+          }
+          return prev
+        })
+      }
+      showToast("메모 저장에 실패했습니다.", "error")
+    }
   }
 
   const deleteDayDiaryMemo = async (dateKey: string, memoId: string) => {

@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef, useEffect } from 'react'
+import React, { useState, useMemo, useRef, useEffect, useLayoutEffect } from 'react'
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths } from 'date-fns'
 import { ko } from 'date-fns/locale'
 import { useAppStore } from '../../store/AppStore'
@@ -58,6 +58,15 @@ const MobileCalendarPage: React.FC = () => {
       }
     }
   }, [])
+
+  const prevIsDiaryMode = useRef(isDiaryMode)
+  useLayoutEffect(() => {
+    if (prevIsDiaryMode.current && !isDiaryMode) {
+      setSelectedDate(null)
+      setIsPanelOpen(false)
+    }
+    prevIsDiaryMode.current = isDiaryMode
+  }, [isDiaryMode])
   const touchStartY = useRef<number>(0)
   const isAtTopOnTouchStart = useRef<boolean>(false)
   const lastTouchY = useRef<number>(0)
@@ -442,13 +451,7 @@ const MobileCalendarPage: React.FC = () => {
               <span className="text-xl leading-none">🔍</span>
             </button>
           )}
-          <button onClick={() => {
-            if (isDiaryMode) {
-              setSelectedDate(null)
-              setIsPanelOpen(false)
-            }
-            setIsDiaryMode(!isDiaryMode)
-          }} className={`p-2 rounded-full transition-colors ${isDiaryMode ? 'text-accent bg-accent/10' : 'text-yuri-400 hover:text-accent hover:bg-yuri-50'}`}>
+          <button onClick={() => setIsDiaryMode(!isDiaryMode)} className={`p-2 rounded-full transition-colors ${isDiaryMode ? 'text-accent bg-accent/10' : 'text-yuri-400 hover:text-accent hover:bg-yuri-50'}`}>
             <span className="text-xl leading-none">{isDiaryMode ? '★' : '☆'}</span>
           </button>
           <button onClick={handleNextMonth} className="p-2 text-yuri-400 hover:text-accent rounded-full hover:bg-yuri-50 transition-colors">

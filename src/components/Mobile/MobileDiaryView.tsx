@@ -531,7 +531,7 @@ export const MobileDiaryView = ({ selectedDate, onClose }: { selectedDate: Date,
 
         {/* Memos Section */}
         <section className="flex flex-col gap-2">
-          {(dayDiary.memos || []).map((memo: DiaryMemo) => (
+          {[...(dayDiary.memos || [])].reverse().map((memo: DiaryMemo) => (
             <MemoItem 
               key={memo.id}
               memo={memo}
