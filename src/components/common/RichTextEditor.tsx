@@ -121,6 +121,11 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ initialContent, onChang
   };
 
   const editor = useEditor({
+    coreExtensionOptions: {
+      clipboardTextSerializer: {
+        blockSeparator: '\n',
+      },
+    },
     extensions: [
       StarterKit.configure({
         orderedList: false,

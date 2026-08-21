@@ -43,6 +43,11 @@ const DiaryTextEditor: React.FC<DiaryTextEditorProps> = ({
   };
 
   const editor = useEditor({
+    coreExtensionOptions: {
+      clipboardTextSerializer: {
+        blockSeparator: '\n',
+      },
+    },
     extensions: [
       StarterKit.configure({
         orderedList: false,
