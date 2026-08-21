@@ -39,6 +39,25 @@ const MobileCalendarPage: React.FC = () => {
 
   const gridRef = useRef<HTMLDivElement>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
+  const cleanupTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
+  const closePanel = () => {
+    setIsPanelOpen(false)
+    if (cleanupTimeoutRef.current) {
+      clearTimeout(cleanupTimeoutRef.current)
+    }
+    cleanupTimeoutRef.current = setTimeout(() => {
+      setSelectedDate(null)
+    }, 300)
+  }
+
+  useEffect(() => {
+    return () => {
+      if (cleanupTimeoutRef.current) {
+        clearTimeout(cleanupTimeoutRef.current)
+      }
+    }
+  }, [])
   const touchStartY = useRef<number>(0)
   const isAtTopOnTouchStart = useRef<boolean>(false)
   const lastTouchY = useRef<number>(0)
@@ -90,26 +109,23 @@ const MobileCalendarPage: React.FC = () => {
     const velocity = timeDelta > 0 ? (currentY - lastTouchY.current) / timeDelta : 0
       
     if (deltaY > 100 || velocity > 0.5) {
-      // 1. Transfer current visual transform into layout flex-basis instantly to prevent jump
-      if (gridRef.current && scrollRef.current) {
-        gridRef.current.style.flex = `0 0 calc(45% + ${deltaY}px)`
-        scrollRef.current.style.flex = `0 0 calc(55% - ${deltaY}px)`
-        scrollRef.current.style.transform = ''
-        
-        // 2. Force layout flush
-        void gridRef.current.offsetHeight
-        
-        // 3. Clean up inline styles so React classes take over
+      // 1. Set close state immediately to prevent popstate delay bounce
+      closePanel()
+      
+      // 2. Clean up inline styles so React CSS transition takes over
+      if (gridRef.current) {
         gridRef.current.style.transition = ''
-        scrollRef.current.style.transition = ''
         gridRef.current.style.flex = ''
+      }
+      if (scrollRef.current) {
+        scrollRef.current.style.transition = ''
         scrollRef.current.style.flex = ''
+        scrollRef.current.style.transform = ''
       }
       
+      // 3. Maintain history popstate
       if (window.history.state?.modal === 'mobileEventList') {
         window.history.back()
-      } else {
-        setIsPanelOpen(false)
       }
     } else {
       // Snap back smoothly without bounce
@@ -275,7 +291,7 @@ const MobileCalendarPage: React.FC = () => {
   useEffect(() => {
     const handlePopState = () => {
       if (!isDiaryMode && isPanelOpen) {
-        setIsPanelOpen(false)
+        closePanel()
       }
     }
     window.addEventListener('popstate', handlePopState)
@@ -284,17 +300,21 @@ const MobileCalendarPage: React.FC = () => {
 
   const handleDateClick = (d: Date) => {
     if (gridIsSwiping.current) return;
-    if (!isDiaryMode && selectedDate && isSameDay(d, selectedDate)) {
+    if (!isDiaryMode && isPanelOpen && selectedDate && isSameDay(d, selectedDate)) {
+      closePanel()
       if (window.history.state?.modal === 'mobileEventList') {
         window.history.back()
-      } else {
-        setIsPanelOpen(false)
       }
       return
     }
     
     if (!isDiaryMode && !isPanelOpen) {
       window.history.pushState({ modal: 'mobileEventList' }, '')
+    }
+
+    if (cleanupTimeoutRef.current) {
+      clearTimeout(cleanupTimeoutRef.current)
+      cleanupTimeoutRef.current = null
     }
     
     setSelectedDate(d)
