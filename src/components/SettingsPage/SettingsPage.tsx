@@ -693,7 +693,11 @@ const SettingsPage: React.FC = () => {
                   {anniversaries.length === 0 ? (
                     <EmptyState type="compact" message="등록된 기념일이 없습니다." />
                   ) : (
-                    anniversaries.map(a => (
+                    [...anniversaries].sort((a, b) => {
+                      if (a.month !== b.month) return a.month - b.month;
+                      if (a.day !== b.day) return a.day - b.day;
+                      return a.name.localeCompare(b.name);
+                    }).map(a => (
                       <div key={a.id} className="flex items-center justify-between px-5 py-4 bg-yuri-50 border border-yuri-200 rounded-xl">
                         <div className="flex items-center gap-4">
                           <span className="text-yuri-900 font-bold">{a.name}</span>

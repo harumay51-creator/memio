@@ -638,6 +638,7 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
 
     // Yearly
     anniversaries.forEach(rule => {
+      if (rule.isLunar) return;
       const startDt = new Date(rule.createdAt);
       let curY = startDt.getFullYear();
       const endY = today.getFullYear();
@@ -662,6 +663,26 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
         curY++;
       }
     });
+
+    const badInstances: string[] = [];
+    recurringInstances.forEach(inst => {
+      if (inst.sourceType === 'yearly') {
+        const parentRule = anniversaries.find(a => a.id === inst.sourceRuleId);
+        if (!parentRule || parentRule.isLunar) {
+          badInstances.push(inst.id);
+        }
+      }
+    });
+
+    if (badInstances.length > 0) {
+      console.log('[AppStore] Cleaning up bad recurring instances:', badInstances.length);
+      const batch = writeBatch(db);
+      badInstances.forEach(id => {
+        batch.delete(doc(db, 'users', uid, 'recurringInstances', id));
+      });
+      batch.commit().catch(console.error);
+      setRecurringInstances(prev => prev.filter(inst => !badInstances.includes(inst.id)));
+    }
 
     if (missingInstances.length > 0) {
       console.log('[AppStore] Backfilling missing instances:', missingInstances.length);
@@ -1168,8 +1189,20 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
 
   const deleteAnniversary = useCallback((id: string) => {
     setAnniversaries(prev => prev.filter(a => a.id !== id))
-    deleteDoc(doc(db, 'users', uid, 'anniversaries', id)).catch(console.error)
-  }, [uid])
+    
+    const batch = writeBatch(db)
+    batch.delete(doc(db, 'users', uid, 'anniversaries', id))
+    
+    const instancesToDelete = recurringInstances.filter(inst => inst.sourceRuleId === id)
+    if (instancesToDelete.length > 0) {
+      setRecurringInstances(prev => prev.filter(inst => inst.sourceRuleId !== id))
+      instancesToDelete.forEach(inst => {
+        batch.delete(doc(db, 'users', uid, 'recurringInstances', inst.id))
+      })
+    }
+    
+    batch.commit().catch(console.error)
+  }, [uid, recurringInstances])
 
   const addMonthlyEvent = useCallback((name: string, day: number) => {
     const newItem: MonthlyEvent = { id: genId(), name, day, createdAt: new Date().toISOString() }
