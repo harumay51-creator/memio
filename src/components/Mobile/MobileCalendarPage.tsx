@@ -468,7 +468,15 @@ const MobileCalendarPage: React.FC<MobileCalendarPageProps> = ({ onOpenDrawer })
             const today = new Date()
             if (isDiaryMode) setCurrentDiaryDate(today)
             else setCurrentDate(today)
-            setSelectedDate(today)
+            
+            if (isPanelOpen) {
+              closePanel()
+              if (window.history.state?.modal === 'mobileEventList') {
+                window.history.back()
+              }
+            } else {
+              setSelectedDate(null)
+            }
           }} className="px-3 py-1.5 text-xs font-bold text-yuri-500 hover:text-accent bg-yuri-50 rounded-full transition-colors mr-1">
             오늘
           </button>
