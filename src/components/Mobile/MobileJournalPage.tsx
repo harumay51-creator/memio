@@ -7,14 +7,18 @@ import { EmptyState } from '../common/EmptyState'
 import { DebouncedInput } from '../common/DebouncedInput'
 
 const RichTextEditor = lazy(() => import('../common/RichTextEditor'))
-import { Lock, Plus, Trash2, ChevronLeft } from 'lucide-react'
+import { Lock, Plus, Trash2, ChevronLeft, Menu } from 'lucide-react'
 import { isSearchMatch, getSearchPreview, decodeHtmlEntities } from '../../utils/textUtils'
 import PinScreen from '../JournalPage/PinScreen'
 import { Virtuoso } from 'react-virtuoso'
 import type { Note } from '../../types'
 import { useConfirm } from '../common/ConfirmModal'
 
-export default function MobileJournalPage() {
+interface MobileJournalPageProps {
+  onOpenDrawer?: () => void
+}
+
+export default function MobileJournalPage({ onOpenDrawer }: MobileJournalPageProps = {}) {
   const { journals, addJournal, updateJournal, deleteJournal, isLoading, loadJournalContent } = useJournalStore()
   const { isPrivateUnlocked, lockPrivate } = useAppStore()
   const { confirm } = useConfirm()
@@ -122,9 +126,16 @@ export default function MobileJournalPage() {
     <div className="flex flex-col h-full bg-yuri-50 relative overflow-hidden">
       {/* Header */}
       <header className="shrink-0 h-14 flex items-center justify-between px-4 bg-white border-b border-yuri-100 z-10 shadow-sm">
-        <h1 className="text-lg font-bold text-yuri-900 flex items-center gap-2">
-          개인 기록 <Lock size={16} className="text-yuri-300" />
-        </h1>
+        <div className="flex items-center gap-2">
+          {onOpenDrawer && (
+            <button onClick={onOpenDrawer} className="p-2 -ml-2 text-yuri-400 hover:text-yuri-600 rounded-full hover:bg-yuri-50 transition-colors">
+              <Menu size={20} />
+            </button>
+          )}
+          <h1 className="text-lg font-bold text-yuri-900 flex items-center gap-2">
+            개인 기록 <Lock size={16} className="text-yuri-300" />
+          </h1>
+        </div>
         <div className="flex items-center gap-2">
           <button 
             onClick={() => setIsSearchOpen(!isSearchOpen)}

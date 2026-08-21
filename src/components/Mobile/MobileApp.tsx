@@ -11,7 +11,7 @@ import { JournalStoreProvider } from '../../store/JournalStore'
 import { auth } from '../../config/firebase'
 import SettingsPage from '../SettingsPage/SettingsPage'
 import LoginHistorySection from '../SettingsPage/LoginHistorySection'
-import { ChevronLeft } from 'lucide-react'
+import { ChevronLeft, Menu, X } from 'lucide-react'
 
 import { useAppStore } from '../../store/AppStore'
 import MobileAppPinScreen from './MobileAppPinScreen'
@@ -71,7 +71,8 @@ const MobileApp: React.FC<MobileAppProps> = ({ activePage, onNavigate, onLogout 
     }
   }
 
-  const [isKeyboardOpen, setIsKeyboardOpen] = useState(false)
+
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   const [isLedgerInputOpen, setIsLedgerInputOpen] = useState(false)
   
   const [ledgerSubTab, setLedgerSubTab] = useState<'card' | 'cash'>('card')
@@ -82,32 +83,6 @@ const MobileApp: React.FC<MobileAppProps> = ({ activePage, onNavigate, onLogout 
   const [isLedgerSearchOpen, setIsLedgerSearchOpen] = useState(false)
   const [ledgerSearchQuery, setLedgerSearchQuery] = useState('')
 
-  useEffect(() => {
-    const handleFocus = (e: FocusEvent) => {
-      const target = e.target as HTMLElement
-      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) {
-        setIsKeyboardOpen(true)
-      }
-    }
-    const handleBlur = (e: FocusEvent) => {
-      const target = e.target as HTMLElement
-      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) {
-        setTimeout(() => {
-          // Check if another input is focused
-          const active = document.activeElement as HTMLElement
-          if (!active || (active.tagName !== 'INPUT' && active.tagName !== 'TEXTAREA' && !active.isContentEditable)) {
-            setIsKeyboardOpen(false)
-          }
-        }, 100)
-      }
-    }
-    document.addEventListener('focusin', handleFocus)
-    document.addEventListener('focusout', handleBlur)
-    return () => {
-      document.removeEventListener('focusin', handleFocus)
-      document.removeEventListener('focusout', handleBlur)
-    }
-  }, [])
 
   useEffect(() => {
     const handlePopState = (e: PopStateEvent) => {
@@ -166,7 +141,7 @@ const MobileApp: React.FC<MobileAppProps> = ({ activePage, onNavigate, onLogout 
   const renderPage = () => {
     switch (activePage) {
       case 'calendar':
-        return <MobileCalendarPage />
+        return <MobileCalendarPage onOpenDrawer={() => setIsDrawerOpen(true)} />
       case 'ledger': {
         const isSearchActive = isLedgerSearchOpen && ledgerSearchQuery.trim() !== ''
         const currentYear = ledgerSubTab === 'card' ? cardYear : cashYear
@@ -182,6 +157,9 @@ const MobileApp: React.FC<MobileAppProps> = ({ activePage, onNavigate, onLogout 
               {/* Row 1: Month Nav & Actions */}
               <div className="flex items-center justify-between px-4 py-2">
                 <div className="flex items-center gap-2">
+                  <button onClick={() => setIsDrawerOpen(true)} className="p-2 text-yuri-400 hover:text-accent rounded-full hover:bg-yuri-50 transition-colors">
+                    <Menu size={20} />
+                  </button>
                   <button onClick={() => {
                     let y = currentYear; let m = currentMonth - 1;
                     if (m < 0) { m = 11; y--; }
@@ -286,7 +264,7 @@ const MobileApp: React.FC<MobileAppProps> = ({ activePage, onNavigate, onLogout 
       case 'journal':
         return (
           <JournalStoreProvider uid={auth.currentUser?.uid || ''}>
-            <MobileJournalPage />
+            <MobileJournalPage onOpenDrawer={() => setIsDrawerOpen(true)} />
           </JournalStoreProvider>
         )
       case 'settings':
@@ -336,10 +314,14 @@ const MobileApp: React.FC<MobileAppProps> = ({ activePage, onNavigate, onLogout 
   }
 
   return (
-    <div className="fixed inset-0 flex flex-col bg-yuri-50 font-sans text-yuri-900 selection:bg-accent/20 overflow-hidden w-full h-full">
+    <div className="fixed inset-0 flex flex-col bg-yuri-50 font-sans text-yuri-900 selection:bg-accent/20 overflow-hidden w-full h-full pb-[env(safe-area-inset-bottom)]">
       {activePage !== 'calendar' && activePage !== 'ledger' && activePage !== 'journal' && activePage !== 'settings' && activePage !== 'pc_settings' as PageId && activePage !== 'login_history' as PageId && (
-        <header className="shrink-0 h-14 flex items-center justify-center border-b border-yuri-100 bg-white sticky top-0 z-10 shadow-sm transition-all">
-          <h1 className="text-lg font-bold text-yuri-900">{getPageTitle(activePage)}</h1>
+        <header className="shrink-0 h-14 flex items-center justify-between px-4 border-b border-yuri-100 bg-white sticky top-0 z-10 shadow-sm transition-all">
+          <button onClick={() => setIsDrawerOpen(true)} className="p-2 text-yuri-400 hover:text-yuri-600 rounded-full hover:bg-yuri-50 transition-colors">
+            <Menu size={20} />
+          </button>
+          <h1 className="text-lg font-bold text-yuri-900 absolute left-1/2 -translate-x-1/2">{getPageTitle(activePage)}</h1>
+          <div className="w-9" />
         </header>
       )}
 
@@ -347,26 +329,59 @@ const MobileApp: React.FC<MobileAppProps> = ({ activePage, onNavigate, onLogout 
         {renderPage()}
       </main>
 
-      {!isKeyboardOpen && (
-        <nav className="shrink-0 h-16 border-t border-yuri-100 bg-white flex items-center justify-around pb-[env(safe-area-inset-bottom)] shadow-[0_-1px_10px_rgba(0,0,0,0.02)] z-20">
-          <TabItem icon="📅" label="달력" isActive={activePage === 'calendar'} onClick={() => onNavigate('calendar')} />
-          <TabItem icon="📝" label="메모" isActive={activePage === 'notes'} onClick={() => onNavigate('notes')} />
-          <TabItem icon="💰" label="가계부" isActive={activePage === 'ledger'} onClick={() => onNavigate('ledger')} />
-          <TabItem icon="⋯" label="더보기" isActive={activePage === 'settings'} onClick={() => onNavigate('settings')} />
-        </nav>
+      {/* Drawer Overlay */}
+      {isDrawerOpen && (
+        <>
+          <div 
+            className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm transition-opacity animate-in fade-in duration-200" 
+            onClick={() => setIsDrawerOpen(false)} 
+          />
+          <div className="fixed inset-y-0 left-0 w-[280px] z-50 bg-white shadow-2xl flex flex-col animate-in slide-in-from-left duration-200 border-r border-yuri-100 pb-[env(safe-area-inset-bottom)]">
+            <div className="flex items-center justify-between p-4 border-b border-yuri-100 shrink-0">
+              <h2 className="font-bold text-lg text-yuri-900">메뉴</h2>
+              <button onClick={() => setIsDrawerOpen(false)} className="p-2 text-yuri-400 hover:text-yuri-600 rounded-full hover:bg-yuri-50 transition-colors">
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto py-2 flex flex-col gap-1 px-3">
+              <DrawerItem 
+                icon="📅" label="달력" 
+                isActive={activePage === 'calendar'} 
+                onClick={() => { onNavigate('calendar'); setIsDrawerOpen(false); }} 
+              />
+              <DrawerItem 
+                icon="💰" label="가계부" 
+                isActive={activePage === 'ledger'} 
+                onClick={() => { onNavigate('ledger'); setIsDrawerOpen(false); }} 
+              />
+              <DrawerItem 
+                icon="📝" label="개인기록" 
+                isActive={activePage === 'journal'} 
+                onClick={() => { onNavigate('journal'); setIsDrawerOpen(false); }} 
+              />
+              <div className="my-2 border-t border-yuri-100 mx-2" />
+              <DrawerItem 
+                icon="⋯" label="더보기" 
+                isActive={activePage === 'settings'} 
+                onClick={() => { onNavigate('settings'); setIsDrawerOpen(false); }} 
+              />
+            </div>
+          </div>
+        </>
       )}
     </div>
   )
 }
 
-const TabItem: React.FC<{ icon: string; label: string; isActive: boolean; onClick: () => void }> = ({ icon, label, isActive, onClick }) => {
+const DrawerItem: React.FC<{ icon: string; label: string; isActive: boolean; onClick: () => void }> = ({ icon, label, isActive, onClick }) => {
   return (
     <button 
       onClick={onClick}
-      className={`flex flex-col items-center justify-center w-full h-full gap-1 transition-colors ${isActive ? 'text-accent' : 'text-yuri-400 hover:text-yuri-600'}`}
+      className={`flex items-center gap-4 w-full px-4 py-3 rounded-xl transition-colors ${isActive ? 'bg-accent/10 text-accent font-bold' : 'text-yuri-600 hover:bg-yuri-50 hover:text-yuri-900'}`}
     >
-      <span className={`text-xl leading-none transition-transform ${isActive ? 'scale-110' : ''}`}>{icon}</span>
-      <span className="text-[10px] font-semibold">{label}</span>
+      <span className="text-xl leading-none">{icon}</span>
+      <span className="text-base">{label}</span>
     </button>
   )
 }

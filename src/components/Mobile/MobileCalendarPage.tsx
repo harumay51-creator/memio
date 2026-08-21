@@ -14,8 +14,13 @@ const EVENT_COLORS = ['#8B7CF8', '#EF6A7B', '#63D2B0', '#F4B73F']
 import { MobileDiaryView } from './MobileDiaryView'
 import { MobileDiarySearchModal } from './MobileDiarySearchModal'
 import Emoji from '../common/Emoji'
+import { Menu } from 'lucide-react'
 
-const MobileCalendarPage: React.FC = () => {
+interface MobileCalendarPageProps {
+  onOpenDrawer?: () => void
+}
+
+const MobileCalendarPage: React.FC<MobileCalendarPageProps> = ({ onOpenDrawer }) => {
   const { events, addEvent, updateEvent, deleteEvent, anniversaries, monthlyEvents, recurringInstances, deleteRecurringOccurrence } = useAppStore()
   const { isDiaryMode, setIsDiaryMode, diaries } = useDiaryStore()
   const { confirm } = useConfirm()
@@ -427,6 +432,11 @@ const MobileCalendarPage: React.FC = () => {
       {/* Calendar Header */}
       <div className="flex items-center justify-between px-4 py-3">
         <div className="flex items-center gap-2">
+          {onOpenDrawer && (
+            <button onClick={onOpenDrawer} className="p-2 -ml-2 text-yuri-400 hover:text-accent rounded-full hover:bg-yuri-50 transition-colors">
+              <Menu size={20} />
+            </button>
+          )}
           <button onClick={handlePrevMonth} className="p-2 text-yuri-400 hover:text-accent rounded-full hover:bg-yuri-50 transition-colors">
             <span className="text-xl leading-none">◀</span>
           </button>
