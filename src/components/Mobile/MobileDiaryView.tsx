@@ -78,13 +78,15 @@ const QuestionItem = ({ q, initialAnswer, saveAnswer, deleteAnswer }: { q: any, 
           <div className="text-[11px] font-bold font-diary opacity-70">{q.text}</div>
         </div>
         <div className="flex-1 min-h-[60px] cursor-text">
-          <DiaryTextEditor
-            initialContent={localVal}
-            onChange={(html) => setLocalVal(html)}
-            placeholder="답변을 입력하세요..."
-            autoFocus
-            className="bg-transparent outline-none leading-relaxed transition-all font-diary"
-          />
+          <Suspense fallback={<div className="h-[100px] w-full animate-pulse bg-yuri-50 rounded-lg" />}>
+            <DiaryTextEditor
+              initialContent={localVal}
+              onChange={(html) => setLocalVal(html)}
+              placeholder="답변을 입력하세요..."
+              autoFocus
+              className="bg-transparent outline-none leading-relaxed transition-all font-diary"
+            />
+          </Suspense>
         </div>
         <div className="flex justify-end gap-2 mt-2">
           <button 

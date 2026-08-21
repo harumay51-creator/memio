@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
 import { collection, doc, getDoc, setDoc, updateDoc, onSnapshot } from 'firebase/firestore'
 import { db } from '../config/firebase'
+import { useToast } from '../components/common/Toast'
 
 export interface DiaryQuestionAnswer {
   questionId: string
@@ -83,6 +84,7 @@ export const DiaryStoreProvider: React.FC<{ children: React.ReactNode, uid: stri
   const [settings, setSettings] = useState<DiarySettings>({ questions: [], theme: 'default' })
   const [isLoading, setIsLoading] = useState(true)
   const [isDiaryMode, setIsDiaryMode] = useState(false)
+  const { showToast } = useToast()
 
   useEffect(() => {
     if (!uid) return
@@ -200,18 +202,49 @@ export const DiaryStoreProvider: React.FC<{ children: React.ReactNode, uid: stri
     if (!uid) return
     const ref = doc(db, `users/${uid}/diaries`, dateKey)
     const newMemo: DiaryMemo = { id: Date.now().toString(), text, tags, createdAt: Date.now() }
+    
+    // Optimistic Update
+    setDiaries(prev => {
+      const currentDay = prev[dateKey] || { dateKey, emojis: [], answers: [], memos: [] }
+      return {
+        ...prev,
+        [dateKey]: {
+          ...currentDay,
+          memos: [...(currentDay.memos || []), newMemo]
+        }
+      }
+    })
+
     const { runTransaction } = await import('firebase/firestore');
     
-    await runTransaction(db, async (transaction) => {
-      const snap = await transaction.get(ref);
-      if (snap.exists()) {
-        const data = snap.data() as DayDiary
-        const memos = data.memos || []
-        transaction.update(ref, { memos: [...memos, newMemo] })
-      } else {
-        transaction.set(ref, { dateKey, emojis: [], answers: [], memos: [newMemo] })
-      }
-    });
+    try {
+      await runTransaction(db, async (transaction) => {
+        const snap = await transaction.get(ref);
+        if (snap.exists()) {
+          const data = snap.data() as DayDiary
+          const memos = data.memos || []
+          if (!memos.some(m => m.id === newMemo.id)) {
+            transaction.update(ref, { memos: [...memos, newMemo] })
+          }
+        } else {
+          transaction.set(ref, { dateKey, emojis: [], answers: [], memos: [newMemo] })
+        }
+      });
+    } catch (error) {
+      console.error("Failed to add memo:", error)
+      setDiaries(prev => {
+        const currentDay = prev[dateKey]
+        if (!currentDay) return prev
+        return {
+          ...prev,
+          [dateKey]: {
+            ...currentDay,
+            memos: (currentDay.memos || []).filter(m => m.id !== newMemo.id)
+          }
+        }
+      })
+      showToast("메모 저장에 실패했습니다.", "error")
+    }
   }
 
   const updateDayDiaryMemo = async (dateKey: string, memoId: string, text: string, tags?: string[]) => {
