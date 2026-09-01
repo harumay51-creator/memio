@@ -553,9 +553,6 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
   useEffect(() => {
     if (isLoading) return;
     
-    // De-duplicate fast exit check
-    const existingKeys = new Set(recurringInstances.map(i => `${i.sourceRuleId}_${i.date}`));
-    
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     
@@ -604,9 +601,66 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
       return dt;
     };
 
+    const badInstances: string[] = [];
+    const validMonthlyGroups = new Map<string, RecurringInstance[]>();
+
+    recurringInstances.forEach(inst => {
+      if (inst.sourceType === 'yearly') {
+        const parentRule = anniversaries.find(a => a.id === inst.sourceRuleId);
+        if (!parentRule || parentRule.isLunar) {
+          badInstances.push(inst.id);
+        }
+      } else if (inst.sourceType === 'monthly') {
+        const parentRule = monthlyEvents.find(m => m.id === inst.sourceRuleId);
+        if (!parentRule) {
+          badInstances.push(inst.id);
+        } else {
+          // Garbage date cleanup (e.g. 15일 버그 데이터)
+          const parts = inst.date.split('-');
+          if (parts.length === 3) {
+            const y = parseInt(parts[0], 10);
+            const m = parseInt(parts[1], 10) - 1;
+            const expectedDt = calcAdjustedMonthly(y, m, parentRule.day);
+            const expectedDtStr = `${expectedDt.getFullYear()}-${String(expectedDt.getMonth() + 1).padStart(2, '0')}-${String(expectedDt.getDate()).padStart(2, '0')}`;
+            if (expectedDtStr !== inst.date) {
+              badInstances.push(inst.id);
+              return;
+            }
+          }
+          
+          // Duplicate detection group
+          const key = `${inst.sourceRuleId}_${inst.date}`;
+          if (!validMonthlyGroups.has(key)) validMonthlyGroups.set(key, []);
+          validMonthlyGroups.get(key)!.push(inst);
+        }
+      }
+    });
+
+    // Handle duplicates (preserve user's excluded status if any)
+    validMonthlyGroups.forEach((group) => {
+      if (group.length > 1) {
+        let survivor = group.find(i => i.status === 'excluded');
+        if (!survivor) survivor = group[0];
+        
+        group.forEach(inst => {
+          if (inst.id !== survivor!.id) {
+            badInstances.push(inst.id);
+          }
+        });
+      }
+    });
+
+    // Build existing keys from survivors
+    const existingKeys = new Set<string>();
+    recurringInstances.forEach(inst => {
+      if (!badInstances.includes(inst.id)) {
+        existingKeys.add(`${inst.sourceRuleId}_${inst.date}`);
+      }
+    });
+
     const missingInstances: RecurringInstance[] = [];
 
-    // Monthly
+    // Monthly Backfill
     monthlyEvents.forEach(rule => {
       const startDt = new Date(rule.createdAt);
       let curY = startDt.getFullYear();
@@ -621,7 +675,7 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
           const key = `${rule.id}_${dtStr}`;
           if (!existingKeys.has(key)) {
             missingInstances.push({
-              id: genId(),
+              id: key, // Deterministic ID
               sourceRuleId: rule.id,
               sourceType: 'monthly',
               name: rule.name,
@@ -636,7 +690,7 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
       }
     });
 
-    // Yearly
+    // Yearly Backfill
     anniversaries.forEach(rule => {
       if (rule.isLunar) return;
       const startDt = new Date(rule.createdAt);
@@ -650,7 +704,7 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
           const key = `${rule.id}_${dtStr}`;
           if (!existingKeys.has(key)) {
             missingInstances.push({
-              id: genId(),
+              id: key, // Deterministic ID
               sourceRuleId: rule.id,
               sourceType: 'yearly',
               name: rule.name,
@@ -661,16 +715,6 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
           }
         }
         curY++;
-      }
-    });
-
-    const badInstances: string[] = [];
-    recurringInstances.forEach(inst => {
-      if (inst.sourceType === 'yearly') {
-        const parentRule = anniversaries.find(a => a.id === inst.sourceRuleId);
-        if (!parentRule || parentRule.isLunar) {
-          badInstances.push(inst.id);
-        }
       }
     });
 
@@ -688,7 +732,7 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
       console.log('[AppStore] Backfilling missing instances:', missingInstances.length);
       const batch = writeBatch(db);
       missingInstances.forEach(inst => {
-        batch.set(doc(db, 'users', uid, 'recurringInstances', inst.id), inst);
+        batch.set(doc(db, 'users', uid, 'recurringInstances', inst.id), inst, { merge: true });
       });
       batch.commit().catch(console.error);
       setRecurringInstances(prev => [...prev, ...missingInstances]);
@@ -1246,7 +1290,7 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
     if (dt.getFullYear() === y && dt.getMonth() === m && dt.getDate() === now.getDate()) {
       const dtStr = `${y}-${String(m + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
       const newInst: RecurringInstance = {
-        id: genId(),
+        id: `${newItem.id}_${dtStr}`,
         sourceRuleId: newItem.id,
         sourceType: 'monthly',
         name,
@@ -1254,7 +1298,7 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
         status: 'materialized'
       }
       setRecurringInstances(prev => [...prev, newInst])
-      setDoc(doc(db, 'users', uid, 'recurringInstances', newInst.id), newInst).catch(console.error)
+      setDoc(doc(db, 'users', uid, 'recurringInstances', newInst.id), newInst, { merge: true }).catch(console.error)
     }
   }, [uid, holidayConfig])
 
