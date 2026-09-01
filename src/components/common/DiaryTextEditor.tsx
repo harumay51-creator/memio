@@ -4,6 +4,11 @@ import { BubbleMenu } from '@tiptap/react/menus';
 import { StarterKit } from '@tiptap/starter-kit';
 import { Highlight } from '@tiptap/extension-highlight';
 import { Placeholder } from '@tiptap/extension-placeholder';
+import { Table } from '@tiptap/extension-table';
+import { TableRow } from '@tiptap/extension-table-row';
+import { TableCell } from '@tiptap/extension-table-cell';
+import { TableHeader } from '@tiptap/extension-table-header';
+import { Table as TableIcon, MoreHorizontal } from 'lucide-react';
 
 const HIGHLIGHT_COLORS = [
   { name: 'Icy Blue', value: '#CFE7F4' },
@@ -65,6 +70,12 @@ const DiaryTextEditor: React.FC<DiaryTextEditorProps> = ({
         placeholder: placeholder || '기록을 남겨보세요...',
         emptyEditorClass: 'is-editor-empty',
       }),
+      Table.configure({
+        resizable: false,
+      }),
+      TableRow,
+      TableHeader,
+      TableCell,
     ],
     content: getSafeContent(initialContent),
     onUpdate: ({ editor }) => {
@@ -114,6 +125,9 @@ const DiaryTextEditor: React.FC<DiaryTextEditorProps> = ({
     }
   }, [editor, initialContent]);
 
+  const [isTableInsertOpen, setIsTableInsertOpen] = React.useState(false);
+  const [isTableMoreOpen, setIsTableMoreOpen] = React.useState(false);
+
   if (!editor) return null;
 
   return (
@@ -161,6 +175,56 @@ const DiaryTextEditor: React.FC<DiaryTextEditorProps> = ({
                 />
               );
             })}
+            
+            <div className="w-px h-4 bg-gray-200 mx-1" />
+            
+            <div className="relative">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsTableInsertOpen(!isTableInsertOpen);
+                }}
+                className={`w-6 h-6 flex items-center justify-center rounded-full transition-colors ${editor.isActive('table') ? 'bg-accent/10 text-accent' : 'text-gray-500 hover:bg-gray-100'}`}
+              >
+                <TableIcon size={14} />
+              </button>
+              
+              {isTableInsertOpen && (
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-white border border-gray-100 shadow-[0_4px_16px_rgba(0,0,0,0.12)] rounded-lg p-1.5 flex flex-col gap-0.5 w-24">
+                  <button type="button" onClick={(e) => { e.stopPropagation(); editor.chain().focus().insertTable({ rows: 2, cols: 2, withHeaderRow: false }).run(); setIsTableInsertOpen(false); }} className="text-xs text-left px-2 py-1.5 hover:bg-gray-50 rounded text-gray-700 font-medium">2 × 2</button>
+                  <button type="button" onClick={(e) => { e.stopPropagation(); editor.chain().focus().insertTable({ rows: 2, cols: 3, withHeaderRow: false }).run(); setIsTableInsertOpen(false); }} className="text-xs text-left px-2 py-1.5 hover:bg-gray-50 rounded text-gray-700 font-medium">3 × 2</button>
+                  <button type="button" onClick={(e) => { e.stopPropagation(); editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: false }).run(); setIsTableInsertOpen(false); }} className="text-xs text-left px-2 py-1.5 hover:bg-gray-50 rounded text-gray-700 font-medium">3 × 3</button>
+                  <button type="button" onClick={(e) => { e.stopPropagation(); editor.chain().focus().insertTable({ rows: 3, cols: 4, withHeaderRow: false }).run(); setIsTableInsertOpen(false); }} className="text-xs text-left px-2 py-1.5 hover:bg-gray-50 rounded text-gray-700 font-medium">4 × 3</button>
+                </div>
+              )}
+            </div>
+          </div>
+        </BubbleMenu>
+      )}
+
+      {editor && (
+        <BubbleMenu 
+          editor={editor} 
+          shouldShow={({ editor }) => editor.isActive('table')}
+        >
+          <div className="flex items-center gap-1 p-1 bg-white shadow-[0_4px_16px_rgba(0,0,0,0.12)] rounded-lg border border-gray-100">
+            <button type="button" onClick={() => editor.chain().focus().addRowAfter().run()} className="text-[11px] px-2 py-1.5 hover:bg-gray-50 rounded text-gray-700 font-medium">행 +</button>
+            <button type="button" onClick={() => editor.chain().focus().addColumnAfter().run()} className="text-[11px] px-2 py-1.5 hover:bg-gray-50 rounded text-gray-700 font-medium">열 +</button>
+            
+            <div className="relative">
+              <button type="button" onClick={() => setIsTableMoreOpen(!isTableMoreOpen)} className="p-1 hover:bg-gray-50 rounded text-gray-500">
+                <MoreHorizontal size={14} />
+              </button>
+              
+              {isTableMoreOpen && (
+                <div className="absolute top-full right-0 mt-1 bg-white border border-gray-100 shadow-lg rounded-lg p-1 flex flex-col gap-0.5 w-20">
+                  <button type="button" onClick={() => { editor.chain().focus().deleteRow().run(); setIsTableMoreOpen(false); }} className="text-[11px] text-center px-2 py-1.5 hover:bg-red-50 rounded text-red-600 font-medium">행 삭제</button>
+                  <button type="button" onClick={() => { editor.chain().focus().deleteColumn().run(); setIsTableMoreOpen(false); }} className="text-[11px] text-center px-2 py-1.5 hover:bg-red-50 rounded text-red-600 font-medium">열 삭제</button>
+                  <button type="button" onClick={() => { editor.chain().focus().deleteTable().run(); setIsTableMoreOpen(false); }} className="text-[11px] text-center px-2 py-1.5 hover:bg-red-50 rounded text-red-600 font-bold">표 삭제</button>
+                </div>
+              )}
+            </div>
           </div>
         </BubbleMenu>
       )}

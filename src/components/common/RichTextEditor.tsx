@@ -10,9 +10,14 @@ import EmojiPicker, { Theme } from 'emoji-picker-react';
 import { auth, db } from '../../config/firebase';
 import { doc, setDoc } from 'firebase/firestore';
 import { AsyncImage } from './AsyncImageNode';
+import { Table } from '@tiptap/extension-table';
+import { TableRow } from '@tiptap/extension-table-row';
+import { TableCell } from '@tiptap/extension-table-cell';
+import { TableHeader } from '@tiptap/extension-table-header';
 import { 
   Bold, Italic, Strikethrough, Heading2, Heading3, 
-  List, Minus, Smile, Link as LinkIcon, Image as ImageIcon
+  List, Minus, Smile, Link as LinkIcon, Image as ImageIcon,
+  Table as TableIcon
 } from 'lucide-react';
 import { useToast } from './Toast';
 
@@ -153,7 +158,13 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ initialContent, onChang
       AsyncImage.configure({
         inline: true,
         allowBase64: true,
-      })
+      }),
+      Table.configure({
+        resizable: false,
+      }),
+      TableRow,
+      TableHeader,
+      TableCell,
     ],
     content: getSafeContent(initialContent),
     onUpdate: ({ editor }) => {
@@ -260,6 +271,19 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ initialContent, onChang
     editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run()
   }
 
+  const [isTableMenuOpen, setIsTableMenuOpen] = useState(false);
+  const tableMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (tableMenuRef.current && !tableMenuRef.current.contains(e.target as Node)) {
+        setIsTableMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   return (
     <div className={`flex flex-col h-full bg-transparent ${className}`}>
       {/* Toolbar */}
@@ -325,6 +349,26 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ initialContent, onChang
           title="링크"
         />
 
+        <div className="relative" ref={tableMenuRef}>
+          <button
+            type="button"
+            onClick={() => setIsTableMenuOpen(!isTableMenuOpen)}
+            className={`p-1.5 rounded transition-colors ${editor.isActive('table') ? 'bg-accent/10 text-accent' : 'text-yuri-600 hover:bg-yuri-50'}`}
+            title="표 삽입"
+          >
+            <TableIcon size={15} />
+          </button>
+          
+          {isTableMenuOpen && (
+            <div className="absolute top-full left-0 mt-1 bg-white border border-yuri-100 shadow-lg rounded-lg p-1.5 z-50 flex flex-col gap-0.5 w-24">
+              <button type="button" onClick={() => { editor.chain().focus().insertTable({ rows: 2, cols: 2, withHeaderRow: false }).run(); setIsTableMenuOpen(false); }} className="text-xs text-left px-2 py-1.5 hover:bg-yuri-50 rounded text-yuri-700 font-medium">2 × 2</button>
+              <button type="button" onClick={() => { editor.chain().focus().insertTable({ rows: 2, cols: 3, withHeaderRow: false }).run(); setIsTableMenuOpen(false); }} className="text-xs text-left px-2 py-1.5 hover:bg-yuri-50 rounded text-yuri-700 font-medium">3 × 2</button>
+              <button type="button" onClick={() => { editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: false }).run(); setIsTableMenuOpen(false); }} className="text-xs text-left px-2 py-1.5 hover:bg-yuri-50 rounded text-yuri-700 font-medium">3 × 3</button>
+              <button type="button" onClick={() => { editor.chain().focus().insertTable({ rows: 3, cols: 4, withHeaderRow: false }).run(); setIsTableMenuOpen(false); }} className="text-xs text-left px-2 py-1.5 hover:bg-yuri-50 rounded text-yuri-700 font-medium">4 × 3</button>
+            </div>
+          )}
+        </div>
+
         <div className="w-px h-4 bg-yuri-200 mx-1" />
         
         {/* Colors */}
@@ -371,21 +415,24 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ initialContent, onChang
             </div>
           )}
         </div>
-
-        <div className="w-px h-4 bg-yuri-200 mx-1" />
-
-        <input
-          type="file"
-          accept="image/*"
-          className="hidden"
-          ref={fileInputRef}
-          onChange={handleImageUpload}
-        />
-        <ToolbarButton
-          onClick={() => fileInputRef.current?.click()}
-          icon={<ImageIcon size={15} />}
-          title="이미지 업로드"
-        />
+          {/* Image Upload */}
+        <div className="flex items-center gap-1 ml-auto">
+          <input
+            type="file"
+            accept="image/*"
+            className="hidden"
+            ref={fileInputRef}
+            onChange={handleImageUpload}
+          />
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="p-1.5 text-yuri-600 hover:text-accent rounded hover:bg-yuri-50 transition-colors"
+            title="이미지 첨부"
+          >
+            <ImageIcon size={15} />
+          </button>
+        </div>
 
         {saveToast && (
           <div className="ml-auto flex items-center text-[10px] text-yuri-400 font-medium animate-in fade-in mr-2">
@@ -393,6 +440,18 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ initialContent, onChang
           </div>
         )}
       </div>
+
+      {editor.isActive('table') && (
+        <div className="flex flex-wrap items-center gap-1 p-1 mb-2 bg-yuri-50 rounded-lg shrink-0 border border-yuri-100">
+          <span className="text-[10px] font-bold text-yuri-400 px-1">표 편집</span>
+          <button type="button" onClick={() => editor.chain().focus().addRowAfter().run()} className="text-xs px-2 py-1 hover:bg-yuri-200/50 rounded text-yuri-700 font-medium">행 +</button>
+          <button type="button" onClick={() => editor.chain().focus().addColumnAfter().run()} className="text-xs px-2 py-1 hover:bg-yuri-200/50 rounded text-yuri-700 font-medium">열 +</button>
+          <div className="w-px h-3 bg-yuri-200 mx-1" />
+          <button type="button" onClick={() => editor.chain().focus().deleteRow().run()} className="text-xs px-2 py-1 hover:bg-red-100 rounded text-red-600 font-medium">행 삭제</button>
+          <button type="button" onClick={() => editor.chain().focus().deleteColumn().run()} className="text-xs px-2 py-1 hover:bg-red-100 rounded text-red-600 font-medium">열 삭제</button>
+          <button type="button" onClick={() => editor.chain().focus().deleteTable().run()} className="text-xs px-2 py-1 hover:bg-red-100 rounded text-red-600 font-bold ml-auto">표 삭제</button>
+        </div>
+      )}
 
       {/* Editor Content */}
       <div 

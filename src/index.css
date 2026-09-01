@@ -196,3 +196,43 @@
 .animate-spin-pixel {
   animation: spin-pixel 1.5s steps(2, end) infinite;
 }
+
+/* Tiptap Table Styles */
+.ProseMirror .tableWrapper {
+  overflow-x: auto;
+  margin: 1em 0;
+  -webkit-overflow-scrolling: touch;
+}
+
+.ProseMirror table {
+  border-collapse: collapse;
+  table-layout: fixed;
+  width: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+.ProseMirror td,
+.ProseMirror th {
+  min-width: 60px;
+  border: 1px solid #E5E5EA;
+  padding: 8px 12px;
+  vertical-align: top;
+  box-sizing: border-box;
+  position: relative;
+  text-align: left;
+}
+
+.ProseMirror th {
+  background-color: #F9FAFB;
+  font-weight: 600;
+}
+
+.ProseMirror .selectedCell:after {
+  z-index: 2;
+  position: absolute;
+  content: "";
+  left: 0; right: 0; top: 0; bottom: 0;
+  background: rgba(200, 200, 255, 0.4);
+  pointer-events: none;
+}
