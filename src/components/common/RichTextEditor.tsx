@@ -20,6 +20,7 @@ import {
   Table as TableIcon
 } from 'lucide-react';
 import { useToast } from './Toast';
+import { handlePlainTextPaste } from '../../utils/textUtils';
 
 const COLORS = ['#5B4FCF', '#D45D6E', '#C96A95', '#3F9E7A'];
 
@@ -187,6 +188,9 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ initialContent, onChang
         return html.replace(/>\s+</g, '><');
       },
       handlePaste: (_view, event) => {
+        if (editor && handlePlainTextPaste(editor, event)) {
+          return true;
+        }
         const items = event.clipboardData?.items;
         if (!items) return false;
 

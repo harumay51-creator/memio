@@ -96,3 +96,39 @@ export function repairCorruptedHtml(text: string): string {
   }
   return text;
 }
+
+export function handlePlainTextPaste(editor: any, event: any): boolean {
+  if (!editor || !event.clipboardData) return false;
+  
+  const items = event.clipboardData.items;
+  if (!items) return false;
+
+  let hasHtml = false;
+  let hasPlain = false;
+  
+  for (let i = 0; i < items.length; i++) {
+    if (items[i].type === 'text/html') hasHtml = true;
+    if (items[i].type === 'text/plain') hasPlain = true;
+  }
+
+  // If HTML is present, let Tiptap handle it natively (protects Tables, rich text, etc.)
+  if (hasHtml || !hasPlain) return false;
+
+  const text = event.clipboardData.getData('text/plain');
+  if (!text) return false;
+
+  event.preventDefault();
+  
+  // Normalize Windows CRLF and Mac CR to LF
+  const normalized = text.replace(/\r\n?/g, '\n');
+  const lines = normalized.split('\n');
+  
+  const nodes = lines.map((line: string) => {
+    if (line === '') return { type: 'paragraph' };
+    return { type: 'paragraph', content: [{ type: 'text', text: line }] };
+  });
+  
+  editor.commands.insertContent(nodes);
+  return true;
+}
+

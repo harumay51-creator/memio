@@ -9,6 +9,7 @@ import { TableRow } from '@tiptap/extension-table-row';
 import { TableCell } from '@tiptap/extension-table-cell';
 import { TableHeader } from '@tiptap/extension-table-header';
 import { Table as TableIcon, MoreHorizontal } from 'lucide-react';
+import { handlePlainTextPaste } from '../../utils/textUtils';
 
 const HIGHLIGHT_COLORS = [
   { name: 'Icy Blue', value: '#CFE7F4' },
@@ -99,6 +100,12 @@ const DiaryTextEditor: React.FC<DiaryTextEditorProps> = ({
       },
       transformPastedHTML(html) {
         return html.replace(/>\s+</g, '><');
+      },
+      handlePaste: (_view, event) => {
+        if (editor && handlePlainTextPaste(editor, event)) {
+          return true;
+        }
+        return false;
       },
     },
   });
