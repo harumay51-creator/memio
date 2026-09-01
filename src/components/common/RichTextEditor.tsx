@@ -444,12 +444,12 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ initialContent, onChang
       {editor.isActive('table') && (
         <div className="flex flex-wrap items-center gap-1 p-1 mb-2 bg-yuri-50 rounded-lg shrink-0 border border-yuri-100">
           <span className="text-[10px] font-bold text-yuri-400 px-1">표 편집</span>
-          <button type="button" onClick={() => editor.chain().focus().addRowAfter().run()} className="text-xs px-2 py-1 hover:bg-yuri-200/50 rounded text-yuri-700 font-medium">행 +</button>
-          <button type="button" onClick={() => editor.chain().focus().addColumnAfter().run()} className="text-xs px-2 py-1 hover:bg-yuri-200/50 rounded text-yuri-700 font-medium">열 +</button>
+          <button type="button" onPointerDown={(e) => e.preventDefault()} onClick={() => editor.chain().focus().addRowAfter().run()} className="text-xs px-2 py-1 hover:bg-yuri-200/50 rounded text-yuri-700 font-medium">행 +</button>
+          <button type="button" onPointerDown={(e) => e.preventDefault()} onClick={() => editor.chain().focus().addColumnAfter().run()} className="text-xs px-2 py-1 hover:bg-yuri-200/50 rounded text-yuri-700 font-medium">열 +</button>
           <div className="w-px h-3 bg-yuri-200 mx-1" />
-          <button type="button" onClick={() => editor.chain().focus().deleteRow().run()} className="text-xs px-2 py-1 hover:bg-red-100 rounded text-red-600 font-medium">행 삭제</button>
-          <button type="button" onClick={() => editor.chain().focus().deleteColumn().run()} className="text-xs px-2 py-1 hover:bg-red-100 rounded text-red-600 font-medium">열 삭제</button>
-          <button type="button" onClick={() => editor.chain().focus().deleteTable().run()} className="text-xs px-2 py-1 hover:bg-red-100 rounded text-red-600 font-bold ml-auto">표 삭제</button>
+          <button type="button" onPointerDown={(e) => e.preventDefault()} onClick={() => editor.chain().focus().deleteRow().run()} className="text-xs px-2 py-1 hover:bg-red-100 rounded text-red-600 font-medium">행 삭제</button>
+          <button type="button" onPointerDown={(e) => e.preventDefault()} onClick={() => editor.chain().focus().deleteColumn().run()} className="text-xs px-2 py-1 hover:bg-red-100 rounded text-red-600 font-medium">열 삭제</button>
+          <button type="button" onPointerDown={(e) => e.preventDefault()} onClick={() => editor.chain().focus().deleteTable().run()} className="text-xs px-2 py-1 hover:bg-red-100 rounded text-red-600 font-bold ml-auto">표 삭제</button>
         </div>
       )}
 

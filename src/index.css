@@ -207,23 +207,55 @@
 .ProseMirror table {
   border-collapse: collapse;
   table-layout: fixed;
-  width: 100%;
+  width: max-content;
+  min-width: 100%;
   margin: 0;
-  overflow: hidden;
+  box-sizing: border-box;
 }
 
 .ProseMirror td,
 .ProseMirror th {
-  min-width: 60px;
+  min-width: 90px;
   border: 1px solid #E5E5EA;
   padding: 8px 12px;
   vertical-align: top;
   box-sizing: border-box;
   position: relative;
   text-align: left;
+  word-break: break-word;
 }
 
 .ProseMirror th {
+  background-color: #F9FAFB;
+  font-weight: 600;
+}
+
+/* Read-only Table Viewer Styles */
+.table-responsive-viewer table {
+  display: block;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  width: max-content;
+  max-width: 100%;
+  min-width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  margin: 1em 0;
+}
+
+.table-responsive-viewer td,
+.table-responsive-viewer th {
+  min-width: 90px;
+  border: 1px solid #E5E5EA;
+  padding: 8px 12px;
+  vertical-align: top;
+  box-sizing: border-box;
+  position: relative;
+  text-align: left;
+  word-break: break-word;
+}
+
+.table-responsive-viewer th {
   background-color: #F9FAFB;
   font-weight: 600;
 }

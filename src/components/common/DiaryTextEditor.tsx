@@ -209,19 +209,19 @@ const DiaryTextEditor: React.FC<DiaryTextEditorProps> = ({
           shouldShow={({ editor }) => editor.isActive('table')}
         >
           <div className="flex items-center gap-1 p-1 bg-white shadow-[0_4px_16px_rgba(0,0,0,0.12)] rounded-lg border border-gray-100">
-            <button type="button" onClick={() => editor.chain().focus().addRowAfter().run()} className="text-[11px] px-2 py-1.5 hover:bg-gray-50 rounded text-gray-700 font-medium">행 +</button>
-            <button type="button" onClick={() => editor.chain().focus().addColumnAfter().run()} className="text-[11px] px-2 py-1.5 hover:bg-gray-50 rounded text-gray-700 font-medium">열 +</button>
+            <button type="button" onPointerDown={(e) => e.preventDefault()} onClick={() => editor.chain().focus().addRowAfter().run()} className="text-[11px] px-2 py-1.5 hover:bg-gray-50 rounded text-gray-700 font-medium">행 +</button>
+            <button type="button" onPointerDown={(e) => e.preventDefault()} onClick={() => editor.chain().focus().addColumnAfter().run()} className="text-[11px] px-2 py-1.5 hover:bg-gray-50 rounded text-gray-700 font-medium">열 +</button>
             
             <div className="relative">
-              <button type="button" onClick={() => setIsTableMoreOpen(!isTableMoreOpen)} className="p-1 hover:bg-gray-50 rounded text-gray-500">
+              <button type="button" onPointerDown={(e) => e.preventDefault()} onClick={() => setIsTableMoreOpen(!isTableMoreOpen)} className="p-1 hover:bg-gray-50 rounded text-gray-500">
                 <MoreHorizontal size={14} />
               </button>
               
               {isTableMoreOpen && (
                 <div className="absolute top-full right-0 mt-1 bg-white border border-gray-100 shadow-lg rounded-lg p-1 flex flex-col gap-0.5 w-20">
-                  <button type="button" onClick={() => { editor.chain().focus().deleteRow().run(); setIsTableMoreOpen(false); }} className="text-[11px] text-center px-2 py-1.5 hover:bg-red-50 rounded text-red-600 font-medium">행 삭제</button>
-                  <button type="button" onClick={() => { editor.chain().focus().deleteColumn().run(); setIsTableMoreOpen(false); }} className="text-[11px] text-center px-2 py-1.5 hover:bg-red-50 rounded text-red-600 font-medium">열 삭제</button>
-                  <button type="button" onClick={() => { editor.chain().focus().deleteTable().run(); setIsTableMoreOpen(false); }} className="text-[11px] text-center px-2 py-1.5 hover:bg-red-50 rounded text-red-600 font-bold">표 삭제</button>
+                  <button type="button" onPointerDown={(e) => e.preventDefault()} onClick={() => { editor.chain().focus().deleteRow().run(); setIsTableMoreOpen(false); }} className="text-[11px] text-center px-2 py-1.5 hover:bg-red-50 rounded text-red-600 font-medium">행 삭제</button>
+                  <button type="button" onPointerDown={(e) => e.preventDefault()} onClick={() => { editor.chain().focus().deleteColumn().run(); setIsTableMoreOpen(false); }} className="text-[11px] text-center px-2 py-1.5 hover:bg-red-50 rounded text-red-600 font-medium">열 삭제</button>
+                  <button type="button" onPointerDown={(e) => e.preventDefault()} onClick={() => { editor.chain().focus().deleteTable().run(); setIsTableMoreOpen(false); }} className="text-[11px] text-center px-2 py-1.5 hover:bg-red-50 rounded text-red-600 font-bold">표 삭제</button>
                 </div>
               )}
             </div>

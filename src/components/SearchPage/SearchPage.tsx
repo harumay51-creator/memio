@@ -18,12 +18,17 @@ type SearchResultItem = {
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토']
 
 const SearchPage: React.FC = () => {
-  const { tasks, events, notes, updateNote, updateTaskText, updateTaskNote, toggleTask, updateEvent, deleteNote, deleteTask, deleteEvent } = useAppStore()
+  const { tasks, events, notes, updateNote, updateTaskText, updateTaskNote, toggleTask, updateEvent, deleteNote, deleteTask, deleteEvent, loadNoteContent } = useAppStore()
   const [query, setQuery] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
   
   // local selection state
   const [selItemId, setSelItemId] = useState<string | null>(null)
+  
+  // Note HTML loading state
+  const [noteHtml, setNoteHtml] = useState<string | null>(null)
+  const [isNoteLoading, setIsNoteLoading] = useState(false)
+  const [noteLoadError, setNoteLoadError] = useState(false)
 
   // Auto focus on mount
   useEffect(() => {
@@ -110,6 +115,35 @@ const SearchPage: React.FC = () => {
     if (!selItemId) return null
     return results.find(r => `${r.type}-${r.id}` === selItemId) || null
   }, [selItemId, results])
+
+  // Load Note HTML when a memo is selected
+  useEffect(() => {
+    if (selectedItem?.type === 'memo') {
+      setIsNoteLoading(true)
+      setNoteLoadError(false)
+      
+      const currentId = selectedItem.id
+      loadNoteContent(currentId).then(content => {
+        if (selItemId !== `memo-${currentId}`) return // Stale response prevention
+        
+        if (content !== null) {
+          setNoteHtml(content)
+        } else {
+          setNoteLoadError(true)
+        }
+        setIsNoteLoading(false)
+      }).catch(() => {
+        if (selItemId === `memo-${currentId}`) {
+          setNoteLoadError(true)
+          setIsNoteLoading(false)
+        }
+      })
+    } else {
+      setNoteHtml(null)
+      setIsNoteLoading(false)
+      setNoteLoadError(false)
+    }
+  }, [selectedItem, selItemId, loadNoteContent])
 
   return (
     <div className="flex h-full w-full bg-white overflow-hidden">
@@ -239,11 +273,24 @@ const SearchPage: React.FC = () => {
                   </button>
                 </header>
                 <div className="flex-1 w-full flex flex-col min-h-0 relative p-6 pb-0">
-                  <RichTextEditor 
-                    key={selectedItem.id}
-                    initialContent={selectedItem.text}
-                    onChange={(html) => updateNote(selectedItem.id, html)}
-                  />
+                  {isNoteLoading ? (
+                    <div className="flex-1 flex flex-col items-center justify-center text-yuri-400 gap-4">
+                      <div className="w-8 h-8 rounded-full border-4 border-yuri-200 border-t-accent animate-spin" />
+                      <p className="text-sm font-medium">메모를 불러오는 중입니다...</p>
+                    </div>
+                  ) : noteLoadError ? (
+                    <div className="flex-1 flex flex-col items-center justify-center text-red-400 gap-2">
+                      <span className="text-3xl mb-2">⚠️</span>
+                      <p className="text-sm font-medium">메모 내용을 불러오지 못했습니다.</p>
+                      <p className="text-xs">네트워크 연결을 확인해주세요.</p>
+                    </div>
+                  ) : noteHtml !== null && (
+                    <RichTextEditor 
+                      key={selectedItem.id}
+                      initialContent={noteHtml}
+                      onChange={(html) => updateNote(selectedItem.id, html)}
+                    />
+                  )}
                 </div>
               </>
             )}

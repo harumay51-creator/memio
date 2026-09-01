@@ -428,7 +428,7 @@ const MemoItem = ({ memo, index, dateSeed, isY2K, isAurora, deleteMemo, updateMe
                 {new Intl.DateTimeFormat('ko-KR', { hour: 'numeric', minute: 'numeric', hour12: true }).format(new Date(memo.createdAt))}
               </span>
             )}
-            <div className="text-[14px] leading-relaxed font-diary flex-1 prose-p:my-0 prose-p:leading-relaxed" style={{ color: 'inherit' }} dangerouslySetInnerHTML={{ __html: memo.text }} />
+            <div className="text-[14px] leading-relaxed font-diary flex-1 prose-p:my-0 prose-p:leading-relaxed table-responsive-viewer" style={{ color: 'inherit' }} dangerouslySetInnerHTML={{ __html: memo.text }} />
           </div>
           <button 
             onClick={(e) => {
@@ -480,7 +480,7 @@ const MemoItem = ({ memo, index, dateSeed, isY2K, isAurora, deleteMemo, updateMe
       )}
 
       <div className="flex justify-between items-start mb-2 gap-2">
-        <div className="text-[14px] leading-relaxed font-diary prose-p:my-0 prose-p:leading-relaxed" style={{ color: 'inherit' }} dangerouslySetInnerHTML={{ __html: memo.text }} />
+        <div className="text-[14px] leading-relaxed font-diary prose-p:my-0 prose-p:leading-relaxed table-responsive-viewer" style={{ color: 'inherit' }} dangerouslySetInnerHTML={{ __html: memo.text }} />
         <button 
           onClick={(e) => {
             e.stopPropagation();

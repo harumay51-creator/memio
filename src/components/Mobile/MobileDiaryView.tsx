@@ -128,7 +128,7 @@ const QuestionItem = ({ q, initialAnswer, saveAnswer, deleteAnswer }: { q: any, 
           ✕
         </button>
       </div>
-      <div className="text-[14px] leading-relaxed font-diary flex-1 prose-p:my-0 prose-p:leading-relaxed" dangerouslySetInnerHTML={{ __html: initialAnswer || '<p className="text-[#A0AABF]">답변을 입력하세요...</p>' }} />
+      <div className="text-[14px] leading-relaxed font-diary flex-1 prose-p:my-0 prose-p:leading-relaxed table-responsive-viewer" dangerouslySetInnerHTML={{ __html: initialAnswer || '<p className="text-[#A0AABF]">답변을 입력하세요...</p>' }} />
     </div>
   )
 }
@@ -319,7 +319,7 @@ const MemoItem = ({ memo, deleteMemo, updateMemo }: { memo: DiaryMemo, deleteMem
               {new Intl.DateTimeFormat('ko-KR', { hour: 'numeric', minute: 'numeric', hour12: true }).format(new Date(memo.createdAt))}
             </span>
           )}
-          <div className="text-[14px] leading-relaxed font-diary flex-1 prose-p:my-0 prose-p:leading-relaxed" dangerouslySetInnerHTML={{ __html: memo.text }} />
+          <div className="text-[14px] leading-relaxed font-diary flex-1 prose-p:my-0 prose-p:leading-relaxed table-responsive-viewer" dangerouslySetInnerHTML={{ __html: memo.text }} />
         </div>
         <button 
           onClick={async (e) => {
