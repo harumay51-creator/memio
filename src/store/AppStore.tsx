@@ -603,6 +603,7 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
 
     const badInstances: string[] = [];
     const validMonthlyGroups = new Map<string, RecurringInstance[]>();
+    const excludedLogicalMonths = new Set<string>();
 
     recurringInstances.forEach(inst => {
       if (inst.sourceType === 'yearly') {
@@ -611,12 +612,16 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
           badInstances.push(inst.id);
         }
       } else if (inst.sourceType === 'monthly') {
+        const parts = inst.date.split('-');
+        if (parts.length === 3 && inst.status === 'excluded') {
+          excludedLogicalMonths.add(`${inst.sourceRuleId}_${parts[0]}-${parts[1]}`);
+        }
+
         const parentRule = monthlyEvents.find(m => m.id === inst.sourceRuleId);
         if (!parentRule) {
           badInstances.push(inst.id);
         } else {
           // Garbage date cleanup (e.g. 15일 버그 데이터)
-          const parts = inst.date.split('-');
           if (parts.length === 3) {
             const y = parseInt(parts[0], 10);
             const m = parseInt(parts[1], 10) - 1;
@@ -652,9 +657,21 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
 
     // Build existing keys from survivors
     const existingKeys = new Set<string>();
+    const instancesToUpdateStatus: string[] = [];
+
     recurringInstances.forEach(inst => {
       if (!badInstances.includes(inst.id)) {
         existingKeys.add(`${inst.sourceRuleId}_${inst.date}`);
+        
+        if (inst.sourceType === 'monthly' && inst.status !== 'excluded') {
+          const parts = inst.date.split('-');
+          if (parts.length === 3) {
+            const logicalKey = `${inst.sourceRuleId}_${parts[0]}-${parts[1]}`;
+            if (excludedLogicalMonths.has(logicalKey)) {
+              instancesToUpdateStatus.push(inst.id);
+            }
+          }
+        }
       }
     });
 
@@ -673,6 +690,8 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
         if (dt <= today) {
           const dtStr = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
           const key = `${rule.id}_${dtStr}`;
+          const logicalKey = `${rule.id}_${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}`;
+          
           if (!existingKeys.has(key)) {
             missingInstances.push({
               id: key, // Deterministic ID
@@ -680,7 +699,7 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
               sourceType: 'monthly',
               name: rule.name,
               date: dtStr,
-              status: 'materialized'
+              status: excludedLogicalMonths.has(logicalKey) ? 'excluded' : 'materialized'
             });
             existingKeys.add(key);
           }
@@ -726,6 +745,16 @@ export const AppStoreProvider: React.FC<{ children: React.ReactNode, uid: string
       });
       batch.commit().catch(console.error);
       setRecurringInstances(prev => prev.filter(inst => !badInstances.includes(inst.id)));
+    }
+
+    if (instancesToUpdateStatus.length > 0) {
+      console.log('[AppStore] Updating status to excluded for existing instances:', instancesToUpdateStatus.length);
+      const batch = writeBatch(db);
+      instancesToUpdateStatus.forEach(id => {
+        batch.update(doc(db, 'users', uid, 'recurringInstances', id), { status: 'excluded' });
+      });
+      batch.commit().catch(console.error);
+      setRecurringInstances(prev => prev.map(inst => instancesToUpdateStatus.includes(inst.id) ? { ...inst, status: 'excluded' } : inst));
     }
 
     if (missingInstances.length > 0) {
